@@ -1,0 +1,67 @@
+/* Airly — navigation: top bar, nav items, tabs, breadcrumb, pagination, sidebar. */
+
+.ay-topbar{display:flex;align-items:center;gap:14px;box-sizing:border-box;height:var(--brand-h-bar);padding:0 18px;background:var(--surface-panel);box-shadow:inset 0 -1px 0 var(--border-hairline);font-family:var(--font-ui)}
+.ay-topbar__brand{font-family:var(--font-display);font-size:var(--text-xl);font-weight:400;letter-spacing:var(--tracking-display-rg);color:var(--text-primary);line-height:1}
+.ay-topbar__spacer{flex:1}
+.ay-topbar--light{background:var(--paper-50);box-shadow:inset 0 -1px 0 var(--paper-line)}
+.ay-topbar--light .ay-topbar__brand{color:var(--text-on-light)}
+
+/* Nav item — one row/pill used by top bars and sidebars alike */
+.ay-navitem{display:inline-flex;align-items:center;gap:9px;box-sizing:border-box;height:var(--control-h-sm);padding:0 12px;border:0;border-radius:var(--radius-full);background:transparent;color:var(--text-secondary);font-family:var(--font-ui);font-size:var(--text-sm);font-weight:var(--weight-medium);line-height:1;white-space:nowrap;cursor:pointer;text-decoration:none;transition:var(--transition-control)}
+.ay-navitem:hover{background:var(--state-hover);color:var(--text-primary)}
+.ay-navitem:active{transform:scale(var(--press-scale))}
+.ay-navitem:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.ay-navitem--active{background:var(--intent-primary);color:var(--intent-primary-ink)}
+.ay-navitem--active:hover{background:var(--intent-primary);background-image:linear-gradient(var(--state-hover),var(--state-hover))}
+.ay-navitem--block{display:flex;width:100%;justify-content:flex-start;border-radius:var(--radius-sm);height:34px}
+.ay-navitem__icon{flex:none;width:16px;font-size:14px;text-align:center}
+.ay-navitem__count{margin-left:auto;font-size:var(--text-xs);color:var(--text-tertiary)}
+.ay-navitem--light{color:var(--blue-700)}
+.ay-navitem--light:hover{background:rgba(1,40,136,0.07);color:var(--text-on-light)}
+.ay-navitem--light.ay-navitem--active{background:var(--intent-primary);color:var(--intent-primary-ink)}
+
+/* Sidebar */
+.ay-sidebar{display:flex;flex-direction:column;gap:3px;box-sizing:border-box;width:240px;padding:14px 12px;background:var(--surface-panel);box-shadow:inset -1px 0 0 var(--border-hairline);font-family:var(--font-ui)}
+.ay-sidebar__group{padding:14px 10px 6px;font-size:var(--text-2xs);font-weight:var(--weight-semibold);letter-spacing:var(--tracking-caps);text-transform:uppercase;color:var(--text-tertiary)}
+
+/* Tabs — underline set */
+.ay-tabs{display:flex;align-items:center;gap:2px;box-shadow:inset 0 -1px 0 var(--border-hairline);font-family:var(--font-ui)}
+.ay-tabs__tab{position:relative;display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 14px;border:0;background:transparent;color:var(--text-secondary);font-family:inherit;font-size:var(--text-md);font-weight:var(--weight-medium);line-height:1;cursor:pointer;transition:var(--transition-control)}
+.ay-tabs__tab::after{content:"";position:absolute;left:10px;right:10px;bottom:0;height:2px;border-radius:2px 2px 0 0;background:transparent;transition:background-color var(--duration-fast) var(--ease-out)}
+.ay-tabs__tab:hover{color:var(--text-primary)}
+.ay-tabs__tab:hover::after{background:var(--border-hairline)}
+.ay-tabs__tab:focus-visible{outline:none;box-shadow:var(--focus-ring-inset);border-radius:var(--radius-sm)}
+.ay-tabs__tab[aria-selected="true"]{color:var(--text-primary)}
+.ay-tabs__tab[aria-selected="true"]::after{background:var(--intent-accent)}
+.ay-tabs__tab[disabled]{opacity:var(--state-disabled-opacity);cursor:not-allowed}
+.ay-tabs--pill{box-shadow:none;gap:6px}
+.ay-tabs--pill .ay-tabs__tab{height:var(--control-h-sm);border-radius:var(--radius-full)}
+.ay-tabs--pill .ay-tabs__tab::after{display:none}
+.ay-tabs--pill .ay-tabs__tab:hover{background:var(--state-hover)}
+.ay-tabs--pill .ay-tabs__tab[aria-selected="true"]{background:var(--blue-50);color:var(--text-on-light)}
+
+/* Breadcrumb */
+.ay-crumbs{display:flex;align-items:center;gap:7px;font-family:var(--font-ui);font-size:var(--text-sm);color:var(--text-tertiary);flex-wrap:wrap}
+.ay-crumbs__link{color:var(--text-secondary);text-decoration:none;border-radius:3px;padding:1px 2px;transition:var(--transition-control)}
+.ay-crumbs__link:hover{color:var(--text-primary);text-decoration:underline;text-underline-offset:2px}
+.ay-crumbs__link:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.ay-crumbs__sep{opacity:0.55;font-size:10px}
+.ay-crumbs__current{color:var(--text-primary);font-weight:var(--weight-medium)}
+
+/* Pagination */
+.ay-pager{display:flex;align-items:center;gap:5px;font-family:var(--font-ui)}
+.ay-pager__btn{display:grid;place-items:center;box-sizing:border-box;min-width:var(--control-h-sm);height:var(--control-h-sm);padding:0 8px;border:0;border-radius:var(--radius-full);background:transparent;color:var(--text-secondary);font-family:inherit;font-size:var(--text-sm);font-weight:var(--weight-medium);cursor:pointer;transition:var(--transition-control)}
+.ay-pager__btn:hover{background:var(--state-hover);color:var(--text-primary)}
+.ay-pager__btn:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.ay-pager__btn[aria-current="page"]{background:var(--blue-50);color:var(--text-on-light)}
+.ay-pager__btn[disabled]{opacity:var(--state-disabled-opacity);cursor:not-allowed;background:transparent}
+.ay-pager__gap{padding:0 4px;color:var(--text-tertiary)}
+
+/* Toolbar — floating action strip (the brand's formatting bar, generalised) */
+.ay-toolbar{display:inline-flex;align-items:center;gap:3px;box-sizing:border-box;padding:5px;border-radius:var(--radius-md);background:var(--surface-toolbar);box-shadow:var(--shadow-toolbar),inset 0 0 0 1px var(--border-hairline)}
+.ay-toolbar__btn{display:grid;place-items:center;width:var(--brand-toolbar-button);height:var(--brand-toolbar-button);border:0;border-radius:var(--radius-sm);background:transparent;color:var(--blue-50);font-size:14px;cursor:pointer;transition:var(--transition-control)}
+.ay-toolbar__btn:hover{background:var(--state-hover)}
+.ay-toolbar__btn:active{transform:scale(var(--press-scale))}
+.ay-toolbar__btn:focus-visible{outline:none;box-shadow:var(--focus-ring-inset)}
+.ay-toolbar__btn[aria-pressed="true"]{background:var(--blue-50);color:var(--text-on-light)}
+.ay-toolbar__sep{width:1px;height:20px;margin:0 4px;background:var(--border-hairline);opacity:0.45}

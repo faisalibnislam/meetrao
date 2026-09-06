@@ -1,0 +1,16 @@
+/* Airly — corner radius. Seven steps, verbatim from the Figma "Corner Radius" frame. */
+:root{
+  --radius-xs:3px;
+  --radius-sm:5px;
+  --radius-md:12px;
+  --radius-lg:18px;
+  --radius-xl:36px;
+  --radius-full:100px;
+  --radius-pill:1000px;
+
+  --radius-note-card:var(--radius-xs);
+  --radius-folder:var(--radius-xs);
+  --radius-control:var(--radius-full);
+  --radius-popup:var(--radius-lg);
+  --radius-toolbar:var(--radius-md);
+}

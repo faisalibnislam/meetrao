@@ -1,0 +1,92 @@
+/* Airly — control sizing, state and motion tokens.
+   The Figma file supplies the palette, type and radii; this layer adds the systematic
+   sizing/state scale a scalable system needs (the source drew states ad hoc per component). */
+:root{
+  /* Control heights — four steps, used by every interactive control */
+  --control-h-xs:24px;
+  --control-h-sm:32px;
+  --control-h-md:40px;
+  --control-h-lg:48px;
+
+  /* Horizontal padding paired to each height */
+  --control-px-xs:10px;
+  --control-px-sm:14px;
+  --control-px-md:18px;
+  --control-px-lg:24px;
+
+  /* Icon size + label gap paired to each height */
+  --control-icon-xs:12px;
+  --control-icon-sm:14px;
+  --control-icon-md:16px;
+  --control-icon-lg:18px;
+  --control-gap-xs:5px;
+  --control-gap-sm:7px;
+  --control-gap-md:9px;
+  --control-gap-lg:10px;
+
+  /* Label size paired to each height */
+  --control-text-xs:11px;
+  --control-text-sm:12px;
+  --control-text-md:14px;
+  --control-text-lg:15px;
+
+  /* State overlays — layered over any fill so one rule serves every variant */
+  --state-hover:rgba(201,225,255,0.10);
+  --state-hover-strong:rgba(201,225,255,0.16);
+  --state-press:rgba(1,27,59,0.22);
+  --state-selected:rgba(90,163,254,0.18);
+  --state-disabled-opacity:0.42; /* @kind other */
+
+  /* Focus — one ring for the whole system, always visible on keyboard focus */
+  --focus-ring-color:#5AA3FE;
+  --focus-ring-width:2px;
+  --focus-ring-offset:2px;
+  --focus-ring:0 0 0 var(--focus-ring-offset) var(--surface-app),0 0 0 calc(var(--focus-ring-offset) + var(--focus-ring-width)) var(--focus-ring-color);
+  --focus-ring-inset:inset 0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+
+  /* Intents — solid fill + the ink that stays legible on it */
+  --intent-primary:#1B5EB2;
+  --intent-primary-ink:#C9E1FF;
+  --intent-accent:#AAFDDC;
+  --intent-accent-ink:#012859;
+  --intent-success:#00A060;
+  --intent-success-ink:#012859;
+  --intent-danger:#F97067;
+  --intent-danger-ink:#012859;
+  --intent-warning:#FCDE9F;
+  --intent-warning-ink:#012859;
+  --intent-info:#5AA3FE;
+  --intent-info-ink:#012859;
+  --intent-neutral:rgba(30,88,161,0.5);
+  --intent-neutral-ink:#C9E1FF;
+
+  /* Soft (tinted) intent fills for badges, alerts and quiet states */
+  --intent-success-soft:rgba(170,253,220,0.16);
+  --intent-danger-soft:rgba(249,112,103,0.18);
+  --intent-warning-soft:rgba(252,222,159,0.16);
+  --intent-info-soft:rgba(90,163,254,0.18);
+  --intent-neutral-soft:rgba(168,207,255,0.10);
+
+  /* Motion — three durations, two curves. Everything animates or nothing does. */
+  --duration-instant:80ms; /* @kind other */
+  --duration-fast:140ms; /* @kind other */
+  --duration-base:220ms; /* @kind other */
+  --duration-slow:360ms; /* @kind other */
+  --ease-out:cubic-bezier(0.22,1,0.36,1); /* @kind other */
+  --ease-in-out:cubic-bezier(0.65,0,0.35,1); /* @kind other */
+  --ease-spring:cubic-bezier(0.34,1.42,0.64,1); /* @kind other */
+  --transition-control:background-color var(--duration-fast) var(--ease-out),color var(--duration-fast) var(--ease-out),box-shadow var(--duration-fast) var(--ease-out),border-color var(--duration-fast) var(--ease-out),transform var(--duration-instant) var(--ease-out),opacity var(--duration-fast) var(--ease-out);
+
+  /* Press displacement — the system's one physical gesture */
+  --press-scale:0.97; /* @kind other */
+  --press-shift:1px;
+
+  /* Elevation for floating surfaces */
+  --elev-1:0 1px 2px rgba(0,27,59,0.28);
+  --elev-2:0 6px 16px -4px rgba(0,27,59,0.45);
+  --elev-3:0 18px 44px -12px rgba(0,27,59,0.62);
+  --elev-overlay:0 28px 70px -18px rgba(0,27,59,0.72);
+}
+@media (prefers-reduced-motion:reduce){
+  :root{--duration-instant:0ms; /* @kind other */--duration-fast:0ms; /* @kind other */--duration-base:0ms; /* @kind other */--duration-slow:0ms; /* @kind other */--press-scale:1; /* @kind other */--press-shift:0px}
+}

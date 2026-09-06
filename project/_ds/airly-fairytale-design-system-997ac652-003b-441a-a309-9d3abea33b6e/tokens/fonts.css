@@ -1,0 +1,21 @@
+/* Airly — webfonts. Files supplied with the design source. */
+@font-face{font-family:"Spectral";font-style:normal;font-weight:200;font-display:swap;src:url("../assets/fonts/Spectral-ExtraLight.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:200;font-display:swap;src:url("../assets/fonts/Spectral-ExtraLightItalic.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:normal;font-weight:300;font-display:swap;src:url("../assets/fonts/Spectral-Light.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:300;font-display:swap;src:url("../assets/fonts/Spectral-LightItalic.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:normal;font-weight:400;font-display:swap;src:url("../assets/fonts/Spectral-Regular.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:400;font-display:swap;src:url("../assets/fonts/Spectral-Italic.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:normal;font-weight:500;font-display:swap;src:url("../assets/fonts/Spectral-Medium.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:500;font-display:swap;src:url("../assets/fonts/Spectral-MediumItalic.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:normal;font-weight:600;font-display:swap;src:url("../assets/fonts/Spectral-SemiBold.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:600;font-display:swap;src:url("../assets/fonts/Spectral-SemiBoldItalic.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:normal;font-weight:700;font-display:swap;src:url("../assets/fonts/Spectral-Bold.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:700;font-display:swap;src:url("../assets/fonts/Spectral-BoldItalic.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:normal;font-weight:800;font-display:swap;src:url("../assets/fonts/Spectral-ExtraBold.ttf") format("truetype")}
+@font-face{font-family:"Spectral";font-style:italic;font-weight:800;font-display:swap;src:url("../assets/fonts/Spectral-ExtraBoldItalic.ttf") format("truetype")}
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url("../assets/fonts/Inter-Variable.ttf") format("truetype-variations")}
+@font-face{font-family:"Inter";font-style:italic;font-weight:100 900;font-display:swap;src:url("../assets/fonts/Inter-Variable-Italic.ttf") format("truetype-variations")}
+@font-face{font-family:"Font Awesome 6 Sharp";font-style:normal;font-weight:100;font-display:block;src:url("../assets/fonts/FontAwesome6Sharp-Thin.otf") format("opentype")}
+@font-face{font-family:"Font Awesome 6 Sharp";font-style:normal;font-weight:300;font-display:block;src:url("../assets/fonts/FontAwesome6Sharp-Light.otf") format("opentype")}
+@font-face{font-family:"Font Awesome 6 Sharp";font-style:normal;font-weight:400;font-display:block;src:url("../assets/fonts/FontAwesome6Sharp-Regular.otf") format("opentype")}
+@font-face{font-family:"Font Awesome 6 Sharp";font-style:normal;font-weight:900;font-display:block;src:url("../assets/fonts/FontAwesome6Sharp-Solid.otf") format("opentype")}

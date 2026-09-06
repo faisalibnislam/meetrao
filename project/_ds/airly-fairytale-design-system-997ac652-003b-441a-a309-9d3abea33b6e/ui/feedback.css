@@ -1,0 +1,87 @@
+/* Airly — feedback: badges, tags, alerts, toasts, progress, skeleton, empty state. */
+
+/* Badge — a count or short status, always pill */
+.ay-badge{display:inline-flex;align-items:center;gap:5px;box-sizing:border-box;height:20px;padding:0 8px;border-radius:var(--radius-pill);background:var(--intent-neutral-soft);color:var(--text-primary);font-family:var(--font-ui);font-size:var(--text-xs);font-weight:var(--weight-semibold);line-height:1;white-space:nowrap}
+.ay-badge--sm{height:16px;padding:0 6px;font-size:var(--text-2xs)}
+.ay-badge--lg{height:24px;padding:0 10px;font-size:var(--text-sm)}
+.ay-badge--dot{width:8px;height:8px;padding:0;border-radius:50%}
+.ay-badge--success{background:var(--intent-success);color:var(--intent-success-ink)}
+.ay-badge--danger{background:var(--intent-danger);color:var(--intent-danger-ink)}
+.ay-badge--warning{background:var(--intent-warning);color:var(--intent-warning-ink)}
+.ay-badge--info{background:var(--intent-info);color:var(--intent-info-ink)}
+.ay-badge--accent{background:var(--intent-accent);color:var(--intent-accent-ink)}
+.ay-badge--neutral{background:var(--intent-neutral);color:var(--intent-neutral-ink)}
+.ay-badge--soft-success{background:var(--intent-success-soft);color:var(--accent-green)}
+.ay-badge--soft-danger{background:var(--intent-danger-soft);color:var(--accent-red)}
+.ay-badge--soft-warning{background:var(--intent-warning-soft);color:var(--accent-yellow)}
+.ay-badge--soft-info{background:var(--intent-info-soft);color:var(--blue-50)}
+
+/* Tag — a removable, sometimes clickable label */
+.ay-tag{display:inline-flex;align-items:center;gap:6px;box-sizing:border-box;height:26px;padding:0 4px 0 10px;border:0;border-radius:var(--radius-full);background:var(--surface-inset);color:var(--text-primary);font-family:var(--font-ui);font-size:var(--text-sm);line-height:1;box-shadow:inset 0 0 0 1px var(--border-hairline);transition:var(--transition-control)}
+.ay-tag--plain{padding:0 10px}
+.ay-tag--clickable{cursor:pointer}
+.ay-tag--clickable:hover{background-image:linear-gradient(var(--state-hover),var(--state-hover))}
+.ay-tag--selected{background:var(--blue-50);color:var(--text-on-light);box-shadow:none}
+.ay-tag__remove{display:grid;place-items:center;width:18px;height:18px;border:0;border-radius:50%;background:transparent;color:inherit;font-size:9px;cursor:pointer;opacity:0.7;transition:var(--transition-control)}
+.ay-tag__remove:hover{opacity:1;background:var(--state-hover-strong)}
+.ay-tag__remove:focus-visible{outline:none;box-shadow:var(--focus-ring)}
+.ay-tag__swatch{width:10px;height:10px;border-radius:50%;flex:none}
+
+/* Alert — inline, persistent message */
+.ay-alert{display:flex;gap:11px;padding:13px 15px;border-radius:var(--radius-md);background:var(--intent-neutral-soft);box-shadow:inset 0 0 0 1px var(--border-hairline);font-family:var(--font-ui)}
+.ay-alert__icon{flex:none;margin-top:1px;font-size:15px;color:var(--text-primary)}
+.ay-alert__body{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.ay-alert__title{font-size:var(--text-md);font-weight:var(--weight-semibold);line-height:var(--leading-snug);color:var(--text-primary)}
+.ay-alert__text{font-size:var(--text-sm);line-height:var(--leading-body);color:var(--text-secondary)}
+.ay-alert--success{background:var(--intent-success-soft);box-shadow:inset 0 0 0 1px rgba(170,253,220,0.35)}
+.ay-alert--success .ay-alert__icon{color:var(--accent-green)}
+.ay-alert--danger{background:var(--intent-danger-soft);box-shadow:inset 0 0 0 1px rgba(249,112,103,0.4)}
+.ay-alert--danger .ay-alert__icon{color:var(--accent-red)}
+.ay-alert--warning{background:var(--intent-warning-soft);box-shadow:inset 0 0 0 1px rgba(252,222,159,0.35)}
+.ay-alert--warning .ay-alert__icon{color:var(--accent-yellow)}
+.ay-alert--info{background:var(--intent-info-soft);box-shadow:inset 0 0 0 1px rgba(90,163,254,0.4)}
+.ay-alert--info .ay-alert__icon{color:var(--blue-50)}
+
+/* Toast — floating, transient */
+.ay-toast{display:flex;align-items:flex-start;gap:11px;min-width:280px;max-width:420px;padding:13px 15px;border-radius:var(--radius-md);background:var(--overlay-navy);color:var(--text-primary);font-family:var(--font-ui);box-shadow:var(--elev-3),inset 0 0 0 1px var(--border-hairline);animation:ay-toast-in var(--duration-base) var(--ease-out) both}
+.ay-toast--leaving{animation:ay-toast-out var(--duration-fast) var(--ease-in-out) both}
+@keyframes ay-toast-in{from{opacity:0;transform:translateY(10px) scale(0.98)}to{opacity:1;transform:none}}
+@keyframes ay-toast-out{to{opacity:0;transform:translateY(6px) scale(0.98)}}
+.ay-toast__icon{flex:none;margin-top:1px;font-size:15px}
+.ay-toast--success .ay-toast__icon{color:var(--accent-green)}
+.ay-toast--danger .ay-toast__icon{color:var(--accent-red)}
+.ay-toast--warning .ay-toast__icon{color:var(--accent-yellow)}
+.ay-toast--info .ay-toast__icon{color:var(--blue-400)}
+.ay-toast__viewport{position:fixed;z-index:60;right:20px;bottom:20px;display:flex;flex-direction:column;gap:10px}
+
+/* Progress */
+.ay-progress{width:100%;height:6px;border-radius:var(--radius-pill);background:var(--surface-inset);overflow:hidden;box-shadow:inset 0 0 0 1px var(--border-hairline)}
+.ay-progress__fill{height:100%;border-radius:inherit;background:var(--intent-accent);transition:width var(--duration-slow) var(--ease-out)}
+.ay-progress--sm{height:4px}
+.ay-progress--lg{height:10px}
+.ay-progress--indeterminate .ay-progress__fill{width:36%;animation:ay-indeterminate 1.2s var(--ease-in-out) infinite}
+@keyframes ay-indeterminate{0%{transform:translateX(-100%)}100%{transform:translateX(280%)}}
+
+/* Skeleton */
+.ay-skeleton{border-radius:var(--radius-sm);background:linear-gradient(90deg,var(--intent-neutral-soft) 0%,var(--state-hover-strong) 50%,var(--intent-neutral-soft) 100%);background-size:200% 100%;animation:ay-shimmer 1.4s var(--ease-in-out) infinite}
+@keyframes ay-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.ay-skeleton--text{height:12px}
+.ay-skeleton--circle{border-radius:50%}
+
+/* Empty state */
+.ay-empty{display:flex;flex-direction:column;align-items:center;gap:11px;padding:40px 24px;text-align:center;font-family:var(--font-ui)}
+.ay-empty__icon{display:grid;place-items:center;width:52px;height:52px;border-radius:50%;background:var(--intent-neutral-soft);color:var(--icon-quiet);font-size:20px}
+.ay-empty__title{font-family:var(--font-display);font-size:var(--text-xl);letter-spacing:var(--tracking-heading);color:var(--text-primary)}
+.ay-empty__text{max-width:380px;font-size:var(--text-sm);line-height:var(--leading-body);color:var(--text-tertiary);text-wrap:pretty}
+
+/* Status pill — the brand's cloud/save indicator, generalised */
+.ay-status{display:inline-flex;align-items:center;gap:7px;height:26px;padding:0 12px;border-radius:var(--radius-pill);font-family:var(--font-ui);font-size:var(--text-xs);font-weight:var(--weight-semibold);line-height:1;white-space:nowrap}
+.ay-status--quiet{background:var(--surface-inset);color:var(--text-primary)}
+.ay-status--saving{background:var(--surface-inset);color:var(--blue-50)}
+.ay-status--offline{background:var(--surface-inset);color:var(--accent-red)}
+.ay-status--success{background:var(--intent-success);color:var(--intent-success-ink)}
+.ay-status--failed{background:var(--intent-danger);color:var(--intent-danger-ink)}
+.ay-status--starred{background:var(--accent-yellow);color:var(--intent-warning-ink)}
+.ay-status__dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.ay-status--pulse .ay-status__dot{animation:ay-pulse 1.4s var(--ease-in-out) infinite}
+@keyframes ay-pulse{0%,100%{opacity:1}50%{opacity:0.35}}

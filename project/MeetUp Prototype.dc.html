@@ -1,0 +1,1879 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/fonts.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/colors.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/typography.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/radius.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/spacing.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/elevation.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/interaction.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/base.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/ui/button.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/ui/forms.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/ui/feedback.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/ui/overlay.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/ui/navigation.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/ui/data.css">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/styles.css">
+<script src="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/_ds_bundle.js"></script>
+<style>
+  html, body { margin: 0; background: var(--blue-950); }
+  body { --border-hairline: rgba(201, 225, 255, 0.15); }
+  a { color: var(--text-interactive); text-decoration: none; }
+  a:hover { color: var(--blue-50); }
+  @keyframes mu-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    body * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; }
+  }
+</style>
+</helmet>
+
+<div style="position:relative;min-height:100vh;overflow:hidden;background:var(--blue-950);font-family:var(--font-ui)">
+
+
+  <div style="{{ frameStyle }}">
+
+    <!-- ============ AUTH ============ -->
+    <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:flex-start;justify-content:center;height:100vh;box-sizing:border-box;overflow:auto;padding:26px 20px 72px;position:relative;z-index:1" data-comment-anchor="30ba760fdc-div">
+        <div style="width:100%;max-width:420px;margin:auto;display:flex;flex-direction:column;gap:18px">
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <img src="assets/meetup-logo.svg" alt="MeetUp" style="height:42px;width:fit-content;display:block;align-self:flex-start">
+            <span style="font-size:14px;color:var(--text-tertiary)">Simple scheduling. Less back-and-forth.</span>
+          </div>
+
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,320px">
+            <div style="display:flex;flex-direction:column;gap:20px">
+              <h1 style="margin:0;font-family:var(--font-display);font-size:22px;line-height:var(--leading-flat);letter-spacing:-0.03em;color:var(--text-primary)">{{ authTitle }}</h1>
+
+              <sc-if value="{{ isSignup }}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Full name" html-for="su-name" hint-size="100%,64px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="su-name" placeholder="Faisal Rahman" hint-size="100%,40px"></x-import>
+                </x-import>
+              </sc-if>
+
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Email address" html-for="au-email" hint-size="100%,64px">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="au-email" type="email" icon="envelope" placeholder="you@company.com" hint-size="100%,40px"></x-import>
+              </x-import>
+
+              <sc-if value="{{ notForgot }}" hint-placeholder-val="{{ true }}">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Password" html-for="au-pass" help="{{ passHelp }}" hint-size="100%,64px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="au-pass" type="password" icon="lock" placeholder="••••••••" hint-size="100%,40px"></x-import>
+                </x-import>
+              </sc-if>
+
+              <sc-if value="{{ isForgot }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:13px;line-height:1.5;color:var(--text-tertiary);text-wrap:pretty">We'll email you a link to set a new password. The link expires in one hour.</span>
+              </sc-if>
+
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="primary" size="lg" block="{{ true }}" loading="{{ authLoading }}" onClick="{{ submitAuth }}" hint-size="100%,48px">{{ authCta }}</x-import>
+
+              <sc-if value="{{ notForgot }}" hint-placeholder-val="{{ true }}">
+                <div style="display:flex;flex-direction:column;gap:16px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <span style="flex:1;height:1px;background:var(--border-hairline)"></span>
+                    <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">Or</span>
+                    <span style="flex:1;height:1px;background:var(--border-hairline)"></span>
+                  </div>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="secondary" size="lg" block="{{ true }}" onClick="{{ googleAuth }}" hint-size="100%,48px">
+                    <span style="display:inline-flex;align-items:center;gap:10px">
+                      <img src="assets/google-g.svg" alt="" style="height:18px;width:18px;display:block;flex-shrink:0">
+                      <span>Continue with Google</span>
+                    </span>
+                  </x-import>
+                  <span style="font-size:12px;line-height:1.5;color:var(--text-tertiary);text-wrap:pretty">Signing in with Google does not give MeetUp access to your calendar. You'll connect that separately.</span>
+                </div>
+              </sc-if>
+            </div>
+          </x-import>
+
+          <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;font-size:13px;color:var(--text-tertiary)">
+            <span style="display:flex;gap:6px">{{ authSwitchLabel }}<a href="#" onClick="{{ toggleAuthMode }}">{{ authSwitchAction }}</a></span>
+            <a href="#" onClick="{{ goForgot }}">Forgot password?</a>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ ONBOARDING ============ -->
+    <sc-if value="{{ isOnb }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;height:100vh;box-sizing:border-box;overflow:auto;padding:26px 20px 72px;position:relative;z-index:1" data-comment-anchor="29ea420088-div">
+        <div style="width:100%;max-width:620px;margin:auto;display:flex;flex-direction:column;gap:22px">
+
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:20px">
+            <img src="assets/meetup-logo.svg" alt="MeetUp" style="height:26px;width:auto;display:block">
+            <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">{{ onbStepLabel }}</span>
+          </div>
+
+          <div style="display:flex;gap:5px">
+            <sc-for list="{{ onbBars }}" as="bar" hint-placeholder-count="5">
+              <span style="{{ bar.style }}"></span>
+            </sc-for>
+          </div>
+
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,380px">
+            <div style="display:flex;flex-direction:column;gap:24px;padding:6px">
+
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <h1 style="margin:0;font-family:var(--font-display);font-size:26px;line-height:var(--leading-flat);letter-spacing:-0.04em;color:var(--text-primary)">{{ onbTitle }}</h1>
+                <span style="font-size:15px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty;max-width:46ch">{{ onbBlurb }}</span>
+              </div>
+
+              <!-- step 2: calendar -->
+              <sc-if value="{{ isOnb2 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:18px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Panel" variant="inset" hint-size="100%,72px">
+                    <div style="display:flex;align-items:center;gap:14px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="calendar" dc-props="{{ iconInteractive18 }}" hint-size="18px,18px"></x-import>
+                      <div style="display:flex;flex-direction:column;gap:3px;flex:1;min-width:0">
+                        <span style="font-size:14px;font-weight:600;color:var(--text-primary)">Google Calendar</span>
+                        <span style="font-size:12px;color:var(--text-tertiary)">{{ calStatusText }}</span>
+                      </div>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="{{ calBadgeTone }}" icon="{{ calBadgeIcon }}" hint-size="auto,20px">{{ calBadgeLabel }}</x-import>
+                    </div>
+                  </x-import>
+                  <sc-if value="{{ calFailed }}" hint-placeholder-val="{{ false }}">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Alert" tone="danger" title="Couldn't connect to Google" hint-size="100%,72px">Google didn't confirm the permission. Try again, and make sure you allow calendar access.</x-import>
+                  </sc-if>
+                </div>
+              </sc-if>
+
+              <!-- step 3: first meeting -->
+              <sc-if value="{{ isOnb3 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:18px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Meeting name" html-for="ob-name" hint-size="100%,64px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="ob-name" value="{{ formName }}" onChange="{{ setFormName }}" hint-size="100%,40px"></x-import>
+                  </x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Description" html-for="ob-desc" help="Shown to guests on your booking page." hint-size="100%,96px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Textarea" id="ob-desc" rows="3" value="{{ formDesc }}" onChange="{{ setFormDesc }}" hint-size="100%,72px"></x-import>
+                  </x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Duration" hint-size="100%,64px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.SegmentedControl" options="{{ durationOptions }}" value="{{ formDuration }}" onChange="{{ setFormDuration }}" hint-size="100%,40px"></x-import>
+                  </x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Location" help="Google Meet is the only location in this release." hint-size="100%,64px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Panel" variant="inset" hint-size="100%,40px">
+                      <div style="display:flex;align-items:center;gap:10px;padding:2px 4px">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" code="f03d" dc-props="{{ iconInteractive14 }}" hint-size="14px,14px"></x-import>
+                        <span style="font-size:14px;color:var(--text-primary)">Google Meet</span>
+                      </div>
+                    </x-import>
+                  </x-import>
+                </div>
+              </sc-if>
+
+              <!-- step 4: availability -->
+              <sc-if value="{{ isOnb4 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:20px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Timezone" html-for="ob-tz" help="Detected from your browser. Change it if that's wrong." hint-size="100%,64px">
+                    <dc-import name="Dropdown" searchable="{{ true }}" options="{{ tzOptions }}" value="{{ tz }}" on-change="{{ setTzValue }}" hint-size="100%,40px"></dc-import>
+                  </x-import>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <sc-for list="{{ days }}" as="day" hint-placeholder-count="7">
+                      <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px;padding:12px 0;border-top:1px solid rgba(201,225,255,0.07)">
+                        <div style="width:132px;flex-shrink:0;padding-top:8px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Checkbox" label="{{ day.label }}" checked="{{ day.on }}" onChange="{{ day.toggle }}" hint-size="132px,24px"></x-import>
+                        </div>
+                        <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px">
+                          <sc-if value="{{ day.on }}" hint-placeholder-val="{{ true }}">
+                            <div style="display:flex;flex-direction:column;gap:8px">
+                              <sc-for list="{{ day.ranges }}" as="rg" hint-placeholder-count="1">
+                                <div style="display:flex;align-items:center;gap:8px">
+                                  <div style="width:118px"><dc-import name="Dropdown" size="sm" options="{{ timeOptions }}" value="{{ rg.start }}" on-change="{{ rg.pickStart }}" hint-size="118px,32px"></dc-import></div>
+                                  <span style="font-size:13px;color:var(--text-tertiary)">—</span>
+                                  <div style="width:118px"><dc-import name="Dropdown" size="sm" options="{{ timeOptions }}" value="{{ rg.end }}" on-change="{{ rg.pickEnd }}" hint-size="118px,32px"></dc-import></div>
+                                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.IconButton" icon="xmark" label="Remove hours" size="sm" onClick="{{ rg.remove }}" hint-size="32px,32px"></x-import>
+                                </div>
+                              </sc-for>
+                              <div>
+                                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="sm" icon="plus" onClick="{{ day.addRange }}" hint-size="auto,32px">Add hours</x-import>
+                              </div>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ day.off }}" hint-placeholder-val="{{ false }}">
+                            <span style="font-size:13px;color:var(--text-tertiary);padding-top:8px">Unavailable</span>
+                          </sc-if>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </sc-if>
+
+              <!-- step 5: done -->
+              <sc-if value="{{ isOnb5 }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:18px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Panel" variant="inset" hint-size="100%,80px">
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="link" dc-props="{{ iconInteractive15 }}" hint-size="15px,15px"></x-import>
+                      <span style="flex:1;min-width:180px;font-family:var(--font-ui);font-size:15px;color:var(--text-primary);word-break:break-all">{{ bookingLink }}</span>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="secondary" size="sm" icon="copy" onClick="{{ copyLink }}" hint-size="auto,32px">Copy Booking Link</x-import>
+                    </div>
+                  </x-import>
+                  <sc-if value="{{ calDisconnected }}" hint-placeholder-val="{{ false }}">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Alert" tone="warning" title="Your calendar isn't connected yet" action="{{ connectNudgeAction }}" hint-size="100%,80px">Connect Google Calendar before you share this link, so guests can't book over something you already have.</x-import>
+                  </sc-if>
+                  <div style="display:flex;flex-wrap:wrap;gap:22px">
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary)">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="circle-check" weight="900" dc-props="{{ iconAccent }}" hint-size="13px,13px"></x-import>
+                      <span>{{ formName }} · {{ formDuration }} min</span>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-secondary)">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="circle-check" weight="900" dc-props="{{ iconAccent }}" hint-size="13px,13px"></x-import>
+                      <span>{{ availSummary }}</span>
+                    </div>
+                  </div>
+                </div>
+              </sc-if>
+
+              <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding-top:4px">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="{{ onbPrimaryVariant }}" size="lg" loading="{{ connecting }}" onClick="{{ onbPrimary }}" hint-size="auto,48px">{{ onbPrimaryLabel }}</x-import>
+                <sc-if value="{{ onbHasSecondary }}" hint-placeholder-val="{{ false }}">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="lg" onClick="{{ onbSecondary }}" hint-size="auto,48px">{{ onbSecondaryLabel }}</x-import>
+                </sc-if>
+              </div>
+            </div>
+          </x-import>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ APP ============ -->
+    <sc-if value="{{ isApp }}" hint-placeholder-val="{{ false }}">
+      <div style="{{ shellStyle }}">
+
+        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Sidebar" width="{{ sidebarWidth }}" dc-props="{{ sidebarNavProps }}" style="{{ sidebarStyle }}" hint-size="240px,100%">
+          <div style="{{ sidebarInnerStyle }}">
+            <div style="{{ sidebarLogoStyle }}">
+              <img src="assets/meetup-logo.svg" alt="MeetUp" style="height:24px;width:auto;display:block">
+            </div>
+            <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="5">
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.NavItem" icon="{{ item.icon }}" active="{{ item.active }}" block="{{ true }}" count="{{ item.count }}" dc-props="{{ item.props }}" onClick="{{ item.go }}" hint-size="100%,40px">{{ item.label }}</x-import>
+            </sc-for>
+            <div style="flex:1"></div>
+            <div style="{{ sidebarFooterStyle }}">
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Avatar" name="Faisal Rahman" size="sm" hint-size="32px,32px"></x-import>
+              <span style="flex:1;min-width:0;font-size:13px;font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Faisal Rahman</span>
+              <sc-if value="{{ isAdmin }}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="soft-warning" size="sm" hint-size="auto,16px">Admin</x-import>
+              </sc-if>
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.IconButton" icon="arrow-right" label="Log out" size="sm" onClick="{{ logout }}" hint-size="32px,32px"></x-import>
+            </div>
+          </div>
+        </x-import>
+
+        <div style="{{ mainColStyle }}">
+          <div style="max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:32px">
+
+            <!-- DASHBOARD -->
+            <sc-if value="{{ isDash }}" hint-placeholder-val="{{ true }}">
+              <div style="display:flex;flex-direction:column;gap:32px">
+                <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px">
+                  <div style="display:flex;flex-direction:column;gap:8px">
+                    <h1 style="margin:0;font-family:var(--font-display);font-size:32px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Good morning, Faisal</h1>
+                    <span style="font-size:15px;color:var(--text-secondary)">Here's what's happening with your meetings.</span>
+                  </div>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="secondary" icon="copy" onClick="{{ copyLink }}" hint-size="auto,40px">Copy Booking Link</x-import>
+                </div>
+
+                <sc-if value="{{ calDisconnected }}" hint-placeholder-val="{{ false }}">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Alert" tone="warning" title="Google Calendar isn't connected" action="{{ connectAction }}" hint-size="100%,80px">Connect it so MeetUp can check for conflicts and add bookings to your calendar.</x-import>
+                </sc-if>
+
+                <div style="display:flex;flex-direction:column;gap:16px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">Upcoming Meetings</span>
+                    <span style="flex:1;height:1px;background:rgba(201,225,255,0.07)"></span>
+                  </div>
+
+                  <sc-if value="{{ hasUpcoming }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;flex-direction:column;gap:12px">
+                      <sc-for list="{{ upcoming }}" as="bk" hint-placeholder-count="3">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" interactive="{{ true }}" onClick="{{ bk.open }}" hint-size="100%,104px">
+                          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px">
+                            <div style="width:64px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0;background:var(--surface-tint);border-radius:var(--radius-xs)">
+                              <span style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-tertiary)">{{ bk.mon }}</span>
+                              <span style="font-family:var(--font-display);font-size:22px;line-height:var(--leading-flat);letter-spacing:-0.03em;color:var(--blue-50)">{{ bk.dayNum }}</span>
+                            </div>
+                            <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:5px">
+                              <span style="font-family:var(--font-display);font-size:16px;line-height:var(--leading-flat);letter-spacing:-0.02em;color:var(--text-primary)">{{ bk.type }}</span>
+                              <span style="font-size:13px;color:var(--text-secondary)">{{ bk.guest }}</span>
+                              <span style="font-size:12px;color:var(--text-tertiary)">{{ bk.when }} · {{ bk.duration }} min</span>
+                            </div>
+                            <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="primary" size="sm" onClick="{{ noop }}" hint-size="auto,32px">Join Google Meet</x-import>
+                          </div>
+                        </x-import>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+
+                  <sc-if value="{{ noUpcoming }}" hint-placeholder-val="{{ false }}">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,240px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.EmptyState" icon="calendar" title="No upcoming meetings" text="Your upcoming appointments will appear here." action="{{ createTypeAction }}" hint-size="100%,220px"></x-import>
+                    </x-import>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- MEETINGS -->
+            <sc-if value="{{ isMeetings }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px">
+                <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Bookings</h1>
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Tabs" tabs="{{ meetingTabs }}" value="{{ tab }}" onChange="{{ setTab }}" hint-size="100%,40px"></x-import>
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <sc-for list="{{ tabRows }}" as="bk" hint-placeholder-count="3">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" dc-props="{{ bk.cardProps }}" hint-size="100%,96px">
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:18px">
+                        <div style="width:56px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 0;background:var(--surface-tint);border-radius:var(--radius-xs)">
+                          <span style="font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-tertiary)">{{ bk.mon }}</span>
+                          <span style="font-family:var(--font-display);font-size:20px;line-height:var(--leading-flat);letter-spacing:-0.03em;color:var(--blue-50)">{{ bk.dayNum }}</span>
+                        </div>
+                        <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:7px">
+                          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">
+                            <span style="font-family:var(--font-display);font-size:18px;line-height:var(--leading-flat);letter-spacing:-0.03em;color:var(--blue-50)">{{ bk.guest }}</span>
+                            <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="{{ bk.badgeTone }}" size="sm" hint-size="auto,16px">{{ bk.status }}</x-import>
+                          </div>
+                          <span style="font-size:13px;font-weight:600;color:var(--text-secondary)">{{ bk.type }}</span>
+                          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+                            <span style="display:flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap;color:var(--text-timestamp)">
+                              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="clock" style="font-size:11px" hint-size="11px,11px"></x-import>
+                              <span>{{ bk.when }} · {{ bk.duration }} min</span>
+                            </span>
+                            <span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-tertiary)">
+                              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="envelope" style="font-size:11px" hint-size="11px,11px"></x-import>
+                              <span>{{ bk.email }}</span>
+                            </span>
+                          </div>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                          <sc-if value="{{ bk.joinable }}" hint-placeholder-val="{{ true }}">
+                            <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="outline" size="sm" onClick="{{ noop }}" hint-size="auto,32px">Google Meet</x-import>
+                          </sc-if>
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="sm" onClick="{{ bk.open }}" hint-size="auto,32px">Details</x-import>
+                        </div>
+                      </div>
+                    </x-import>
+                  </sc-for>
+                  <sc-if value="{{ tabEmpty }}" hint-placeholder-val="{{ false }}">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,200px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.EmptyState" icon="clock-rotate-left" title="Nothing here yet" text="Past meetings will be listed once they've happened." hint-size="100%,180px"></x-import>
+                    </x-import>
+                  </sc-if>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- MEETING TYPES -->
+            <sc-if value="{{ isTypes }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+                  <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Meetings</h1>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="accent" icon="plus" onClick="{{ newType }}" hint-size="auto,40px">Create Meeting</x-import>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px">
+                  <sc-for list="{{ types }}" as="mt" hint-placeholder-count="3">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" dc-props="{{ mt.cardProps }}" hint-size="100%,220px">
+                      <div style="display:flex;flex-direction:column;gap:16px;height:100%">
+                        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                          <div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+                            <span style="font-family:var(--font-display);font-size:18px;line-height:var(--leading-flat);letter-spacing:-0.03em;color:var(--text-primary)">{{ mt.name }}</span>
+                            <span style="font-size:13px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty">{{ mt.desc }}</span>
+                          </div>
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Switch" checked="{{ mt.active }}" onChange="{{ mt.toggle }}" hint-size="40px,24px"></x-import>
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="soft-info" size="sm" icon="clock" hint-size="auto,16px">{{ mt.duration }} min</x-import>
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="soft-info" size="sm" hint-size="auto,16px">Google Meet</x-import>
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="{{ mt.badgeTone }}" size="sm" hint-size="auto,16px">{{ mt.stateLabel }}</x-import>
+                        </div>
+                        <span style="font-size:12px;color:var(--text-tertiary);word-break:break-all">{{ mt.link }}</span>
+                        <div style="flex:1"></div>
+                        <div style="display:flex;gap:8px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="outline" size="sm" icon="pen-to-square" onClick="{{ mt.edit }}" hint-size="auto,32px">Edit</x-import>
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="sm" icon="copy" onClick="{{ mt.copy }}" hint-size="auto,32px">Copy Link</x-import>
+                        </div>
+                      </div>
+                    </x-import>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- CREATE / EDIT TYPE -->
+            <sc-if value="{{ isTypeEdit }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:680px;margin:0 auto">
+                <div style="display:flex;flex-direction:column;gap:10px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Breadcrumb" items="{{ typeCrumbs }}" hint-size="auto,20px"></x-import>
+                  <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">{{ typeEditTitle }}</h1>
+                </div>
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,520px">
+                  <div style="display:flex;flex-direction:column;gap:20px;padding:4px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Meeting name" html-for="mt-name" error="{{ nameError }}" hint-size="100%,64px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="mt-name" value="{{ formName }}" invalid="{{ nameInvalid }}" onChange="{{ setFormName }}" hint-size="100%,40px"></x-import>
+                    </x-import>
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Description" html-for="mt-desc" hint-size="100%,96px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Textarea" id="mt-desc" rows="3" value="{{ formDesc }}" onChange="{{ setFormDesc }}" hint-size="100%,72px"></x-import>
+                    </x-import>
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Duration" hint-size="100%,64px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.SegmentedControl" options="{{ durationOptions }}" value="{{ formDuration }}" onChange="{{ setFormDuration }}" hint-size="100%,40px"></x-import>
+                    </x-import>
+                    <span style="height:1px;background:rgba(201,225,255,0.07)"></span>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Buffer time" html-for="mt-buf" hint-size="100%,64px">
+                        <dc-import name="Dropdown" options="{{ bufferOptions }}" value="{{ formBuffer }}" on-change="{{ pickBuffer }}" hint-size="100%,40px"></dc-import>
+                      </x-import>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Minimum notice" html-for="mt-notice" hint-size="100%,64px">
+                        <dc-import name="Dropdown" options="{{ noticeOptions }}" value="{{ formNotice }}" on-change="{{ pickNotice }}" hint-size="100%,40px"></dc-import>
+                      </x-import>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Booking window" html-for="mt-window" hint-size="100%,64px">
+                        <dc-import name="Dropdown" options="{{ windowOptions }}" value="{{ formWindow }}" on-change="{{ pickWindow }}" hint-size="100%,40px"></dc-import>
+                      </x-import>
+                    </div>
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Panel" variant="inset" hint-size="100%,64px">
+                      <div style="display:flex;align-items:center;gap:14px">
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+                          <span style="font-size:14px;font-weight:600;color:var(--text-primary)">Active</span>
+                          <span style="font-size:12px;color:var(--text-tertiary)">Guests can book this meeting from your link.</span>
+                        </div>
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Switch" checked="{{ formActive }}" onChange="{{ setFormActive }}" hint-size="40px,24px"></x-import>
+                      </div>
+                    </x-import>
+                    <div style="display:flex;flex-wrap:wrap;gap:12px;padding-top:4px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="primary" loading="{{ saving }}" onClick="{{ saveType }}" hint-size="auto,40px">{{ saveLabel }}</x-import>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" onClick="{{ goTypes }}" hint-size="auto,40px">Cancel</x-import>
+                    </div>
+                  </div>
+                </x-import>
+              </div>
+            </sc-if>
+
+            <!-- AVAILABILITY -->
+            <sc-if value="{{ isAvail }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:680px;margin:0 auto">
+                <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Set your availability</h1>
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,120px">
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px">
+                    <div style="display:flex;flex-direction:column;gap:5px;flex:1;min-width:200px">
+                      <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">Your timezone</span>
+                      <span style="font-size:13px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty">Guests see your times converted into their own zone.</span>
+                    </div>
+                    <div style="width:260px;max-width:100%">
+                      <dc-import name="Dropdown" searchable="{{ true }}" options="{{ tzOptions }}" value="{{ tz }}" on-change="{{ setTzValue }}" hint-size="100%,40px"></dc-import>
+                    </div>
+                  </div>
+                </x-import>
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,420px">
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <sc-for list="{{ days }}" as="day" hint-placeholder-count="7">
+                      <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px;padding:14px 0;border-top:1px solid rgba(201,225,255,0.07)">
+                        <div style="width:132px;flex-shrink:0;padding-top:8px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Checkbox" label="{{ day.label }}" checked="{{ day.on }}" onChange="{{ day.toggle }}" hint-size="132px,24px"></x-import>
+                        </div>
+                        <div style="flex:1;min-width:180px;display:flex;flex-direction:column;gap:8px">
+                          <sc-if value="{{ day.on }}" hint-placeholder-val="{{ true }}">
+                            <div style="display:flex;flex-direction:column;gap:8px">
+                              <sc-for list="{{ day.ranges }}" as="rg" hint-placeholder-count="1">
+                                <div style="display:flex;align-items:center;gap:8px">
+                                  <div style="width:118px"><dc-import name="Dropdown" size="sm" options="{{ timeOptions }}" value="{{ rg.start }}" on-change="{{ rg.pickStart }}" hint-size="118px,32px"></dc-import></div>
+                                  <span style="font-size:13px;color:var(--text-tertiary)">—</span>
+                                  <div style="width:118px"><dc-import name="Dropdown" size="sm" options="{{ timeOptions }}" value="{{ rg.end }}" on-change="{{ rg.pickEnd }}" hint-size="118px,32px"></dc-import></div>
+                                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.IconButton" icon="xmark" label="Remove hours" size="sm" onClick="{{ rg.remove }}" hint-size="32px,32px"></x-import>
+                                </div>
+                              </sc-for>
+                              <div>
+                                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="sm" icon="plus" onClick="{{ day.addRange }}" hint-size="auto,32px">Add hours</x-import>
+                              </div>
+                            </div>
+                          </sc-if>
+                          <sc-if value="{{ day.off }}" hint-placeholder-val="{{ false }}">
+                            <span style="font-size:13px;color:var(--text-tertiary);padding-top:8px">Unavailable</span>
+                          </sc-if>
+                        </div>
+                      </div>
+                    </sc-for>
+                  </div>
+                </x-import>
+                <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="primary" loading="{{ saving }}" onClick="{{ saveAvail }}" hint-size="auto,40px">Save availability</x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.StatusPill" status="{{ availStatus }}" label="{{ availStatusLabel }}" hint-size="auto,24px"></x-import>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- SETTINGS -->
+            <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:680px;margin:0 auto">
+                <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Settings</h1>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,340px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="Profile" subtitle="How you appear on your booking page." hint-size="100%,64px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,260px">
+                    <div style="display:flex;flex-direction:column;gap:18px">
+                      <div style="display:flex;align-items:center;gap:16px">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Avatar" name="Faisal Rahman" size="lg" hint-size="48px,48px"></x-import>
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="outline" size="sm" icon="upload" onClick="{{ noop }}" hint-size="auto,32px">Change photo</x-import>
+                      </div>
+                      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Name" html-for="st-name" hint-size="100%,64px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="st-name" default-value="Faisal Rahman" hint-size="100%,40px"></x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Email" html-for="st-email" help="Used for booking notifications." hint-size="100%,64px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="st-email" default-value="faisal@studioatlas.co" hint-size="100%,40px"></x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Username" html-for="st-user" help="meetup.com/faisal" hint-size="100%,64px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="st-user" default-value="faisal" hint-size="100%,40px"></x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Timezone" html-for="st-tz" hint-size="100%,64px">
+                          <dc-import name="Dropdown" searchable="{{ true }}" options="{{ tzOptions }}" value="{{ tz }}" on-change="{{ setTzValue }}" hint-size="100%,40px"></dc-import>
+                        </x-import>
+                      </div>
+                    </div>
+                  </x-import>
+                </x-import>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,180px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="Calendar" subtitle="MeetUp checks this calendar for conflicts." hint-size="100%,64px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,100px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Panel" variant="inset" hint-size="100%,72px">
+                      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="calendar" dc-props="{{ iconInteractive18 }}" hint-size="18px,18px"></x-import>
+                        <div style="flex:1;min-width:160px;display:flex;flex-direction:column;gap:3px">
+                          <span style="font-size:14px;font-weight:600;color:var(--text-primary)">Google Calendar</span>
+                          <span style="font-size:12px;color:var(--text-tertiary)">{{ calStatusText }}</span>
+                        </div>
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="{{ calBtnVariant }}" size="sm" loading="{{ connecting }}" onClick="{{ toggleCalendar }}" hint-size="auto,32px">{{ calBtnLabel }}</x-import>
+                      </div>
+                    </x-import>
+                  </x-import>
+                </x-import>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,200px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="Booking preferences" subtitle="Applied to new meeting types." hint-size="100%,64px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,120px">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Default duration" html-for="st-dur" hint-size="100%,64px">
+                        <dc-import name="Dropdown" options="{{ durationSelectOptions }}" value="{{ prefDuration }}" on-change="{{ pickPrefDuration }}" hint-size="100%,40px"></dc-import>
+                      </x-import>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Default minimum notice" html-for="st-not" hint-size="100%,64px">
+                        <dc-import name="Dropdown" options="{{ noticeOptions }}" value="{{ prefNotice }}" on-change="{{ pickPrefNotice }}" hint-size="100%,40px"></dc-import>
+                      </x-import>
+                    </div>
+                  </x-import>
+                </x-import>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,180px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="Account" hint-size="100%,48px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,120px">
+                    <div style="display:flex;flex-wrap:wrap;gap:12px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="outline" size="sm" icon="lock" onClick="{{ openPassword }}" hint-size="auto,32px">Change password</x-import>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="sm" onClick="{{ logout }}" hint-size="auto,32px">Log out</x-import>
+                      <div style="flex:1"></div>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="danger" size="sm" icon="trash" onClick="{{ openDelete }}" hint-size="auto,32px">Delete account</x-import>
+                    </div>
+                  </x-import>
+                </x-import>
+              </div>
+            </sc-if>
+
+            <!-- ADMIN — DASHBOARD -->
+            <sc-if value="{{ isAdmDash }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:960px;margin:0 auto">
+                <div style="display:flex;flex-direction:column;gap:8px">
+                  <h1 style="margin:0;font-family:var(--font-display);font-size:32px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Dashboard</h1>
+                  <span style="font-size:15px;color:var(--text-secondary)">Good morning, Faisal. Here's the state of the platform.</span>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px">
+                  <sc-for list="{{ metrics }}" as="m" hint-placeholder-count="4">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,110px">
+                      <div style="display:flex;flex-direction:column;gap:8px">
+                        <span style="font-family:var(--font-display);font-size:32px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">{{ m.value }}</span>
+                        <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">{{ m.label }}</span>
+                      </div>
+                    </x-import>
+                  </sc-for>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <div style="display:flex;align-items:center;gap:12px">
+                    <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">Recent Activity</span>
+                    <span style="flex:1;height:1px;background:rgba(201,225,255,0.07)"></span>
+                  </div>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,240px">
+                    <div style="display:flex;flex-direction:column">
+                      <sc-for list="{{ activity }}" as="a" hint-placeholder-count="5">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 0;border-top:1px solid rgba(201,225,255,0.07)">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="{{ a.icon }}" dc-props="{{ iconInteractive14 }}" hint-size="14px,14px"></x-import>
+                          <span style="flex:1;min-width:180px;font-size:14px;color:var(--text-primary)">{{ a.text }}</span>
+                          <span style="font-size:12px;color:var(--text-timestamp)">{{ a.time }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </x-import>
+                </div>
+              </div>
+            </sc-if>
+
+            <!-- ADMIN — USERS -->
+            <sc-if value="{{ isAdmUsers }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:960px;margin:0 auto">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+                  <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Users</h1>
+                  <div style="width:280px;max-width:100%">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.SearchField" placeholder="Search name, email, username..." dc-props="{{ userSearchProps }}" hint-size="100%,40px"></x-import>
+                  </div>
+                </div>
+                <sc-if value="{{ hasUserResults }}" hint-placeholder-val="{{ true }}">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,320px">
+                  <div style="overflow-x:auto;padding:6px 6px 10px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Table" columns="{{ userColumns }}" rows="{{ userRows }}" dc-props="{{ tableProps }}" hint-size="100%,280px"></x-import>
+                  </div>
+                </x-import>
+                </sc-if>
+                <sc-if value="{{ noUserResults }}" hint-placeholder-val="{{ false }}">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.EmptyState" icon="user" title="No users found" text="No account matches that name, email or username." hint-size="100%,180px"></x-import>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <!-- ADMIN — USER DETAIL -->
+            <sc-if value="{{ isAdmUser }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:680px;margin:0 auto">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Breadcrumb" items="{{ userCrumbs }}" hint-size="auto,20px"></x-import>
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Avatar" name="{{ admUser.name }}" size="lg" hint-size="48px,48px"></x-import>
+                    <h1 style="margin:0;font-family:var(--font-display);font-size:26px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">{{ admUser.name }}</h1>
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="{{ admUser.badgeTone }}" hint-size="auto,20px">{{ admUser.status }}</x-import>
+                    <div style="flex:1"></div>
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="{{ admUser.actionVariant }}" size="sm" onClick="{{ admUser.action }}" hint-size="auto,32px">{{ admUser.actionLabel }}</x-import>
+                  </div>
+                </div>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,220px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="Profile" hint-size="100%,48px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,160px">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+                      <sc-for list="{{ admUser.fields }}" as="f" hint-placeholder-count="6">
+                        <div style="display:flex;flex-direction:column;gap:4px">
+                          <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">{{ f.label }}</span>
+                          <span style="font-size:14px;color:var(--text-primary)">{{ f.value }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </x-import>
+                </x-import>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,200px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="Meetings" subtitle="{{ admUser.typesSubtitle }}" hint-size="100%,64px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,140px">
+                    <div style="display:flex;flex-direction:column">
+                      <sc-for list="{{ admUser.types }}" as="t" hint-placeholder-count="2">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(201,225,255,0.07)">
+                          <span style="flex:1;min-width:160px;font-size:14px;font-weight:600;color:var(--text-primary)">{{ t.name }}</span>
+                          <span style="font-size:12px;color:var(--text-tertiary)">{{ t.duration }} min</span>
+                          <span style="font-size:12px;color:var(--text-timestamp)">{{ t.bookings }} bookings</span>
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="{{ t.badgeTone }}" size="sm" hint-size="auto,16px">{{ t.state }}</x-import>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </x-import>
+                </x-import>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,200px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="Recent bookings" hint-size="100%,48px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,150px">
+                    <div style="display:flex;flex-direction:column">
+                      <sc-for list="{{ admUser.bookings }}" as="b" hint-placeholder-count="3">
+                        <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:11px 0;border-top:1px solid rgba(201,225,255,0.07)">
+                          <span style="flex:1;min-width:150px;font-size:14px;color:var(--text-primary)">{{ b.guest }}</span>
+                          <span style="font-size:12px;color:var(--text-secondary)">{{ b.meeting }}</span>
+                          <span style="font-size:12px;color:var(--text-timestamp)">{{ b.when }}</span>
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="{{ b.badgeTone }}" size="sm" hint-size="auto,16px">{{ b.status }}</x-import>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </x-import>
+                </x-import>
+              </div>
+            </sc-if>
+
+            <!-- ADMIN — BOOKINGS -->
+            <sc-if value="{{ isAdmBookings }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:960px;margin:0 auto">
+                <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px">
+                  <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Bookings</h1>
+                  <div style="display:flex;flex-wrap:wrap;gap:10px">
+                    <div style="width:250px;max-width:100%">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.SearchField" placeholder="Search host, guest, email..." dc-props="{{ bookingSearchProps }}" hint-size="100%,40px"></x-import>
+                    </div>
+                    <div style="width:150px"><dc-import name="Dropdown" options="{{ admDateOptions }}" value="{{ admDateFilter }}" on-change="{{ pickAdmDate }}" hint-size="100%,40px"></dc-import></div>
+                  </div>
+                </div>
+                <sc-if value="{{ hasBookingResults }}" hint-placeholder-val="{{ true }}">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,320px">
+                  <div style="overflow-x:auto;padding:6px 6px 10px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Table" columns="{{ bookingColumns }}" rows="{{ bookingRows }}" dc-props="{{ tableProps }}" hint-size="100%,280px"></x-import>
+                  </div>
+                </x-import>
+                </sc-if>
+                <sc-if value="{{ noBookingResults }}" hint-placeholder-val="{{ false }}">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.EmptyState" icon="calendar" title="No bookings found" text="Nothing matches that search or date range." hint-size="100%,180px"></x-import>
+                </sc-if>
+              </div>
+            </sc-if>
+
+            <!-- ADMIN — BOOKING DETAIL -->
+            <sc-if value="{{ isAdmBooking }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:680px;margin:0 auto">
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Breadcrumb" items="{{ bookingCrumbs }}" hint-size="auto,20px"></x-import>
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">
+                    <h1 style="margin:0;font-family:var(--font-display);font-size:26px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">{{ admBooking.meeting }}</h1>
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Badge" tone="{{ admBooking.badgeTone }}" hint-size="auto,20px">{{ admBooking.status }}</x-import>
+                  </div>
+                </div>
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,360px">
+                  <div style="display:flex;flex-direction:column;gap:20px">
+                    <sc-for list="{{ admBooking.groups }}" as="g" hint-placeholder-count="4">
+                      <div style="display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid rgba(201,225,255,0.07)">
+                        <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">{{ g.label }}</span>
+                        <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="2">
+                          <div style="display:flex;flex-wrap:wrap;gap:12px">
+                            <span style="width:96px;flex-shrink:0;font-size:13px;color:var(--text-tertiary)">{{ r.k }}</span>
+                            <span style="flex:1;min-width:160px;font-size:13px;color:var(--text-primary);word-break:break-word">{{ r.v }}</span>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-for>
+                    <div>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="outline" size="sm" icon="link" onClick="{{ copyMeetLink }}" hint-size="auto,32px">Copy Meet link</x-import>
+                    </div>
+                  </div>
+                </x-import>
+              </div>
+            </sc-if>
+
+            <!-- ADMIN — SETTINGS -->
+            <sc-if value="{{ isAdmSettings }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;gap:26px;width:100%;max-width:680px;margin:0 auto">
+                <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Settings</h1>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,200px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="General" hint-size="100%,48px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,140px">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px">
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="App name" html-for="ad-app" hint-size="100%,64px">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="ad-app" default-value="MeetUp" hint-size="100%,40px"></x-import>
+                      </x-import>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Support email" html-for="ad-sup" hint-size="100%,64px">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="ad-sup" default-value="support@meetup.com" hint-size="100%,40px"></x-import>
+                      </x-import>
+                    </div>
+                  </x-import>
+                </x-import>
+
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,240px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardHeader" title="Admin account" hint-size="100%,48px"></x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.CardBody" hint-size="100%,180px">
+                    <div style="display:flex;flex-direction:column;gap:18px">
+                      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Admin name" html-for="ad-name" hint-size="100%,64px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="ad-name" default-value="Faisal Rahman" hint-size="100%,40px"></x-import>
+                        </x-import>
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Admin email" html-for="ad-email" hint-size="100%,64px">
+                          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="ad-email" default-value="faisal@studioatlas.co" hint-size="100%,40px"></x-import>
+                        </x-import>
+                      </div>
+                      <div style="display:flex;flex-wrap:wrap;gap:12px">
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="primary" size="sm" loading="{{ saving }}" onClick="{{ saveAdmSettings }}" hint-size="auto,32px">Save changes</x-import>
+                        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="sm" onClick="{{ logout }}" hint-size="auto,32px">Log out</x-import>
+                      </div>
+                    </div>
+                  </x-import>
+                </x-import>
+              </div>
+            </sc-if>
+
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ PUBLIC BOOKING ============ -->
+    <sc-if value="{{ isBook }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:flex-start;justify-content:center;height:100vh;box-sizing:border-box;overflow:auto;padding:28px 20px 72px;position:relative;z-index:1">
+        <div style="width:100%;margin:auto;max-width:980px;display:flex;flex-direction:column;gap:22px">
+          <img src="assets/meetup-logo.svg" alt="MeetUp" style="height:22px;width:fit-content;display:block;align-self:flex-start;opacity:0.85">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" hint-size="100%,560px">
+            <div style="{{ bookGridStyle }}">
+
+              <div style="{{ hostPanelStyle }}">
+                <div style="display:flex;align-items:center;gap:14px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Avatar" name="Faisal Rahman" size="lg" hint-size="48px,48px"></x-import>
+                  <div style="display:flex;flex-direction:column;gap:2px">
+                    <span style="font-size:14px;font-weight:600;color:var(--text-primary)">Faisal Rahman</span>
+                    <span style="font-size:12px;color:var(--text-tertiary)">Product consultant</span>
+                  </div>
+                </div>
+                <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50);text-wrap:pretty">{{ formName }}</h1>
+                <span style="font-size:14px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty">{{ formDesc }}</span>
+                <div style="display:flex;flex-direction:column;gap:12px;padding-top:4px">
+                  <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-secondary)">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="clock" dc-props="{{ iconInteractive14 }}" hint-size="14px,14px"></x-import>
+                    <span>{{ formDuration }} minutes</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-secondary)">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" code="f03d" dc-props="{{ iconInteractive14 }}" hint-size="14px,14px"></x-import>
+                    <span>Google Meet</span>
+                  </div>
+                  <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-secondary)">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="calendar" dc-props="{{ iconInteractive14 }}" hint-size="14px,14px"></x-import>
+                    <span>{{ tzNote }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style="padding:34px;display:flex;flex-direction:column;gap:20px;min-width:0">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+                  <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;white-space:nowrap;color:var(--text-tertiary)">Select a date</span>
+                  <div style="display:flex;align-items:center;gap:6px">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.IconButton" icon="chevron-left" label="Previous month" size="sm" disabled="{{ prevDisabled }}" onClick="{{ prevMonth }}" hint-size="32px,32px"></x-import>
+                    <span style="font-family:var(--font-display);font-size:16px;line-height:var(--leading-flat);letter-spacing:-0.02em;color:var(--text-primary);min-width:132px;text-align:center">{{ monthLabel }}</span>
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.IconButton" icon="chevron-right" label="Next month" size="sm" disabled="{{ nextDisabled }}" onClick="{{ nextMonth }}" hint-size="32px,32px"></x-import>
+                  </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+                  <sc-for list="{{ weekLabels }}" as="w" hint-placeholder-count="7">
+                    <span style="text-align:center;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-tertiary);padding-bottom:4px">{{ w }}</span>
+                  </sc-for>
+                  <sc-for list="{{ calCells }}" as="c" hint-placeholder-count="35">
+                    <button type="button" style="{{ c.style }}" style-hover="{{ c.hoverStyle }}" style-focus="outline:none;box-shadow:var(--focus-ring)" disabled="{{ c.disabled }}" onClick="{{ c.select }}">{{ c.label }}</button>
+                  </sc-for>
+                </div>
+
+                <span style="height:1px;background:rgba(201,225,255,0.07)"></span>
+
+                <div style="display:flex;flex-direction:column;gap:12px">
+                  <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">{{ slotHeading }}</span>
+
+                  <sc-if value="{{ slotError }}" hint-placeholder-val="{{ false }}">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Alert" tone="danger" title="This time is no longer available" hint-size="100%,72px">Someone just booked it. We've refreshed the times below.</x-import>
+                  </sc-if>
+
+                  <sc-if value="{{ hasSlots }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px">
+                      <sc-for list="{{ slots }}" as="s" hint-placeholder-count="12">
+                        <button type="button" style="{{ s.style }}" style-hover="{{ s.hoverStyle }}" style-focus="outline:none;box-shadow:var(--focus-ring)" onClick="{{ s.select }}">{{ s.label }}</button>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ noSlots }}" hint-placeholder-val="{{ false }}">
+                    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.EmptyState" icon="clock" title="No available times" text="Faisal isn't taking bookings on this day. Try another date." hint-size="100%,180px"></x-import>
+                  </sc-if>
+
+                  <sc-if value="{{ hasSlots }}" hint-placeholder-val="{{ true }}">
+                    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding-top:6px;border-top:1px solid rgba(201,225,255,0.07)">
+                      <span style="flex:1;min-width:150px;font-size:13px;color:var(--text-secondary)">{{ slotCtaHint }}</span>
+                      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="primary" icon-end="arrow-right" disabled="{{ noSlotPicked }}" onClick="{{ continueToDetails }}" hint-size="auto,40px">Continue</x-import>
+                    </div>
+                  </sc-if>
+                </div>
+              </div>
+            </div>
+          </x-import>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ GUEST DETAILS ============ -->
+    <sc-if value="{{ isGuest }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:flex-start;justify-content:center;height:100vh;box-sizing:border-box;overflow:auto;padding:28px 20px 72px;position:relative;z-index:1">
+        <div style="width:100%;max-width:560px;margin:auto;display:flex;flex-direction:column;gap:22px">
+          <img src="assets/meetup-logo.svg" alt="MeetUp" style="height:22px;width:fit-content;display:block;align-self:flex-start;opacity:0.85">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,480px">
+            <div style="display:flex;flex-direction:column;gap:24px;padding:6px">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <h1 style="margin:0;font-family:var(--font-display);font-size:26px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Enter your details</h1>
+                <span style="font-size:14px;color:var(--text-secondary)">{{ selectionSummary }}</span>
+              </div>
+              <sc-if value="{{ bookingError }}" hint-placeholder-val="{{ false }}">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Alert" tone="danger" title="This time is no longer available" action="{{ pickAnotherAction }}" hint-size="100%,88px">Someone booked 4:30 PM while you were filling in your details. Nothing has been scheduled.</x-import>
+              </sc-if>
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Full name" html-for="g-name" required="{{ true }}" error="{{ guestNameError }}" hint-size="100%,64px">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="g-name" value="{{ guestName }}" invalid="{{ guestNameInvalid }}" onChange="{{ setGuestName }}" placeholder="John Smith" hint-size="100%,40px"></x-import>
+              </x-import>
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Email address" html-for="g-email" required="{{ true }}" error="{{ guestEmailError }}" help="We'll send the confirmation and the Meet link here." hint-size="100%,64px">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="g-email" type="email" value="{{ guestEmail }}" invalid="{{ guestEmailInvalid }}" onChange="{{ setGuestEmail }}" placeholder="you@company.com" hint-size="100%,40px"></x-import>
+              </x-import>
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Note (optional)" html-for="g-note" hint-size="100%,96px">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Textarea" id="g-note" rows="3" placeholder="Anything Faisal should know before the call?" hint-size="100%,72px"></x-import>
+              </x-import>
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="primary" size="lg" block="{{ true }}" loading="{{ booking }}" onClick="{{ confirmBooking }}" hint-size="100%,48px">Schedule Meeting</x-import>
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" block="{{ true }}" icon="chevron-left" onClick="{{ backToBook }}" hint-size="100%,40px">Back</x-import>
+              </div>
+            </div>
+          </x-import>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ CONFIRMATION ============ -->
+    <sc-if value="{{ isConfirm }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:flex-start;justify-content:center;height:100vh;box-sizing:border-box;overflow:auto;padding:28px 20px 72px;position:relative;z-index:1">
+        <div style="width:100%;max-width:540px;margin:auto;display:flex;flex-direction:column;gap:22px;animation:mu-rise 220ms cubic-bezier(.22,1,.36,1) both">
+          <img src="assets/meetup-logo.svg" alt="MeetUp" style="height:22px;width:fit-content;display:block;align-self:flex-start;opacity:0.85">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,480px">
+            <div style="display:flex;flex-direction:column;gap:26px;padding:10px">
+              <div style="display:flex;flex-direction:column;gap:14px">
+                <span style="width:44px;height:44px;border-radius:50%;background:var(--intent-accent);box-shadow:0 0 14px rgba(170,253,220,0.28);display:flex;align-items:center;justify-content:center">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="check" weight="900" dc-props="{{ inkOnAccent }}" hint-size="18px,18px"></x-import>
+                </span>
+                <h1 style="margin:0;font-family:var(--font-display);font-size:32px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.06em;color:var(--blue-50)">You're booked!</h1>
+              </div>
+
+              <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Panel" variant="inset" hint-size="100%,180px">
+                <div style="display:flex;flex-direction:column;gap:14px">
+                  <span style="font-family:var(--font-display);font-size:20px;line-height:var(--leading-flat);letter-spacing:-0.03em;color:var(--text-primary)">{{ formName }}</span>
+                  <div style="display:flex;flex-direction:column;gap:9px">
+                    <div style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary)">
+                      <span style="width:70px;flex-shrink:0;color:var(--text-tertiary)">With</span><span>Faisal Rahman</span>
+                    </div>
+                    <div style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary)">
+                      <span style="width:70px;flex-shrink:0;color:var(--text-tertiary)">When</span><span>{{ confirmWhen }}</span>
+                    </div>
+                    <div style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary)">
+                      <span style="width:70px;flex-shrink:0;color:var(--text-tertiary)">Where</span><span>Google Meet</span>
+                    </div>
+                    <div style="display:flex;gap:10px;font-size:13px;color:var(--text-secondary)">
+                      <span style="width:70px;flex-shrink:0;color:var(--text-tertiary)">Guest</span><span>{{ guestEmailShown }}</span>
+                    </div>
+                  </div>
+                </div>
+              </x-import>
+
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="primary" size="lg" block="{{ true }}" onClick="{{ noop }}" hint-size="100%,48px">Join Google Meet</x-import>
+                <div style="display:flex;flex-wrap:wrap;gap:10px">
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="outline" size="sm" icon="calendar" onClick="{{ noop }}" hint-size="auto,32px">Add to Google Calendar</x-import>
+                  <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="sm" icon="download" onClick="{{ noop }}" hint-size="auto,32px">Download .ics</x-import>
+                </div>
+              </div>
+
+              <span style="font-size:13px;line-height:1.5;color:var(--text-tertiary);text-wrap:pretty">A confirmation has been sent to your email. Need to cancel? <a href="#" onClick="{{ guestCancel }}">Cancel this meeting</a>.</span>
+            </div>
+          </x-import>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ CANCELLED ============ -->
+    <sc-if value="{{ isCancelled }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:flex-start;justify-content:center;height:100vh;box-sizing:border-box;overflow:auto;padding:28px 20px 72px;position:relative;z-index:1">
+        <div style="width:100%;max-width:460px;margin:auto">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Card" variant="raised" pad="{{ true }}" hint-size="100%,300px">
+            <div style="display:flex;flex-direction:column;gap:20px;padding:10px">
+              <span style="width:44px;height:44px;border-radius:50%;background:var(--intent-danger);box-shadow:0 7px 10px rgba(249,112,102,0.3);display:flex;align-items:center;justify-content:center">
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="xmark" weight="900" dc-props="{{ inkOnDanger }}" hint-size="18px,18px"></x-import>
+              </span>
+              <h1 style="margin:0;font-family:var(--font-display);font-size:28px;line-height:var(--leading-flat);font-weight:300;letter-spacing:-0.05em;color:var(--blue-50)">Meeting cancelled</h1>
+              <span style="font-size:14px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty">{{ cancelledLine }} The Google Calendar event has been removed and the time is free again.</span>
+              <div>
+                <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="secondary" onClick="{{ goBook }}" hint-size="auto,40px">Book another time</x-import>
+              </div>
+            </div>
+          </x-import>
+        </div>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <!-- ============ OVERLAYS ============ -->
+  <sc-if value="{{ showBookingModal }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Modal" open="{{ true }}" title="{{ modalBooking.type }}" subtitle="{{ modalBooking.when }}" onClose="{{ closeModal }}" footer="{{ bookingModalFooter }}" split-footer="{{ true }}" hint-size="520px,420px">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:12px;font-size:13px;color:var(--text-secondary)">
+          <span style="width:76px;flex-shrink:0;color:var(--text-tertiary)">Guest</span><span>{{ modalBooking.guest }}</span>
+        </div>
+        <div style="display:flex;gap:12px;font-size:13px;color:var(--text-secondary)">
+          <span style="width:76px;flex-shrink:0;color:var(--text-tertiary)">Email</span><span>{{ modalBooking.email }}</span>
+        </div>
+        <div style="display:flex;gap:12px;font-size:13px;color:var(--text-secondary)">
+          <span style="width:76px;flex-shrink:0;color:var(--text-tertiary)">Duration</span><span>{{ modalBooking.duration }} minutes</span>
+        </div>
+        <div style="display:flex;gap:12px;font-size:13px;color:var(--text-secondary)">
+          <span style="width:76px;flex-shrink:0;color:var(--text-tertiary)">Status</span><span>{{ modalBooking.status }}</span>
+        </div>
+        <div style="display:flex;gap:12px;font-size:13px;color:var(--text-secondary)">
+          <span style="width:76px;flex-shrink:0;color:var(--text-tertiary)">Meet</span><span style="word-break:break-all">{{ modalBooking.meet }}</span>
+        </div>
+        <sc-if value="{{ modalBooking.note }}" hint-placeholder-val="{{ false }}">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Panel" variant="tint" hint-size="100%,72px">
+            <span style="font-size:13px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty">{{ modalBooking.note }}</span>
+          </x-import>
+        </sc-if>
+      </div>
+    </x-import>
+  </sc-if>
+
+  <sc-if value="{{ showCancelModal }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Modal" open="{{ true }}" size="sm" title="Cancel this meeting?" onClose="{{ closeModal }}" footer="{{ cancelModalFooter }}" split-footer="{{ true }}" hint-size="400px,220px">
+      <span style="font-size:14px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty">{{ cancelPrompt }} They'll be notified, the calendar event will be removed, and the slot will open back up.</span>
+    </x-import>
+  </sc-if>
+
+  <sc-if value="{{ showPasswordModal }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Modal" open="{{ true }}" size="sm" title="Change password" onClose="{{ closeModal }}" footer="{{ passwordModalFooter }}" split-footer="{{ true }}" hint-size="400px,320px">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="Current password" html-for="pw-old" hint-size="100%,64px">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="pw-old" type="password" icon="lock" placeholder="••••••••" hint-size="100%,40px"></x-import>
+        </x-import>
+        <x-import component-from-global-scope="AirlyDesignSystem_997ac6.FormField" label="New password" html-for="pw-new" help="At least 8 characters." hint-size="100%,64px">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Input" id="pw-new" type="password" icon="lock" placeholder="••••••••" hint-size="100%,40px"></x-import>
+        </x-import>
+      </div>
+    </x-import>
+  </sc-if>
+
+  <sc-if value="{{ showDeleteModal }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Modal" open="{{ true }}" size="sm" title="Delete your account?" onClose="{{ closeModal }}" footer="{{ deleteModalFooter }}" split-footer="{{ true }}" hint-size="400px,240px">
+      <span style="font-size:14px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty">This removes your booking page, meetings and availability for good. Upcoming meetings will be cancelled and your guests notified. This can't be undone.</span>
+    </x-import>
+  </sc-if>
+
+  <sc-if value="{{ showSuspendModal }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Modal" open="{{ true }}" size="sm" title="Suspend this account?" onClose="{{ closeModal }}" footer="{{ suspendModalFooter }}" split-footer="{{ true }}" hint-size="400px,220px">
+      <span style="font-size:14px;line-height:1.5;color:var(--text-secondary);text-wrap:pretty">{{ suspendPrompt }}</span>
+    </x-import>
+  </sc-if>
+
+  <sc-if value="{{ showConnectModal }}" hint-placeholder-val="{{ false }}">
+    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Modal" open="{{ true }}" size="sm" title="Connect Google Calendar" subtitle="MeetUp will request two permissions" onClose="{{ closeModal }}" footer="{{ connectModalFooter }}" split-footer="{{ true }}" hint-size="400px,300px">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="circle-check" weight="900" dc-props="{{ iconAccentTop }}" hint-size="13px,13px"></x-import>
+          <span style="font-size:13px;line-height:1.5;color:var(--text-secondary)">See when you're busy, so guests are never offered a time you can't make.</span>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Icon" name="circle-check" weight="900" dc-props="{{ iconAccentTop }}" hint-size="13px,13px"></x-import>
+          <span style="font-size:13px;line-height:1.5;color:var(--text-secondary)">Create events with a Google Meet link when someone books.</span>
+        </div>
+        <span style="font-size:12px;line-height:1.5;color:var(--text-tertiary)">MeetUp never reads the contents of your events.</span>
+      </div>
+    </x-import>
+  </sc-if>
+
+  <div style="position:fixed;bottom:22px;right:22px;z-index:60;display:flex;flex-direction:column;gap:10px;max-width:340px">
+    <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+      <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Toast" tone="{{ toastTone }}" title="{{ toastTitle }}" onClose="{{ dismissToast }}" hint-size="320px,64px">{{ toastText }}</x-import>
+    </sc-if>
+  </div>
+
+  <!-- prototype chrome -->
+  <div style="position:fixed;bottom:0;left:0;right:0;z-index:70;display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 16px;background:rgba(4,35,73,0.92);backdrop-filter:blur(20px);box-shadow:inset 0 1px 0 rgba(201,225,255,0.18)">
+    <span style="font-size:10px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-tertiary)">Prototype</span>
+    <div style="width:240px">
+      <dc-import name="Dropdown" size="sm" placement="up" options="{{ screenOptions }}" value="{{ screen }}" on-change="{{ jumpTo }}" hint-size="100%,32px"></dc-import>
+    </div>
+    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.SegmentedControl" size="sm" options="{{ viewportOptions }}" value="{{ viewport }}" onChange="{{ setViewport }}" hint-size="auto,32px"></x-import>
+    <div style="flex:1"></div>
+    <x-import component-from-global-scope="AirlyDesignSystem_997ac6.Button" variant="ghost" size="sm" icon="rotate-left" onClick="{{ resetProto }}" hint-size="auto,32px">Reset</x-import>
+  </div>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startScreen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;signup&quot;,&quot;forgot&quot;,&quot;onb1&quot;,&quot;onb2&quot;,&quot;onb3&quot;,&quot;onb4&quot;,&quot;onb5&quot;,&quot;dash&quot;,&quot;meetings&quot;,&quot;types&quot;,&quot;typeEdit&quot;,&quot;avail&quot;,&quot;settings&quot;,&quot;book&quot;,&quot;guest&quot;,&quot;confirm&quot;,&quot;cancelled&quot;,&quot;admDash&quot;,&quot;admUsers&quot;,&quot;admUser&quot;,&quot;admBookings&quot;,&quot;admBooking&quot;,&quot;admSettings&quot;],&quot;default&quot;:&quot;login&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;calendarConnected&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;emptyDashboard&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;calendarFails&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+class Component extends DCLogic {
+  TIMES = ['08:00 AM','08:30 AM','09:00 AM','09:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','12:00 PM','12:30 PM','01:00 PM','01:30 PM','02:00 PM','02:30 PM','03:00 PM','03:30 PM','04:00 PM','04:30 PM','05:00 PM','05:30 PM','06:00 PM','07:00 PM'];
+
+  state = {
+    screen: this.props.startScreen || 'login',
+    authMode: 'login',
+    authLoading: false,
+    viewport: 'desktop',
+    connected: this.props.calendarConnected === true,
+    connecting: false,
+    calFailed: false,
+    tz: 'Asia/Dhaka',
+    tab: 'upcoming',
+    saving: false,
+    savedAvail: false,
+    booking: false,
+    editing: null,
+    slotError: false,
+    taken: [],
+    selectedDate: 7,
+    selectedSlot: null,
+    guestName: '',
+    guestEmail: '',
+    guestTouched: false,
+    modal: null,
+    modalBookingId: null,
+    userQuery: '',
+    bookingQuery: '',
+    admDateFilter: 'all',
+    prefDuration: '30',
+    prefNotice: '60',
+    month: 0,
+    selectedMonth: 0,
+    bookingError: false,
+    bookingFailed: false,
+    calAttempts: 0,
+    admUserId: 'u1',
+    admBookingId: 'ab1',
+    suspendedIds: [],
+    reactivated: [],
+    cancelledIds: [],
+    guestCancelled: false,
+    toast: null,
+    form: { name: '30 Minute Consultation', desc: 'A quick conversation to discuss your project.', duration: '30', buffer: '0', notice: '60', window: '30', active: true },
+    formTouched: false,
+    types: [
+      { id: 't1', name: '30 Minute Consultation', desc: 'A quick conversation to discuss your project.', duration: 30, slug: '30-minute-consultation', active: true },
+      { id: 't2', name: 'Project Deep Dive', desc: 'Review scope, timeline and budget in detail.', duration: 60, slug: 'project-deep-dive', active: true },
+      { id: 't3', name: 'Intro Call', desc: "Fifteen minutes to see if we're a fit.", duration: 15, slug: 'intro-call', active: false }
+    ],
+    days: [
+      { key: 'mon', label: 'Monday', on: true, ranges: [{ start: '09:00 AM', end: '12:00 PM' }, { start: '02:00 PM', end: '05:00 PM' }] },
+      { key: 'tue', label: 'Tuesday', on: true, ranges: [{ start: '09:00 AM', end: '05:00 PM' }] },
+      { key: 'wed', label: 'Wednesday', on: true, ranges: [{ start: '09:00 AM', end: '05:00 PM' }] },
+      { key: 'thu', label: 'Thursday', on: true, ranges: [{ start: '09:00 AM', end: '05:00 PM' }] },
+      { key: 'fri', label: 'Friday', on: true, ranges: [{ start: '09:00 AM', end: '03:00 PM' }] },
+      { key: 'sat', label: 'Saturday', on: false, ranges: [{ start: '10:00 AM', end: '02:00 PM' }] },
+      { key: 'sun', label: 'Sunday', on: false, ranges: [{ start: '10:00 AM', end: '02:00 PM' }] }
+    ]
+  };
+
+  BOOKINGS = [
+    { id: 'b1', type: '30 Minute Consultation', guest: 'John Smith', email: 'john@example.com', when: 'Today · 3:00 PM – 3:30 PM', mon: 'Sep', dayNum: '5', duration: 30, past: false, note: 'Happy to share the current wireframes beforehand if useful.' },
+    { id: 'b2', type: 'Project Deep Dive', guest: 'Amina Chowdhury', email: 'amina@northbridge.io', when: 'Tomorrow · 11:00 AM – 12:00 PM', mon: 'Sep', dayNum: '6', duration: 60, past: false, note: '' },
+    { id: 'b3', type: 'Intro Call', guest: 'Dan Whitfield', email: 'dan@whitfield.dev', when: 'Mon 7 Sep · 9:30 AM – 9:45 AM', mon: 'Sep', dayNum: '7', duration: 15, past: false, note: '' },
+    { id: 'b4', type: '30 Minute Consultation', guest: 'Priya Nair', email: 'priya@nairstudio.com', when: '2 Sep · 4:00 PM – 4:30 PM', mon: 'Sep', dayNum: '2', duration: 30, past: true, note: '' },
+    { id: 'b5', type: 'Intro Call', guest: 'Tomás Rivera', email: 'tomas@rivera.mx', when: '28 Aug · 10:00 AM – 10:15 AM', mon: 'Aug', dayNum: '28', duration: 15, past: true, cancelled: true, note: '' }
+  ];
+
+  ADMIN_USERS = [
+    { id: 'u1', name: 'John Smith', email: 'john@example.com', username: 'johnsmith', tz: 'GMT−04:00 — New York', types: 2, bookings: 14, joined: 'Sep 2, 2026' },
+    { id: 'u2', name: 'Sarah Okonkwo', email: 'sarah@brightpath.io', username: 'sarah', tz: 'GMT+01:00 — London', types: 3, bookings: 41, joined: 'Aug 28, 2026' },
+    { id: 'u3', name: 'Mike Delgado', email: 'mike@delgado.studio', username: 'mikedelgado', tz: 'GMT−07:00 — Los Angeles', types: 1, bookings: 6, joined: 'Aug 21, 2026' },
+    { id: 'u4', name: 'Jane Whitfield', email: 'jane@whitfield.dev', username: 'janew', tz: 'GMT+10:00 — Sydney', types: 2, bookings: 23, joined: 'Aug 14, 2026', suspended: true },
+    { id: 'u5', name: 'Amina Chowdhury', email: 'amina@northbridge.io', username: 'amina', tz: 'GMT+06:00 — Dhaka', types: 4, bookings: 58, joined: 'Jul 30, 2026' },
+    { id: 'u6', name: 'Tomás Rivera', email: 'tomas@rivera.mx', username: 'tomas', tz: 'GMT−06:00 — Mexico City', types: 1, bookings: 3, joined: 'Jul 22, 2026' }
+  ];
+
+  ADMIN_BOOKINGS = [
+    { id: 'ab1', host: 'Sarah Okonkwo', hostEmail: 'sarah@brightpath.io', guest: 'Daniel Poole', guestEmail: 'daniel@poole.co', meeting: '30 Minute Consultation', duration: 30, date: 'Sep 7, 2026', time: '10:00 AM – 10:30 AM', tz: 'GMT+01:00 — London', status: 'Confirmed', meet: 'meet.google.com/xrq-hvzp-nkd' },
+    { id: 'ab2', host: 'Amina Chowdhury', hostEmail: 'amina@northbridge.io', guest: 'Lena Fischer', guestEmail: 'lena@fischer.de', meeting: 'Project Deep Dive', duration: 60, date: 'Sep 7, 2026', time: '2:00 PM – 3:00 PM', tz: 'GMT+06:00 — Dhaka', status: 'Confirmed', meet: 'meet.google.com/bqt-mkfd-oyu' },
+    { id: 'ab3', host: 'John Smith', hostEmail: 'john@example.com', guest: 'Priya Nair', guestEmail: 'priya@nairstudio.com', meeting: 'Intro Call', duration: 15, date: 'Sep 6, 2026', time: '9:30 AM – 9:45 AM', tz: 'GMT−04:00 — New York', status: 'Confirmed', meet: 'meet.google.com/kdo-wsnp-tra' },
+    { id: 'ab4', host: 'Jane Whitfield', hostEmail: 'jane@whitfield.dev', guest: 'Marcus Lee', guestEmail: 'marcus@leeworks.io', meeting: '30 Minute Consultation', duration: 30, date: 'Sep 4, 2026', time: '4:00 PM – 4:30 PM', tz: 'GMT+10:00 — Sydney', status: 'Cancelled', meet: 'meet.google.com/zpc-vlmt-hja' },
+    { id: 'ab5', host: 'Mike Delgado', hostEmail: 'mike@delgado.studio', guest: 'Ruth Adeyemi', guestEmail: 'ruth@adeyemi.ng', meeting: 'Portfolio Review', duration: 45, date: 'Sep 3, 2026', time: '11:00 AM – 11:45 AM', tz: 'GMT−07:00 — Los Angeles', status: 'Confirmed', meet: 'meet.google.com/nfe-qtbx-rwl' },
+    { id: 'ab6', host: 'Sarah Okonkwo', hostEmail: 'sarah@brightpath.io', guest: 'Tomás Rivera', guestEmail: 'tomas@rivera.mx', meeting: 'Intro Call', duration: 15, date: 'Sep 1, 2026', time: '3:15 PM – 3:30 PM', tz: 'GMT+01:00 — London', status: 'Cancelled', meet: 'meet.google.com/uwd-jrpo-cvi' }
+  ];
+
+  ADMIN_ACTIVITY = [
+    { text: 'John Smith created an account', time: '5 min ago', icon: 'user-plus' },
+    { text: 'Sarah created "30 Minute Consultation"', time: '18 min ago', icon: 'plus' },
+    { text: 'Mike received a new booking', time: '32 min ago', icon: 'calendar' },
+    { text: 'Jane cancelled a booking', time: '1 hr ago', icon: 'circle-xmark' },
+    { text: 'Amina connected Google Calendar', time: '2 hr ago', icon: 'cloud-arrow-up' }
+  ];
+
+  SCREEN_LABEL = {
+    login: 'Auth — Login', signup: 'Auth — Sign up', forgot: 'Auth — Forgot password',
+    onb1: 'Onboarding — Welcome', onb2: 'Onboarding — Calendar', onb3: 'Onboarding — First meeting',
+    onb4: 'Onboarding — Availability', onb5: 'Onboarding — Complete',
+    dash: 'App — Dashboard', meetings: 'App — Bookings', types: 'App — Meetings',
+    typeEdit: 'App — Create / Edit Meeting', avail: 'App — Availability', settings: 'App — Settings',
+    book: 'Public — Booking page', guest: 'Public — Guest details', confirm: 'Public — Confirmation',
+    cancelled: 'Public — Cancelled',
+    admDash: 'Admin — Dashboard', admUsers: 'Admin — Users', admUser: 'Admin — User details',
+    admBookings: 'Admin — Bookings', admBooking: 'Admin — Booking details', admSettings: 'Admin — Settings'
+  };
+
+  componentWillUnmount() { clearTimeout(this._t); clearTimeout(this._toast); }
+
+  go = (screen) => this.setState({ screen, slotError: false, modal: null, modalBookingId: null });
+
+  notify = (tone, title, text) => {
+    clearTimeout(this._toast);
+    this.setState({ toast: { tone, title, text } });
+    this._toast = setTimeout(() => this.setState({ toast: null }), 3200);
+  };
+
+  delay = (ms, fn) => { clearTimeout(this._t); this._t = setTimeout(fn, ms); };
+
+  TZ_ZONES = [
+    'Pacific/Midway', 'Pacific/Honolulu', 'America/Anchorage', 'America/Los_Angeles', 'America/Vancouver',
+    'America/Tijuana', 'America/Denver', 'America/Phoenix', 'America/Edmonton', 'America/Chicago',
+    'America/Mexico_City', 'America/Winnipeg', 'America/Guatemala', 'America/Bogota', 'America/Lima',
+    'America/New_York', 'America/Toronto', 'America/Panama', 'America/Halifax', 'America/Santiago',
+    'America/Caracas', 'America/Sao_Paulo', 'America/Argentina/Buenos_Aires', 'America/Montevideo',
+    'Atlantic/South_Georgia', 'Atlantic/Azores', 'Atlantic/Cape_Verde', 'UTC', 'Europe/London',
+    'Europe/Dublin', 'Europe/Lisbon', 'Africa/Casablanca', 'Africa/Lagos', 'Europe/Paris', 'Europe/Berlin',
+    'Europe/Madrid', 'Europe/Rome', 'Europe/Amsterdam', 'Europe/Brussels', 'Europe/Zurich', 'Europe/Vienna',
+    'Europe/Prague', 'Europe/Warsaw', 'Europe/Stockholm', 'Europe/Oslo', 'Europe/Copenhagen', 'Europe/Budapest',
+    'Africa/Johannesburg', 'Africa/Cairo', 'Europe/Athens', 'Europe/Helsinki', 'Europe/Bucharest',
+    'Europe/Kyiv', 'Europe/Istanbul', 'Asia/Jerusalem', 'Africa/Nairobi', 'Europe/Moscow', 'Asia/Riyadh',
+    'Asia/Baghdad', 'Asia/Tehran', 'Asia/Dubai', 'Asia/Baku', 'Asia/Kabul', 'Asia/Karachi', 'Asia/Tashkent',
+    'Asia/Kolkata', 'Asia/Colombo', 'Asia/Kathmandu', 'Asia/Dhaka', 'Asia/Almaty', 'Asia/Yangon',
+    'Asia/Bangkok', 'Asia/Jakarta', 'Asia/Ho_Chi_Minh', 'Asia/Shanghai', 'Asia/Hong_Kong', 'Asia/Singapore',
+    'Asia/Kuala_Lumpur', 'Asia/Manila', 'Asia/Taipei', 'Australia/Perth', 'Asia/Tokyo', 'Asia/Seoul',
+    'Australia/Adelaide', 'Australia/Darwin', 'Australia/Brisbane', 'Australia/Sydney', 'Australia/Melbourne',
+    'Pacific/Guam', 'Pacific/Noumea', 'Pacific/Auckland', 'Pacific/Fiji', 'Pacific/Tongatapu', 'Pacific/Kiritimati'
+  ];
+
+  /* Build "GMT+06:00 — Dhaka" labels from real offsets, sorted west to east. */
+  tzOptionList() {
+    if (this._tzOpts) return this._tzOpts;
+    const now = new Date();
+    const rows = this.TZ_ZONES.map(z => {
+      let raw = 'GMT';
+      try {
+        const parts = new Intl.DateTimeFormat('en-US', { timeZone: z, timeZoneName: 'shortOffset' }).formatToParts(now);
+        const found = parts.filter(p => p.type === 'timeZoneName')[0];
+        if (found) raw = found.value;
+      } catch (e) { raw = 'GMT'; }
+      const m = /GMT([+-])(\d{1,2})(?::(\d{2}))?/.exec(raw);
+      const sign = m ? m[1] : '+';
+      const hh = m ? parseInt(m[2], 10) : 0;
+      const mm = m && m[3] ? parseInt(m[3], 10) : 0;
+      const mins = (sign === '-' ? -1 : 1) * (hh * 60 + mm);
+      const pad = (n) => (n < 10 ? '0' + n : String(n));
+      const off = hh === 0 && mm === 0 ? 'GMT+00:00' : 'GMT' + (sign === '-' ? '−' : '+') + pad(hh) + ':' + pad(mm);
+      const city = z === 'UTC' ? 'UTC' : z.split('/').pop().replace(/_/g, ' ');
+      return { value: z, label: off + ' — ' + city, mins: mins };
+    });
+    rows.sort((a, b) => (a.mins - b.mins) || a.label.localeCompare(b.label));
+    this._tzOpts = rows.map(r => ({ value: r.value, label: r.label }));
+    return this._tzOpts;
+  }
+
+  tzLabelFor(v) {
+    const hit = this.tzOptionList().filter(o => o.value === v)[0];
+    return hit ? hit.label : v;
+  }
+
+  cellStyle(kind) {
+    const base = 'display:flex;align-items:center;justify-content:center;height:40px;border:0;border-radius:var(--radius-full);font-family:var(--font-ui);font-size:13px;font-weight:600;transition:background-color 140ms cubic-bezier(.22,1,.36,1),color 140ms;';
+    if (kind === 'empty') return base + 'background:transparent;color:transparent;pointer-events:none';
+    if (kind === 'disabled') return base + 'background:transparent;color:rgba(90,163,254,0.45);cursor:not-allowed';
+    if (kind === 'selected') return base + 'background:var(--blue-50);color:var(--text-on-light);cursor:pointer';
+    return base + 'background:var(--surface-field);color:var(--blue-50);cursor:pointer';
+  }
+
+  slotStyle(selected) {
+    const base = 'height:44px;padding:0 12px;border:0;border-radius:var(--radius-full);font-family:var(--font-ui);font-size:14px;font-weight:600;cursor:pointer;transition:background-color 140ms cubic-bezier(.22,1,.36,1),color 140ms;';
+    return selected
+      ? base + 'background:var(--blue-50);color:var(--text-on-light)'
+      : base + 'background:transparent;color:var(--blue-50);box-shadow:inset 0 0 0 1px var(--border-strong)';
+  }
+
+  renderVals() {
+    const s = this.state;
+    const R = React.createElement;
+    const A = window.AirlyDesignSystem_997ac6 || {};
+    const scr = s.screen;
+    const isAuth = scr === 'login' || scr === 'signup' || scr === 'forgot';
+    const isOnb = scr.indexOf('onb') === 0;
+    const adminScreens = ['admDash', 'admUsers', 'admUser', 'admBookings', 'admBooking', 'admSettings'];
+    const isAdmin = adminScreens.indexOf(scr) >= 0;
+    const isApp = ['dash', 'meetings', 'types', 'typeEdit', 'avail', 'settings'].indexOf(scr) >= 0 || isAdmin;
+    const mobile = s.viewport === 'mobile';
+    const emptyDash = this.props.emptyDashboard === true;
+
+    // ---- data ----
+    const live = this.BOOKINGS.map(b => ({ ...b, cancelled: b.cancelled || s.cancelledIds.indexOf(b.id) >= 0 }));
+    const decorate = (b) => ({
+      ...b,
+      status: b.cancelled ? 'Cancelled' : 'Confirmed',
+      badgeTone: b.cancelled ? 'soft-danger' : 'soft-success',
+      joinable: !b.cancelled && !b.past,
+      cardProps: b.cancelled
+        ? { style: { opacity: 0.66, boxShadow: 'inset 0 0 0 1px rgba(249,112,103,0.14)' } }
+        : b.past
+          ? { style: { opacity: 0.82 } }
+          : { style: { boxShadow: 'var(--elev-2), inset 0 0 0 1px rgba(201,225,255,0.2)' } },
+      open: () => this.setState({ modal: 'booking', modalBookingId: b.id })
+    });
+    const upcoming = emptyDash ? [] : live.filter(b => !b.past && !b.cancelled).map(decorate);
+    const past = live.filter(b => b.past).map(decorate);
+    const tabRows = s.tab === 'upcoming' ? live.filter(b => !b.past).map(decorate) : past;
+
+    // ---- calendar (today Sep 5 2026; 30-day booking window ends Oct 5) ----
+    const MONTHS = [
+      { name: 'September', days: 30, firstDow: 2, minDay: 7, maxDay: 30 },
+      { name: 'October', days: 31, firstDow: 4, minDay: 1, maxDay: 5 }
+    ];
+    const M = MONTHS[s.month];
+    const cells = [];
+    for (let i = 0; i < M.firstDow; i++) cells.push({ label: '', key: 'e' + i, style: this.cellStyle('empty'), hoverStyle: '', disabled: true, select: () => {} });
+    for (let d = 1; d <= M.days; d++) {
+      const dow = (M.firstDow + d - 1) % 7;
+      const closed = dow === 0 || dow === 6 || d < M.minDay || d > M.maxDay;
+      const selected = !closed && s.selectedMonth === s.month && s.selectedDate === d;
+      cells.push({
+        label: String(d), key: 'd' + d, disabled: closed,
+        style: this.cellStyle(closed ? 'disabled' : selected ? 'selected' : 'open'),
+        hoverStyle: closed ? 'background-color:transparent' : selected ? 'background-color:var(--blue-100)' : 'background-color:var(--surface-inset);color:var(--blue-50)',
+        select: closed ? () => {} : () => this.setState({ selectedDate: d, selectedMonth: s.month, selectedSlot: null, slotError: false })
+      });
+    }
+    const SM = MONTHS[s.selectedMonth];
+    const selDow = (SM.firstDow + s.selectedDate - 1) % 7;
+    const dayOpen = selDow !== 0 && selDow !== 6 && s.selectedDate >= SM.minDay && s.selectedDate <= SM.maxDay;
+    const raw = ['09:00 AM','09:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM','02:00 PM','02:30 PM','03:00 PM','03:30 PM','04:00 PM','04:30 PM'];
+    const slots = dayOpen ? raw.filter(t => s.taken.indexOf(t) < 0).map(t => ({
+      label: t, key: t, style: this.slotStyle(s.selectedSlot === t),
+      hoverStyle: s.selectedSlot === t ? 'background-color:var(--blue-100)' : 'background-color:var(--surface-field);box-shadow:inset 0 0 0 1px var(--blue-400)',
+      select: () => {
+        if (t === '11:30 AM' && s.taken.indexOf(t) < 0) {
+          this.setState({ taken: s.taken.concat([t]), slotError: true, selectedSlot: null });
+          this.notify('danger', 'Time just taken', 'Someone booked 11:30 AM while you were choosing.');
+          return;
+        }
+        this.setState({ selectedSlot: t, slotError: false });
+      }
+    })) : [];
+
+    const monthLabel = M.name + ' 2026';
+    const endOf = (t) => {
+      const dur = parseInt(s.form.duration, 10);
+      const parts = t.split(/[: ]/);
+      let h = parseInt(parts[0], 10) % 12 + (parts[2] === 'PM' ? 12 : 0);
+      let m = parseInt(parts[1], 10) + dur;
+      h += Math.floor(m / 60); m = m % 60;
+      const ap = h >= 12 ? 'PM' : 'AM';
+      const hh = h % 12 === 0 ? 12 : h % 12;
+      return hh + ':' + (m < 10 ? '0' + m : m) + ' ' + ap;
+    };
+    const slotRange = s.selectedSlot ? s.selectedSlot + ' – ' + endOf(s.selectedSlot) : '';
+    const longDate = SM.name + ' ' + s.selectedDate + ', 2026';
+
+    // ---- availability rows ----
+    const days = s.days.map((d, di) => ({
+      key: d.key, label: d.label, on: d.on, off: !d.on,
+      toggle: () => this.setState(st => ({ days: st.days.map((x, i) => i === di ? { ...x, on: !x.on } : x), savedAvail: false })),
+      addRange: () => this.setState(st => ({ days: st.days.map((x, i) => i === di ? { ...x, ranges: x.ranges.concat([{ start: '02:00 PM', end: '05:00 PM' }]) } : x), savedAvail: false })),
+      ranges: d.ranges.map((r, ri) => ({
+        key: d.key + ri, start: r.start, end: r.end,
+        pickStart: (v) => this.setState(st => ({ days: st.days.map((x, i) => i === di ? { ...x, ranges: x.ranges.map((y, j) => j === ri ? { ...y, start: v } : y) } : x), savedAvail: false })),
+        pickEnd: (v) => this.setState(st => ({ days: st.days.map((x, i) => i === di ? { ...x, ranges: x.ranges.map((y, j) => j === ri ? { ...y, end: v } : y) } : x), savedAvail: false })),
+        remove: () => this.setState(st => ({ days: st.days.map((x, i) => i === di ? { ...x, ranges: x.ranges.filter((y, j) => j !== ri), on: x.ranges.length > 1 } : x), savedAvail: false }))
+      }))
+    }));
+    const activeDays = s.days.filter(d => d.on);
+    const availSummary = activeDays.length ? activeDays.length + ' days a week, ' + activeDays[0].ranges[0].start + ' onwards' : 'No availability set';
+
+    // ---- types ----
+    const types = s.types.map((t, ti) => ({
+      key: t.id, name: t.name, desc: t.desc, duration: t.duration, active: t.active,
+      stateLabel: t.active ? 'Active' : 'Disabled',
+      badgeTone: t.active ? 'soft-success' : 'neutral',
+      link: 'meetup.com/faisal/' + t.slug,
+      cardProps: t.active
+        ? { style: { boxShadow: 'var(--elev-2), inset 0 0 0 1px rgba(201,225,255,0.28)' } }
+        : { style: { opacity: 0.62, boxShadow: 'inset 0 0 0 1px rgba(201,225,255,0.08)' } },
+      toggle: () => { this.setState(st => ({ types: st.types.map((x, i) => i === ti ? { ...x, active: !x.active } : x) })); this.notify('neutral', t.active ? 'Booking type disabled' : 'Booking type enabled', t.name); },
+      copy: () => this.notify('success', 'Booking link copied', 'meetup.com/faisal/' + t.slug),
+      edit: () => this.setState({ screen: 'typeEdit', editing: t.id, formTouched: false, form: { ...this.state.form, name: t.name, desc: t.desc, duration: String(t.duration), active: t.active } })
+    }));
+
+    // ---- modals ----
+    const mb = live.find(b => b.id === s.modalBookingId);
+    const modalBooking = mb
+      ? { ...mb, status: mb.cancelled ? 'Cancelled' : 'Confirmed', meet: mb.cancelled ? 'Removed with the calendar event' : 'meet.google.com/qvd-mspt-jrb' }
+      : { type: '', when: '', guest: '', email: '', duration: 0, status: '', note: '', meet: '' };
+    const bookingModalFooter = mb ? R('div', { style: { display: 'flex', gap: 10 } },
+      R(A.Button, { key: 'c', variant: 'ghost', size: 'sm', onClick: () => this.setState({ modal: 'cancel' }) }, 'Cancel Meeting'),
+      R(A.Button, { key: 'j', variant: 'primary', size: 'sm', disabled: mb.cancelled || mb.past }, 'Join Meeting')
+    ) : null;
+    const cancelModalFooter = R('div', { style: { display: 'flex', gap: 10 } },
+      R(A.Button, { key: 'k', variant: 'ghost', size: 'sm', onClick: () => this.setState({ modal: 'booking' }) }, 'Keep it'),
+      R(A.Button, {
+        key: 'd', variant: 'danger', size: 'sm',
+        onClick: () => {
+          const id = s.modalBookingId;
+          this.setState(st => ({ modal: null, cancelledIds: st.cancelledIds.concat(id ? [id] : []) }));
+          this.notify('danger', 'Meeting cancelled', 'The calendar event was removed and the slot is free.');
+        }
+      }, 'Cancel Meeting')
+    );
+    const connectModalFooter = R('div', { style: { display: 'flex', gap: 10 } },
+      R(A.Button, { key: 'l', variant: 'ghost', size: 'sm', onClick: () => this.setState({ modal: null }) }, "I'll do this later"),
+      R(A.Button, { key: 'g', variant: 'primary', size: 'sm', onClick: this.connectCalendar }, 'Allow access')
+    );
+
+    // ---- onboarding ----
+    const step = isOnb ? parseInt(scr.slice(3), 10) : 1;
+    const onbTitles = ['Welcome to MeetUp', 'Connect Google Calendar', 'Create your first meeting', 'When are you free?', "You're ready to meet."];
+    const onbBlurbs = [
+      'Set up your availability and start accepting bookings in minutes.',
+      'MeetUp uses your Google Calendar to avoid double bookings and automatically add new appointments.',
+      'This is what guests will see and book. You can change any of it later.',
+      'Guests will only ever be offered times inside these hours.',
+      'Share your link and let people pick a time that works.'
+    ];
+    const onbBars = [1, 2, 3, 4, 5].map(n => ({
+      key: 'bar' + n,
+      style: 'flex:1;height:3px;border-radius:var(--radius-pill);background:' + (n <= step ? 'var(--blue-300)' : 'rgba(201,225,255,0.18)')
+    }));
+
+    const primaryFor = {
+      1: { label: 'Get Started', variant: 'primary', run: () => this.go('onb2') },
+      2: { label: s.connected ? 'Continue' : 'Connect Google Calendar', variant: s.connected ? 'primary' : 'secondary', run: s.connected ? () => this.go('onb3') : this.connectCalendar },
+      3: { label: 'Continue', variant: 'primary', run: () => this.go('onb4') },
+      4: { label: 'Continue', variant: 'primary', run: () => this.go('onb5') },
+      5: { label: 'Go to Dashboard', variant: 'primary', run: () => this.go('dash') }
+    }[step];
+    const secondaryFor = {
+      2: { label: "I'll do this later", run: () => this.go('onb3') },
+      5: { label: 'View Booking Page', run: () => this.go('book') }
+    }[step];
+
+    // ---- nav ----
+    const navDefs = isAdmin ? [
+      { key: 'admDash', label: 'Dashboard', icon: 'house' },
+      { key: 'admUsers', label: 'Users', icon: 'users' },
+      { key: 'admBookings', label: 'Bookings', icon: 'calendar' },
+      { key: 'admSettings', label: 'Settings', icon: 'gear' }
+    ] : [
+      { key: 'dash', label: 'Dashboard', icon: 'house' },
+      { key: 'meetings', label: 'Bookings', icon: 'calendar', count: emptyDash ? null : (live.filter(b => !b.past).length || null) },
+      { key: 'types', label: 'Meetings', icon: 'list' },
+      { key: 'avail', label: 'Availability', icon: 'clock' },
+      { key: 'settings', label: 'Settings', icon: 'gear' }
+    ];
+    const navItems = navDefs.map(n => ({
+      key: n.key, label: n.label, icon: n.icon,
+      count: n.count == null ? null : this.countPill(n.count),
+      active: scr === n.key || (n.key === 'types' && scr === 'typeEdit')
+        || (n.key === 'admUsers' && scr === 'admUser') || (n.key === 'admBookings' && scr === 'admBooking'),
+      props: { style: { borderRadius: 'var(--radius-pill)' } },
+      go: () => this.go(n.key)
+    }));
+
+    // ---- layout ----
+    const frameStyle = mobile
+      ? 'position:relative;z-index:1;width:390px;margin:0 auto;min-height:100vh;box-shadow:0 0 0 1px rgba(201,225,255,0.18)'
+      : 'position:relative;z-index:1';
+    const shellStyle = mobile
+      ? 'display:flex;flex-direction:column;height:100vh;overflow:hidden'
+      : 'display:flex;align-items:stretch;height:100vh;overflow:hidden';
+    const sidebarStyle = mobile
+      ? 'width:100%;flex-shrink:0'
+      : 'height:100%;flex-shrink:0';
+    const sidebarInnerStyle = mobile
+      ? 'display:flex;align-items:center;gap:6px;overflow-x:auto'
+      : 'display:flex;flex-direction:column;gap:3px;height:100%';
+    const bookGridStyle = mobile
+      ? 'display:flex;flex-direction:column'
+      : 'display:grid;grid-template-columns:minmax(0,320px) minmax(0,1fr)';
+
+    // ---- admin derived ----
+    const suspended = (u) => (u.suspended ? s.reactivated.indexOf(u.id) < 0 : s.suspendedIds.indexOf(u.id) >= 0);
+    const uq = s.userQuery.trim().toLowerCase();
+    const admUsers = this.ADMIN_USERS
+      .filter(u => !uq || (u.name + ' ' + u.email + ' ' + u.username).toLowerCase().indexOf(uq) >= 0)
+      .map(u => ({
+        ...u, id: u.id, status: suspended(u) ? 'Suspended' : 'Active',
+        badgeTone: suspended(u) ? 'soft-danger' : 'soft-success',
+        open: () => this.setState({ screen: 'admUser', admUserId: u.id })
+      }));
+    const au = this.ADMIN_USERS.find(u => u.id === s.admUserId) || this.ADMIN_USERS[0];
+    const auSusp = suspended(au);
+    const admUserView = {
+      name: au.name, status: auSusp ? 'Suspended' : 'Active',
+      badgeTone: auSusp ? 'soft-danger' : 'soft-success',
+      actionLabel: auSusp ? 'Reactivate User' : 'Suspend User',
+      actionVariant: auSusp ? 'secondary' : 'danger',
+      action: () => auSusp
+        ? (this.setState(st => ({ reactivated: st.reactivated.concat([au.id]), suspendedIds: st.suspendedIds.filter(x => x !== au.id) })), this.notify('success', 'Account reactivated', au.name + ' can accept bookings again.'))
+        : this.setState({ modal: 'suspend' }),
+      fields: [
+        { key: 'n', label: 'Name', value: au.name },
+        { key: 'e', label: 'Email', value: au.email },
+        { key: 'u', label: 'Username', value: 'meetup.com/' + au.username },
+        { key: 't', label: 'Timezone', value: au.tz },
+        { key: 'j', label: 'Joined', value: au.joined },
+        { key: 's', label: 'Account status', value: auSusp ? 'Suspended' : 'Active' }
+      ],
+      typesSubtitle: au.types + ' meetings · ' + au.bookings + ' bookings all-time',
+      types: [
+        { key: 'a', name: '30 Minute Consultation', duration: 30, bookings: Math.round(au.bookings * 0.6), state: 'Active', badgeTone: 'soft-success' },
+        { key: 'b', name: 'Intro Call', duration: 15, bookings: Math.round(au.bookings * 0.4), state: au.types > 1 ? 'Active' : 'Disabled', badgeTone: au.types > 1 ? 'soft-success' : 'neutral' }
+      ],
+      bookings: this.ADMIN_BOOKINGS.filter(b => b.host === au.name).concat(this.ADMIN_BOOKINGS.slice(0, 2)).slice(0, 3).map((b, i) => ({
+        key: b.id + i, guest: b.guest, meeting: b.meeting, when: b.date + ' · ' + b.time,
+        status: b.status, badgeTone: b.status === 'Cancelled' ? 'soft-danger' : 'soft-success'
+      }))
+    };
+    const bq = s.bookingQuery.trim().toLowerCase();
+    const admBookings = this.ADMIN_BOOKINGS
+      .filter(b => !bq || (b.host + ' ' + b.guest + ' ' + b.guestEmail + ' ' + b.hostEmail).toLowerCase().indexOf(bq) >= 0)
+      .filter(b => s.admDateFilter === 'all'
+        || (s.admDateFilter === 'upcoming' ? ['Sep 6, 2026', 'Sep 7, 2026'].indexOf(b.date) >= 0 : ['Sep 6, 2026', 'Sep 7, 2026'].indexOf(b.date) < 0))
+      .map(b => ({ ...b, open: () => this.setState({ screen: 'admBooking', admBookingId: b.id }) }));
+    const ab = this.ADMIN_BOOKINGS.find(b => b.id === s.admBookingId) || this.ADMIN_BOOKINGS[0];
+    const admBookingView = {
+      meeting: ab.meeting, status: ab.status, meet: ab.meet,
+      badgeTone: ab.status === 'Cancelled' ? 'soft-danger' : 'soft-success',
+      groups: [
+        { key: 'h', label: 'Host', rows: [{ key: 'n', k: 'Name', v: ab.host }, { key: 'e', k: 'Email', v: ab.hostEmail }] },
+        { key: 'g', label: 'Guest', rows: [{ key: 'n', k: 'Name', v: ab.guest }, { key: 'e', k: 'Email', v: ab.guestEmail }] },
+        { key: 'm', label: 'Meeting', rows: [{ key: 'n', k: 'Name', v: ab.meeting }, { key: 'd', k: 'Duration', v: ab.duration + ' minutes' }] },
+        { key: 's', label: 'Schedule', rows: [{ key: 'd', k: 'Date', v: ab.date }, { key: 't', k: 'Time', v: ab.time }, { key: 'z', k: 'Timezone', v: ab.tz }] },
+        { key: 'v', label: 'Google Meet', rows: [{ key: 'l', k: 'Link', v: ab.meet }] }
+      ]
+    };
+    const suspendPrompt = 'Suspending ' + au.name + " blocks sign-in and stops new bookings. Existing bookings stay on their calendar.";
+    const suspendModalFooter = R('div', { style: { display: 'flex', gap: 10 } },
+      R(A.Button, { key: 'k', variant: 'ghost', size: 'sm', onClick: () => this.setState({ modal: null }) }, 'Keep Active'),
+      R(A.Button, {
+        key: 's', variant: 'danger', size: 'sm',
+        onClick: () => {
+          this.setState(st => ({ modal: null, suspendedIds: st.suspendedIds.concat([au.id]), reactivated: st.reactivated.filter(x => x !== au.id) }));
+          this.notify('danger', 'Account suspended', au.name + ' can no longer accept bookings.');
+        }
+      }, 'Suspend User')
+    );
+
+    const authTitles = { login: 'Sign in to MeetUp', signup: 'Create your account', forgot: 'Reset your password' };
+    const authCtas = { login: 'Sign In', signup: 'Create Account', forgot: 'Send Reset Link' };
+
+    return {
+      // routing
+      screen: scr, isAuth, isOnb, isApp,
+      isLogin: scr === 'login', isSignup: scr === 'signup', isForgot: scr === 'forgot', notForgot: scr !== 'forgot',
+      isOnb2: scr === 'onb2', isOnb3: scr === 'onb3', isOnb4: scr === 'onb4', isOnb5: scr === 'onb5',
+      isDash: scr === 'dash', isMeetings: scr === 'meetings', isTypes: scr === 'types',
+      isTypeEdit: scr === 'typeEdit', isAvail: scr === 'avail', isSettings: scr === 'settings',
+      isBook: scr === 'book', isGuest: scr === 'guest', isConfirm: scr === 'confirm', isCancelled: scr === 'cancelled',
+
+      // chrome
+      viewport: s.viewport,
+      viewportOptions: [{ value: 'desktop', label: 'Desktop' }, { value: 'mobile', label: 'Mobile' }],
+      setViewport: (v) => this.setState({ viewport: v }),
+      screenOptions: Object.keys(this.SCREEN_LABEL).map(k => ({ value: k, label: this.SCREEN_LABEL[k] })),
+      jumpTo: (v) => this.go(v),
+      setTzValue: (v) => this.setState({ tz: v, savedAvail: false }),
+      pickBuffer: (v) => this.setForm('buffer', v),
+      pickNotice: (v) => this.setForm('notice', v),
+      pickWindow: (v) => this.setForm('window', v),
+      prefDuration: s.prefDuration, pickPrefDuration: (v) => this.setState({ prefDuration: v }),
+      prefNotice: s.prefNotice, pickPrefNotice: (v) => this.setState({ prefNotice: v }),
+      admDateFilter: s.admDateFilter, pickAdmDate: (v) => this.setState({ admDateFilter: v }),
+      resetProto: () => this.setState({ screen: 'login', authMode: 'login', connected: false, taken: [], selectedDate: 7, selectedSlot: null, cancelledIds: [], guestName: '', guestEmail: '', modal: null, slotError: false, tab: 'upcoming', tz: 'Asia/Dhaka', userQuery: '', bookingQuery: '', admDateFilter: 'all', suspendedIds: [], reactivated: [], month: 0, selectedMonth: 0, bookingError: false, bookingFailed: false, calAttempts: 0 }),
+      frameStyle, shellStyle, sidebarStyle, sidebarInnerStyle, bookGridStyle,
+      hostPanelStyle: 'padding:34px;display:flex;flex-direction:column;gap:22px;border-' + (mobile ? 'bottom' : 'right') + ':1px solid rgba(201,225,255,0.07)',
+      sidebarWidth: mobile ? '100%' : 244,
+      sidebarLogoStyle: mobile ? 'padding:4px 10px 4px 4px;flex-shrink:0' : 'padding:10px 10px 20px',
+      inkOnAccent: { style: { fontSize: 18, color: 'var(--intent-accent-ink)' } },
+      inkOnDanger: { style: { fontSize: 18, color: 'var(--intent-danger-ink)' } },
+      iconAccent: { style: { fontSize: 13, color: 'var(--accent-green)' } },
+      iconAccentTop: { style: { fontSize: 13, color: 'var(--accent-green)', marginTop: 3 } },
+      iconInteractive18: { style: { fontSize: 18, color: 'var(--icon-interactive)' } },
+      iconInteractive15: { style: { fontSize: 15, color: 'var(--icon-interactive)' } },
+      iconInteractive14: { style: { fontSize: 14, color: 'var(--icon-interactive)' } },
+      sidebarFooterStyle: mobile
+        ? 'display:none'
+        : 'margin-top:12px;padding:8px 8px 8px 10px;border-radius:var(--radius-pill);background:var(--surface-tint);display:flex;align-items:center;gap:10px',
+      sidebarNavProps: { style: mobile
+        ? { width: 'auto', margin: '12px 12px 0', padding: '10px 12px', borderRadius: 18,
+            boxShadow: 'var(--elev-2), inset 0 0 0 1px rgba(201,225,255,0.15)' }
+        : { width: 244, height: 'calc(100% - 84px)', boxSizing: 'border-box', margin: '16px 0 68px 16px',
+            borderRadius: 18, paddingBottom: 14, overflowY: 'auto',
+            boxShadow: 'var(--elev-2), inset 0 0 0 1px rgba(201,225,255,0.15)' } },
+      mainColStyle: mobile
+        ? 'flex:1;min-width:0;height:100%;overflow-y:auto;box-sizing:border-box;padding:20px 20px 90px;position:relative;z-index:1'
+        : 'flex:1;min-width:0;height:100%;overflow-y:auto;box-sizing:border-box;padding:40px 36px 96px;position:relative;z-index:1',
+      noop: () => this.notify('neutral', 'Prototype', 'This action is stubbed in the prototype.'),
+
+      // auth
+      authTitle: authTitles[scr] || '', authCta: authCtas[scr] || '',
+      passHelp: scr === 'signup' ? 'At least 8 characters.' : '',
+      authLoading: s.authLoading,
+      authSwitchLabel: scr === 'signup' ? 'Already have an account?' : 'New to MeetUp?',
+      authSwitchAction: scr === 'signup' ? 'Sign in' : 'Create an account',
+      toggleAuthMode: (e) => { e.preventDefault(); this.go(scr === 'signup' ? 'login' : 'signup'); },
+      goForgot: (e) => { e.preventDefault(); this.go('forgot'); },
+      submitAuth: () => {
+        if (scr === 'forgot') { this.notify('success', 'Check your inbox', 'A reset link is on its way to you.'); this.go('login'); return; }
+        this.setState({ authLoading: true });
+        this.delay(700, () => this.setState({ authLoading: false, screen: scr === 'signup' ? 'onb1' : 'dash' }));
+      },
+      googleAuth: () => { this.setState({ authLoading: true }); this.delay(700, () => this.setState({ authLoading: false, screen: 'onb1' })); },
+      logout: () => this.go('login'),
+
+      // onboarding
+      onbStepLabel: 'Step ' + step + ' of 5',
+      onbBars, onbTitle: onbTitles[step - 1], onbBlurb: onbBlurbs[step - 1],
+      onbPrimaryLabel: primaryFor.label, onbPrimaryVariant: primaryFor.variant, onbPrimary: primaryFor.run,
+      onbHasSecondary: !!secondaryFor, onbSecondaryLabel: secondaryFor ? secondaryFor.label : '', onbSecondary: secondaryFor ? secondaryFor.run : () => {},
+      connecting: s.connecting, calFailed: s.calFailed,
+      calStatusText: s.connecting ? 'Connecting…' : s.connected ? 'Connected as faisal@studioatlas.co' : 'Not connected',
+      calBadgeTone: s.connected ? 'soft-success' : 'neutral',
+      calBadgeIcon: s.connected ? 'circle-check' : null,
+      calBadgeLabel: s.connected ? 'Connected' : 'Disconnected',
+      calDisconnected: !s.connected,
+      calBtnLabel: s.connected ? 'Disconnect' : 'Connect',
+      calBtnVariant: s.connected ? 'outline' : 'primary',
+      toggleCalendar: () => s.connected ? (this.setState({ connected: false }), this.notify('warning', 'Calendar disconnected', 'MeetUp can no longer check for conflicts.')) : this.connectCalendar(),
+      connectAction: R(A.Button, { variant: 'secondary', size: 'sm', onClick: () => this.setState({ modal: 'connect' }) }, 'Connect'),
+      connectNudgeAction: R(A.Button, { variant: 'secondary', size: 'sm', onClick: () => this.go('onb2') }, 'Connect now'),
+
+      // app
+      navItems, upcoming, hasUpcoming: upcoming.length > 0, noUpcoming: upcoming.length === 0,
+      createTypeAction: R(A.Button, { variant: 'accent', icon: 'plus', onClick: () => this.setState({ screen: 'typeEdit', editing: null }) }, 'Create Meeting'),
+      meetingTabs: [
+        { value: 'upcoming', label: this.tabLabel('Upcoming', live.filter(b => !b.past).length, true) },
+        { value: 'past', label: this.tabLabel('Past', past.length, false) }
+      ],
+      tab: s.tab, setTab: (v) => this.setState({ tab: v }), tabRows, tabEmpty: tabRows.length === 0,
+      types, newType: () => this.setState({ screen: 'typeEdit', editing: null, formTouched: false, form: { name: '', desc: '', duration: '30', buffer: '0', notice: '60', window: '30', active: true } }),
+      goTypes: () => this.go('types'),
+      typeCrumbs: [
+        { label: 'Meetings', onClick: (e) => { e.preventDefault(); this.go('types'); } },
+        { label: s.editing ? 'Edit' : 'New' }
+      ],
+      typeEditTitle: s.editing ? 'Edit meeting' : 'Create meeting',
+      saveLabel: s.editing ? 'Save changes' : 'Create meeting',
+
+      // form
+      formName: s.form.name, formDesc: s.form.desc, formDuration: s.form.duration,
+      formBuffer: s.form.buffer, formNotice: s.form.notice, formWindow: s.form.window, formActive: s.form.active,
+      setFormName: (e) => this.setForm('name', e.target.value),
+      setFormDesc: (e) => this.setForm('desc', e.target.value),
+      setFormDuration: (v) => this.setForm('duration', v),
+      setFormBuffer: (e) => this.setForm('buffer', e.target.value),
+      setFormNotice: (e) => this.setForm('notice', e.target.value),
+      setFormWindow: (e) => this.setForm('window', e.target.value),
+      setFormActive: (e) => this.setForm('active', e.target.checked),
+      nameInvalid: s.formTouched && !s.form.name.trim(),
+      nameError: s.formTouched && !s.form.name.trim() ? 'Give the meeting a name guests will recognise.' : '',
+      durationOptions: [{ value: '15', label: '15 min' }, { value: '30', label: '30 min' }, { value: '45', label: '45 min' }, { value: '60', label: '60 min' }],
+      durationSelectOptions: [{ value: '15', label: '15 minutes' }, { value: '30', label: '30 minutes' }, { value: '45', label: '45 minutes' }, { value: '60', label: '60 minutes' }],
+      bufferOptions: [{ value: '0', label: 'None' }, { value: '5', label: '5 minutes' }, { value: '10', label: '10 minutes' }, { value: '15', label: '15 minutes' }],
+      noticeOptions: [{ value: '60', label: '1 hour' }, { value: '120', label: '2 hours' }, { value: '240', label: '4 hours' }, { value: '720', label: '12 hours' }, { value: '1440', label: '24 hours' }],
+      windowOptions: [{ value: '7', label: '7 days' }, { value: '14', label: '14 days' }, { value: '30', label: '30 days' }, { value: '60', label: '60 days' }],
+      saving: s.saving,
+      saveType: () => {
+        if (!s.form.name.trim()) { this.setState({ formTouched: true }); return; }
+        this.setState({ saving: true });
+        this.delay(700, () => { this.setState({ saving: false, screen: 'types' }); this.notify('success', s.editing ? 'Meeting saved' : 'Meeting created', s.form.name); });
+      },
+
+      // availability
+      days, timeOptions: this.TIMES, availSummary,
+      tz: s.tz, tzLabel: this.tzLabelFor(s.tz),
+      tzOptions: this.tzOptionList(),
+      setTz: (e) => { this.setState({ tz: e.target.value, savedAvail: false }); },
+      saveAvail: () => { this.setState({ saving: true }); this.delay(700, () => { this.setState({ saving: false, savedAvail: true }); this.notify('success', 'Availability saved', 'Guests will see these hours from now on.'); }); },
+      availStatus: s.savedAvail ? 'saved' : 'unsaved',
+      availStatusLabel: s.savedAvail ? 'All changes saved' : 'Unsaved changes',
+
+      // public booking
+      weekLabels: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+      calCells: cells, slots, hasSlots: slots.length > 0, noSlots: slots.length === 0,
+      slotHeading: dayOpen ? 'Available times · ' + SM.name + ' ' + s.selectedDate : 'Available times',
+      monthLabel,
+      prevDisabled: s.month === 0,
+      nextDisabled: s.month >= MONTHS.length - 1,
+      prevMonth: () => this.setState({ month: Math.max(0, s.month - 1) }),
+      nextMonth: () => this.setState({ month: Math.min(MONTHS.length - 1, s.month + 1) }),
+      bookingError: s.bookingError,
+      pickAnotherAction: R(A.Button, { variant: 'secondary', size: 'sm', onClick: () => this.setState({ bookingError: false, screen: 'book', selectedSlot: null }) }, 'Pick another time'),
+      slotError: s.slotError,
+      noSlotPicked: !s.selectedSlot,
+      slotCtaHint: s.selectedSlot ? longDate + ' · ' + slotRange : 'Pick a time to continue.',
+      continueToDetails: () => { if (s.selectedSlot) this.setState({ screen: 'guest', guestTouched: false }); },
+      tzNote: 'Times shown in ' + this.tzLabelFor(s.tz),
+      goBook: () => this.setState({ screen: 'book', selectedSlot: null, slotError: false, guestCancelled: false }),
+      backToBook: () => this.go('book'),
+      selectionSummary: slotRange ? longDate + ' · ' + slotRange : longDate,
+      guestName: s.guestName, guestEmail: s.guestEmail,
+      setGuestName: (e) => this.setState({ guestName: e.target.value }),
+      setGuestEmail: (e) => this.setState({ guestEmail: e.target.value }),
+      guestNameInvalid: s.guestTouched && !s.guestName.trim(),
+      guestNameError: s.guestTouched && !s.guestName.trim() ? 'Faisal needs to know who he is meeting.' : '',
+      guestEmailInvalid: s.guestTouched && s.guestEmail.indexOf('@') < 0,
+      guestEmailError: s.guestTouched && s.guestEmail.indexOf('@') < 0 ? 'Enter an email we can send the confirmation to.' : '',
+      booking: s.booking,
+      confirmBooking: () => {
+        if (!s.guestName.trim() || s.guestEmail.indexOf('@') < 0) { this.setState({ guestTouched: true, bookingError: false }); return; }
+        this.setState({ booking: true, bookingError: false });
+        /* 4:30 PM demonstrates the server rejecting a slot taken while the form was open */
+        if (s.selectedSlot === '04:30 PM' && !s.bookingFailed) {
+          this.delay(900, () => {
+            this.setState(st => ({ booking: false, bookingError: true, bookingFailed: true, taken: st.taken.concat(['04:30 PM']) }));
+            this.notify('danger', 'Booking failed', 'That time was taken while you were filling in your details.');
+          });
+          return;
+        }
+        this.delay(900, () => this.setState({ booking: false, screen: 'confirm' }));
+      },
+      confirmWhen: longDate + ' · ' + (slotRange || '3:00 PM – 3:30 PM'),
+      guestEmailShown: s.guestEmail || 'you@company.com',
+      guestCancel: (e) => { e.preventDefault(); this.setState({ screen: 'cancelled', guestCancelled: true }); },
+      cancelledLine: 'Your meeting with Faisal Rahman on ' + longDate + ' is cancelled.',
+
+      // overlays
+      showBookingModal: s.modal === 'booking' && !!mb, modalBooking, bookingModalFooter,
+      showCancelModal: s.modal === 'cancel', cancelModalFooter,
+      cancelPrompt: mb ? 'This cancels ' + mb.type + ' with ' + mb.guest + '.' : 'This cancels the meeting.',
+      showConnectModal: s.modal === 'connect', connectModalFooter,
+      openPassword: () => this.setState({ modal: 'password' }),
+      showPasswordModal: s.modal === 'password',
+      passwordModalFooter: R('div', { style: { display: 'flex', gap: 10 } },
+        R(A.Button, { key: 'c', variant: 'ghost', size: 'sm', onClick: () => this.setState({ modal: null }) }, 'Cancel'),
+        R(A.Button, { key: 'u', variant: 'primary', size: 'sm', onClick: () => { this.setState({ modal: null }); this.notify('success', 'Password updated', 'Use your new password next time you sign in.'); } }, 'Update password')
+      ),
+      openDelete: () => this.setState({ modal: 'delete' }),
+      showDeleteModal: s.modal === 'delete',
+      deleteModalFooter: R('div', { style: { display: 'flex', gap: 10 } },
+        R(A.Button, { key: 'k', variant: 'ghost', size: 'sm', onClick: () => this.setState({ modal: null }) }, 'Keep my account'),
+        R(A.Button, { key: 'd', variant: 'danger', size: 'sm', onClick: () => { this.setState({ modal: null, screen: 'login' }); this.notify('danger', 'Account deleted', 'Your booking page is no longer reachable.'); } }, 'Delete account')
+      ),
+      closeModal: () => this.setState({ modal: null }),
+      hasToast: !!s.toast,
+      toastTone: s.toast ? s.toast.tone : 'neutral',
+      toastTitle: s.toast ? s.toast.title : '',
+      toastText: s.toast ? s.toast.text : '',
+      dismissToast: () => this.setState({ toast: null }),
+
+      // admin
+      isAdmin,
+      isAdmDash: scr === 'admDash', isAdmUsers: scr === 'admUsers', isAdmUser: scr === 'admUser',
+      isAdmBookings: scr === 'admBookings', isAdmBooking: scr === 'admBooking', isAdmSettings: scr === 'admSettings',
+      metrics: [
+        { key: 'u', value: '1,248', label: 'Total Users' },
+        { key: 'b', value: '4,832', label: 'Total Bookings' },
+        { key: 'up', value: '142', label: 'Upcoming Bookings' },
+        { key: 'mt', value: '86', label: 'Meetings' }
+      ],
+      activity: this.ADMIN_ACTIVITY.map(a => ({ ...a, key: a.text })),
+      userSearchProps: { value: s.userQuery, onChange: (e) => this.setState({ userQuery: e.target.value }), onClear: () => this.setState({ userQuery: '' }) },
+      tableProps: { style: { minWidth: 780, whiteSpace: 'nowrap' } },
+      userColumns: this.userColumns(),
+      userRows: admUsers,
+      noUserResults: admUsers.length === 0,
+      hasUserResults: admUsers.length > 0,
+      goAdmUsers: () => this.go('admUsers'),
+      userCrumbs: [
+        { label: 'Users', onClick: (e) => { e.preventDefault(); this.go('admUsers'); } },
+        { label: admUserView.name }
+      ],
+      bookingCrumbs: [
+        { label: 'Bookings', onClick: (e) => { e.preventDefault(); this.go('admBookings'); } },
+        { label: admBookingView.meeting }
+      ],
+      admUser: admUserView,
+      bookingSearchProps: { value: s.bookingQuery, onChange: (e) => this.setState({ bookingQuery: e.target.value }), onClear: () => this.setState({ bookingQuery: '' }) },
+      admDateOptions: [{ value: 'all', label: 'All dates' }, { value: 'upcoming', label: 'Upcoming' }, { value: 'past', label: 'Past' }],
+      admDateProps: { value: s.admDateFilter, onChange: (e) => this.setState({ admDateFilter: e.target.value }) },
+      bookingColumns: this.bookingColumns(),
+      bookingRows: admBookings,
+      noBookingResults: admBookings.length === 0,
+      hasBookingResults: admBookings.length > 0,
+      goAdmBookings: () => this.go('admBookings'),
+      admBooking: admBookingView,
+      copyMeetLink: () => this.notify('success', 'Meet link copied', admBookingView.meet),
+      saveAdmSettings: () => { this.setState({ saving: true }); this.delay(700, () => { this.setState({ saving: false }); this.notify('success', 'Settings saved', 'Platform details updated.'); }); },
+      showSuspendModal: s.modal === 'suspend', suspendModalFooter, suspendPrompt,
+
+      // shared
+      bookingLink: 'meetup.com/faisal',
+      copyLink: () => this.notify('success', 'Booking link copied', 'meetup.com/faisal')
+    };
+  }
+
+  userColumns() {
+    const R = React.createElement;
+    const A = window.AirlyDesignSystem_997ac6 || {};
+    return [
+      { key: 'name', label: 'User', render: (r) => R('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
+        R('span', { key: 'n', style: { fontWeight: 600, color: 'var(--text-primary)' } }, r.name),
+        R('span', { key: 'u', style: { fontSize: 11, color: 'var(--text-tertiary)' } }, '@' + r.username)) },
+      { key: 'email', label: 'Email' },
+      { key: 'types', label: 'Meetings', align: 'right' },
+      { key: 'bookings', label: 'Bookings', align: 'right' },
+      { key: 'status', label: 'Status', render: (r) => R(A.Badge, { tone: r.badgeTone, size: 'sm' }, r.status) },
+      { key: 'joined', label: 'Joined' },
+      { key: 'action', label: '', align: 'right', render: (r) => R(A.Button, { variant: 'ghost', size: 'xs', onClick: r.open }, 'View') }
+    ];
+  }
+
+  bookingColumns() {
+    const R = React.createElement;
+    const A = window.AirlyDesignSystem_997ac6 || {};
+    return [
+      { key: 'host', label: 'Host', render: (r) => R('span', { style: { fontWeight: 600, color: 'var(--text-primary)' } }, r.host) },
+      { key: 'guest', label: 'Guest', render: (r) => R('div', { style: { display: 'flex', flexDirection: 'column', gap: 2 } },
+        R('span', { key: 'g' }, r.guest),
+        R('span', { key: 'e', style: { fontSize: 11, color: 'var(--text-tertiary)' } }, r.guestEmail)) },
+      { key: 'meeting', label: 'Meeting' },
+      { key: 'date', label: 'Date' },
+      { key: 'time', label: 'Time' },
+      { key: 'status', label: 'Status', render: (r) => R(A.Badge, { tone: r.status === 'Cancelled' ? 'soft-danger' : 'soft-success', size: 'sm' }, r.status) },
+      { key: 'action', label: '', align: 'right', render: (r) => R(A.Button, { variant: 'ghost', size: 'xs', onClick: r.open }, 'View') }
+    ];
+  }
+
+  countPill(count) {
+    return React.createElement('span', {
+      style: {
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        minWidth: 20, height: 18, padding: '0 6px', borderRadius: 'var(--radius-pill)',
+        background: 'var(--blue-50)', color: 'var(--text-on-light)',
+        fontSize: 11, fontWeight: 600, lineHeight: 1
+      }
+    }, count);
+  }
+
+  tabLabel(text, count, strong) {
+    const R = React.createElement;
+    return R('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 8 } },
+      R('span', { key: 't' }, text),
+      R('span', {
+        key: 'c',
+        style: {
+          minWidth: 20, height: 18, padding: '0 6px', borderRadius: 'var(--radius-pill)',
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 11, fontWeight: 600, lineHeight: 1,
+          background: strong ? 'var(--blue-50)' : 'var(--surface-tint)',
+          color: strong ? 'var(--text-on-light)' : 'var(--text-secondary)'
+        }
+      }, count)
+    );
+  }
+
+  setForm = (k, v) => this.setState(st => ({ form: { ...st.form, [k]: v } }));
+
+  connectCalendar = () => {
+    this.setState({ connecting: true, calFailed: false, modal: null });
+    const shouldFail = this.props.calendarFails === true && this.state.calAttempts === 0;
+    this.delay(1200, () => {
+      if (shouldFail) {
+        this.setState(st => ({ connecting: false, calFailed: true, calAttempts: st.calAttempts + 1 }));
+        this.notify('danger', "Couldn't connect to Google", 'Google didn\u2019t confirm the permission. Try again.');
+        return;
+      }
+      this.setState(st => ({ connecting: false, connected: true, calFailed: false, calAttempts: st.calAttempts + 1 }));
+      this.notify('success', 'Google Calendar connected', 'MeetUp will check this calendar before offering times.');
+    });
+  };
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="apple-touch-icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&amp;family=DM+Mono:wght@400;500&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<link rel="stylesheet" href="_ds/airly-fairytale-design-system-997ac652-003b-441a-a309-9d3abea33b6e/tokens/fonts.css">
+<style>
+  :root {
+    --ground: #E7E4DC; --surface: #FFFFFF; --fill: #F2F1EC; --fill-2: #EAE8E1;
+    --line: #E0DDD4; --line-soft: #EDEBE4; --line-strong: #CFCBC0;
+    --ink: #1A1917; --ink-2: #575550; --ink-3: #66635C;
+    --accent: #14554A; --accent-2: #0E4038; --accent-soft: #E4EDEA; --accent-line: #C2D6D0;
+    --shot: 0 1px 2px rgba(26,25,23,0.05), 0 22px 44px -18px rgba(26,25,23,0.3);
+    --fa: "Font Awesome 6 Sharp";
+    --serif: "Instrument Serif", Georgia, serif;
+    --mono: "DM Mono", ui-monospace, monospace;
+  }
+  html, body { margin: 0; background: var(--ground); }
+  body { font-family: 'DM Sans', system-ui, -apple-system, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+  a { color: var(--ink); text-decoration: none; font-weight: 500; }
+  a:hover { color: var(--accent); }
+  img { display: block; max-width: 100%; }
+  @keyframes mu-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--ground);display:flex;justify-content:center">
+  <div style="width:100%;max-width:440px;min-width:0;background:var(--ground);display:flex;flex-direction:column;position:relative">
+
+    <!-- ── top bar ── -->
+    <div style="position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;padding:12px 20px;background:rgba(231,228,220,0.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)">
+      <img src="assets/meetrao-logo.svg" alt="Meetrao" style="height:19px;width:auto;flex:none">
+      <a href="Meetrao.dc.html#login" style="margin-left:auto;display:inline-flex;align-items:center;min-height:44px;padding:0 12px;font-size:13.5px;color:var(--ink-2)">Log in</a>
+      <a href="Meetrao.dc.html#signup" style="display:inline-flex;align-items:center;min-height:44px;padding:0 15px;border-radius:7px;background:var(--accent);color:#fff;font-size:13.5px;font-weight:600;flex:none" style-hover="background:var(--accent-2);color:#fff">Sign up</a>
+    </div>
+
+    <!-- ── hero ── -->
+    <section style="padding:34px 20px 0;display:flex;flex-direction:column;gap:18px">
+      
+
+      <h1 style="margin:0;font-family:var(--serif);font-size:clamp(40px,11.5vw,50px);font-weight:400;line-height:0.98;letter-spacing:-0.02em;color:var(--ink);text-wrap:balance">Stop asking “what time works for you?”</h1>
+
+      <p style="margin:0;font-size:15px;line-height:1.55;color:var(--ink-2);text-wrap:pretty">Share one link. Meetrao reads your calendar, offers only the times you are genuinely free, and puts a Google Meet link on every booking.</p>
+
+      <div style="display:flex;flex-direction:column;gap:9px;padding-top:2px">
+        <a href="Meetrao.dc.html#signup" style="display:flex;align-items:center;justify-content:center;gap:9px;height:50px;border-radius:8px;background:var(--accent);color:#fff;font-size:15px;font-weight:600" style-hover="background:var(--accent-2);color:#fff">
+          Create your free account
+          <span style="font-family:var(--fa);font-weight:300;font-size:11px"></span>
+        </a>
+        <a href="Meetrao.dc.html#book" style="display:flex;align-items:center;justify-content:center;gap:9px;height:50px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink);font-size:15px;font-weight:600" style-hover="background:var(--fill);color:var(--ink)">
+          <span style="font-family:var(--fa);font-weight:300;font-size:13px"></span>
+          See a live booking page
+        </a>
+      </div>
+
+      <span style="font-size:12.5px;line-height:1.5;color:var(--ink-3)">No credit card. Two minutes to set up. Your link looks like <span style="font-family:var(--mono);color:var(--ink-2)">meetrao.com/you</span></span>
+
+      <div style="position:relative;margin-top:12px">
+        <div style="position:absolute;left:50%;top:6%;transform:translateX(-50%);width:86%;height:64%;background:var(--accent);opacity:0.13;filter:blur(64px);border-radius:50%;pointer-events:none"></div>
+        <div style="{{ shotFrameStyle }}">
+          <sc-if value="{{ heroIsBooking }}" hint-placeholder-val="{{ true }}">
+            <img src="assets/m-booking.png" alt="The Meetrao booking page on a phone: pick a date, then a time" style="width:100%;height:auto">
+          </sc-if>
+          <sc-if value="{{ heroIsDashboard }}" hint-placeholder-val="{{ false }}">
+            <img src="assets/m-dashboard.png" alt="The Meetrao dashboard on a phone: today and later this week" style="width:100%;height:auto">
+          </sc-if>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── proof ── -->
+    <section style="margin-top:34px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--fill);padding:16px 20px">
+      <div style="display:grid;grid-template-columns:1fr;gap:11px">
+        <sc-for list="{{ proofPoints }}" as="p" hint-placeholder-count="4">
+          <span style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--ink-2)">
+            <span style="font-family:var(--fa);font-weight:900;font-size:9px;color:var(--accent);flex:none"></span>{{ p.text }}
+          </span>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ── features ── -->
+    <section id="features" style="padding:44px 20px 0;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">What you get</span>
+        <h2 style="margin:0;font-family:var(--serif);font-size:clamp(28px,7.6vw,34px);font-weight:400;line-height:1.06;letter-spacing:-0.016em;color:var(--ink);text-wrap:balance">Scheduling that respects the calendar you already keep.</h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:1px;border:1px solid var(--line);border-radius:12px;background:var(--line);overflow:hidden">
+        <sc-for list="{{ features }}" as="f" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:10px;padding:22px 20px;background:var(--surface)">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;background:var(--accent-soft);color:var(--accent);font-family:var(--fa);font-weight:300;font-size:15px;flex:none">{{ f.glyph }}</span>
+            <span style="font-size:15.5px;font-weight:600;letter-spacing:-0.005em;color:var(--ink)">{{ f.title }}</span>
+            <span style="font-size:13.5px;line-height:1.55;color:var(--ink-2);text-wrap:pretty">{{ f.text }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ── availability ── -->
+    <section style="padding:46px 20px 0;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">Availability</span>
+        <h3 style="margin:0;font-family:var(--serif);font-size:clamp(25px,6.8vw,31px);font-weight:400;line-height:1.08;letter-spacing:-0.014em;color:var(--ink);text-wrap:balance">Set your hours once. Answer no more emails about it.</h3>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Tick the days you work, add the ranges you want, and Meetrao converts every slot into your guest’s own timezone.</p>
+      </div>
+      <ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:9px">
+        <sc-for list="{{ availPoints }}" as="p" hint-placeholder-count="3">
+          <li style="display:flex;gap:10px;align-items:flex-start">
+            <span style="font-family:var(--fa);font-weight:900;font-size:10px;color:var(--accent);flex:none;margin-top:4px"></span>
+            <span style="font-size:13.5px;line-height:1.55;color:var(--ink-2)">{{ p.text }}</span>
+          </li>
+        </sc-for>
+      </ul>
+      <div style="{{ shotFrameStyle }}">
+        <img src="assets/m-availability.png" alt="Availability on a phone: day rows with time ranges" style="width:100%;height:auto">
+      </div>
+    </section>
+
+    <!-- ── dashboard ── -->
+    <section style="padding:46px 20px 0;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">Your day</span>
+        <h3 style="margin:0;font-family:var(--serif);font-size:clamp(25px,6.8vw,31px);font-weight:400;line-height:1.08;letter-spacing:-0.014em;color:var(--ink);text-wrap:balance">Open it once in the morning and you are done.</h3>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Today first, this week underneath, and a Join button that goes straight into the call.</p>
+      </div>
+      <div style="{{ shotFrameStyle }}">
+        <img src="assets/m-dashboard.png" alt="Meetrao dashboard on a phone, showing today and later this week" style="width:100%;height:auto">
+      </div>
+    </section>
+
+    <!-- ── confirmation ── -->
+    <section style="padding:46px 20px 0;display:flex;flex-direction:column;gap:16px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">The booking moment</span>
+        <h3 style="margin:0;font-family:var(--serif);font-size:clamp(25px,6.8vw,31px);font-weight:400;line-height:1.08;letter-spacing:-0.014em;color:var(--ink);text-wrap:balance">Two taps and a confirmation they can trust.</h3>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Name, email, done — the invite lands with the Meet link already in it.</p>
+      </div>
+      <div style="{{ shotFrameStyle }}">
+        <img src="assets/m-confirm.png" alt="Booking confirmed on a phone, with a Join Google Meet button" style="width:100%;height:auto">
+      </div>
+    </section>
+
+    <!-- ── how it works ── -->
+    <section id="how" style="padding:46px 20px 0;display:flex;flex-direction:column;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">How it works</span>
+        <h2 style="margin:0;font-family:var(--serif);font-size:clamp(28px,7.6vw,34px);font-weight:400;line-height:1.06;letter-spacing:-0.016em;color:var(--ink)">Three steps, then never again.</h2>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:8px;padding-top:14px;border-top:2px solid var(--accent)">
+            <span style="font-family:var(--mono);font-size:11px;letter-spacing:0.08em;color:var(--accent)">{{ s.n }}</span>
+            <span style="font-size:15.5px;font-weight:600;letter-spacing:-0.008em;color:var(--ink)">{{ s.title }}</span>
+            <span style="font-size:13.5px;line-height:1.55;color:var(--ink-2);text-wrap:pretty">{{ s.text }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ── guest chips ── -->
+    <section id="guest" style="padding:44px 20px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">For your guests</span>
+        <h3 style="margin:0;font-family:var(--serif);font-size:clamp(25px,6.8vw,31px);font-weight:400;line-height:1.08;letter-spacing:-0.014em;color:var(--ink);text-wrap:balance">No account. No download. No timezone maths.</h3>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px">
+        <sc-for list="{{ guestChips }}" as="c" hint-placeholder-count="4">
+          <span style="display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface);font-size:12.5px;font-weight:500;color:var(--ink-2)">{{ c.text }}</span>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ── CTA ── -->
+    <section style="padding:46px 20px 0">
+      <div style="{{ ctaStyle }}">
+        <h2 style="margin:0;font-family:var(--serif);font-size:clamp(28px,7.6vw,34px);font-weight:400;line-height:1.05;letter-spacing:-0.016em;color:#fff;text-wrap:balance">Your calendar already knows when you are free.</h2>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:rgba(255,255,255,0.72);text-wrap:pretty">Let it do the scheduling. Claim your link and send it to the next person who asks.</p>
+        <a href="Meetrao.dc.html#signup" style="display:flex;align-items:center;justify-content:center;gap:9px;height:48px;border-radius:8px;background:#fff;color:var(--accent);font-size:14.5px;font-weight:600;margin-top:4px" style-hover="opacity:0.9;color:var(--accent)">
+          Get started free
+          <span style="font-family:var(--fa);font-weight:300;font-size:11px"></span>
+        </a>
+      </div>
+    </section>
+
+    <!-- ── footer ── -->
+    <footer style="padding:28px 20px 26px;display:flex;flex-direction:column;gap:16px">
+      <img src="assets/meetrao-logo.svg" alt="Meetrao" style="height:17px;width:auto;align-self:flex-start">
+      <div style="display:flex;flex-wrap:wrap;gap:4px 22px;margin:-13px 0">
+        <a href="#" style="display:inline-flex;align-items:center;min-height:44px;font-size:12.5px;color:var(--ink-2)">Privacy</a>
+        <a href="#" style="display:inline-flex;align-items:center;min-height:44px;font-size:12.5px;color:var(--ink-2)">Terms</a>
+        <a href="Meetrao.dc.html#login" style="display:inline-flex;align-items:center;min-height:44px;font-size:12.5px;color:var(--ink-2)">Log in</a>
+      </div>
+      <span style="font-size:12.5px;color:var(--ink-3)">© 2026 Meetrao</span>
+    </footer>
+
+    <!-- ── sticky action bar ── -->
+    <sc-if value="{{ showSticky }}" hint-placeholder-val="{{ true }}">
+      <div style="position:sticky;bottom:0;z-index:45;display:flex;align-items:center;gap:12px;padding:10px 20px 12px;background:rgba(231,228,220,0.94);backdrop-filter:blur(12px);border-top:1px solid var(--line)">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+          <span style="font-size:13px;font-weight:600;color:var(--ink)">Claim your link</span>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--ink-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">meetrao.com/you</span>
+        </div>
+        <a href="Meetrao.dc.html#signup" style="display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 18px;border-radius:8px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;flex:none" style-hover="background:var(--accent-2);color:#fff">Get started</a>
+      </div>
+    </sc-if>
+
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:430,&quot;height&quot;:900},&quot;heroShot&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;booking&quot;,&quot;dashboard&quot;],&quot;default&quot;:&quot;booking&quot;,&quot;tsType&quot;:&quot;'booking' | 'dashboard'&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;ctaTone&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;green&quot;,&quot;ink&quot;],&quot;default&quot;:&quot;green&quot;,&quot;tsType&quot;:&quot;'green' | 'ink'&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;stickyCta&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Layout&quot;},&quot;roundShots&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Layout&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const shot = p.heroShot || 'booking';
+    const ctaGreen = (p.ctaTone || 'green') === 'green';
+
+    const frame = 'position:relative;border:1px solid var(--line-strong);border-radius:'
+      + (p.roundShots === false ? '12px' : '20px')
+      + ';background:var(--surface);box-shadow:var(--shot);overflow:hidden;animation:mu-up 460ms cubic-bezier(.22,1,.36,1) both';
+
+    return {
+      heroIsBooking: shot !== 'dashboard',
+      heroIsDashboard: shot === 'dashboard',
+      shotFrameStyle: frame,
+      availPoints: [
+        { key: 'a', text: 'Several ranges per day, for a real lunch break.' },
+        { key: 'b', text: 'Turn a day off without deleting its hours.' },
+        { key: 'c', text: 'Ninety-four timezones, correct through DST.' }
+      ],
+      showSticky: p.stickyCta !== false,
+      proofPoints: [
+        { key: 'a', text: 'No double bookings' },
+        { key: 'b', text: 'Google Meet on every booking' },
+        { key: 'c', text: 'Every timezone converted' },
+        { key: 'd', text: 'One link, all your meetings' }
+      ],
+      features: [
+        { key: 'a', glyph: '\uf133', title: 'Conflict-aware by default', text: 'Meetrao checks your Google Calendar before it offers a slot, so nothing lands on top of what you already have.' },
+        { key: 'b', glyph: '\uf03d', title: 'Meet links, automatically', text: 'Every confirmed booking creates a calendar event with its own Google Meet link, for you and your guest.' },
+        { key: 'c', glyph: '\uf1de', title: 'Rules that protect your day', text: 'Buffers between calls, a minimum notice period, and a booking window — so nobody grabs the next ten minutes.' }
+      ],
+      steps: [
+        { key: '1', n: '01', title: 'Connect your calendar', text: 'One Google permission. Meetrao reads your busy times and nothing else.' },
+        { key: '2', n: '02', title: 'Describe one meeting', text: 'A name, a length, and the hours you are free. That is the whole setup.' },
+        { key: '3', n: '03', title: 'Send the link', text: 'Your guest picks from the times that are actually open. The invite writes itself.' }
+      ],
+      guestChips: [
+        { key: 'a', text: 'No sign-up' },
+        { key: 'b', text: 'Add to Google Calendar' },
+        { key: 'c', text: 'Download .ics' },
+        { key: 'd', text: 'Cancel in one click' }
+      ],
+      ctaStyle: 'display:flex;flex-direction:column;gap:11px;padding:28px 22px 26px;border-radius:14px;background:'
+        + (ctaGreen ? 'var(--accent)' : '#1A1917')
+    };
+  }
+}
+</script>
+</body>
+</html>
