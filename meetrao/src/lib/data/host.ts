@@ -43,30 +43,64 @@ export async function requireAdmin(): Promise<Profile> {
   return profile;
 }
 
+/**
+ * Every query below filters by the signed-in user EXPLICITLY, rather than
+ * leaning on row level security to do the scoping.
+ *
+ * That is not belt-and-braces, it is load-bearing. Admins hold a second,
+ * platform-wide SELECT policy on these tables (`meeting_types_select_admin`
+ * and friends, migration 0003) so the /admin area can read across accounts.
+ * Postgres ORs policies together, so for an admin an unfiltered select returns
+ * EVERY host's rows — their own Meetings, Bookings and Availability pages would
+ * quietly fill up with other people's data, guest names and addresses included.
+ *
+ * The rule for this file: it serves the *host* surface, so it always says whose
+ * rows it wants. Cross-account reads belong in the admin data layer.
+ */
+async function currentUserId(): Promise<string | null> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
+}
+
 export const getMeetingTypes = cache(async (): Promise<MeetingType[]> => {
+  const userId = await currentUserId();
+  if (!userId) return [];
+
   const supabase = await createClient();
   const { data } = await supabase
     .from("meeting_types")
     .select("*")
+    .eq("user_id", userId)
     .order("created_at", { ascending: true });
   return data ?? [];
 });
 
 export const getAvailability = cache(async (): Promise<AvailabilityRule[]> => {
+  const userId = await currentUserId();
+  if (!userId) return [];
+
   const supabase = await createClient();
   const { data } = await supabase
     .from("availability_rules")
     .select("*")
+    .eq("user_id", userId)
     .order("weekday", { ascending: true })
     .order("start_minute", { ascending: true });
   return data ?? [];
 });
 
 export const getBookings = cache(async (): Promise<Booking[]> => {
+  const userId = await currentUserId();
+  if (!userId) return [];
+
   const supabase = await createClient();
   const { data } = await supabase
     .from("bookings")
     .select("*")
+    .eq("host_id", userId)
     .order("starts_at", { ascending: true });
   return data ?? [];
 });
