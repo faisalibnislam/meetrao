@@ -42,14 +42,15 @@ the one row:
 delete from auth.users where email = 'demo@meetrao.app';
 ```
 
-### Two things only you can do
+Both Supabase keys are already set. The only thing still outstanding is
+**Google Calendar** (optional) — see [below](#setting-up-google-calendar).
+Without it hosts are not conflict-checked and bookings get no Meet link; the
+dashboard says so in an amber banner. Everything else, including completing a
+booking, works now.
 
-1. **`SUPABASE_SERVICE_ROLE_KEY`** — dashboard → Project Settings → API keys →
-   `service_role`. Paste it into `.env.local`. Until then every screen renders
-   and public booking pages load, but nobody can complete a booking.
-2. **Google Calendar** (optional) — see [below](#setting-up-google-calendar).
-   Without it hosts are not conflict-checked and bookings get no Meet link; the
-   dashboard says so in an amber banner.
+> Supabase's newer key format is what this project uses:
+> `sb_publishable_...` in place of the anon JWT and `sb_secret_...` in place of
+> `service_role`. Legacy JWTs work too — both map to the same Postgres roles.
 
 Also worth doing in the Supabase dashboard: **Auth → Providers → Email →
 Confirm email: off**, so the design's `signup → onboarding` flow works as drawn.
