@@ -111,6 +111,39 @@ update public.profiles set is_admin = true where username = 'you';
 
 ---
 
+## Deploying
+
+The app lives in the `meetrao/` subdirectory of this repository, so whatever
+host you use must be pointed at it — on Vercel that is **Settings → General →
+Root Directory: `meetrao`**. Framework detection and the build command are
+correct as-is.
+
+Only one environment variable has to be set by hand:
+
+| Variable | Where |
+| --- | --- |
+| `SUPABASE_SERVICE_ROLE_KEY` | the host's env settings, **secret**, all environments |
+
+The two public Supabase values and the demo username are committed in
+`.env.production`; they are safe there because they are `NEXT_PUBLIC_` values
+that ship to the browser anyway. The service-role key is not, and must never be
+given a `NEXT_PUBLIC_` prefix — it bypasses every row-level policy.
+
+`NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_BOOKING_HOST` are deliberately unset in
+production. `src/lib/env.ts` falls back to
+`NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL`, so the OAuth redirect and the
+booking links follow the deployment without a rebuild. Set them explicitly once
+a custom domain is attached.
+
+Then, with the production domain in hand:
+
+1. **Supabase → Auth → URL Configuration** — set the Site URL and add
+   `<domain>/auth/callback` to the redirect allow-list.
+2. **Google Cloud console** — add `<domain>/api/google/callback` as an
+   authorised redirect URI (see the next section).
+
+---
+
 ## Setting up Google Calendar
 
 Calendar access is a **separate OAuth grant** from "Sign in with Google".
