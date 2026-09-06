@@ -19,7 +19,7 @@ import { detectTimezone, timezoneOptions } from "@/lib/timezones";
 import { useHydrated } from "@/lib/use-hydrated";
 import { completeOnboarding, updateTimezone } from "@/lib/actions/profile";
 import { createMeetingType, updateMeetingType } from "@/lib/actions/meetings";
-import { calendarFailure } from "@/lib/google/failure";
+import { calendarFailure, calendarUnconfigured } from "@/lib/google/failure";
 
 const CALENDAR_REASONS = [
   "See when you are busy, so guests are never offered a time you cannot make.",
@@ -56,7 +56,8 @@ export function StepCalendar({
   reason?: string;
 }) {
   const failure = calendarFailure(status, reason);
-  const unconfigured = status === "unconfigured";
+  const unconfigured =
+    status === "unconfigured" ? calendarUnconfigured(reason) : null;
 
   return (
     <StepCard
@@ -129,8 +130,7 @@ export function StepCalendar({
               className="mt-[2px] text-amber"
             />
             <span className="text-[12.5px] leading-[1.5] text-amber-ink">
-              Google Calendar is not configured on this deployment. Add
-              GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, then try again.
+              {unconfigured}
             </span>
           </div>
         ) : null}

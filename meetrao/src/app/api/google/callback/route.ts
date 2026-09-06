@@ -1,6 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
-import { siteUrl } from "@/lib/env";
+import { hasServiceRole, siteUrl } from "@/lib/env";
 import { exchangeCode } from "@/lib/google/oauth";
 import { saveConnection } from "@/lib/google/calendar";
 import { createClient } from "@/lib/supabase/server";
@@ -84,6 +84,16 @@ export async function GET(request: NextRequest) {
         userId: user.id,
       });
       return finish(returnPath, "norefresh");
+    }
+
+    // The connect route refuses to start without this, but a key removed
+    // mid-flow would otherwise surface as an unexplained "something went
+    // wrong" after the host has already granted access.
+    if (!hasServiceRole()) {
+      console.error(
+        "[google/callback] SUPABASE_SERVICE_ROLE_KEY is not set; cannot store the connection",
+      );
+      return finish(returnPath, "unconfigured", "storage");
     }
 
     await saveConnection(user.id, tokens);

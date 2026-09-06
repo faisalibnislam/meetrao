@@ -11,6 +11,22 @@
  */
 export type CalendarFailure = { title: string; body: string };
 
+/**
+ * The deployment is missing something, as opposed to the host doing something
+ * wrong. Rendered amber rather than red: nothing the host can fix.
+ *
+ * Two different things can be missing, and they fail at opposite ends of the
+ * flow — the OAuth client before the host ever reaches Google, the service-role
+ * key only when the returned tokens are saved. Naming which one is missing is
+ * the whole point of this message.
+ */
+export function calendarUnconfigured(reason?: string): string | null {
+  if (reason === "storage") {
+    return "Google Calendar can't be stored on this deployment: SUPABASE_SERVICE_ROLE_KEY is not set. Calendar tokens live behind the service role, so the connection cannot be saved without it.";
+  }
+  return "Google Calendar is not configured on this deployment. Add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET, then try again.";
+}
+
 export function calendarFailure(
   status: string | undefined,
   reason?: string,

@@ -88,9 +88,26 @@ standing up a fresh project.
    handled.
 4. **Auth → URL Configuration**: add `<site>/auth/callback` to the redirect
    allow-list.
-5. To sign in with Google, enable the Google provider under **Auth → Providers**
-   and give it its own OAuth client. This is *separate* from calendar access —
-   see below.
+5. **Auth → Providers → Google**: off by default. While it is off, the "Sign in
+   with Google" button sends the browser to GoTrue, which answers with raw JSON:
+
+   ```json
+   {"code":400,"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}
+   ```
+
+   That error comes from Supabase, not from this app, and no application code
+   can intercept it — the browser has already left the site by then. Enable the
+   provider and paste in a client ID and secret.
+
+   Sign-in is a *separate* grant from calendar access, but one Google Cloud
+   OAuth client can serve both: add Supabase's own callback
+
+   ```
+   https://<project-ref>.supabase.co/auth/v1/callback
+   ```
+
+   to that client's authorised redirect URIs, alongside the two Meetrao ones in
+   [Setting up Google Calendar](#setting-up-google-calendar).
 
 Optionally run `supabase/seed.sql` for the demo host described in
 [Quick start](#quick-start).

@@ -12,7 +12,7 @@ import {
 import { requireProfile } from "@/lib/data/host";
 import { getConnectionSummary } from "@/lib/google/calendar";
 import { publicEnv } from "@/lib/env";
-import { calendarFailure } from "@/lib/google/failure";
+import { calendarFailure, calendarUnconfigured } from "@/lib/google/failure";
 import { Icon } from "@/components/ui/icon";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -95,8 +95,23 @@ async function CalendarSettings({
   // /api/google/callback returns here by default, so this is where most
   // connection failures actually land.
   const failure = calendarFailure(status, reason);
+  const unconfigured =
+    status === "unconfigured" ? calendarUnconfigured(reason) : null;
   return (
     <>
+      {unconfigured ? (
+        <div className="flex gap-[11px] rounded-[8px] border border-amber-line bg-amber-soft px-[14px] py-[12px]">
+          <Icon
+            name="triangleExclamation"
+            weight={900}
+            size={13}
+            className="mt-[2px] text-amber"
+          />
+          <span className="text-[12.5px] leading-[1.5] text-amber-ink">
+            {unconfigured}
+          </span>
+        </div>
+      ) : null}
       {failure ? (
         <div className="flex gap-[11px] rounded-[8px] border border-red-line bg-red-soft px-[14px] py-[12px]">
           <Icon
