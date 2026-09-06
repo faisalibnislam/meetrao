@@ -13,13 +13,48 @@ function required(value: string | undefined, name: string): string {
   return value;
 }
 
+/**
+ * The deployment's own origin.
+ *
+ * `NEXT_PUBLIC_SITE_URL` wins when set — needed for a custom domain, since the
+ * Google OAuth redirect URI has to match it byte for byte. Otherwise fall back
+ * to the stable production domain Vercel injects at build time, which avoids a
+ * chicken-and-egg problem: the URL does not exist until the first deploy, but
+ * `NEXT_PUBLIC_*` values are inlined during the build.
+ */
+function resolveSiteUrl(): string {
+  const explicit = process.env.NEXT_PUBLIC_SITE_URL;
+  if (explicit) return explicit.replace(/\/$/, "");
+
+  const vercel = process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL;
+  if (vercel) return `https://${vercel}`;
+
+  return "http://localhost:3000";
+}
+
+/** "https://example.com/" → "example.com". Never throws on a malformed value. */
+function hostOf(url: string): string {
+  try {
+    return new URL(url).host;
+  } catch {
+    return url.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+  }
+}
+
 export const publicEnv = {
   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
   supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
   /** Absolute origin, used to build OAuth redirect URIs and booking links. */
-  siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  /** Host shown in booking links, e.g. "meetrao.com/faisal". */
-  bookingHost: process.env.NEXT_PUBLIC_BOOKING_HOST ?? "meetrao.com",
+  siteUrl: resolveSiteUrl(),
+  /**
+   * Host shown in booking links, e.g. "meetrao.com/faisal".
+   *
+   * Defaults to this deployment's own host rather than a hard-coded brand
+   * domain — the Copy link button puts this on the clipboard, so a fixed
+   * "meetrao.com" would hand people a link to a site that is not this one.
+   * Set it explicitly only once a real domain actually serves the app.
+   */
+  bookingHost: process.env.NEXT_PUBLIC_BOOKING_HOST || hostOf(resolveSiteUrl()),
   /**
    * Username of a public demo account. When set, the landing page's secondary
    * CTA points at a real booking page; when not, it falls back to the "How it
