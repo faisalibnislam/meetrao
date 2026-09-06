@@ -3,7 +3,7 @@ import "server-only";
 import { createServerClient } from "@supabase/ssr";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
-import { requirePublicEnv, serverEnv } from "@/lib/env";
+import { requirePublicEnv, serviceRoleKey } from "@/lib/env";
 import type { Database } from "./database.types";
 
 /**
@@ -47,7 +47,7 @@ export async function createClient() {
  */
 export function createAdminClient() {
   const { supabaseUrl } = requirePublicEnv();
-  const { supabaseServiceRoleKey } = serverEnv();
+  const supabaseServiceRoleKey = serviceRoleKey();
 
   return createSupabaseClient<Database>(supabaseUrl, supabaseServiceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },

@@ -14,22 +14,63 @@ Built from the Claude Design handoff in `../project` — see
 
 ## Quick start
 
-```bash
-cp .env.example .env.local     # fill in the values — see below
-npm install
-npm run dev                    # http://localhost:3000
-```
+`.env.local` is already written and the **Meetrao** Supabase project already has
+the migrations and a demo host applied. So:
 
 ```bash
-npm run build       # production build
-npm test            # slot-engine unit tests
-npm run typecheck   # tsc --noEmit
-npm run lint        # eslint
+npm install
+npm run setup:check   # says exactly what is still missing, and what it costs
+npm run dev           # http://localhost:3000
+```
+
+Sign in as the seeded demo host:
+
+| | |
+| --- | --- |
+| email | `demo@meetrao.app` |
+| password | `meetrao-demo-2026` |
+| booking page | `/faisal` |
+
+It has three meeting types (one inactive), a full week of availability, and
+three bookings, so the dashboard, Bookings, Meetings and the public booking page
+all have something in them. It is also flagged `is_admin`, so `/admin` works.
+
+**Delete it before this project holds anything real** — everything cascades from
+the one row:
+
+```sql
+delete from auth.users where email = 'demo@meetrao.app';
+```
+
+### Two things only you can do
+
+1. **`SUPABASE_SERVICE_ROLE_KEY`** — dashboard → Project Settings → API keys →
+   `service_role`. Paste it into `.env.local`. Until then every screen renders
+   and public booking pages load, but nobody can complete a booking.
+2. **Google Calendar** (optional) — see [below](#setting-up-google-calendar).
+   Without it hosts are not conflict-checked and bookings get no Meet link; the
+   dashboard says so in an amber banner.
+
+Also worth doing in the Supabase dashboard: **Auth → Providers → Email →
+Confirm email: off**, so the design's `signup → onboarding` flow works as drawn.
+Left on, signup shows a "check your inbox" notice instead — both paths are
+handled.
+
+```bash
+npm run build        # production build
+npm test             # slot-engine unit tests
+npm run typecheck    # tsc --noEmit
+npm run lint         # eslint
+npm run setup:check  # configuration doctor
 ```
 
 ---
 
 ## Setting up Supabase
+
+Already done for the **Meetrao** project (`gpighkgvdiphdtpqpsfr`): all eight
+migrations are applied and `supabase/seed.sql` has been run. This section is for
+standing up a fresh project.
 
 1. Create a project, then copy the URL and publishable key into `.env.local`.
 2. Apply the migrations in `supabase/migrations/` **in filename order**. Either
@@ -49,6 +90,9 @@ npm run lint        # eslint
 5. To sign in with Google, enable the Google provider under **Auth → Providers**
    and give it its own OAuth client. This is *separate* from calendar access —
    see below.
+
+Optionally run `supabase/seed.sql` for the demo host described in
+[Quick start](#quick-start).
 
 Regenerate types after a schema change:
 

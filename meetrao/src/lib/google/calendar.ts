@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/server";
+import { hasServiceRole } from "@/lib/env";
 import type { Interval } from "@/lib/booking/time";
 import {
   GoogleAuthError,
@@ -55,6 +56,7 @@ export async function saveConnection(
 }
 
 export async function deleteConnection(userId: string): Promise<void> {
+  if (!hasServiceRole()) return;
   const admin = createAdminClient();
 
   const { data } = await admin
@@ -70,6 +72,7 @@ export async function deleteConnection(userId: string): Promise<void> {
 }
 
 export async function isCalendarConnected(userId: string): Promise<boolean> {
+  if (!hasServiceRole()) return false;
   const admin = createAdminClient();
   const { data } = await admin
     .from("calendar_connections")
@@ -82,6 +85,11 @@ export async function isCalendarConnected(userId: string): Promise<boolean> {
 export async function getConnectionSummary(
   userId: string,
 ): Promise<{ connected: boolean; accountEmail: string | null }> {
+  // Connection state lives behind the service role. Without it, report "not
+  // connected" rather than throwing — every screen still renders, and the
+  // dashboard's amber banner already says the calendar is not wired up.
+  if (!hasServiceRole()) return { connected: false, accountEmail: null };
+
   const admin = createAdminClient();
   const { data } = await admin
     .from("calendar_connections")
@@ -102,6 +110,8 @@ export async function getConnectionSummary(
 export async function getFreshConnection(
   userId: string,
 ): Promise<CalendarConnection> {
+  if (!hasServiceRole()) throw new CalendarNotConnectedError();
+
   const admin = createAdminClient();
 
   const { data, error } = await admin

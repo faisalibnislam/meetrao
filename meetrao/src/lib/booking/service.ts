@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { createPublicClient } from "@/lib/supabase/public";
+import { hasServiceRole } from "@/lib/env";
 import {
   createCalendarEvent,
   deleteCalendarEvent,
@@ -149,6 +150,17 @@ export async function createBooking(input: {
   }
   if (Number.isNaN(input.startsAt.getTime())) {
     return { ok: false, code: "invalid_input", message: "Pick a time." };
+  }
+
+  // Writing a booking is the one guest-facing path that needs the service
+  // role. Fail with a clear message rather than an opaque 500.
+  if (!hasServiceRole()) {
+    return {
+      ok: false,
+      code: "error",
+      message:
+        "Bookings are not configured on this deployment yet. Set SUPABASE_SERVICE_ROLE_KEY.",
+    };
   }
 
   const host = await getPublicHost(input.username);

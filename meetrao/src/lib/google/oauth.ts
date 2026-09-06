@@ -1,6 +1,6 @@
 import "server-only";
 
-import { serverEnv, siteUrl } from "@/lib/env";
+import { googleEnv, siteUrl } from "@/lib/env";
 
 /**
  * Calendar access is a SEPARATE OAuth grant from "Sign in with Google".
@@ -28,7 +28,7 @@ export function googleRedirectUri() {
 }
 
 export function buildConsentUrl(state: string) {
-  const { googleClientId } = serverEnv();
+  const { googleClientId } = googleEnv();
   const params = new URLSearchParams({
     client_id: googleClientId,
     redirect_uri: googleRedirectUri(),
@@ -85,7 +85,7 @@ export class GoogleAuthError extends Error {
 }
 
 export async function exchangeCode(code: string): Promise<GoogleTokens> {
-  const { googleClientId, googleClientSecret } = serverEnv();
+  const { googleClientId, googleClientSecret } = googleEnv();
   const json = await postToken(
     new URLSearchParams({
       code,
@@ -107,7 +107,7 @@ export async function exchangeCode(code: string): Promise<GoogleTokens> {
 export async function refreshAccessToken(
   refreshToken: string,
 ): Promise<GoogleTokens> {
-  const { googleClientId, googleClientSecret } = serverEnv();
+  const { googleClientId, googleClientSecret } = googleEnv();
   const json = await postToken(
     new URLSearchParams({
       refresh_token: refreshToken,

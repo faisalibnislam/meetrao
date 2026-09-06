@@ -38,13 +38,20 @@ export function requirePublicEnv() {
   };
 }
 
-/** Server-only. Never import this from a client component. */
-export function serverEnv() {
+/**
+ * Server-only. Deliberately separate from `googleEnv()`: reading whether a
+ * host has connected a calendar must not require Google credentials to be
+ * configured, or a deployment without them would fail on the dashboard.
+ */
+export function serviceRoleKey() {
+  return required(
+    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    "SUPABASE_SERVICE_ROLE_KEY",
+  );
+}
+
+export function googleEnv() {
   return {
-    supabaseServiceRoleKey: required(
-      process.env.SUPABASE_SERVICE_ROLE_KEY,
-      "SUPABASE_SERVICE_ROLE_KEY",
-    ),
     googleClientId: required(process.env.GOOGLE_CLIENT_ID, "GOOGLE_CLIENT_ID"),
     googleClientSecret: required(
       process.env.GOOGLE_CLIENT_SECRET,
@@ -58,6 +65,15 @@ export function hasGoogleCredentials() {
   return Boolean(
     process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET,
   );
+}
+
+/**
+ * True when the service-role key is configured. Without it Meetrao can still
+ * render every screen and serve public booking pages (those run on the anon
+ * key), but it cannot store Google tokens or write a booking.
+ */
+export function hasServiceRole() {
+  return Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 export function siteUrl(path = "") {
