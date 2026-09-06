@@ -113,34 +113,39 @@ update public.profiles set is_admin = true where username = 'you';
 
 ## Deploying
 
-The app lives in the `meetrao/` subdirectory of this repository, so whatever
-host you use must be pointed at it — on Vercel that is **Settings → General →
-Root Directory: `meetrao`**. Framework detection and the build command are
-correct as-is.
+Production is **https://meetrao.com**, on Vercel.
+
+The app lives in the `meetrao/` subdirectory of this repository, so the host must
+be pointed at it — **Settings → General → Root Directory: `meetrao`**. Framework
+detection and the build command are correct as-is.
 
 Only one environment variable has to be set by hand:
 
 | Variable | Where |
 | --- | --- |
-| `SUPABASE_SERVICE_ROLE_KEY` | the host's env settings, **secret**, all environments |
+| `SUPABASE_SERVICE_ROLE_KEY` | Vercel → Settings → Environment Variables, **secret**, all environments |
 
-The two public Supabase values and the demo username are committed in
-`.env.production`; they are safe there because they are `NEXT_PUBLIC_` values
+The two public Supabase values, the demo username and the site URL are committed
+in `.env.production`; they are safe there because they are `NEXT_PUBLIC_` values
 that ship to the browser anyway. The service-role key is not, and must never be
 given a `NEXT_PUBLIC_` prefix — it bypasses every row-level policy.
 
-`NEXT_PUBLIC_SITE_URL` and `NEXT_PUBLIC_BOOKING_HOST` are deliberately unset in
-production. `src/lib/env.ts` falls back to
-`NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL`, so the OAuth redirect and the
-booking links follow the deployment without a rebuild. Set them explicitly once
-a custom domain is attached.
+`NEXT_PUBLIC_SITE_URL` is pinned to the custom domain rather than inferred.
+`src/lib/env.ts` would otherwise fall back to
+`NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL`, which is Vercel's own pick and
+changes the day a second domain is attached — and the Google redirect URI has to
+match this value exactly. `NEXT_PUBLIC_BOOKING_HOST` stays unset; it derives
+`meetrao.com` from the site URL.
 
-Then, with the production domain in hand:
+Two allow-lists have to name the domain, or the auth flows fail at the last hop:
 
-1. **Supabase → Auth → URL Configuration** — set the Site URL and add
-   `<domain>/auth/callback` to the redirect allow-list.
-2. **Google Cloud console** — add `<domain>/api/google/callback` as an
+1. **Supabase → Auth → URL Configuration** — Site URL `https://meetrao.com`, and
+   `https://meetrao.com/auth/callback` in the redirect allow-list.
+2. **Google Cloud console** — `https://meetrao.com/api/google/callback` as an
    authorised redirect URI (see the next section).
+
+Keep `http://localhost:3000/...` in both alongside the production entries, so
+local development keeps working.
 
 ---
 
@@ -156,8 +161,13 @@ In the Google Cloud console:
 
 1. Enable the **Google Calendar API**.
 2. Create an **OAuth client ID** of type *Web application*.
-3. Authorised redirect URI: `<NEXT_PUBLIC_SITE_URL>/api/google/callback`
-   — it must match exactly, including scheme and port.
+3. Authorised redirect URIs — `<NEXT_PUBLIC_SITE_URL>/api/google/callback`, one
+   per environment. They must match exactly, including scheme and port:
+
+   ```
+   https://meetrao.com/api/google/callback
+   http://localhost:3000/api/google/callback
+   ```
 4. On the consent screen, add exactly these two scopes:
 
    | Scope | Why |
