@@ -168,12 +168,19 @@ In the Google Cloud console:
    https://meetrao.com/api/google/callback
    http://localhost:3000/api/google/callback
    ```
-4. On the consent screen, add exactly these two scopes:
+4. On the consent screen, add exactly these two scopes. Paste the **full URLs** —
+   the console rejects the abbreviated `.../auth/…` form the Google docs print,
+   and only offers Calendar scopes once step 1 is done:
 
    | Scope | Why |
    | --- | --- |
-   | `.../auth/calendar.freebusy` | when the host is busy — not what they are doing |
-   | `.../auth/calendar.events` | create and delete the events Meetrao itself makes |
+   | `https://www.googleapis.com/auth/calendar.freebusy` | when the host is busy — not what they are doing |
+   | `https://www.googleapis.com/auth/calendar.events` | create and delete the events Meetrao itself makes |
+
+   Both are *sensitive* scopes, so they land under "Sensitive scopes" and, while
+   the app is in Testing, work only for accounts listed under **Audience → Test
+   users**. They must match `GOOGLE_SCOPES` in `src/lib/google/oauth.ts`, which
+   is what the authorization request actually asks for.
 
    These two are what the connect dialog promises, and why it can honestly say
    *"Meetrao never reads the contents of your events."* Do not widen them to
