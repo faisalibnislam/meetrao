@@ -95,11 +95,56 @@ export function calendarFailure(
   }
 
   if (status === "failed") {
+    if (reason === "network") {
+      return {
+        title: "Couldn't reach Google",
+        body: "The request to Google's token endpoint never completed. That is usually a transient network fault on the server — try again in a moment.",
+      };
+    }
+    if (reason === "bad_response") {
+      return {
+        title: "Google sent something unreadable",
+        body: "The token endpoint replied with a body that is not JSON, which normally means a proxy or captive portal answered instead of Google.",
+      };
+    }
+    if (reason === "config") {
+      return {
+        title: "The deployment is missing a setting",
+        body: "An environment variable the connection needs is not set on this deployment. The server logs name which one.",
+      };
+    }
+    if (reason === "storage_write") {
+      return {
+        title: "The connection couldn't be saved",
+        body: "Google returned the tokens, but writing them to calendar_connections failed. The server logs carry the database error.",
+      };
+    }
     return {
       title: "Couldn't connect to Google",
-      body: "Something went wrong finishing the connection. Try again — if it keeps happening, the server logs have the detail.",
+      body: `Something went wrong finishing the connection${reason ? ` (${reason})` : ""}. Try again — if it keeps happening, the server logs have the detail.`,
     };
   }
 
   return null;
+}
+
+/**
+ * Classify an exception that is not a GoogleAuthError into a short, safe token
+ * for the URL. Deliberately coarse: an error *message* can carry a token or a
+ * connection string, so only the failure's shape travels — the message itself
+ * stays in the server log.
+ */
+export function classifyFailure(cause: unknown): string {
+  if (cause instanceof TypeError) return "network";
+  if (cause instanceof SyntaxError) return "bad_response";
+
+  if (cause instanceof Error) {
+    if (cause.message.startsWith("Missing environment variable")) {
+      return "config";
+    }
+    if (cause.message.startsWith("Could not store the calendar connection")) {
+      return "storage_write";
+    }
+  }
+  return "unknown";
 }

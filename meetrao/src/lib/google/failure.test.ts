@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { calendarFailure, calendarUnconfigured } from "./failure";
+import {
+  calendarFailure,
+  calendarUnconfigured,
+  classifyFailure,
+} from "./failure";
 
 /**
  * These messages are the only diagnostic the host ever sees for a failed
@@ -92,5 +96,55 @@ describe("calendarUnconfigured", () => {
 
   it("distinguishes the two", () => {
     expect(calendarUnconfigured("storage")).not.toBe(calendarUnconfigured());
+  });
+});
+
+describe("classifyFailure", () => {
+  it("names the shape of the failure, never its message", () => {
+    // The message can carry a token or a connection string; only the shape
+    // travels in the URL.
+    const leaky = new Error("connect ECONNREFUSED sb_secret_abc123@db:5432");
+    expect(classifyFailure(leaky)).toBe("unknown");
+    expect(classifyFailure(leaky)).not.toContain("sb_secret");
+  });
+
+  it("separates a network fault from an unreadable body", () => {
+    expect(classifyFailure(new TypeError("fetch failed"))).toBe("network");
+    expect(classifyFailure(new SyntaxError("Unexpected token <"))).toBe(
+      "bad_response",
+    );
+  });
+
+  it("recognises a missing environment variable", () => {
+    expect(
+      classifyFailure(new Error("Missing environment variable GOOGLE_CLIENT_ID.")),
+    ).toBe("config");
+  });
+
+  it("recognises a failed write to calendar_connections", () => {
+    expect(
+      classifyFailure(
+        new Error("Could not store the calendar connection: permission denied"),
+      ),
+    ).toBe("storage_write");
+  });
+
+  it("survives a thrown non-Error", () => {
+    expect(classifyFailure("just a string")).toBe("unknown");
+    expect(classifyFailure(undefined)).toBe("unknown");
+  });
+
+  it("produces only URL-safe tokens", () => {
+    const causes = [
+      new TypeError("x"),
+      new SyntaxError("x"),
+      new Error("Missing environment variable X."),
+      new Error("Could not store the calendar connection: y"),
+      null,
+    ];
+    for (const c of causes) {
+      // Must survive the callback's own shape check, or the reason is dropped.
+      expect(classifyFailure(c)).toMatch(/^[a-z0-9_]{1,40}$/);
+    }
   });
 });

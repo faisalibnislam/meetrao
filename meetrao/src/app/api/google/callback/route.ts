@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasServiceRole, siteUrl } from "@/lib/env";
 import { GoogleAuthError, exchangeCode } from "@/lib/google/oauth";
+import { classifyFailure } from "@/lib/google/failure";
 import { saveConnection } from "@/lib/google/calendar";
 import { createClient } from "@/lib/supabase/server";
 import { OAUTH_RETURN_COOKIE, OAUTH_STATE_COOKIE } from "../connect/route";
@@ -107,6 +108,9 @@ export async function GET(request: NextRequest) {
     if (cause instanceof GoogleAuthError) {
       return finish(returnPath, "exchange", cause.code);
     }
-    return finish(returnPath, "failed");
+    // Everything else: report the shape of the failure, never its message —
+    // that can carry a token or a connection string. The message is logged
+    // above, where only the operator sees it.
+    return finish(returnPath, "failed", classifyFailure(cause));
   }
 }
