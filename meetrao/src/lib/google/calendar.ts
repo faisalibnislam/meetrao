@@ -2,6 +2,7 @@ import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/server";
 import { hasServiceRole } from "@/lib/env";
+import { CalendarStoreError } from "./errors";
 import type { Interval } from "@/lib/booking/time";
 import {
   GoogleAuthError,
@@ -52,7 +53,22 @@ export async function saveConnection(
     { onConflict: "user_id" },
   );
 
-  if (error) throw new Error(`Could not store the calendar connection: ${error.message}`);
+  if (error) {
+    // Log every field: supabase-js reports a failed fetch as an error value
+    // rather than throwing, so `code` is the only thing that separates "the
+    // database said no" from "the request never left the process".
+    console.error("[calendar] calendar_connections upsert failed", {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      userId,
+    });
+    throw new CalendarStoreError(
+      `Could not store the calendar connection: ${error.message}`,
+      error.code || "network",
+    );
+  }
 }
 
 export async function deleteConnection(userId: string): Promise<void> {

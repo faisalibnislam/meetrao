@@ -4,6 +4,7 @@ import {
   calendarUnconfigured,
   classifyFailure,
 } from "./failure";
+import { CalendarStoreError } from "./errors";
 
 /**
  * These messages are the only diagnostic the host ever sees for a failed
@@ -121,12 +122,25 @@ describe("classifyFailure", () => {
     ).toBe("config");
   });
 
-  it("recognises a failed write to calendar_connections", () => {
-    expect(
-      classifyFailure(
-        new Error("Could not store the calendar connection: permission denied"),
-      ),
-    ).toBe("storage_write");
+  it("carries the database error code, which is what names the cause", () => {
+    const store = (code: string) =>
+      classifyFailure(new CalendarStoreError("Could not store …", code));
+
+    // supabase-js reports a failed fetch as an error value rather than
+    // throwing, so an empty code means the request never left the process.
+    expect(store("network")).toBe("storage_network");
+    expect(store("42501")).toBe("storage_42501");
+    expect(store("PGRST204")).toBe("storage_pgrst204");
+    expect(store("")).toBe("storage_unknown");
+  });
+
+  it("keeps a store error's message out of the token", () => {
+    const leaky = new CalendarStoreError(
+      "Could not store the calendar connection: sb_secret_abc123 rejected",
+      "42501",
+    );
+    expect(classifyFailure(leaky)).toBe("storage_42501");
+    expect(classifyFailure(leaky)).not.toContain("sb_secret");
   });
 
   it("survives a thrown non-Error", () => {
@@ -139,7 +153,8 @@ describe("classifyFailure", () => {
       new TypeError("x"),
       new SyntaxError("x"),
       new Error("Missing environment variable X."),
-      new Error("Could not store the calendar connection: y"),
+      new CalendarStoreError("y", "PGRST204"),
+      new CalendarStoreError("y", "!!! weird ***"),
       null,
     ];
     for (const c of causes) {

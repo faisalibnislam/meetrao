@@ -9,6 +9,8 @@
  * `status` comes from `?calendar=`, `reason` from `?reason=` (Google's own
  * error code, already shape-checked by the callback).
  */
+import { CalendarStoreError } from "./errors";
+
 export type CalendarFailure = { title: string; body: string };
 
 /**
@@ -113,10 +115,29 @@ export function calendarFailure(
         body: "An environment variable the connection needs is not set on this deployment. The server logs name which one.",
       };
     }
-    if (reason === "storage_write") {
+    if (reason?.startsWith("storage_")) {
+      const code = reason.slice("storage_".length);
+      if (code === "network") {
+        return {
+          title: "The database was unreachable",
+          body: "Google returned the tokens, but the write to calendar_connections never reached Supabase. Check NEXT_PUBLIC_SUPABASE_URL on the deployment, and that the project is not paused.",
+        };
+      }
+      if (code === "42501") {
+        return {
+          title: "The database refused the write",
+          body: "Supabase rejected the insert as unauthorised (SQLSTATE 42501). SUPABASE_SERVICE_ROLE_KEY is set but is not a service-role key — a publishable or anon key here has no rights on calendar_connections.",
+        };
+      }
+      if (code.startsWith("pgrst")) {
+        return {
+          title: "The database rejected the write",
+          body: `PostgREST refused the insert (${code.toUpperCase()}). If this is PGRST204 a column is missing, which means the migrations on this project are behind the code.`,
+        };
+      }
       return {
         title: "The connection couldn't be saved",
-        body: "Google returned the tokens, but writing them to calendar_connections failed. The server logs carry the database error.",
+        body: `Google returned the tokens, but writing them to calendar_connections failed (${code}). The server logs carry the full database error.`,
       };
     }
     return {
@@ -135,15 +156,17 @@ export function calendarFailure(
  * stays in the server log.
  */
 export function classifyFailure(cause: unknown): string {
+  if (cause instanceof CalendarStoreError) {
+    // PGRST204 → storage_pgrst204, 42501 → storage_42501, network → storage_network
+    const code = cause.code.toLowerCase().replace(/[^a-z0-9]/g, "");
+    return `storage_${code || "unknown"}`.slice(0, 40);
+  }
   if (cause instanceof TypeError) return "network";
   if (cause instanceof SyntaxError) return "bad_response";
 
   if (cause instanceof Error) {
     if (cause.message.startsWith("Missing environment variable")) {
       return "config";
-    }
-    if (cause.message.startsWith("Could not store the calendar connection")) {
-      return "storage_write";
     }
   }
   return "unknown";
