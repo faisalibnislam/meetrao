@@ -1,7 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasServiceRole, siteUrl } from "@/lib/env";
-import { exchangeCode } from "@/lib/google/oauth";
+import { GoogleAuthError, exchangeCode } from "@/lib/google/oauth";
 import { saveConnection } from "@/lib/google/calendar";
 import { createClient } from "@/lib/supabase/server";
 import { OAUTH_RETURN_COOKIE, OAUTH_STATE_COOKIE } from "../connect/route";
@@ -18,7 +18,7 @@ function constantTimeEquals(a: string, b: string) {
  * error code — never free text, and never anything the caller supplied raw.
  */
 function finish(returnPath: string, status: string, reason?: string) {
-  const safeReason = reason && /^[a-z_]{1,40}$/.test(reason) ? reason : null;
+  const safeReason = reason && /^[a-z0-9_]{1,40}$/.test(reason) ? reason : null;
   const query = safeReason
     ? `?calendar=${status}&reason=${safeReason}`
     : `?calendar=${status}`;
@@ -100,6 +100,13 @@ export async function GET(request: NextRequest) {
     return finish(returnPath, "connected");
   } catch (cause) {
     console.error("[google/callback] token exchange or save failed", cause);
+
+    // Google's token endpoint is precise about which piece is wrong. Losing
+    // that to a generic "something went wrong" is what made this failure take
+    // a log export to diagnose.
+    if (cause instanceof GoogleAuthError) {
+      return finish(returnPath, "exchange", cause.code);
+    }
     return finish(returnPath, "failed");
   }
 }

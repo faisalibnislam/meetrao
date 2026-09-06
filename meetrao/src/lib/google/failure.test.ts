@@ -31,16 +31,45 @@ describe("calendarFailure", () => {
     );
   });
 
-  it("keeps the four causes distinct from one another", () => {
+  it("keeps every cause distinct from the others", () => {
     const bodies = [
       calendarFailure("denied", "access_denied"),
       calendarFailure("session"),
       calendarFailure("norefresh"),
       calendarFailure("failed"),
+      calendarFailure("exchange", "redirect_uri_mismatch"),
+      calendarFailure("exchange", "invalid_client"),
+      calendarFailure("exchange", "invalid_grant"),
     ].map((f) => f?.body);
 
     expect(bodies.every(Boolean)).toBe(true);
-    expect(new Set(bodies).size).toBe(4);
+    expect(new Set(bodies).size).toBe(7);
+  });
+
+  describe("token exchange rejections", () => {
+    it("points redirect_uri_mismatch at the registered URI", () => {
+      const f = calendarFailure("exchange", "redirect_uri_mismatch");
+      expect(f?.body).toContain("/api/google/callback");
+      expect(f?.body).toMatch(/trailing slash/i);
+    });
+
+    it("points invalid_client at the deployment's credentials", () => {
+      const f = calendarFailure("exchange", "invalid_client");
+      expect(f?.body).toContain("GOOGLE_CLIENT_SECRET");
+      expect(f?.body).toMatch(/redeploy/i);
+    });
+
+    it("tells invalid_grant to restart, since only that one is retryable", () => {
+      expect(calendarFailure("exchange", "invalid_grant")?.body).toMatch(
+        /start the connection again/i,
+      );
+    });
+
+    it("still names an unrecognised code rather than swallowing it", () => {
+      expect(calendarFailure("exchange", "http_500")?.body).toContain(
+        "http_500",
+      );
+    });
   });
 
   it("does not tell a timed-out host to allow access again", () => {

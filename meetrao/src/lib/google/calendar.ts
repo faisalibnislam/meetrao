@@ -180,6 +180,9 @@ async function callCalendar<T>(
   if (res.status === 401 || res.status === 403) {
     throw new GoogleAuthError(
       "Google rejected the calendar credentials. Reconnect the calendar.",
+      // Not one of Google's OAuth error codes — this is the Calendar API
+      // refusing a token, not the token endpoint refusing to issue one.
+      res.status === 401 ? "calendar_unauthorized" : "calendar_forbidden",
     );
   }
   if (!res.ok) {

@@ -52,6 +52,34 @@ export function calendarFailure(
     };
   }
 
+  // Google accepted the consent and then rejected the token exchange. Its own
+  // error code says which of the three moving parts is wrong, and each has a
+  // different fix, so none of them should read as "try again".
+  if (status === "exchange") {
+    if (reason === "redirect_uri_mismatch") {
+      return {
+        title: "The redirect URI doesn't match",
+        body: "Google requires the redirect URI in the token exchange to match one registered on the OAuth client, exactly. Add this deployment's <site>/api/google/callback under Credentials → your Web application client, with no trailing slash.",
+      };
+    }
+    if (reason === "invalid_client") {
+      return {
+        title: "Google rejected the app's credentials",
+        body: "GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET do not form a valid pair for this OAuth client — usually a stale secret, or one saved to the wrong environment. Check both on the deployment, then redeploy so the new values are picked up.",
+      };
+    }
+    if (reason === "invalid_grant") {
+      return {
+        title: "That authorisation expired",
+        body: "Google's one-time code is only valid for a few minutes and only once. Start the connection again and finish it without reloading or going back.",
+      };
+    }
+    return {
+      title: "Google rejected the token exchange",
+      body: `Google refused to issue a token (${reason ?? "no code given"}). The server logs carry its full description.`,
+    };
+  }
+
   if (status === "session") {
     return {
       title: "The connection timed out",

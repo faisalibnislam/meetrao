@@ -60,6 +60,22 @@ type TokenResponse = {
   error_description?: string;
 };
 
+export class GoogleAuthError extends Error {
+  /**
+   * Google's machine-readable `error` field — redirect_uri_mismatch,
+   * invalid_client, invalid_grant and friends. The human description varies and
+   * is not safe to put in a URL; this is, and it is what tells a deployment
+   * which of its three moving parts is actually wrong.
+   */
+  readonly code: string;
+
+  constructor(message: string, code: string) {
+    super(message);
+    this.name = "GoogleAuthError";
+    this.code = code;
+  }
+}
+
 async function postToken(body: URLSearchParams): Promise<TokenResponse> {
   const res = await fetch(TOKEN_ENDPOINT, {
     method: "POST",
@@ -72,16 +88,10 @@ async function postToken(body: URLSearchParams): Promise<TokenResponse> {
   if (!res.ok || json.error) {
     throw new GoogleAuthError(
       json.error_description ?? json.error ?? `Token request failed (${res.status})`,
+      json.error ?? `http_${res.status}`,
     );
   }
   return json;
-}
-
-export class GoogleAuthError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "GoogleAuthError";
-  }
 }
 
 export async function exchangeCode(code: string): Promise<GoogleTokens> {
