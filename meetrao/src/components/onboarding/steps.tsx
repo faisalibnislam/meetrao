@@ -18,6 +18,7 @@ import { detectTimezone, timezoneOptions } from "@/lib/timezones";
 import { useHydrated } from "@/lib/use-hydrated";
 import { completeOnboarding, updateTimezone } from "@/lib/actions/profile";
 import { createMeetingType, updateMeetingType } from "@/lib/actions/meetings";
+import { calendarFailure } from "@/lib/google/failure";
 
 const CALENDAR_REASONS = [
   "See when you are busy, so guests are never offered a time you cannot make.",
@@ -46,12 +47,14 @@ export function StepCalendar({
   connected,
   accountEmail,
   status,
+  reason,
 }: {
   connected: boolean;
   accountEmail: string | null;
   status?: string;
+  reason?: string;
 }) {
-  const failed = status === "failed" || status === "denied";
+  const failure = calendarFailure(status, reason);
   const unconfigured = status === "unconfigured";
 
   return (
@@ -97,7 +100,7 @@ export function StepCalendar({
           </Badge>
         </div>
 
-        {failed ? (
+        {failure ? (
           <div className="flex gap-[11px] rounded-[8px] border border-red-line bg-red-soft px-[14px] py-[12px]">
             <Icon
               name="circleExclamation"
@@ -107,11 +110,10 @@ export function StepCalendar({
             />
             <div className="flex flex-col gap-[3px]">
               <span className="text-[13px] font-semibold text-red">
-                Couldn&apos;t connect to Google
+                {failure.title}
               </span>
               <span className="text-[12.5px] leading-[1.5] text-red-ink">
-                Google didn&apos;t confirm the permission. Try again and allow
-                calendar access.
+                {failure.body}
               </span>
             </div>
           </div>
@@ -133,8 +135,8 @@ export function StepCalendar({
         ) : null}
 
         <ul className="m-0 flex list-none flex-col gap-[9px] p-0">
-          {CALENDAR_REASONS.map((reason) => (
-            <li key={reason} className="flex items-start gap-[10px]">
+          {CALENDAR_REASONS.map((line) => (
+            <li key={line} className="flex items-start gap-[10px]">
               <Icon
                 name="check"
                 weight={900}
@@ -142,7 +144,7 @@ export function StepCalendar({
                 className="mt-[4px] text-accent"
               />
               <span className="text-[13px] leading-[1.5] text-ink-2">
-                {reason}
+                {line}
               </span>
             </li>
           ))}

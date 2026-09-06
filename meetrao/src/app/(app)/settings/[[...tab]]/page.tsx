@@ -12,6 +12,8 @@ import {
 import { requireProfile } from "@/lib/data/host";
 import { getConnectionSummary } from "@/lib/google/calendar";
 import { publicEnv } from "@/lib/env";
+import { calendarFailure } from "@/lib/google/failure";
+import { Icon } from "@/components/ui/icon";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -19,10 +21,13 @@ const VALID: ReadonlySet<string> = new Set(SETTINGS_TABS.map((t) => t.slug));
 
 export default async function SettingsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ tab?: string[] }>;
+  searchParams: Promise<{ calendar?: string; reason?: string }>;
 }) {
   const { tab } = await params;
+  const { calendar, reason } = await searchParams;
 
   if (tab && tab.length > 1) notFound();
   const current = (tab?.[0] ?? "profile") as SettingsTab;
@@ -55,6 +60,8 @@ export default async function SettingsPage({
               <CalendarSettings
                 userId={profile.id}
                 timezone={profile.timezone}
+                status={calendar}
+                reason={reason}
               />
             ) : null}
 
@@ -76,16 +83,43 @@ export default async function SettingsPage({
 async function CalendarSettings({
   userId,
   timezone,
+  status,
+  reason,
 }: {
   userId: string;
   timezone: string;
+  status?: string;
+  reason?: string;
 }) {
   const { connected, accountEmail } = await getConnectionSummary(userId);
+  // /api/google/callback returns here by default, so this is where most
+  // connection failures actually land.
+  const failure = calendarFailure(status, reason);
   return (
-    <CalendarPanel
-      connected={connected}
-      accountEmail={accountEmail}
-      timezone={timezone}
-    />
+    <>
+      {failure ? (
+        <div className="flex gap-[11px] rounded-[8px] border border-red-line bg-red-soft px-[14px] py-[12px]">
+          <Icon
+            name="circleExclamation"
+            weight={900}
+            size={13}
+            className="mt-[2px] text-red"
+          />
+          <div className="flex flex-col gap-[3px]">
+            <span className="text-[13px] font-semibold text-red">
+              {failure.title}
+            </span>
+            <span className="text-[12.5px] leading-[1.5] text-red-ink">
+              {failure.body}
+            </span>
+          </div>
+        </div>
+      ) : null}
+      <CalendarPanel
+        connected={connected}
+        accountEmail={accountEmail}
+        timezone={timezone}
+      />
+    </>
   );
 }

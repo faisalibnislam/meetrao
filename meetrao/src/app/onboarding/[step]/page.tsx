@@ -20,10 +20,10 @@ export default async function OnboardingStepPage({
   searchParams,
 }: {
   params: Promise<{ step: string }>;
-  searchParams: Promise<{ calendar?: string }>;
+  searchParams: Promise<{ calendar?: string; reason?: string }>;
 }) {
   const { step: rawStep } = await params;
-  const { calendar } = await searchParams;
+  const { calendar, reason } = await searchParams;
 
   const step = Number(rawStep);
   if (!Number.isInteger(step) || step < 1 || step > TOTAL_STEPS) notFound();
@@ -34,7 +34,9 @@ export default async function OnboardingStepPage({
     <>
       <StepRail step={step} />
       {step === 1 ? <StepWelcome /> : null}
-      {step === 2 ? <CalendarStep status={calendar} userId={profile.id} /> : null}
+      {step === 2 ? (
+        <CalendarStep status={calendar} reason={reason} userId={profile.id} />
+      ) : null}
       {step === 3 ? (
         <MeetingStep
           defaultDuration={profile.default_duration_minutes}
@@ -51,9 +53,11 @@ export default async function OnboardingStepPage({
 
 async function CalendarStep({
   status,
+  reason,
   userId,
 }: {
   status?: string;
+  reason?: string;
   userId: string;
 }) {
   const { connected, accountEmail } = await getConnectionSummary(userId);
@@ -62,6 +66,7 @@ async function CalendarStep({
       connected={connected}
       accountEmail={accountEmail}
       status={status}
+      reason={reason}
     />
   );
 }
