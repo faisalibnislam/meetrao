@@ -103,11 +103,36 @@ npx supabase gen types typescript --project-id <ref> > src/lib/supabase/database
 
 ### Making yourself an admin
 
-`is_admin` is not settable from the app, by design. Flip it in SQL:
+`is_admin` is not settable from the app, by design — there is no UI path to
+privilege escalation. Two ways in, both SQL:
+
+**Before the account exists** — put the address on the bootstrap allowlist
+(`0009_bootstrap_admins.sql`). `handle_new_user` reads it while building the
+profile, so the account is an admin from its first sign-in, whether that is
+email/password or "Sign in with Google":
+
+```sql
+insert into public.bootstrap_admins (email, note) values ('you@example.com', 'Owner');
+```
+
+The address must be lowercase; a check constraint enforces it, because the
+lookup is a plain equality test.
+
+**After it exists** — flip the flag directly:
 
 ```sql
 update public.profiles set is_admin = true where username = 'you';
 ```
+
+`bootstrap_admins` has no grants and no policies, so only the service role can
+read or write it. It is in effect a list of who may become an administrator,
+which is why it does not live in `platform_settings` — that table is readable
+by every signed-in user.
+
+There is no admin link inside the host app. Sign in normally, then go to
+`/admin`; a signed-in non-admin who tries is redirected to `/dashboard`
+(`src/lib/data/host.ts:42`, enforced in the `(admin)` layout so every page
+under it is covered).
 
 ---
 
