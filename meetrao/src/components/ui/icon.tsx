@@ -46,8 +46,9 @@ export type IconName = keyof typeof ICONS;
 
 type IconProps = {
   name: IconName;
-  /** 300 for objects and navigation, 900 for status/close/check. */
-  weight?: 300 | 400 | 900;
+  /** 300 for objects and navigation, 900 for status/close/check.
+   *  Only these two faces are shipped; see globals.css. */
+  weight?: 300 | 900;
   size?: number;
   className?: string;
   style?: CSSProperties;

@@ -1,30 +1,32 @@
 @import "tailwindcss";
 
 /* ── Font Awesome 6 Sharp ──────────────────────────────────────────────────
-   Supplied with the Airly design-system bundle. This is a LICENSED family —
-   ship your own licensed copy, or substitute an equivalent icon set and keep
-   the weight convention (Light 300 for objects/navigation, Solid 900 for
-   status/close/check glyphs).                                              */
+   Subset to the 31 codepoints this app actually renders (see
+   src/components/ui/icon.tsx) and converted to woff2: 5.1 MB of OTFs became
+   9.6 KB. Regenerate after adding an icon:
+
+     pyftsubset FontAwesome6Sharp-Light.otf --unicodes=U+2B,U+F002,… \
+       --flavor=woff2 --layout-features='' --no-hinting --desubroutinize \
+       --output-file=public/fonts/fa-sharp-light.woff2
+
+   Only the two weights the design uses are shipped — Light 300 for object and
+   navigation glyphs, Solid 900 for status, close and check.
+
+   This is a LICENSED family. Ship your own licensed copy, or substitute an
+   equivalent icon set and keep the weight convention.                      */
 @font-face {
   font-family: "Font Awesome 6 Sharp";
   font-style: normal;
   font-weight: 300;
   font-display: block;
-  src: url("/fonts/FontAwesome6Sharp-Light.otf") format("opentype");
-}
-@font-face {
-  font-family: "Font Awesome 6 Sharp";
-  font-style: normal;
-  font-weight: 400;
-  font-display: block;
-  src: url("/fonts/FontAwesome6Sharp-Regular.otf") format("opentype");
+  src: url("/fonts/fa-sharp-light.woff2") format("woff2");
 }
 @font-face {
   font-family: "Font Awesome 6 Sharp";
   font-style: normal;
   font-weight: 900;
   font-display: block;
-  src: url("/fonts/FontAwesome6Sharp-Solid.otf") format("opentype");
+  src: url("/fonts/fa-sharp-solid.woff2") format("woff2");
 }
 
 /* ── Design tokens ─────────────────────────────────────────────────────────
