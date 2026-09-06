@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Logo } from "@/components/brand/logo";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-style";
 import { Icon } from "@/components/ui/icon";
 import { getBookingByReference } from "@/lib/booking/service";
 import { formatMediumDate } from "@/lib/booking/time";

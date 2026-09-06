@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
-import { Button, buttonClass } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-style";
 import { Badge, Eyebrow } from "@/components/ui/controls";
 import { Field, Input, Textarea } from "@/components/ui/field";
 import { Icon } from "@/components/ui/icon";

@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { Badge, Avatar, EmptyState } from "@/components/ui/controls";
 import { SearchField } from "@/components/ui/field";
 import { MenuSelect } from "@/components/ui/menu-select";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-style";
 import { initialsOf } from "@/lib/initials";
 
 const TH =

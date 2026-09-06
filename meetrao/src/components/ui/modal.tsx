@@ -4,7 +4,8 @@ import { useEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 import { Icon } from "./icon";
-import { Button, buttonClass, type ButtonVariant } from "./button";
+import { Button, type ButtonVariant } from "./button";
+import { buttonClass } from "./button-style";
 import { RouteLink } from "./route-link";
 
 /**

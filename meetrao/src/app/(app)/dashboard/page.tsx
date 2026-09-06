@@ -9,7 +9,7 @@ import {
   LaterRow,
   TodayRow,
 } from "@/components/app/booking-rows";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-style";
 import { EmptyState } from "@/components/ui/controls";
 import { Icon, type IconName } from "@/components/ui/icon";
 import {

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { PageBody, PageHeader } from "@/components/app/page-header";
 import { CopyLinkButton } from "@/components/app/copy-link";
 import { MeetingsTable } from "@/components/app/meetings-table";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-style";
 import { EmptyState } from "@/components/ui/controls";
 import { Icon } from "@/components/ui/icon";
 import { getMeetingTypes, requireProfile } from "@/lib/data/host";
