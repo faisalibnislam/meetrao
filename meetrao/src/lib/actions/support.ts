@@ -1,5 +1,8 @@
 "use server";
 
+import { sendAndLog } from "@/lib/email/send";
+import { supportEmail } from "@/lib/env";
+
 export type SupportState =
   | { status: "idle" }
   | { status: "sent"; email: string }
@@ -13,14 +16,13 @@ export type SupportState =
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 /**
- * The contact form's submit endpoint.
+ * The contact form's submit endpoint. Sends the message to the support address
+ * through Resend, with the sender's address as reply-to so a reply goes
+ * straight back to them.
  *
- * There is deliberately no mail provider wired in here. Meetrao has no
- * transactional email at all yet — that is START-HERE change 4, which is not in
- * this batch — so sending would mean inventing an integration and a secret.
- * Instead the request is validated and logged server-side, which is honest
- * about where it goes, and the single call below is the only line that changes
- * when a provider is chosen.
+ * Plain-text-ish HTML rather than one of the six templates: those are
+ * product mail addressed to a host or guest, and this is an internal
+ * message to the support inbox.
  */
 export async function submitSupportRequest(
   _prev: SupportState,
@@ -42,23 +44,55 @@ export async function submitSupportRequest(
     return { status: "error", errors, values };
   }
 
-  try {
-    // Where a provider goes. Until change 4 lands there is nowhere to send it,
-    // so the request is recorded rather than silently dropped.
-    console.info("[support] request received", {
-      name,
-      email,
-      topic,
-      length: message.length,
-      at: new Date().toISOString(),
-    });
-  } catch {
+  const result = await sendAndLog("support-request", {
+    to: supportEmail(),
+    replyTo: email,
+    subject: `Support · ${topic} · ${name}`,
+    html: supportHtml({ name, email, topic, message }),
+  });
+
+  if (!result.ok) {
     return {
       status: "error",
-      formError: "Something went wrong sending that. Email hello@airlystudio.com instead.",
+      formError: `Something went wrong sending that. Email ${supportEmail()} instead.`,
       values,
     };
   }
 
   return { status: "sent", email };
+}
+
+/** Escapes everything the sender typed — all four fields are attacker-controlled. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function supportHtml(input: {
+  name: string;
+  email: string;
+  topic: string;
+  message: string;
+}): string {
+  const rows = [
+    ["From", `${escapeHtml(input.name)} &lt;${escapeHtml(input.email)}&gt;`],
+    ["Topic", escapeHtml(input.topic)],
+  ]
+    .map(
+      ([label, value]) =>
+        `<tr><td style="padding:4px 12px 4px 0;color:#66635C;font:13px Arial,sans-serif">${label}</td>` +
+        `<td style="padding:4px 0;color:#1A1917;font:13px Arial,sans-serif">${value}</td></tr>`,
+    )
+    .join("");
+
+  return [
+    '<div style="font:14px/1.6 Arial,sans-serif;color:#1A1917">',
+    `<table cellpadding="0" cellspacing="0" border="0">${rows}</table>`,
+    '<hr style="border:0;border-top:1px solid #E0DDD4;margin:14px 0">',
+    `<div style="white-space:pre-wrap">${escapeHtml(input.message)}</div>`,
+    "</div>",
+  ].join("");
 }

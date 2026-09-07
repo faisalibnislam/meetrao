@@ -8,6 +8,13 @@ import {
   deleteCalendarEvent,
   fetchBusyIntervals,
 } from "@/lib/google/calendar";
+import {
+  sendBookingCancelled,
+  sendBookingNewGuest,
+  sendBookingNewHost,
+  type BookingEmailData,
+  type HostEmailData,
+} from "@/lib/email/messages";
 import { bookingWindow, isSlotBookable, type SlotRules } from "./slots";
 import type { Interval } from "./time";
 import { formatLongDate, formatTimeRange } from "./time";
@@ -270,6 +277,24 @@ export async function createBooking(input: {
     });
   }
 
+  // Both confirmation emails. Best-effort like the calendar event above: the
+  // booking is already made and must not be undone by a mail failure, so the
+  // senders log rather than throw. The host copy honours "New booking"; the
+  // guest copy is transactional and always sends.
+  await notifyBookingCreated(host.id, {
+    id: booking.id,
+    reference: booking.reference,
+    meetingName: meetingType.name,
+    durationMinutes: meetingType.duration_minutes,
+    guestName,
+    guestEmail,
+    guestNote: input.guestNote?.trim() ?? "",
+    guestTimezone: input.guestTimezone ?? null,
+    startsAt: input.startsAt,
+    endsAt,
+    meetUrl,
+  });
+
   return { ok: true, reference: booking.reference, meetUrl, calendarSynced };
 }
 
@@ -346,7 +371,9 @@ export async function cancelBooking(params: {
 
   const { data: booking } = await admin
     .from("bookings")
-    .select("id, host_id, status, google_event_id")
+    .select(
+      "id, host_id, status, google_event_id, reference, meeting_name, duration_minutes, guest_name, guest_email, guest_note, guest_timezone, starts_at, ends_at, meet_url",
+    )
     .eq("id", params.bookingId)
     .maybeSingle();
 
@@ -380,7 +407,75 @@ export async function cancelBooking(params: {
     }
   }
 
+  // Both sides are told. The host copy honours "Booking cancelled"; the guest
+  // copy is transactional — their meeting disappeared and they are owed the
+  // news regardless of any preference.
+  await notifyBookingCancelled(
+    booking.host_id,
+    {
+      id: booking.id,
+      reference: booking.reference,
+      meetingName: booking.meeting_name,
+      durationMinutes: booking.duration_minutes,
+      guestName: booking.guest_name,
+      guestEmail: booking.guest_email,
+      guestNote: booking.guest_note,
+      guestTimezone: booking.guest_timezone,
+      startsAt: new Date(booking.starts_at),
+      endsAt: new Date(booking.ends_at),
+      meetUrl: booking.meet_url,
+    },
+    params.by,
+  );
+
   return { ok: true };
+}
+
+/* ── Email notifications ─────────────────────────────────────────────────────
+ *
+ * Both helpers load the host once and hand off to the senders in
+ * @/lib/email/messages, which own the preference gating. Host mail is gated
+ * there; guest mail is transactional and is not.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+async function loadHostForEmail(hostId: string): Promise<HostEmailData | null> {
+  const admin = createAdminClient();
+  const { data } = await admin
+    .from("profiles")
+    .select("id, full_name, email, username, timezone")
+    .eq("id", hostId)
+    .maybeSingle();
+
+  if (!data || !data.email) return null;
+  return {
+    id: data.id,
+    fullName: data.full_name,
+    email: data.email,
+    username: data.username,
+    timezone: data.timezone,
+  };
+}
+
+async function notifyBookingCreated(
+  hostId: string,
+  booking: BookingEmailData,
+): Promise<void> {
+  const host = await loadHostForEmail(hostId);
+  if (!host) return;
+  await Promise.allSettled([
+    sendBookingNewHost(host, booking),
+    sendBookingNewGuest(host, booking),
+  ]);
+}
+
+async function notifyBookingCancelled(
+  hostId: string,
+  booking: BookingEmailData,
+  by: "host" | "guest",
+): Promise<void> {
+  const host = await loadHostForEmail(hostId);
+  if (!host) return;
+  await sendBookingCancelled(host, booking, by);
 }
 
 /** "Monday, September 7 · 9:00 – 9:30 AM" */

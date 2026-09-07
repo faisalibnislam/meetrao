@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { siteUrl } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { sendWelcome } from "@/lib/email/messages";
 
 export type AuthState = {
   error?: string;
@@ -74,6 +75,10 @@ export async function signUpAction(
       notice: `Check ${email} for a link to confirm your account, then sign in.`,
     };
   }
+
+  // The account exists and can sign in, so this is the moment the design calls
+  // "email confirmed". Best-effort: a mail failure must not block signup.
+  await sendWelcome({ fullName, email, username: email.split("@")[0] });
 
   redirect("/onboarding/1");
 }

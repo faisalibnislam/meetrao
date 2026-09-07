@@ -95,6 +95,34 @@ export function googleEnv() {
   };
 }
 
+/**
+ * Server-only. Transactional email, via Resend. Kept separate from every other
+ * accessor for the same reason `serviceRoleKey()` is: a deployment without mail
+ * configured must still run, so nothing reads this except the send path.
+ */
+export function resendApiKey() {
+  return required(process.env.RESEND_API_KEY, "RESEND_API_KEY");
+}
+
+/** True when transactional email is configured. */
+export function hasResend() {
+  return Boolean(process.env.RESEND_API_KEY);
+}
+
+/**
+ * The From address. Resend requires the sending domain to be verified with SPF
+ * and DKIM before it will deliver, so this is deliberately configurable — a
+ * deployment on a different domain sets RESEND_FROM rather than editing code.
+ */
+export function resendFrom() {
+  return process.env.RESEND_FROM || "Meetrao <hello@meetrao.com>";
+}
+
+/** Where replies to transactional mail should land. */
+export function supportEmail() {
+  return process.env.SUPPORT_EMAIL || "hello@airlystudio.com";
+}
+
 /** True when Google Calendar credentials are configured. */
 export function hasGoogleCredentials() {
   return Boolean(
