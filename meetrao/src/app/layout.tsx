@@ -1,12 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Sans, DM_Mono, Instrument_Serif } from "next/font/google";
+import { Instrument_Sans, DM_Mono, Instrument_Serif } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+// Instrument Sans carries `wdth` and `wght` axes and no optical-size axis, so
+// no `opsz` is requested here. Explicit weights rather than the variable face:
+// the same four the design uses.
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
-  variable: "--font-dm-sans",
+  variable: "--font-instrument-sans",
   display: "swap",
 });
 
@@ -47,7 +50,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${dmSans.variable} ${dmMono.variable} ${instrumentSerif.variable}`}
+      className={`${instrumentSans.variable} ${dmMono.variable} ${instrumentSerif.variable}`}
     >
       <body>
         <ToastProvider>{children}</ToastProvider>
