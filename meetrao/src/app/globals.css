@@ -189,6 +189,22 @@
   }
 }
 
+/* Landing hero: three colour fields drifting on different periods so the
+   composite never visibly loops. Paused entirely by the reduced-motion guard
+   below. */
+@keyframes mr-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(6%, 8%, 0) scale(1.12); }
+}
+@keyframes mr-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1.05); }
+  50% { transform: translate3d(-8%, -6%, 0) scale(0.95); }
+}
+@keyframes mr-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(0.98); }
+  50% { transform: translate3d(4%, -9%, 0) scale(1.1); }
+}
+
 .animate-mu-in {
   animation: mu-in 160ms ease both;
 }
