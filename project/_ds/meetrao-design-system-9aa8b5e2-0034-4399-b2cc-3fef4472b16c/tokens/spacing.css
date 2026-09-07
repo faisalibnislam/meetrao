@@ -1,0 +1,47 @@
+/* Meetrao — spacing, control heights, layout widths.
+   Sibling groups use flex/grid + gap, never margins between items. */
+:root{
+  /* gaps */
+  --gap-hairline:2px;   /* nav items, menu rows */
+  --gap-inline:6px;
+  --gap-inline-lg:10px;
+  --gap-field:14px;     /* between form fields */
+  --gap-field-lg:16px;
+  --gap-section:20px;
+  --gap-section-lg:26px;
+  --gap-band:34px;      /* landing sections */
+  --gap-band-lg:46px;
+
+  /* control heights */
+  --h-row-action:26px;  /* table row buttons */
+  --h-compact:28px;
+  --h-small:30px;
+  --h-secondary:32px;
+  --h-control:34px;     /* standard select / input */
+  --h-form:36px;
+  --h-form-lg:38px;     /* auth inputs, onboarding primary */
+  --h-cta:40px;
+  --h-cta-lg:44px;
+  --h-cta-hero:46px;
+  --h-cta-mobile:50px;
+
+  /* layout */
+  --page-max:1120px;      /* app content column */
+  --page-max-landing:1160px;
+  --card-max-auth:940px;
+  --card-max-form:600px;
+  --card-max-avail:660px;
+  --card-max-onboarding:580px;
+  --card-max-guest:520px;
+  --card-max-cancelled:460px;
+  --sidebar-w:218px;
+  --mobile-frame-w:412px;
+
+  /* page padding */
+  --page-pad:24px 26px 90px;
+  --page-pad-mobile:18px 16px 90px;
+  --header-pad:46px 26px 16px;          /* dashboard header — tall by intent */
+  --header-pad-tight:16px 26px;
+  --header-pad-mobile:44px 16px 14px;
+  --sidebar-pad:14px 12px 58px;
+}

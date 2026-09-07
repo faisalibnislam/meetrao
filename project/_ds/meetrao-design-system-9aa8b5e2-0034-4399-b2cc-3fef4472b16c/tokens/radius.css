@@ -1,0 +1,14 @@
+/* Meetrao — corner radii. Small controls stay tight; page surfaces round more. */
+:root{
+  --radius-badge:4px;      /* badges, count pills */
+  --radius-xs:5px;         /* row-action buttons, menu rows, avatar chips 26px */
+  --radius-control:6px;    /* buttons, inputs, nav items, calendar cells, slots */
+  --radius-cta:7px;        /* landing CTAs */
+  --radius-card:8px;       /* cards, panels, dialogs, sections, icon tiles */
+  --radius-metric:10px;    /* metric cards, guest tiles */
+  --radius-surface:12px;   /* page-level surfaces, screenshot frames */
+  --radius-band:14px;      /* landing CTA band */
+  --radius-hero:16px;      /* landing hero screenshot frame */
+  --radius-frame-mobile:20px;
+  --radius-round:50%;      /* avatars, dots, switch thumb */
+}

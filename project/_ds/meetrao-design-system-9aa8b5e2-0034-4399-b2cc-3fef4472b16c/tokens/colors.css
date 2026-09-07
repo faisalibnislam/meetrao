@@ -1,0 +1,60 @@
+/* Meetrao — colour. Warm greige ground, near-black ink, deep-green accent.
+   Rule: --ink is for text. --accent is for primary actions and selected state.
+   Destructive is always --red. Status colours never decorate. */
+:root{
+  /* surfaces */
+  --ground:#E7E4DC;        /* page background, app shell, header */
+  --surface:#FFFFFF;       /* cards, tables, inputs, dialogs, popovers */
+  --fill:#F4F3EE;          /* table headers, inert fields, row hover, aside panels */
+  --fill-2:#EAE8E1;        /* secondary hover, avatar chips, switch track off */
+  --sidebar:#EFEDE7;       /* app sidebar — sits between ground and surface */
+
+  /* lines */
+  --line:#E0DDD4;          /* default border: cards, tables, dividers */
+  --line-soft:#EDEBE4;     /* internal row dividers, metric cell separators */
+  --line-strong:#CFCBC0;   /* input borders, secondary buttons, dashed empty states */
+
+  /* ink */
+  --ink:#1A1917;           /* primary text, logo wordmark */
+  --ink-2:#575550;         /* secondary text, body copy, labels */
+  --ink-3:#66635C;         /* muted: eyebrows, table headers, meta, placeholders.
+                              4.7:1 on --ground — do not lighten. */
+  --on-accent:#FFFFFF;
+
+  /* accent — deep green */
+  --accent:#14554A;
+  --accent-2:#0E4038;      /* primary action hover */
+  --accent-soft:#E4EDEA;   /* accent tint: badges, avatar chips, selected menu row */
+  --accent-line:#C2D6D0;   /* border on accent-tinted surfaces */
+
+  /* semantic */
+  --red:#98291F;
+  --red-2:#7F221A;         /* destructive hover */
+  --red-soft:#F8E9E5;
+  --red-line:#E7D2CB;
+  --red-ink:#77332B;       /* body copy inside red-soft panels */
+  --amber:#7D5406;
+  --amber-soft:#F7EFDD;
+  --amber-line:#E5D6B4;
+  --amber-ink:#6A4705;     /* body copy inside amber-soft panels */
+  --slate:#2F4C63;         /* metric-card tone only */
+  --slate-soft:#EAEFF3;
+  --slate-line:#D3DEE6;
+
+  /* semantic aliases */
+  --text-primary:var(--ink);
+  --text-secondary:var(--ink-2);
+  --text-muted:var(--ink-3);
+  --text-accent:var(--accent);
+  --surface-page:var(--ground);
+  --surface-card:var(--surface);
+  --surface-inert:var(--fill);
+  --border-default:var(--line);
+  --border-control:var(--line-strong);
+  --border-divider:var(--line-soft);
+  --action-primary:var(--accent);
+  --action-primary-hover:var(--accent-2);
+  --action-danger:var(--red);
+  --action-danger-hover:var(--red-2);
+  --scrim:rgba(26,25,23,0.34);
+}

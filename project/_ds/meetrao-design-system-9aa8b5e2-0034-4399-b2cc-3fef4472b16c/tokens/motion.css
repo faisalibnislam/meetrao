@@ -1,0 +1,19 @@
+/* Meetrao — motion. Short and unshowy: colour transitions, a 5px lift, nothing bounces
+   except the switch thumb. Everything is disabled under prefers-reduced-motion. */
+:root{
+  --dur-fast:120ms; /* @kind other */      /* colour, background, border, box-shadow */
+  --dur-base:140ms; /* @kind other */      /* switch thumb, caret rotation */
+  --dur-pop:160ms; /* @kind other */       /* dialogs, toasts, popovers */
+  --dur-entrance:220ms; /* @kind other */  /* confirmed card */
+  --dur-hero:500ms; /* @kind other */      /* landing hero + screenshot entrance */
+  --dur-spin:700ms; /* @kind other */      /* button spinner, one full turn */
+  --ease:ease; /* @kind other */
+  --ease-spring:cubic-bezier(.3,1.2,.6,1); /* @kind other */   /* switch thumb travel */
+  --ease-out-soft:cubic-bezier(.22,1,.36,1); /* @kind other */ /* landing entrances */
+  --transition-control:background var(--dur-fast) var(--ease),border-color var(--dur-fast) var(--ease),box-shadow var(--dur-fast) var(--ease),color var(--dur-fast) var(--ease); /* @kind other */
+}
+@keyframes mu-in{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mu-pop{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mu-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes mu-spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){*{animation-duration:0.001ms !important;transition-duration:0.001ms !important}}

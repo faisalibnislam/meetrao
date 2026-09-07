@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap">
+<style>
+  :root {
+    --ground:#E7E4DC; --surface:#FFFFFF; --fill:#F4F3EE; --fill-2:#EAE8E1;
+    --line:#E0DDD4; --line-soft:#EDEBE4; --line-strong:#CFCBC0;
+    --ink:#1A1917; --ink-2:#575550; --ink-3:#66635C;
+    --accent:#14554A; --accent-2:#0E4038; --accent-soft:#E4EDEA; --accent-line:#C2D6D0;
+    --red:#98291F; --red-soft:#F8E9E5; --red-line:#E7D2CB;
+    --amber:#7D5406; --amber-soft:#F7EFDD; --amber-line:#E5D6B4;
+    --pop:0 1px 2px rgba(26,25,23,0.05), 0 16px 34px -12px rgba(26,25,23,0.24);
+    --mono:"DM Mono",ui-monospace,monospace;
+    --serif:"Instrument Serif",Georgia,serif;
+  }
+  html, body { margin:0; background:var(--ground); }
+  body { font-family:'Instrument Sans',system-ui,sans-serif; color:var(--ink); -webkit-font-smoothing:antialiased; }
+  a { color:var(--ink); text-decoration:underline; text-underline-offset:2px; text-decoration-color:var(--line-strong); font-weight:500; }
+  a:hover { color:var(--accent); text-decoration-color:var(--accent); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--ground);padding:34px 24px 70px">
+  <div style="max-width:1300px;margin:0 auto;display:flex;flex-direction:column;gap:26px">
+
+    <!-- this gallery is a review surface, not part of the product — so it links out, and
+         nothing in the product links in -->
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-bottom:4px;border-bottom:1px solid var(--line)">
+      <a href="Meetrao Landing.dc.html" style="display:inline-flex;align-items:center;gap:8px;min-height:38px;font-size:13px;font-weight:500;color:var(--ink-2);text-decoration:none">
+        <span style="font-family:var(--fa);font-weight:300;font-size:10px">&#xf053;</span>
+        Meetrao
+      </a>
+      <span style="width:3px;height:3px;border-radius:50%;background:var(--line-strong);flex:none"></span>
+      <a href="Meetrao App.dc.html" style="min-height:38px;display:inline-flex;align-items:center;font-size:13px;color:var(--ink-2);text-decoration:none">The app</a>
+      <a href="Meetrao Help.dc.html" style="min-height:38px;display:inline-flex;align-items:center;font-size:13px;color:var(--ink-2);text-decoration:none">Help centre</a>
+      <a href="Meetrao Support.dc.html" style="min-height:38px;display:inline-flex;align-items:center;font-size:13px;color:var(--ink-2);text-decoration:none">Support</a>
+      <span style="margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-3)">Review surface</span>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:9px;max-width:640px">
+        <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3)">Transactional email</span>
+        <h1 style="margin:0;font-family:var(--serif);font-size:clamp(30px,3.6vw,42px);font-weight:400;letter-spacing:-0.015em;line-height:1.05;color:var(--ink)">Meetrao email templates</h1>
+        <p style="margin:0;font-size:14px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">Six send-ready emails, each a self-contained HTML file built on tables and inline styles so it survives Gmail, Outlook and Apple Mail. Previews below are the live files at their real 600px send width.</p>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;padding:13px 15px;border:1px solid var(--line);border-radius:8px;background:var(--surface);min-width:220px">
+        <span style="font-family:var(--mono);font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:var(--ink-3)">Files</span>
+        <span style="font-family:var(--mono);font-size:12px;line-height:1.7;color:var(--ink-2)">emails/*.html</span>
+        <span style="font-size:12px;line-height:1.5;color:var(--ink-3)">Drop straight into your email tool. Merge fields are marked on each card.</span>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:8px">
+      <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+        <button type="button" onClick="{{ f.pick }}" style="{{ f.style }}" style-hover="{{ f.hover }}">{{ f.label }}</button>
+      </sc-for>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(600px,100%),1fr));gap:26px;align-items:start">
+      <sc-if value="{{ e0.shown }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:15px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface)">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px">
+            <span style="{{ e0.badgeStyle }}"><span style="{{ e0.dotStyle }}"></span>{{ e0.tag }}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto">{{ e0.file }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:14.5px;font-weight:600;letter-spacing:-0.005em;color:var(--ink)">{{ e0.name }}</span>
+            <span style="font-size:12.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ e0.when }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;padding-top:3px;border-top:1px solid var(--line-soft)">
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">Subject</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink)">{{ e0.subject }}</span>
+            </div>
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">To</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink-2)">{{ e0.to }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px">
+            <sc-for list="{{ e0.fields }}" as="mf" hint-placeholder-count="3">
+              <span style="display:inline-flex;align-items:center;height:21px;padding:0 7px;border:1px solid var(--line);border-radius:4px;background:var(--fill);font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">{{ mf.name }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);box-shadow:var(--pop);overflow:hidden">
+          <iframe src="emails/verify-email.html" title="{{ e0.name }}" loading="lazy" style="display:block;width:100%;height:590px;border:0;background:#E7E4DC"></iframe>
+        </div>
+
+        <a href="emails/verify-email.html" target="_blank" style="align-self:flex-start;font-size:12.5px">Open verify-email.html full size</a>
+      </div>
+      </sc-if>
+      <sc-if value="{{ e1.shown }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:15px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface)">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px">
+            <span style="{{ e1.badgeStyle }}"><span style="{{ e1.dotStyle }}"></span>{{ e1.tag }}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto">{{ e1.file }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:14.5px;font-weight:600;letter-spacing:-0.005em;color:var(--ink)">{{ e1.name }}</span>
+            <span style="font-size:12.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ e1.when }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;padding-top:3px;border-top:1px solid var(--line-soft)">
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">Subject</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink)">{{ e1.subject }}</span>
+            </div>
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">To</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink-2)">{{ e1.to }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px">
+            <sc-for list="{{ e1.fields }}" as="mf" hint-placeholder-count="3">
+              <span style="display:inline-flex;align-items:center;height:21px;padding:0 7px;border:1px solid var(--line);border-radius:4px;background:var(--fill);font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">{{ mf.name }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);box-shadow:var(--pop);overflow:hidden">
+          <iframe src="emails/welcome.html" title="{{ e1.name }}" loading="lazy" style="display:block;width:100%;height:976px;border:0;background:#E7E4DC"></iframe>
+        </div>
+
+        <a href="emails/welcome.html" target="_blank" style="align-self:flex-start;font-size:12.5px">Open welcome.html full size</a>
+      </div>
+      </sc-if>
+      <sc-if value="{{ e2.shown }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:15px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface)">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px">
+            <span style="{{ e2.badgeStyle }}"><span style="{{ e2.dotStyle }}"></span>{{ e2.tag }}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto">{{ e2.file }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:14.5px;font-weight:600;letter-spacing:-0.005em;color:var(--ink)">{{ e2.name }}</span>
+            <span style="font-size:12.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ e2.when }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;padding-top:3px;border-top:1px solid var(--line-soft)">
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">Subject</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink)">{{ e2.subject }}</span>
+            </div>
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">To</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink-2)">{{ e2.to }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px">
+            <sc-for list="{{ e2.fields }}" as="mf" hint-placeholder-count="3">
+              <span style="display:inline-flex;align-items:center;height:21px;padding:0 7px;border:1px solid var(--line);border-radius:4px;background:var(--fill);font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">{{ mf.name }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);box-shadow:var(--pop);overflow:hidden">
+          <iframe src="emails/booking-new-host.html" title="{{ e2.name }}" loading="lazy" style="display:block;width:100%;height:992px;border:0;background:#E7E4DC"></iframe>
+        </div>
+
+        <a href="emails/booking-new-host.html" target="_blank" style="align-self:flex-start;font-size:12.5px">Open booking-new-host.html full size</a>
+      </div>
+      </sc-if>
+      <sc-if value="{{ e3.shown }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:15px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface)">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px">
+            <span style="{{ e3.badgeStyle }}"><span style="{{ e3.dotStyle }}"></span>{{ e3.tag }}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto">{{ e3.file }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:14.5px;font-weight:600;letter-spacing:-0.005em;color:var(--ink)">{{ e3.name }}</span>
+            <span style="font-size:12.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ e3.when }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;padding-top:3px;border-top:1px solid var(--line-soft)">
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">Subject</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink)">{{ e3.subject }}</span>
+            </div>
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">To</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink-2)">{{ e3.to }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px">
+            <sc-for list="{{ e3.fields }}" as="mf" hint-placeholder-count="3">
+              <span style="display:inline-flex;align-items:center;height:21px;padding:0 7px;border:1px solid var(--line);border-radius:4px;background:var(--fill);font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">{{ mf.name }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);box-shadow:var(--pop);overflow:hidden">
+          <iframe src="emails/booking-new-guest.html" title="{{ e3.name }}" loading="lazy" style="display:block;width:100%;height:918px;border:0;background:#E7E4DC" data-comment-anchor="01e958c708-iframe"></iframe>
+        </div>
+
+        <a href="emails/booking-new-guest.html" target="_blank" style="align-self:flex-start;font-size:12.5px">Open booking-new-guest.html full size</a>
+      </div>
+      </sc-if>
+      <sc-if value="{{ e4.shown }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:15px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface)">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px">
+            <span style="{{ e4.badgeStyle }}"><span style="{{ e4.dotStyle }}"></span>{{ e4.tag }}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto">{{ e4.file }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:14.5px;font-weight:600;letter-spacing:-0.005em;color:var(--ink)">{{ e4.name }}</span>
+            <span style="font-size:12.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ e4.when }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;padding-top:3px;border-top:1px solid var(--line-soft)">
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">Subject</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink)">{{ e4.subject }}</span>
+            </div>
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">To</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink-2)">{{ e4.to }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px">
+            <sc-for list="{{ e4.fields }}" as="mf" hint-placeholder-count="3">
+              <span style="display:inline-flex;align-items:center;height:21px;padding:0 7px;border:1px solid var(--line);border-radius:4px;background:var(--fill);font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">{{ mf.name }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);box-shadow:var(--pop);overflow:hidden">
+          <iframe src="emails/booking-changed.html" title="{{ e4.name }}" loading="lazy" style="display:block;width:100%;height:936px;border:0;background:#E7E4DC"></iframe>
+        </div>
+
+        <a href="emails/booking-changed.html" target="_blank" style="align-self:flex-start;font-size:12.5px">Open booking-changed.html full size</a>
+      </div>
+      </sc-if>
+      <sc-if value="{{ e5.shown }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:15px 16px;border:1px solid var(--line);border-radius:10px;background:var(--surface)">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:9px">
+            <span style="{{ e5.badgeStyle }}"><span style="{{ e5.dotStyle }}"></span>{{ e5.tag }}</span>
+            <span style="font-family:var(--mono);font-size:11px;color:var(--ink-3);margin-left:auto">{{ e5.file }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px">
+            <span style="font-size:14.5px;font-weight:600;letter-spacing:-0.005em;color:var(--ink)">{{ e5.name }}</span>
+            <span style="font-size:12.5px;line-height:1.5;color:var(--ink-2);text-wrap:pretty">{{ e5.when }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;padding-top:3px;border-top:1px solid var(--line-soft)">
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">Subject</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink)">{{ e5.subject }}</span>
+            </div>
+            <div style="display:flex;gap:9px">
+              <span style="width:56px;flex:none;font-family:var(--mono);font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);padding-top:3px">To</span>
+              <span style="flex:1;min-width:0;font-size:12.5px;line-height:1.45;color:var(--ink-2)">{{ e5.to }}</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;padding-top:2px">
+            <sc-for list="{{ e5.fields }}" as="mf" hint-placeholder-count="3">
+              <span style="display:inline-flex;align-items:center;height:21px;padding:0 7px;border:1px solid var(--line);border-radius:4px;background:var(--fill);font-family:var(--mono);font-size:10.5px;color:var(--ink-2)">{{ mf.name }}</span>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--line-strong);border-radius:10px;background:var(--surface);box-shadow:var(--pop);overflow:hidden">
+          <iframe src="emails/booking-cancelled.html" title="{{ e5.name }}" loading="lazy" style="display:block;width:100%;height:786px;border:0;background:#E7E4DC"></iframe>
+        </div>
+
+        <a href="emails/booking-cancelled.html" target="_blank" style="align-self:flex-start;font-size:12.5px">Open booking-cancelled.html full size</a>
+      </div>
+      </sc-if>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:11px;max-width:760px;padding:18px 20px;border:1px solid var(--line);border-radius:10px;background:var(--surface)" data-comment-anchor="f65b21baf5-div">
+      <span style="font-size:14px;font-weight:600;color:var(--ink)">Notes for implementation</span>
+      <ul style="margin:0;padding:0 0 0 18px;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ notes }}" as="n" hint-placeholder-count="4">
+          <li style="font-size:13px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">{{ n.text }}</li>
+        </sc-for>
+      </ul>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { filter: 'all' };
+
+  /* The preview sandbox will not let an iframe navigate to a project file, so each frame is
+     fed its email's markup directly. Fetch once, then write into every matching frame. */
+  componentDidMount() { this.fill(); }
+  componentDidUpdate() { this.fill(); }
+
+  fill = () => {
+    this._html = this._html || {};
+    document.querySelectorAll('iframe[src^="emails/"]').forEach(frame => {
+      const file = frame.getAttribute('src');
+      if (frame.dataset.mrFilled === file) return;
+      const write = (html) => {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        doc.open(); doc.write(html); doc.close();
+        frame.dataset.mrFilled = file;
+      };
+      if (this._html[file]) { write(this._html[file]); return; }
+      fetch(file).then(r => r.text()).then(html => { this._html[file] = html; write(html); }).catch(() => {});
+    });
+  };
+
+  EMAILS = [
+    {
+      key: 'verify', group: 'account', tag: 'Blocking', tone: 'amber',
+      name: 'Confirm your email', file: 'verify-email.html',
+      subject: 'Confirm your email to activate Meetrao',
+      to: 'The new signup',
+      when: 'Sent the moment someone signs up with email and password. Until the link is clicked the account cannot sign in.',
+      fields: ['{{first_name}}', '{{verify_url}}', '{{expires_in}}'],
+      height: 660
+    },
+    {
+      key: 'welcome', group: 'account', tag: 'Welcome', tone: 'accent',
+      name: 'Welcome to Meetrao', file: 'welcome.html',
+      subject: 'Welcome to Meetrao — your link is ready',
+      to: 'The host, once verified',
+      when: 'Sent immediately after the email is confirmed, or straight after a Google signup.',
+      fields: ['{{first_name}}', '{{booking_url}}', '{{onboarding_url}}'],
+      height: 1080
+    },
+    {
+      key: 'newHost', group: 'booking', tag: 'New booking', tone: 'accent',
+      name: 'New booking — to the host', file: 'booking-new-host.html',
+      subject: 'New booking: {{guest_name}} — {{meeting_name}}',
+      to: 'The host',
+      when: 'Sent when a guest confirms a slot. Respects the "New booking" preference.',
+      fields: ['{{guest_name}}', '{{guest_email}}', '{{meeting_name}}', '{{start_long}}', '{{timezone}}', '{{meet_url}}', '{{guest_note}}'],
+      height: 1000
+    },
+    {
+      key: 'newGuest', group: 'booking', tag: 'New booking', tone: 'accent',
+      name: "You're booked — to the guest", file: 'booking-new-guest.html',
+      subject: "You're booked with {{host_name}} — {{start_short}}",
+      to: 'The guest',
+      when: 'Sent alongside the host copy. Always sent — a guest confirmation is not a preference.',
+      fields: ['{{guest_first}}', '{{host_name}}', '{{meeting_name}}', '{{start_long}}', '{{guest_timezone}}', '{{meet_url}}'],
+      height: 900
+    },
+    {
+      key: 'changed', group: 'booking', tag: 'Rescheduled', tone: 'amber',
+      name: 'Meeting rescheduled', file: 'booking-changed.html',
+      subject: 'Moved: {{meeting_name}} is now {{start_short}}',
+      to: 'Both host and guest',
+      when: 'Sent to both sides when the time, duration or meeting is changed. Respects "Booking changed" for the host.',
+      fields: ['{{old_start_long}}', '{{start_long}}', '{{meeting_name}}', '{{changed_by}}', '{{meet_url}}'],
+      height: 980
+    },
+    {
+      key: 'cancelled', group: 'booking', tag: 'Cancelled', tone: 'red',
+      name: 'Meeting cancelled', file: 'booking-cancelled.html',
+      subject: 'Cancelled: {{meeting_name}} on {{start_short}}',
+      to: 'Both host and guest',
+      when: 'Sent to both sides on cancellation, from either party. Respects "Booking cancelled" for the host.',
+      fields: ['{{meeting_name}}', '{{other_party}}', '{{old_start_long}}', '{{cancelled_at}}', '{{cancel_reason}}'],
+      height: 840
+    }
+  ];
+
+  badge(tone) {
+    const map = {
+      accent: ['var(--accent-soft)', 'var(--accent-line)', 'var(--accent)'],
+      red: ['var(--red-soft)', 'var(--red-line)', 'var(--red)'],
+      amber: ['var(--amber-soft)', 'var(--amber-line)', 'var(--amber)']
+    };
+    const c = map[tone] || map.accent;
+    return 'display:inline-flex;align-items:center;gap:6px;height:21px;padding:0 8px;border:1px solid ' + c[1]
+      + ';border-radius:4px;background:' + c[0] + ';color:' + c[2] + ';font-size:11.5px;font-weight:600;white-space:nowrap;flex:none';
+  }
+
+  dot(tone) {
+    const map = { accent: 'var(--accent)', red: 'var(--red)', amber: 'var(--amber)' };
+    return 'width:5px;height:5px;border-radius:50%;background:' + (map[tone] || map.accent) + ';flex:none';
+  }
+
+  renderVals() {
+    const f = this.state.filter;
+    const groups = [['all', 'All six'], ['account', 'Account'], ['booking', 'Bookings']];
+
+    return {
+      filters: groups.map(([k, label]) => {
+        const on = f === k;
+        return {
+          key: k, label,
+          style: 'display:inline-flex;align-items:center;height:32px;padding:0 13px;border:1px solid '
+            + (on ? 'var(--accent)' : 'var(--line-strong)') + ';border-radius:6px;background:'
+            + (on ? 'var(--accent)' : 'var(--surface)') + ';color:' + (on ? '#fff' : 'var(--ink)')
+            + ';font-family:inherit;font-size:13px;font-weight:' + (on ? '600' : '500')
+            + ';cursor:pointer;transition:background 120ms ease,border-color 120ms ease',
+          hover: on ? 'background:var(--accent-2)' : 'background:var(--fill)',
+          pick: () => this.setState({ filter: k })
+        };
+      }),
+      /* one entry per authored card — iframe srcs are literal in the template, so each card
+         is exposed by index and shown/hidden rather than looped over */
+      ...this.EMAILS.reduce((acc, e, i) => {
+        acc['e' + i] = {
+          shown: f === 'all' || e.group === f,
+          name: e.name, file: e.file, subject: e.subject, to: e.to, when: e.when, tag: e.tag,
+          badgeStyle: this.badge(e.tone), dotStyle: this.dot(e.tone),
+          fields: e.fields.map(n => ({ key: n, name: n }))
+        };
+        return acc;
+      }, {}),
+      notes: [
+        { key: 'resend', text: 'Sending via Resend: these are plain HTML files, so they drop straight into the send API as the html parameter — no conversion needed. If you would rather own them as components, Resend\'s React Email will render the same markup, but keep the table structure; a div-based rewrite will break Outlook.' },
+        { key: 'merge', text: 'Resend\'s transactional send API does no templating, so substitute the {{...}} fields in application code before the call. Its Broadcasts product does support {{{FIRST_NAME}}}-style variables, but only for audience sends — that suits Welcome and any future product news, not booking mail.' },
+        { key: 'domain', text: 'Resend needs meetrao.com verified with SPF and DKIM records before anything sends, and a DMARC policy is worth adding at the same time. Until the domain is verified Resend will only deliver to the account owner\'s own address, which is easy to mistake for working code.' },
+        { key: 'transactional', text: 'Split the two kinds of mail. Verification, booking confirmations and cancellations are transactional: send them through the API, and do not attach List-Unsubscribe. Welcome and product news are marketing: they must honour the notification preferences and carry a working unsubscribe.' },
+        { key: 'idempotent', text: 'Pass an idempotency key on booking mail — Resend supports it. A retried webhook or a double-submitted booking should not send the guest two confirmations.' },
+        { key: 'fonts', text: 'The product moved from DM Sans to Instrument Sans, but the emails are unaffected: they never used a web font. Measured across the six files the stacks are Arial (105 declarations, standing in for Instrument Sans), Courier New (17, for DM Mono on links and Meet URLs) and Georgia (6, for Instrument Serif on display lines). Do not add @font-face or a Google Fonts link — Gmail, Outlook and several others strip them, and the fallback then decides your layout.' },
+        { key: 'metrics', text: 'Georgia is wider than Instrument Serif at the same size, so the display lines were written short enough to hold on one line in Georgia. If you swap the serif stack, re-check the headline in each email.' },
+        { key: 'logo', text: 'The Meetrao mark is drawn in type (a green rounded square plus the wordmark) rather than an image, because a project-hosted logo will not resolve for recipients. Host the real mark on your CDN and swap it in — the cell is sized for a 22px square. Keep alt text, since many clients block images by default.' },
+        { key: 'inline', text: 'Every style is inlined on the element. The only rules in <head> are the mobile media query and the Outlook conditional; each email reads correctly with the <style> block stripped entirely.' },
+        { key: 'preheader', text: 'Each file opens with a hidden preheader (~85 characters) that previews next to the subject line. Update it whenever the subject changes — a stale preheader is more confusing than none.' },
+        { key: 'address', text: 'The footer carries Meetrao\'s real postal address: Operated by Airly Studio, 44/A Judge Court Road, Cumilla, Bangladesh. It matches the Terms and Privacy pages. A physical address is a legal requirement for marketing mail under CAN-SPAM, so it stays even on the transactional templates.' },
+        { key: 'size', text: 'All six are under 10KB, well clear of the ~100KB point where Gmail clips a message and hides the unsubscribe link.' }
+      ]
+
+    };
+  }
+}
+</script>
+</body>
+</html>

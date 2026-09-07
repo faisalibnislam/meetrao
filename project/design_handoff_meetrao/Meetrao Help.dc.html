@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="icon" type="image/png" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&amp;family=DM+Mono:wght@400;500&amp;family=Instrument+Serif:ital@0;1&amp;display=swap">
+<link rel="stylesheet" href="assets/fonts.css">
+<style>
+  :root {
+    --ground:#E7E4DC; --surface:#FFFFFF; --fill:#F4F3EE; --fill-2:#EAE8E1;
+    --line:#E0DDD4; --line-soft:#EDEBE4; --line-strong:#CFCBC0;
+    --ink:#1A1917; --ink-2:#575550; --ink-3:#66635C;
+    --accent:#14554A; --accent-2:#0E4038; --accent-soft:#E4EDEA; --accent-line:#C2D6D0;
+    --red:#98291F; --red-soft:#F8E9E5; --red-line:#E7D2CB;
+    --amber:#7D5406; --amber-soft:#F7EFDD; --amber-line:#E5D6B4;
+    --pop:0 1px 2px rgba(26,25,23,0.05), 0 16px 34px -12px rgba(26,25,23,0.24);
+    --fa:"Font Awesome 6 Sharp";
+    --mono:"DM Mono",ui-monospace,monospace;
+    --serif:"Instrument Serif",Georgia,serif;
+  }
+  html { scroll-behavior:smooth; }
+  html, body { margin:0; background:var(--ground); }
+  body { font-family:'Instrument Sans',system-ui,-apple-system,sans-serif; color:var(--ink); -webkit-font-smoothing:antialiased; }
+  a { color:var(--accent); text-decoration:underline; text-underline-offset:2px; text-decoration-color:var(--accent-line); font-weight:500; }
+  a:hover { color:var(--accent-2); text-decoration-color:var(--accent-2); }
+  /* The prose underline rule below must not reach the global nav or footer — they were
+     copied from the landing page, which sets text-decoration:none. */
+  header a, footer a { text-decoration: none; }
+  h2 { scroll-margin-top:84px; }
+  /* The rail wraps under the article below ~880px. Sticky must be dropped there, or it pins
+     over the now-full-width text. Inline styles cannot express a media query. */
+  @media (max-width: 880px) {
+    /* !important is required: every one of these is set inline on the element, and inline
+       styles beat stylesheet rules without it. */
+    nav[data-help-rail] {
+      position: static !important;
+      flex: 1 1 100% !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+    nav[data-help-rail] > div { flex-direction: row !important; flex-wrap: wrap !important; }
+    nav[data-help-rail] > div > a { flex: 0 0 auto; }
+  }
+  /* ── Responsive: the global nav and footer are shared with the landing page and need the
+     same breakpoints. Everything else on this page reflows via flex-wrap and auto-fit. ── */
+
+  /* Phone: four section links plus Log in and the CTA cannot share a 375px row. Every
+     destination is also in the footer. */
+  @media (max-width: 720px) {
+    header nav { display: none !important; }
+    header > div { gap: 12px !important; padding: 10px 12px !important; }
+  }
+
+  /* Phone: the footer's first column has a 240px floor which, with a 140px sibling track,
+     exceeds a 375px screen. Stack instead. */
+  @media (max-width: 700px) {
+    footer [data-footer-panel] { grid-template-columns: 1fr !important; gap: 30px !important; }
+  }
+
+  /* 26px of gutter is a lot of a small screen. */
+  @media (max-width: 560px) {
+    footer > div { padding-left: 18px !important; padding-right: 18px !important; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:var(--ground)">
+
+  <header style="position:sticky;top:0;z-index:60;padding:20px 26px 0;pointer-events:none">
+    <div style="max-width:1148px;margin:0 auto;display:flex;align-items:center;gap:22px;padding:10px 14px 10px 18px;border:1px solid var(--line);border-radius:12px;background:#FFFFFF;backdrop-filter:blur(16px);box-shadow:0 1px 2px rgba(26,25,23,0.04), 0 12px 28px -14px rgba(26,25,23,0.22);pointer-events:auto">
+      <a href="Meetrao Landing.dc.html" style="display:block;flex:none"><img src="assets/meetrao-logo.svg" alt="Meetrao" style="height:19px;width:auto"></a>
+      <nav style="display:flex;gap:22px;margin-left:10px;flex-wrap:wrap;min-width:0">
+        <a href="Meetrao Landing.dc.html#product" style="font-size:13.5px;color:var(--ink-2);white-space:nowrap">Product</a>
+        <a href="Meetrao Landing.dc.html#how" style="font-size:13.5px;color:var(--ink-2);white-space:nowrap">How it works</a>
+        <a href="Meetrao Landing.dc.html#usecases" style="font-size:13.5px;color:var(--ink-2);white-space:nowrap">Use cases</a>
+        <a href="Meetrao Landing.dc.html#faq" style="font-size:13.5px;color:var(--ink-2);white-space:nowrap">FAQ</a>
+      </nav>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:12px;flex:none">
+        <a href="Meetrao App.dc.html#login" style="display:inline-flex;align-items:center;min-height:38px;padding:0 8px;font-size:13.5px;color:var(--ink-2)">Log in</a>
+        <a href="Meetrao App.dc.html#signup" style="display:inline-flex;align-items:center;gap:8px;height:38px;padding:0 15px;border-radius:7px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;white-space:nowrap;transition:background 120ms ease" style-hover="background:var(--accent-2);color:#fff">Get started — Free</a>
+      </div>
+    </div>
+  </header>
+
+
+  
+
+  <div style="max-width:1200px;margin:0 auto;padding:34px 24px 90px;display:flex;flex-direction:column;gap:26px">
+
+    <!-- ── intro ── -->
+    <div style="display:flex;flex-direction:column;gap:12px;max-width:660px">
+      <h1 style="margin:0;font-family:var(--serif);font-size:clamp(32px,4vw,46px);font-weight:400;letter-spacing:-0.015em;line-height:1.03;color:var(--ink)">Help Centre</h1>
+      <p style="margin:0;font-size:15.5px;line-height:1.65;color:var(--ink-2);text-wrap:pretty">Meetrao replaces the back-and-forth of finding a time. You connect your calendar once, describe the meetings people can book, set the hours you are free, and share one link. Everything below explains a section of the app, in the order you would meet it.</p>
+    </div>
+
+    <!-- ── the idea ── -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1px;border:1px solid var(--line);border-radius:12px;background:var(--line);overflow:hidden">
+      <sc-for list="{{ pillars }}" as="p" hint-placeholder-count="3">
+        <div style="display:flex;flex-direction:column;gap:9px;padding:20px 20px 22px;background:var(--surface)">
+          <span style="{{ p.iconStyle }}">{{ p.glyph }}</span>
+          <span style="font-size:14.5px;font-weight:600;letter-spacing:-0.005em;color:var(--ink)">{{ p.title }}</span>
+          <span style="font-size:13.5px;line-height:1.6;color:var(--ink-2);text-wrap:pretty">{{ p.text }}</span>
+        </div>
+      </sc-for>
+    </div>
+
+    <!-- ── rail + content ── -->
+    <div style="display:flex;flex-wrap:wrap;align-items:flex-start;gap:30px">
+
+      <!-- sticky jump rail; wraps above the content on narrow viewports -->
+      <nav aria-label="Help contents" data-help-rail="1" style="flex:0 0 232px;box-sizing:border-box;position:sticky;top:96px;align-self:flex-start;max-height:calc(100vh - 120px);overflow-y:auto;padding:16px 14px;border:1px solid var(--line);border-radius:12px;background:var(--surface);box-shadow:0 1px 2px rgba(26,25,23,0.04), 0 10px 24px -16px rgba(26,25,23,0.18)">
+        <span style="display:flex;align-items:center;gap:10px;padding:0 4px 12px;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:var(--accent)"><span style="width:16px;height:2px;border-radius:1px;background:var(--accent);flex:none"></span>Jump to</span>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <sc-for list="{{ toc }}" as="t" hint-placeholder-count="10">
+            <a href="{{ t.href }}" style="display:flex;align-items:center;gap:10px;min-height:36px;padding:7px 10px;border-radius:7px;font-size:13px;font-weight:500;color:var(--ink-2);text-decoration:none;transition:background 120ms ease,color 120ms ease" style-hover="background:var(--accent-soft);color:var(--accent)">
+              <span style="font-family:var(--fa);font-weight:300;font-size:12px;color:var(--ink-3);width:15px;text-align:center;flex:none">{{ t.glyph }}</span>
+              <span style="min-width:0">{{ t.label }}</span>
+            </a>
+          </sc-for>
+        </div>
+      </nav>
+
+      <div style="flex:1 1 520px;min-width:0;display:flex;flex-direction:column;gap:26px">
+
+    <!-- ═══ GETTING STARTED ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="start" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Getting started</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Signing up takes about two minutes. There are two ways in.</p>
+
+      <span style="display:block;margin:22px 0 0;font-size:14.5px;font-weight:600;color:var(--ink)">With an email address</span>
+      <p style="margin:9px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Enter your name, work email and a password of at least 8 characters. We email you a confirmation link straight away. <strong style="font-weight:600;color:var(--ink)">You cannot use Meetrao until you click it</strong> — this stops anyone signing up with an address that is not theirs.</p>
+      <p style="margin:9px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">The link lasts 24 hours. If it does not arrive, check your spam folder, then use <em>Resend the email</em> on the waiting screen. Typed your address wrong? <em>Use a different email</em> takes you back to sign-up.</p>
+
+      <span style="display:block;margin:22px 0 0;font-size:14.5px;font-weight:600;color:var(--ink)">With Google</span>
+      <p style="margin:9px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Continue with Google and you skip the confirmation step entirely — Google has already verified the address. You go straight to setup.</p>
+
+      <div style="display:flex;gap:12px;margin:22px 0 0;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--fill)">
+        <span style="font-family:var(--fa);font-weight:900;font-size:12px;color:var(--accent);flex:none;margin-top:3px"></span>
+        <span style="font-size:13.5px;line-height:1.6;color:var(--ink-2)">Forgot your password? Use <em>Forgot?</em> next to the password field. We send a reset link that expires in one hour.</span>
+      </div>
+    </section>
+
+    <!-- ═══ SETUP ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="setup" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Setting up — the five steps</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">After you confirm your email, Meetrao walks you through setup. The tracker at the top shows where you are. Everything here can be changed later, so do not agonise over it.</p>
+
+      <div style="display:flex;flex-direction:column;gap:14px;margin:22px 0 0">
+        <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+          <div style="display:flex;gap:14px">
+            <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:11.5px;font-weight:600;flex:none;margin-top:1px">{{ s.n }}</span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:14.5px;font-weight:600;color:var(--ink)">{{ s.title }}</span>
+              <span style="font-size:14px;line-height:1.65;color:var(--ink-2);text-wrap:pretty">{{ s.text }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="display:flex;gap:12px;margin:22px 0 0;padding:14px 16px;border:1px solid var(--amber-line);border-radius:8px;background:var(--amber-soft)">
+        <span style="font-family:var(--fa);font-weight:900;font-size:12px;color:var(--amber);flex:none;margin-top:3px"></span>
+        <span style="font-size:13.5px;line-height:1.6;color:#6A4705">You can skip connecting your calendar, but then Meetrao cannot see when you are busy — guests may be offered times you already have something in. Connect it before you share your link.</span>
+      </div>
+      <p style="margin:16px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Need to stop halfway? Use the account button at the top-right of the setup screen to log out. Your progress is saved and you can pick it up later.</p>
+    </section>
+
+    <!-- ═══ DASHBOARD ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="dashboard" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Dashboard</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">The first thing you see, designed to be read once in the morning and then closed. It greets you with today's date, the current time, and when your next meeting starts.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Four cards summarise where things stand: how many meetings are <strong style="font-weight:600;color:var(--ink)">Upcoming</strong>, when your <strong style="font-weight:600;color:var(--ink)">Next meeting</strong> is and with whom, how many <strong style="font-weight:600;color:var(--ink)">Active meetings</strong> can be booked from your link, and your average <strong style="font-weight:600;color:var(--ink)">reply time</strong> — how long people take to book after opening your link.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Below that, <strong style="font-weight:600;color:var(--ink)">Today</strong> lists what is happening now, each row with a <em>Join</em> button that opens Google Meet directly. <strong style="font-weight:600;color:var(--ink)">Later this week</strong> follows. <em>Details</em> on any row opens the full booking, including any note your guest left.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">If your calendar is not connected, an amber banner sits at the top until it is. It is worth clearing.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)"><strong style="font-weight:600;color:var(--ink)">Copy link</strong> in the header copies your booking link. If more than one meeting is active it becomes a dropdown, so you can copy the link for a specific meeting instead of your general one.</p>
+    </section>
+
+    <!-- ═══ MEETINGS ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="meetings" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Meetings — what people can book</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">A “meeting” is a type of appointment, not a single booking. Most people have two or three — a short intro call, a standard consultation, a longer deep dive. Each has its own link.</p>
+
+      <span style="display:block;margin:22px 0 0;font-size:14.5px;font-weight:600;color:var(--ink)">Creating one</span>
+      <p style="margin:9px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Give it a name guests will recognise and a description — both appear on your booking page. Pick a duration (15, 30, 45 or 60 minutes). Location is Google Meet; it is the only option in this release, and every booking gets its own link.</p>
+
+      <span style="display:block;margin:22px 0 0;font-size:14.5px;font-weight:600;color:var(--ink)">Booking rules</span>
+      <p style="margin:9px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Three settings protect your day:</p>
+      <div style="margin:12px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden">
+        <sc-for list="{{ rules }}" as="r" hint-placeholder-count="3">
+          <div style="{{ r.rowStyle }}">
+            <span style="width:168px;flex:none;font-size:13.5px;font-weight:600;color:var(--ink)">{{ r.name }}</span>
+            <span style="flex:1;min-width:200px;font-size:13.5px;line-height:1.6;color:var(--ink-2)">{{ r.text }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <span style="display:block;margin:22px 0 0;font-size:14.5px;font-weight:600;color:var(--ink)">Turning one off</span>
+      <p style="margin:9px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">The <strong style="font-weight:600;color:var(--ink)">Active</strong> switch controls whether a meeting can be booked. Switch it off and it stays in your list — with its settings and history intact — but nobody can book it from your link. Better than deleting something you might want back.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)"><em>Preview</em> shows you exactly what a guest sees. Worth a look before you send the link to anyone.</p>
+    </section>
+
+    <!-- ═══ AVAILABILITY ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="availability" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Availability — when you are free</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">One weekly schedule covers all your meetings. Tick the days you work and set the hours for each.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">A day can have more than one range — <em>Add hours</em> lets you set 9:00–12:00 and 14:00–17:00 so nobody books over lunch. Unticking a day marks it Unavailable but keeps its hours, so switching it back on later takes one click.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Your <strong style="font-weight:600;color:var(--ink)">timezone</strong> is detected from your browser and you can change it. Guests always see your hours converted into their own timezone, so you never have to do the arithmetic. Ninety-four timezones are supported and they stay correct through daylight saving.</p>
+      <div style="display:flex;gap:12px;margin:22px 0 0;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--fill)">
+        <span style="font-family:var(--fa);font-weight:900;font-size:12px;color:var(--accent);flex:none;margin-top:3px"></span>
+        <span style="font-size:13.5px;line-height:1.6;color:var(--ink-2)">These hours are the outer boundary. Within them, Meetrao still hides anything your Google Calendar says you are busy for — so a meeting already in your calendar at 10am will not be offered, even though Tuesday 9–5 is open.</span>
+      </div>
+      <p style="margin:16px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Changes are not live until you press <strong style="font-weight:600;color:var(--ink)">Save availability</strong>. The label beside the button tells you whether you have unsaved changes.</p>
+    </section>
+
+    <!-- ═══ BOOKINGS ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="bookings" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Bookings — who booked you</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Every booking, split into <strong style="font-weight:600;color:var(--ink)">Upcoming</strong> and <strong style="font-weight:600;color:var(--ink)">Past</strong>. Each row shows the guest and their email, which meeting they booked, the date and time, and whether it is confirmed or cancelled. Search by guest name or email address.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)"><em>Join</em> appears on anything still to come. <em>Details</em> opens the full record — including the note your guest left, if any — and is where you cancel from.</p>
+
+      <span style="display:block;margin:22px 0 0;font-size:14.5px;font-weight:600;color:var(--ink)">Cancelling</span>
+      <p style="margin:9px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Open <em>Details</em>, then <em>Cancel meeting</em>. Your guest is emailed, the calendar event is removed, and the slot opens for someone else to book. It cannot be undone — but the guest can book a new time from your link.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Guests can cancel too, from the confirmation email or their confirmation page. You are emailed when they do.</p>
+    </section>
+
+    <!-- ═══ EMAILS ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="emails" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Emails and notifications</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Meetrao emails both sides whenever a booking is made, changed or cancelled. The message carries everything needed: the meeting, both names, the date and time in the right timezone, the duration and the Google Meet link.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">You control which of these reach you in <strong style="font-weight:600;color:var(--ink)">Settings → Notifications</strong>:</p>
+      <div style="margin:14px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden">
+        <sc-for list="{{ notices }}" as="n" hint-placeholder-count="5">
+          <div style="{{ n.rowStyle }}">
+            <span style="width:168px;flex:none;font-size:13.5px;font-weight:600;color:var(--ink)">{{ n.name }}</span>
+            <span style="flex:1;min-width:180px;font-size:13.5px;line-height:1.6;color:var(--ink-2)">{{ n.text }}</span>
+            <span style="{{ n.tagStyle }}">{{ n.deflt }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:12px;margin:20px 0 0;padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--fill)">
+        <span style="font-family:var(--fa);font-weight:900;font-size:12px;color:var(--accent);flex:none;margin-top:3px"></span>
+        <span style="font-size:13.5px;line-height:1.6;color:var(--ink-2)">Turning these off only affects <em>your</em> inbox. Your guests still get their confirmations — and you will still receive password and security emails, which cannot be switched off.</span>
+      </div>
+    </section>
+
+    <!-- ═══ GUEST VIEW ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="guests" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">What your guests see</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Your guests never sign up, never download anything and never work out a timezone. They open your link and see your name, title, photo and the meeting description on the left, with a calendar on the right.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Days you do not work are dimmed. They pick a date, then a time from the slots that are genuinely open, then give a name, an email and — if they want — a short note. That is the whole flow: two taps and a form.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Because Meetrao invites them to the calendar event, the meeting appears on their calendar automatically with the Meet link attached — they do not have to add it themselves. The confirmation page shows the booking with a <em>Join Google Meet</em> button, an .ics download if they use something other than Google, and a way to cancel. The same details arrive by email.</p>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">If someone else takes the slot while they are choosing, Meetrao tells them plainly and refreshes the list. Nothing is scheduled unless it actually succeeded.</p>
+    </section>
+
+    <!-- ═══ SETTINGS ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="settings" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Settings and your account</h2>
+      <p style="margin:12px 0 0;font-size:14.5px;line-height:1.7;color:var(--ink-2)">Settings live behind your profile at the bottom of the sidebar. Click it and choose <strong style="font-weight:600;color:var(--ink)">Settings</strong> — or <strong style="font-weight:600;color:var(--ink)">Log out</strong>. There are five panels.</p>
+      <div style="display:flex;flex-direction:column;gap:14px;margin:20px 0 0">
+        <sc-for list="{{ panels }}" as="p" hint-placeholder-count="5">
+          <div style="display:flex;gap:13px">
+            <span style="{{ p.iconStyle }}">{{ p.glyph }}</span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+              <span style="font-size:14.5px;font-weight:600;color:var(--ink)">{{ p.title }}</span>
+              <span style="font-size:14px;line-height:1.65;color:var(--ink-2);text-wrap:pretty">{{ p.text }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;gap:12px;margin:22px 0 0;padding:14px 16px;border:1px solid var(--red-line);border-radius:8px;background:var(--red-soft)">
+        <span style="font-family:var(--fa);font-weight:900;font-size:12px;color:var(--red);flex:none;margin-top:3px"></span>
+        <span style="font-size:13.5px;line-height:1.6;color:#77332B"><strong style="font-weight:600">Deleting your account is immediate and permanent.</strong> Your booking page stops working, every upcoming meeting is cancelled, your guests are notified, and your data is erased — we keep no copy. Export anything you need first.</span>
+      </div>
+    </section>
+
+    <!-- ═══ FAQ ═══ -->
+    <section style="display:flex;flex-direction:column;gap:0;padding:32px 34px 36px;border:1px solid var(--line);border-radius:12px;background:var(--surface)">
+      <h2 id="faq" style="margin:0;font-size:21px;font-weight:600;letter-spacing:-0.012em;color:var(--ink)">Common questions</h2>
+      <div style="display:flex;flex-direction:column;gap:0;margin:18px 0 0;border:1px solid var(--line);border-radius:8px;overflow:hidden">
+        <sc-for list="{{ faqs }}" as="f" hint-placeholder-count="8">
+          <div style="{{ f.rowStyle }}">
+            <span style="font-size:14px;font-weight:600;color:var(--ink)">{{ f.q }}</span>
+            <span style="font-size:13.5px;line-height:1.65;color:var(--ink-2);text-wrap:pretty">{{ f.a }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+
+    <!-- ── contact ── -->
+    <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:22px 26px;border:1px solid var(--accent-line);border-radius:12px;background:var(--accent-soft)">
+      <div style="flex:1;min-width:240px;display:flex;flex-direction:column;gap:5px">
+        <span style="font-size:15.5px;font-weight:600;color:var(--ink)">Still stuck?</span>
+        <span style="font-size:13.5px;line-height:1.6;color:var(--ink-2)">Email us and a person will read it. Tell us what you were trying to do and what happened instead.</span>
+      </div>
+      <a href="Meetrao Support.dc.html" style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 17px;border-radius:7px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;text-decoration:none;flex:none" style-hover="background:var(--accent-2);color:#fff">
+        <span style="font-family:var(--fa);font-weight:300;font-size:12px"></span>Contact support
+      </a>
+    </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <footer style="background:var(--accent-2);color:#fff">
+    <div style="max-width:1200px;margin:0 auto;padding:0 26px">
+
+      <!-- CTA band, now the top of the footer -->
+      <div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:30px;padding:76px 0 60px;">
+        <div style="flex:1;min-width:290px;display:flex;flex-direction:column;gap:14px">
+          <span style="display:inline-flex;align-items:center;gap:10px;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#7FD8C4"><span style="width:18px;height:2px;border-radius:1px;background:#7FD8C4;flex:none"></span>Get started</span>
+          <h2 style="margin:0;max-width:21ch;font-family:var(--serif);font-size:clamp(34px,5.2vw,66px);font-weight:400;line-height:1;letter-spacing:-0.024em;color:#fff;text-wrap:balance">Your calendar already knows when you're free.</h2>
+          <p style="margin:0;max-width:46ch;font-size:15.5px;line-height:1.6;color:rgba(255,255,255,0.74);text-wrap:pretty">Let Meetrao handle the scheduling. It's completely free to use — no card, no subscription.</p>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px;flex:none">
+          <a href="Meetrao App.dc.html#signup" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;height:52px;padding:0 24px;border-radius:8px;background:#fff;color:var(--accent-2);font-size:15px;font-weight:600;transition:opacity 120ms ease" style-hover="opacity:0.9;color:var(--accent-2)">
+            Create your free booking link
+            <span style="font-family:var(--fa);font-weight:300;font-size:12px"></span>
+          </a>
+          <a href="Meetrao App.dc.html#book" style="display:inline-flex;align-items:center;justify-content:center;gap:10px;height:52px;padding:0 21px;border:1px solid rgba(255,255,255,0.34);border-radius:8px;color:#fff;font-size:15px;font-weight:600;transition:background 120ms ease" style-hover="background:rgba(255,255,255,0.1);color:#fff">
+            <span style="font-family:var(--fa);font-weight:300;font-size:12px"></span>See a booking page
+          </a>
+        </div>
+      </div>
+
+      <!-- link columns -->
+      <div data-footer-panel="1" style="{{ footerPanelStyle }}" data-comment-anchor="411-cols">
+        
+
+        <sc-for list="{{ footerCols2 }}" as="col" hint-placeholder-count="4">
+          <div style="min-width:0;display:flex;flex-direction:column;gap:14px">
+            <span style="font-family:var(--mono);font-size:10.5px;letter-spacing:0.08em;text-transform:uppercase;color:rgba(255,255,255,0.82)">{{ col.title }}</span>
+            <div style="display:flex;flex-direction:column;gap:11px">
+              <sc-for list="{{ col.links }}" as="l" hint-placeholder-count="5">
+                <a href="{{ l.href }}" style="font-size:14px;font-weight:400;color:rgba(255,255,255,0.86);transition:color 120ms ease" style-hover="color:#fff">{{ l.label }}</a>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- trust row -->
+      <div style="{{ footerTrustPanelStyle }}" data-comment-anchor="418-trust">
+        <sc-for list="{{ footerTrust }}" as="t" hint-placeholder-count="3">
+          <div style="flex:1;min-width:230px;display:flex;gap:12px;align-items:flex-start">
+            <span style="font-family:var(--fa);font-weight:300;font-size:14px;color:rgba(255,255,255,0.82);width:18px;text-align:center;flex:none;margin-top:2px">{{ t.glyph }}</span>
+            <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+              <span style="font-size:13.5px;font-weight:600;color:#fff">{{ t.title }}</span>
+              <span style="font-size:13px;line-height:1.55;color:rgba(255,255,255,0.82);text-wrap:pretty">{{ t.text }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+
+      <!-- legal row -->
+      <div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:22px 0 34px">
+        <span style="font-size:13px;color:rgba(255,255,255,0.58)">© 2026 Meetrao · Operated by <a href="https://airlystudio.com/" target="_blank" rel="noopener noreferrer" style="color:rgba(255,255,255,0.82);text-decoration:underline;text-underline-offset:2px;text-decoration-color:rgba(255,255,255,0.34)" style-hover="color:#fff;text-decoration-color:#fff">Airly Studio</a></span>
+        <div style="display:flex;flex-wrap:wrap;gap:20px;margin-left:auto">
+          <a href="Meetrao Privacy.dc.html" style="font-size:13px;color:rgba(255,255,255,0.72)" style-hover="color:#fff">Privacy</a>
+          <a href="Meetrao Terms.dc.html" style="font-size:13px;color:rgba(255,255,255,0.72)" style-hover="color:#fff">Terms</a>
+          <a href="Meetrao Support.dc.html" style="font-size:13px;color:rgba(255,255,255,0.72)" style-hover="color:#fff">Contact</a>
+        </div>
+      </div>
+
+      <!-- the mark, edge to edge across the container -->
+      <div style="padding-bottom:30px">
+        <img src="assets/meetrao-logo-white.svg" alt="Meetrao" style="width:100%;height:auto;display:block;opacity:0.96">
+      </div>
+    </div>
+  </footer>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1000,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  renderVals() {
+    const rowN = (i) => 'display:flex;flex-wrap:wrap;align-items:flex-start;gap:14px;padding:12px 15px;background:var(--surface);'
+      + (i > 0 ? 'border-top:1px solid var(--line-soft)' : '');
+    const faqRow = (i) => 'display:flex;flex-direction:column;gap:6px;padding:15px 17px;background:var(--surface);'
+      + (i > 0 ? 'border-top:1px solid var(--line-soft)' : '');
+    const tile = (tone) => {
+      const map = { accent: 'var(--accent)', slate: '#2F4C63', amber: 'var(--amber)' };
+      return 'display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;background:var(--accent-soft);color:'
+        + (map[tone] || map.accent) + ';font-family:var(--fa);font-weight:300;font-size:14px;flex:none';
+    };
+
+    return {
+      /* ── global footer, shared with the landing page ── */
+      footerCols2: [
+        { title: 'Product', links: [
+          ['How it works', 'Meetrao Landing.dc.html#how'], ['Use cases', 'Meetrao Landing.dc.html#usecases'],
+          ['What you get', 'Meetrao Landing.dc.html#product'], ['See a booking page', 'Meetrao App.dc.html#book']
+        ] },
+        { title: 'Get started', links: [
+          ['Create a free link', 'Meetrao App.dc.html#signup'], ['Log in', 'Meetrao App.dc.html#login'],
+          ['Connect Google Calendar', 'Meetrao App.dc.html#onb2'], ['Set your availability', 'Meetrao App.dc.html#avail']
+        ] },
+        { title: 'Support', links: [
+          ['Help centre', 'Meetrao Help.dc.html'], ['Contact support', 'Meetrao Support.dc.html'],
+          ['FAQ', 'Meetrao Landing.dc.html#faq']
+        ] },
+        { title: 'Company', links: [
+          ['Privacy Policy', 'Meetrao Privacy.dc.html'], ['Terms of Service', 'Meetrao Terms.dc.html'],
+          ['Operated by Airly Studio', 'Meetrao Terms.dc.html']
+        ] }
+      ].map(c => ({
+        key: c.title, title: c.title,
+        links: c.links.map(([label, href]) => ({ key: label, label, href }))
+      })),
+      footerPanelStyle: 'display:grid;grid-template-columns:minmax(240px,1.35fr) repeat(auto-fit,minmax(140px,1fr));gap:44px 34px;align-items:start;'
+        + 'margin-top:44px;margin-bottom:30px;padding:34px 30px 36px;border-radius:20px;background:#206155',
+      footerTrustPanelStyle: 'display:flex;flex-wrap:wrap;gap:16px;margin-bottom:30px;padding:26px 30px;'
+        + 'border-radius:20px;background:#206155',
+      footerTrust: [
+        { key: 'a', glyph: '\uf02b', title: 'Completely free', text: 'No subscription, no card, no trial that expires.' },
+        { key: 'b', glyph: '\uf070', title: 'Your calendar stays private', text: 'Meetrao reads busy or free — never what your meetings are about.' },
+        { key: 'c', glyph: '\uf00d', title: 'Disconnect whenever', text: 'One click in Settings, and the calendar token is deleted.' }
+      ]
+,
+
+      pillars: [
+        { key: 'a', glyph: '\uf0c1', iconStyle: tile('accent'), title: 'One link, always current',
+          text: 'Share meetrao.com/your-name once. It reflects your calendar and hours as they are today, not as they were when you sent it.' },
+        { key: 'b', glyph: '\uf133', iconStyle: tile('accent'), title: 'Never double-booked',
+          text: 'Meetrao checks your Google Calendar before offering any slot, so nothing lands on top of what you already have.' },
+        { key: 'c', glyph: '\uf03d', iconStyle: tile('accent'), title: 'On both calendars',
+          text: 'Each booking creates one event with its own Google Meet link, and invites your guest — so it lands on their calendar as well as yours.' }
+      ],
+
+      toc: [
+        { key: 'a', href: '#start', glyph: '\uf090', label: 'Getting started' },
+        { key: 'b', href: '#setup', glyph: '\uf0ae', label: 'Setting up' },
+        { key: 'c', href: '#dashboard', glyph: '\uf015', label: 'Dashboard' },
+        { key: 'd', href: '#meetings', glyph: '\uf03a', label: 'Meetings' },
+        { key: 'e', href: '#availability', glyph: '\uf017', label: 'Availability' },
+        { key: 'f', href: '#bookings', glyph: '\uf133', label: 'Bookings' },
+        { key: 'g', href: '#emails', glyph: '\uf0e0', label: 'Emails' },
+        { key: 'h', href: '#guests', glyph: '\uf0c0', label: 'What guests see' },
+        { key: 'i', href: '#settings', glyph: '\uf013', label: 'Settings' },
+        { key: 'j', href: '#faq', glyph: '\uf059', label: 'Common questions' }
+      ],
+
+      steps: [
+        { key: '1', n: '1', title: 'Welcome',
+          text: 'A short summary of what is coming. Nothing to fill in.' },
+        { key: '2', n: '2', title: 'Connect your calendar',
+          text: 'One Google permission. Meetrao reads when you are busy, writes each booking to your calendar and invites your guest — it never reads what your meetings are about.' },
+        { key: '3', n: '3', title: 'Create your first meeting',
+          text: 'A name, a description and a duration. This is what guests see and book. Most people start with one and add more later.' },
+        { key: '4', n: '4', title: 'Set your hours',
+          text: 'Tick the days you work and the times within them. Your timezone is detected automatically.' },
+        { key: '5', n: '5', title: 'You are ready',
+          text: 'Your booking link is shown with a copy button, plus a summary of what you set up. Send it to someone.' }
+      ],
+
+      rules: [
+        { key: 'a', name: 'Buffer between meetings', text: 'Adds a gap either side of a booking, so you are not on calls back to back. None, 5, 10 or 15 minutes.' },
+        { key: 'b', name: 'Minimum notice', text: 'How close to the start someone can book. Set to 1 hour and nobody can grab the next ten minutes.' },
+        { key: 'c', name: 'Booking window', text: 'How far ahead people can book — 7, 14, 30 or 60 days. Keeps your calendar from filling out to next quarter.' }
+      ].map((r, i) => ({ ...r, rowStyle: rowN(i) })),
+
+      notices: [
+        { key: 'a', name: 'New booking', text: 'Someone books a time with you.', deflt: 'On' },
+        { key: 'b', name: 'Booking changed', text: 'A booking is rescheduled or edited.', deflt: 'On' },
+        { key: 'c', name: 'Booking cancelled', text: 'You or your guest cancels.', deflt: 'On' },
+        { key: 'd', name: 'Daily agenda', text: 'One email each morning listing the day\u2019s meetings.', deflt: 'Off' },
+        { key: 'e', name: 'Product news', text: 'Occasional updates about new Meetrao features.', deflt: 'Off' }
+      ].map((n, i) => ({
+        ...n, rowStyle: rowN(i),
+        tagStyle: 'display:inline-flex;align-items:center;height:20px;padding:0 8px;border:1px solid '
+          + (n.deflt === 'On' ? 'var(--accent-line)' : 'var(--line)') + ';border-radius:4px;background:'
+          + (n.deflt === 'On' ? 'var(--accent-soft)' : 'var(--fill)') + ';color:'
+          + (n.deflt === 'On' ? 'var(--accent)' : 'var(--ink-3)')
+          + ';font-family:var(--mono);font-size:10.5px;flex:none;white-space:nowrap'
+      })),
+
+      panels: [
+        { key: 'a', glyph: '\uf007', iconStyle: tile('accent'), title: 'Profile',
+          text: 'Your name, job title, email, photo and username. Your username is your booking link, so changing it changes the link you have already shared.' },
+        { key: 'b', glyph: '\uf133', iconStyle: tile('accent'), title: 'Calendar',
+          text: 'Connect or disconnect Google Calendar, and set your timezone. Disconnecting stops conflict checking straight away.' },
+        { key: 'c', glyph: '\uf1de', iconStyle: tile('accent'), title: 'Booking',
+          text: 'Defaults applied to every new meeting you create — a starting duration and minimum notice, so you are not setting them each time.' },
+        { key: 'd', glyph: '\uf0e0', iconStyle: tile('accent'), title: 'Notifications',
+          text: 'The five switches covering which emails Meetrao sends you.' },
+        { key: 'e', glyph: '\uf023', iconStyle: tile('accent'), title: 'Account',
+          text: 'Your email address and whether it is verified, changing your password, logging out, and deleting your account.' }
+      ],
+
+      faqs: [
+        { key: 'a', q: 'Can I have more than one type of meeting?',
+          a: 'Yes. Create as many as you like — each gets its own link, and your main link shows all the active ones.' },
+        { key: 'b', q: 'Can guests reschedule?',
+          a: 'Not yet. They can cancel and book a new time from your link, which achieves the same thing in two steps.' },
+        { key: 'c', q: 'Does Meetrao read my meeting titles or notes?',
+          a: 'No. It sees only whether a period is busy or free. Titles, guests, descriptions and attachments are never read. It does write the bookings you accept, and invites your guest to them.' },
+        { key: 'd', q: 'What if I disconnect my calendar?',
+          a: 'Your link keeps working, but Meetrao can no longer see conflicts — so guests may be offered times you are not free. A banner reminds you until you reconnect.' },
+        { key: 'e', q: 'Can I use something other than Google Meet?',
+          a: 'Not in this release. Every booking gets a Google Meet link. Other options may come later.' },
+        { key: 'f', q: 'Can two people book the same slot?',
+          a: 'No. The slot is checked again at the moment of booking. If someone got there first, the second person is told immediately and nothing is scheduled.' },
+        { key: 'g', q: 'Do guests need an account?',
+          a: 'Never. They give a name, an email and optionally a note. That is all.' },
+        { key: 'h', q: 'Why can I not sign in after signing up?',
+          a: 'Your email address is probably not confirmed yet. Check your inbox for the verification link, or ask for a new one from the waiting screen.' },
+        { key: 'z', q: 'Does the meeting appear on my guest\u2019s calendar too?',
+          a: 'Yes, by default. Meetrao creates one event and adds your guest as an attendee, so the meeting, description and Meet link appear on both calendars. If they do not use Google Calendar, the invitation still arrives by email and they can download an .ics file.' },
+        { key: 'i', q: 'What does it cost?',
+          a: 'Nothing while Meetrao is in beta. If paid plans arrive we will email you first, and you would have to opt in — a free account is never billed automatically.' },
+        { key: 'j', q: 'How do I get my data out?',
+          a: 'Email us and we will send you a copy. Do it before deleting your account, since deletion is immediate and we keep no copy.' }
+      ].map((f, i) => ({ ...f, rowStyle: faqRow(i) }))
+    };
+  }
+}
+</script>
+</body>
+</html>
