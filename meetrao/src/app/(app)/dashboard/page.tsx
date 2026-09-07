@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { PageBody, PageHeader } from "@/components/app/page-header";
 import { DashboardGreeting } from "@/components/app/dashboard-header";
-import { ConnectCalendarBanner } from "@/components/app/connect-calendar";
+import {
+  ConnectCalendarBanner,
+  ReconnectCalendarBanner,
+} from "@/components/app/connect-calendar";
 import { CopyLinkButton } from "@/components/app/copy-link";
 import {
   BookingDialogs,
@@ -167,6 +170,8 @@ export default async function DashboardPage() {
         <div className="flex flex-col gap-[24px]">
           {!connection.connected ? (
             <ConnectCalendarBanner returnTo="/dashboard" />
+          ) : connection.needsReconnect ? (
+            <ReconnectCalendarBanner returnTo="/dashboard" />
           ) : null}
 
           <div className="grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-[12px]">

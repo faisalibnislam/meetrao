@@ -49,6 +49,10 @@ export async function saveConnection(
       refresh_token: tokens.refreshToken,
       token_expires_at: tokens.expiresAt.toISOString(),
       scopes: tokens.scopes,
+      // A fresh grant clears whatever made the last one fail.
+      needs_reconnect: false,
+      last_error: null,
+      last_error_at: null,
     },
     { onConflict: "user_id" },
   );
@@ -98,24 +102,38 @@ export async function isCalendarConnected(userId: string): Promise<boolean> {
   return Boolean(data);
 }
 
+export type ConnectionSummary = {
+  connected: boolean;
+  accountEmail: string | null;
+  /**
+   * Google rejected the stored grant — revoked by the host, or missing a scope
+   * this app now needs. The connection row still exists, so "connected" stays
+   * true; the UI has to ask for re-consent rather than silently doing nothing.
+   */
+  needsReconnect: boolean;
+};
+
 export async function getConnectionSummary(
   userId: string,
-): Promise<{ connected: boolean; accountEmail: string | null }> {
+): Promise<ConnectionSummary> {
   // Connection state lives behind the service role. Without it, report "not
   // connected" rather than throwing — every screen still renders, and the
   // dashboard's amber banner already says the calendar is not wired up.
-  if (!hasServiceRole()) return { connected: false, accountEmail: null };
+  if (!hasServiceRole()) {
+    return { connected: false, accountEmail: null, needsReconnect: false };
+  }
 
   const admin = createAdminClient();
   const { data } = await admin
     .from("calendar_connections")
-    .select("google_account_email")
+    .select("google_account_email, needs_reconnect")
     .eq("user_id", userId)
     .maybeSingle();
 
   return {
     connected: Boolean(data),
     accountEmail: data?.google_account_email ?? null,
+    needsReconnect: Boolean(data?.needs_reconnect),
   };
 }
 
@@ -176,6 +194,72 @@ export async function getFreshConnection(
   };
 }
 
+/* ── Connection health ───────────────────────────────────────────────────── */
+
+/**
+ * Mark a connection as needing re-consent. Best-effort: this runs on a path
+ * that is already failing, so a write error here must not mask the original.
+ */
+async function flagNeedsReconnect(userId: string, reason: string): Promise<void> {
+  if (!hasServiceRole()) return;
+  try {
+    const admin = createAdminClient();
+    await admin
+      .from("calendar_connections")
+      .update({
+        needs_reconnect: true,
+        last_error: reason,
+        last_error_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId);
+  } catch {
+    // Nothing to do — the caller is about to throw the real error.
+  }
+}
+
+/* ── Guest RSVP ──────────────────────────────────────────────────────────── */
+
+export type GuestRsvp = "needsAction" | "accepted" | "declined" | "tentative";
+
+const RSVP_VALUES: readonly string[] = [
+  "needsAction",
+  "accepted",
+  "declined",
+  "tentative",
+];
+
+/**
+ * The guest's responseStatus on the host's event.
+ *
+ * Google reports RSVPs onto the event the host owns; there is no push
+ * subscription here, so this is a read done when the host looks at a booking.
+ * Returns null when the event is gone or the guest is not on it.
+ */
+export async function fetchGuestRsvp(
+  userId: string,
+  eventId: string,
+  guestEmail: string,
+): Promise<GuestRsvp | null> {
+  const connection = await getFreshConnection(userId);
+
+  type EventResponse = {
+    attendees?: Array<{ email?: string; responseStatus?: string }>;
+  };
+
+  const event = await callCalendar<EventResponse>(
+    connection,
+    `/calendars/${encodeURIComponent(connection.calendarId)}/events/${encodeURIComponent(eventId)}`,
+  );
+
+  const target = guestEmail.toLowerCase();
+  const attendee = event.attendees?.find(
+    (a) => (a.email ?? "").toLowerCase() === target,
+  );
+
+  const status = attendee?.responseStatus;
+  return status && RSVP_VALUES.includes(status) ? (status as GuestRsvp) : null;
+}
+
 /* ── API calls ───────────────────────────────────────────────────────────── */
 
 async function callCalendar<T>(
@@ -194,6 +278,14 @@ async function callCalendar<T>(
   });
 
   if (res.status === 401 || res.status === 403) {
+    // Google rejected the grant: the host revoked it, or the token no longer
+    // carries a scope this call needs. Recorded so the dashboard can ask them
+    // to reconnect — otherwise every later calendar write fails silently and
+    // guests are offered times the host is not actually free.
+    await flagNeedsReconnect(
+      connection.userId,
+      res.status === 401 ? "Google rejected the token" : "Google refused the scope",
+    );
     throw new GoogleAuthError(
       "Google rejected the calendar credentials. Reconnect the calendar.",
       // Not one of Google's OAuth error codes — this is the Calendar API

@@ -24,6 +24,7 @@ import { calendarFailure, calendarUnconfigured } from "@/lib/google/failure";
 const CALENDAR_REASONS = [
   "See when you are busy, so guests are never offered a time you cannot make.",
   "Add each booking to your calendar with a Meet link, automatically.",
+  "Invite your guest to that same event, so it lands on their calendar too. You will each see the other's email address on it.",
 ];
 
 /* ── Step 1 ──────────────────────────────────────────────────────────────── */

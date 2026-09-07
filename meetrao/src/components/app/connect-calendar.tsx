@@ -4,10 +4,15 @@ import { useState } from "react";
 import { GoogleG } from "@/components/brand/logo";
 import { Icon } from "@/components/ui/icon";
 import { Modal } from "@/components/ui/modal";
+import { RouteLink } from "@/components/ui/route-link";
 
 const REASONS = [
   "See when you are busy, so guests are never offered a time you cannot make.",
   "Add each booking to your calendar with a Meet link, automatically.",
+  // Disclosed here because it is the consequence a host would not expect: the
+  // guest is an attendee on the host's own event, so each can see the other's
+  // address. Inherent to a Google invitation, and stated in the privacy policy.
+  "Invite your guest to that same event, so it lands on their calendar too. You will each see the other's email address on it.",
 ];
 
 /**
@@ -73,5 +78,38 @@ export function ConnectCalendarBanner({ returnTo }: { returnTo: string }) {
         </div>
       </Modal>
     </>
+  );
+}
+
+/**
+ * Google rejected the stored grant — the host revoked it, or it is missing a
+ * scope. Red rather than amber: unlike "never connected", this is a working
+ * setup that has stopped working, and every booking made meanwhile is going
+ * out without a calendar event or a Meet link.
+ */
+export function ReconnectCalendarBanner({ returnTo }: { returnTo: string }) {
+  return (
+    <div className="flex flex-wrap items-center gap-[12px] rounded-[8px] border border-red-line bg-red-soft px-[14px] py-[11px]">
+      <Icon
+        name="circleExclamation"
+        weight={900}
+        size={13}
+        className="flex-none text-red"
+      />
+      <span className="min-w-[220px] flex-1 text-[13px] leading-[1.5] text-red-ink">
+        <strong className="font-semibold">
+          Google Calendar needs reconnecting.
+        </strong>{" "}
+        Access was revoked or has expired, so conflicts are not being checked
+        and new bookings get no calendar event or Meet link.
+      </span>
+      <RouteLink
+        href={`/api/google/connect?next=${encodeURIComponent(returnTo)}`}
+        className="inline-flex h-[44px] flex-none items-center gap-[7px] rounded-[6px] border border-red-line bg-white/75 px-[12px] text-[12.5px] font-semibold text-red-ink no-underline hover:bg-white sm:h-[28px]"
+      >
+        <GoogleG size={13} />
+        Reconnect
+      </RouteLink>
+    </div>
   );
 }

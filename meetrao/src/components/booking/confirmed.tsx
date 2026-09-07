@@ -23,7 +23,6 @@ export type ConfirmedBooking = {
   meetUrl: string | null;
   /** Rendered server-side in the host's zone, used until the guest's zone is known. */
   initialWhen: string;
-  googleCalendarUrl: string;
   icsUrl: string;
 };
 
@@ -134,22 +133,36 @@ export function Confirmed({ booking }: { booking: ConfirmedBooking }) {
               Join Google Meet
             </Button>
 
+            {/* The guest is an attendee on the host\'s event, so Google has
+                already put this on their calendar and emailed the invitation.
+                "Add to Google Calendar" would create a SECOND, duplicate entry
+                — hence a statement rather than a button. The .ics stays as the
+                fallback for anyone not on Google Calendar. */}
+            <div className="flex items-start gap-[10px] rounded-[8px] border border-accent-line bg-accent-soft px-[13px] py-[11px]">
+              <Icon
+                name="circleCheck"
+                weight={900}
+                size={13}
+                className="mt-[2px] flex-none text-accent"
+              />
+              <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
+                <span className="text-[12.5px] font-semibold text-ink">
+                  This is already on your calendar
+                </span>
+                <span className="text-[12.5px] leading-[1.5] text-ink-2">
+                  You were invited to the meeting, so it is on your calendar
+                  with the Meet link attached.
+                </span>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-[8px]">
               <a
-                href={booking.googleCalendarUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-[34px] min-w-[150px] flex-1 items-center justify-center gap-[7px] rounded-[6px] border border-line-strong bg-surface px-[11px] text-[12.5px] font-semibold text-ink no-underline hover:bg-fill hover:text-ink"
-              >
-                <Icon name="calendar" size={11} />
-                Add to Google Calendar
-              </a>
-              <a
                 href={booking.icsUrl}
-                className="inline-flex h-[34px] items-center justify-center gap-[7px] rounded-[6px] border border-transparent px-[11px] text-[12.5px] font-semibold text-ink-2 no-underline hover:bg-fill hover:text-ink"
+                className="inline-flex h-[44px] items-center justify-center gap-[7px] rounded-[6px] border border-line-strong bg-surface px-[11px] text-[12.5px] font-semibold text-ink no-underline hover:bg-fill hover:text-ink sm:h-[34px]"
               >
                 <Icon name="download" size={11} />
-                .ics
+                Download .ics instead
               </a>
             </div>
 

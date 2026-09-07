@@ -28,6 +28,7 @@ export function toRowData(
     note: booking.guest_note,
     status: booking.status,
     meetUrl: booking.meet_url,
+    rsvp: (booking.guest_rsvp as BookingRowData["rsvp"]) ?? null,
     dayLabel: formatDayLabel(startsAt, hostTimezone, now),
     dateLabel: formatMediumDate(startsAt, hostTimezone),
     timeRange: formatTimeRange(startsAt, endsAt, hostTimezone),

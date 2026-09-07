@@ -82,6 +82,9 @@ export type Database = {
           guest_email: string;
           guest_name: string;
           guest_note: string;
+          guest_rsvp: string | null;
+          guest_rsvp_notified_at: string | null;
+          guest_rsvp_synced_at: string | null;
           guest_timezone: string | null;
           host_id: string;
           id: string;
@@ -103,6 +106,9 @@ export type Database = {
           guest_email: string;
           guest_name: string;
           guest_note?: string;
+          guest_rsvp?: string | null;
+          guest_rsvp_notified_at?: string | null;
+          guest_rsvp_synced_at?: string | null;
           guest_timezone?: string | null;
           host_id: string;
           id?: string;
@@ -124,6 +130,9 @@ export type Database = {
           guest_email?: string;
           guest_name?: string;
           guest_note?: string;
+          guest_rsvp?: string | null;
+          guest_rsvp_notified_at?: string | null;
+          guest_rsvp_synced_at?: string | null;
           guest_timezone?: string | null;
           host_id?: string;
           id?: string;
@@ -162,6 +171,9 @@ export type Database = {
           created_at: string;
           google_account_email: string | null;
           id: string;
+          last_error: string | null;
+          last_error_at: string | null;
+          needs_reconnect: boolean;
           provider: string;
           refresh_token: string | null;
           scopes: string[];
@@ -175,6 +187,9 @@ export type Database = {
           created_at?: string;
           google_account_email?: string | null;
           id?: string;
+          last_error?: string | null;
+          last_error_at?: string | null;
+          needs_reconnect?: boolean;
           provider?: string;
           refresh_token?: string | null;
           scopes?: string[];
@@ -188,6 +203,9 @@ export type Database = {
           created_at?: string;
           google_account_email?: string | null;
           id?: string;
+          last_error?: string | null;
+          last_error_at?: string | null;
+          needs_reconnect?: boolean;
           provider?: string;
           refresh_token?: string | null;
           scopes?: string[];

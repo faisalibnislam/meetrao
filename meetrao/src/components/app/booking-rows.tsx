@@ -7,6 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/controls";
 import { Icon } from "@/components/ui/icon";
 import { Modal, DetailRow } from "@/components/ui/modal";
+
+/** Kept in step with RSVP_LABEL in @/lib/booking/rsvp, which is server-only. */
+const RSVP_LABEL: Record<
+  NonNullable<BookingRowData["rsvp"]>,
+  string
+> = {
+  needsAction: "Invitation sent — no response yet",
+  accepted: "Guest accepted",
+  declined: "Guest declined in Google",
+  tentative: "Guest replied maybe",
+};
 import { useToast } from "@/components/ui/toast";
 import { cancelBookingAsHost } from "@/lib/actions/bookings";
 
@@ -32,6 +43,11 @@ export type BookingRowData = {
   timeRange: string;
   /** Whether the meeting has already happened. */
   past: boolean;
+  /**
+   * The guest's response on the Google event. Null when the calendar was not
+   * connected for this booking, or it has not been read back yet.
+   */
+  rsvp: "needsAction" | "accepted" | "declined" | "tentative" | null;
 };
 
 /* ── Dialog host ─────────────────────────────────────────────────────────── */
@@ -119,6 +135,24 @@ export function BookingDialogs({ children }: { children: ReactNode }) {
               k="Status"
               v={booking.status === "cancelled" ? "Cancelled" : "Confirmed"}
             />
+            <DetailRow
+              k="Calendar"
+              v={
+                booking.status === "cancelled"
+                  ? "Event removed"
+                  : booking.rsvp
+                    ? RSVP_LABEL[booking.rsvp]
+                    : "Invitation sent"
+              }
+            />
+            {booking.rsvp === "declined" && booking.status !== "cancelled" ? (
+              <div className="rounded-[8px] border border-amber-line bg-amber-soft px-[13px] py-[11px]">
+                <span className="text-[12.5px] leading-[1.5] text-amber-ink text-pretty">
+                  Declining in Google does not cancel the booking — the slot is
+                  still held. Cancel it here if the meeting is off.
+                </span>
+              </div>
+            ) : null}
             <DetailRow
               k="Meet"
               v={

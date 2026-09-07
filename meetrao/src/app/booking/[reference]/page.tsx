@@ -9,24 +9,6 @@ export const metadata: Metadata = {
 };
 
 /** The Google "add to calendar" template URL. */
-function googleCalendarUrl(params: {
-  title: string;
-  start: Date;
-  end: Date;
-  details: string;
-  location: string;
-}) {
-  const stamp = (d: Date) => d.toISOString().replace(/[-:]|\.\d{3}/g, "");
-  const query = new URLSearchParams({
-    action: "TEMPLATE",
-    text: params.title,
-    dates: `${stamp(params.start)}/${stamp(params.end)}`,
-    details: params.details,
-    location: params.location,
-  });
-  return `https://calendar.google.com/calendar/render?${query.toString()}`;
-}
-
 export default async function BookingConfirmedPage({
   params,
 }: {
@@ -56,15 +38,6 @@ export default async function BookingConfirmedPage({
           booking.endsAt,
           booking.hostTimezone,
         ),
-        googleCalendarUrl: googleCalendarUrl({
-          title: `${booking.meetingName} with ${booking.hostName}`,
-          start: booking.startsAt,
-          end: booking.endsAt,
-          details: booking.meetUrl
-            ? `Google Meet: ${booking.meetUrl}`
-            : "Booked through Meetrao.",
-          location: booking.meetUrl ?? "Google Meet",
-        }),
         icsUrl: `/booking/${booking.reference}/ics`,
       }}
     />
