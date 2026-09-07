@@ -137,6 +137,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      bootstrap_admins: {
+        Row: {
+          created_at: string;
+          email: string;
+          note: string;
+        };
+        Insert: {
+          created_at?: string;
+          email: string;
+          note?: string;
+        };
+        Update: {
+          created_at?: string;
+          email?: string;
+          note?: string;
+        };
+        Relationships: [];
+      };
       calendar_connections: {
         Row: {
           access_token: string | null;
@@ -260,6 +278,11 @@ export type Database = {
           is_admin: boolean;
           is_suspended: boolean;
           job_title: string;
+          notify_booking_cancelled: boolean;
+          notify_booking_changed: boolean;
+          notify_daily_agenda: boolean;
+          notify_new_booking: boolean;
+          notify_product_news: boolean;
           onboarding_completed_at: string | null;
           timezone: string;
           updated_at: string;
@@ -276,6 +299,11 @@ export type Database = {
           is_admin?: boolean;
           is_suspended?: boolean;
           job_title?: string;
+          notify_booking_cancelled?: boolean;
+          notify_booking_changed?: boolean;
+          notify_daily_agenda?: boolean;
+          notify_new_booking?: boolean;
+          notify_product_news?: boolean;
           onboarding_completed_at?: string | null;
           timezone?: string;
           updated_at?: string;
@@ -292,6 +320,11 @@ export type Database = {
           is_admin?: boolean;
           is_suspended?: boolean;
           job_title?: string;
+          notify_booking_cancelled?: boolean;
+          notify_booking_changed?: boolean;
+          notify_daily_agenda?: boolean;
+          notify_new_booking?: boolean;
+          notify_product_news?: boolean;
           onboarding_completed_at?: string | null;
           timezone?: string;
           updated_at?: string;

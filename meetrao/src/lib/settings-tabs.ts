@@ -7,6 +7,7 @@ export const SETTINGS_TABS = [
   { slug: "profile", label: "Profile" },
   { slug: "calendar", label: "Calendar" },
   { slug: "booking", label: "Booking" },
+  { slug: "notifications", label: "Notifications" },
   { slug: "account", label: "Account" },
 ] as const;
 

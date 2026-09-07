@@ -7,6 +7,7 @@ import {
   AccountPanel,
   BookingPanel,
   CalendarPanel,
+  NotificationsPanel,
   ProfilePanel,
 } from "@/components/app/settings-panels";
 import { requireProfile } from "@/lib/data/host";
@@ -69,6 +70,18 @@ export default async function SettingsPage({
               <BookingPanel
                 durationMinutes={profile.default_duration_minutes}
                 noticeMinutes={profile.default_notice_minutes}
+              />
+            ) : null}
+
+            {current === "notifications" ? (
+              <NotificationsPanel
+                initial={{
+                  newBooking: profile.notify_new_booking,
+                  bookingChanged: profile.notify_booking_changed,
+                  bookingCancelled: profile.notify_booking_cancelled,
+                  dailyAgenda: profile.notify_daily_agenda,
+                  productNews: profile.notify_product_news,
+                }}
               />
             ) : null}
 

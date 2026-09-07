@@ -1,9 +1,10 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { cn } from "@/lib/cn";
 import { GoogleG } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/controls";
+import { Badge, Switch } from "@/components/ui/controls";
 import { Field, Input } from "@/components/ui/field";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
@@ -23,6 +24,10 @@ import {
   updateProfile,
   updateTimezone,
 } from "@/lib/actions/profile";
+import {
+  updateNotificationPreferences,
+  type NotificationPreferences,
+} from "@/lib/actions/notifications";
 
 function SectionHeading({
   title,
@@ -299,6 +304,119 @@ export function BookingPanel({
           />
         </div>
       </div>
+
+      <div>
+        <Button size="lg" loading={pending} onClick={save}>
+          {saved ? "Saved" : "Save changes"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/* ── Notifications ───────────────────────────────────────────────────────── */
+
+/**
+ * The five rows, in the design's order. `key` is the field on
+ * NotificationPreferences; the copy is verbatim from the spec.
+ */
+const NOTIFICATION_ROWS: {
+  key: keyof NotificationPreferences;
+  label: string;
+  helper: string;
+}[] = [
+  {
+    key: "newBooking",
+    label: "New booking",
+    helper: "When someone books a time with you.",
+  },
+  {
+    key: "bookingChanged",
+    label: "Booking changed",
+    helper: "When a booking is rescheduled or edited.",
+  },
+  {
+    key: "bookingCancelled",
+    label: "Booking cancelled",
+    helper: "When you or your guest cancels.",
+  },
+  {
+    key: "dailyAgenda",
+    label: "Daily agenda",
+    helper: "One email each morning listing the day's meetings.",
+  },
+  {
+    key: "productNews",
+    label: "Product news",
+    helper: "Occasional updates about new Meetrao features.",
+  },
+];
+
+export function NotificationsPanel({
+  initial,
+}: {
+  initial: NotificationPreferences;
+}) {
+  const { notify } = useToast();
+  const [prefs, setPrefs] = useState(initial);
+  const [saved, setSaved] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  function toggle(key: keyof NotificationPreferences, next: boolean) {
+    setPrefs((prev) => ({ ...prev, [key]: next }));
+    setSaved(false);
+  }
+
+  function save() {
+    startTransition(async () => {
+      const result = await updateNotificationPreferences(prefs);
+      if (!result.ok) {
+        notify("bad", "Could not save", result.message ?? "Try again.");
+        return;
+      }
+      setSaved(true);
+      notify("ok", "Settings saved", "Your changes are live.");
+    });
+  }
+
+  return (
+    <div className="flex flex-col gap-[15px]">
+      <SectionHeading
+        title="Notifications"
+        blurb="Which emails Meetrao sends you."
+      />
+
+      <div className="overflow-hidden rounded-[8px] border border-line bg-surface">
+        {NOTIFICATION_ROWS.map((row, i) => (
+          <div
+            key={row.key}
+            className={cn(
+              "flex items-center gap-[14px] px-[15px] py-[13px]",
+              i > 0 && "border-t border-line-soft",
+            )}
+          >
+            <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+              <span className="text-[13.5px] font-semibold text-ink">
+                {row.label}
+              </span>
+              <span className="text-[12.5px] leading-[1.5] text-ink-3">
+                {row.helper}
+              </span>
+            </div>
+            <Switch
+              checked={prefs[row.key]}
+              onChange={(next) => toggle(row.key, next)}
+              label={row.label}
+              disabled={pending}
+            />
+          </div>
+        ))}
+      </div>
+
+      <p className="m-0 text-[12.5px] leading-[1.55] text-ink-3">
+        Turning everything off does not stop the emails your guests receive, or
+        password and security emails.
+      </p>
 
       <div>
         <Button size="lg" loading={pending} onClick={save}>
