@@ -55,3 +55,52 @@ export async function setUserSuspended(
   refresh();
   return { ok: true };
 }
+
+/**
+ * Hard-delete an account and everything it owns.
+ *
+ * Deliberately NOT the same shape as suspension: suspension is reversible and
+ * flips a flag, this is final and cannot be undone. They are separate actions
+ * with separate confirmations for that reason.
+ *
+ * The work happens inside admin_remove_account (migration 0012) because a
+ * Postgres function body is one transaction. Reserving the username and
+ * deleting the user cannot be atomic across an HTTP call to
+ * auth.admin.deleteUser(), and half-applied is worse than either outcome: a
+ * reservation with the account still live, or an account gone with its public
+ * link free for anyone to claim.
+ */
+export async function removeUserAccount(
+  userId: string,
+): Promise<{ ok: boolean; message?: string }> {
+  const actor = await requireAdminUser();
+  if (!actor) return { ok: false, message: "Admins only." };
+  if (actor.id === userId) {
+    return { ok: false, message: "You cannot remove your own account." };
+  }
+
+  const admin = createAdminClient();
+  const { data, error } = await admin.rpc("admin_remove_account", {
+    p_user_id: userId,
+  });
+
+  if (error) {
+    console.error("[admin] account removal failed", {
+      userId,
+      code: error.code,
+      message: error.message,
+    });
+    return { ok: false, message: "Could not remove that account." };
+  }
+
+  const removed = Array.isArray(data) ? data[0] : null;
+
+  await admin.from("admin_activity").insert({
+    actor_id: actor.id,
+    kind: "user_removed",
+    summary: `${removed?.removed_email ?? "An account"} was removed by an admin`,
+  });
+
+  refresh();
+  return { ok: true };
+}

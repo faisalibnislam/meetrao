@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PageBody, PageHeader } from "@/components/app/page-header";
 import { SuspendUserButton } from "@/components/admin/suspend-user";
+import { RemoveUserPanel } from "@/components/admin/remove-user";
 import { Avatar, Badge, EmptyState } from "@/components/ui/controls";
 import { loadAdminData } from "@/lib/data/admin";
 import { initialsOf } from "@/lib/initials";
@@ -68,6 +69,15 @@ export default async function AdminUserDetailPage({
               suspended={user.suspended}
             />
           </div>
+
+          {/* Removal sits apart from the Suspend button above on purpose: one
+              is reversible and one is not. */}
+          <RemoveUserPanel
+            userId={user.id}
+            name={user.name}
+            email={user.email}
+            username={user.username}
+          />
 
           <section className="flex flex-col gap-[11px]">
             <h2 className="m-0 text-[14.5px] font-semibold text-ink">Profile</h2>

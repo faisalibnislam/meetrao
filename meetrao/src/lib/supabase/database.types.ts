@@ -350,9 +350,34 @@ export type Database = {
         };
         Relationships: [];
       };
+      reserved_usernames: {
+        Row: {
+          reason: string;
+          reserved_at: string;
+          username: string;
+        };
+        Insert: {
+          reason?: string;
+          reserved_at?: string;
+          username: string;
+        };
+        Update: {
+          reason?: string;
+          reserved_at?: string;
+          username?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<never, never>;
     Functions: {
+      admin_remove_account: {
+        Args: { p_user_id: string };
+        Returns: {
+          removed_email: string;
+          removed_username: string;
+        }[];
+      };
       generate_username: { Args: { seed: string }; Returns: string };
       get_busy_intervals: {
         Args: { p_from: string; p_to: string; p_user_id: string };
