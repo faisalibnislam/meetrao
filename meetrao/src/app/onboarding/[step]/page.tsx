@@ -10,6 +10,7 @@ import {
 import { StepRail, TOTAL_STEPS } from "@/components/onboarding/step-rail";
 import { getConnectionSummary } from "@/lib/google/calendar";
 import { getAvailability, getMeetingTypes, requireProfile } from "@/lib/data/host";
+import { requireVerified } from "@/lib/auth/verification";
 import { bookingLink } from "@/lib/env";
 import { minutesToLabel } from "@/lib/booking/slots";
 
@@ -28,6 +29,8 @@ export default async function OnboardingStepPage({
   const step = Number(rawStep);
   if (!Number.isInteger(step) || step < 1 || step > TOTAL_STEPS) notFound();
 
+  // Onboarding is outside the (app) layout, so it enforces the gate itself.
+  await requireVerified();
   const profile = await requireProfile();
 
   return (

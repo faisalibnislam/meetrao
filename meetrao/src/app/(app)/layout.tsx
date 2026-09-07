@@ -6,12 +6,16 @@ import {
   requireProfile,
 } from "@/lib/data/host";
 import { initialsOf } from "@/lib/initials";
+import { requireVerified } from "@/lib/auth/verification";
 
 export default async function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // The boundary, not the proxy redirect: every authenticated page renders
+  // inside this layout.
+  await requireVerified();
   const profile = await requireProfile();
 
   // A host who has not finished setup lands back in it — the design routes

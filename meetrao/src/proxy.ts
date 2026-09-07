@@ -9,11 +9,15 @@ const PROTECTED_PREFIXES = [
   "/availability",
   "/settings",
   "/onboarding",
+  "/verify",
   "/admin",
 ];
 
 /** Routes a signed-in user should be bounced away from. */
 const AUTH_ROUTES = ["/login", "/signup", "/forgot"];
+
+/** Reachable while unverified — the gate itself and the routes that leave it. */
+const VERIFY_EXEMPT = ["/verify", "/auth", "/api/auth"];
 
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -56,6 +60,22 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.search = `?next=${encodeURIComponent(pathname)}`;
+    return NextResponse.redirect(url);
+  }
+
+  // The verification gate. A convenience redirect only — the real enforcement
+  // is requireVerified() in the (app) and onboarding layouts, because a proxy
+  // redirect is not a boundary. Google and other OAuth users arrive with
+  // email_confirmed_at already set and never see this.
+  if (
+    user &&
+    !user.email_confirmed_at &&
+    isProtected &&
+    !VERIFY_EXEMPT.some((p) => pathname === p || pathname.startsWith(`${p}/`))
+  ) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/verify";
+    url.search = "";
     return NextResponse.redirect(url);
   }
 

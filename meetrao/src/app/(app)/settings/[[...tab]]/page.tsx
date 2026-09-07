@@ -11,6 +11,7 @@ import {
   ProfilePanel,
 } from "@/components/app/settings-panels";
 import { requireProfile } from "@/lib/data/host";
+import { getVerificationState } from "@/lib/auth/verification";
 import { getConnectionSummary } from "@/lib/google/calendar";
 import { publicEnv } from "@/lib/env";
 import { calendarFailure, calendarUnconfigured } from "@/lib/google/failure";
@@ -35,6 +36,7 @@ export default async function SettingsPage({
   if (!VALID.has(current)) notFound();
 
   const profile = await requireProfile();
+  const verification = await getVerificationState();
 
   return (
     <>
@@ -85,7 +87,12 @@ export default async function SettingsPage({
               />
             ) : null}
 
-            {current === "account" ? <AccountPanel /> : null}
+            {current === "account" ? (
+              <AccountPanel
+                email={verification.email ?? profile.email}
+                verified={verification.verified}
+              />
+            ) : null}
           </div>
         </div>
       </PageBody>

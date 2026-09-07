@@ -429,7 +429,13 @@ export function NotificationsPanel({
 
 /* ── Account ─────────────────────────────────────────────────────────────── */
 
-export function AccountPanel() {
+export function AccountPanel({
+  email,
+  verified,
+}: {
+  email: string;
+  verified: boolean;
+}) {
   const { notify } = useToast();
   const [dialog, setDialog] = useState<"password" | "delete" | null>(null);
   const [password, setPassword] = useState("");
@@ -459,6 +465,20 @@ export function AccountPanel() {
   return (
     <div className="flex flex-col gap-[15px]">
       <SectionHeading title="Account" blurb="Sign-in and account removal." />
+
+      <div className="flex flex-wrap items-center gap-[14px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px]">
+        <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
+          <span className="text-[13.5px] font-semibold text-ink">
+            Email address
+          </span>
+          <span className="truncate font-mono text-[12.5px] text-ink-2">
+            {email}
+          </span>
+        </div>
+        <Badge tone={verified ? "ok" : "warn"}>
+          {verified ? "Verified" : "Unverified"}
+        </Badge>
+      </div>
 
       <div className="flex items-center gap-[14px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px]">
         <div className="flex min-w-0 flex-1 flex-col gap-[2px]">

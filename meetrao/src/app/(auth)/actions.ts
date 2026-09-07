@@ -69,7 +69,8 @@ export async function signUpAction(
 
   // With "Confirm email" switched off the session is live immediately and the
   // design's signup → onboarding flow works as drawn. With it on, Supabase
-  // returns no session and the host has to click the emailed link first.
+  // returns no session and the host has to click the emailed link first — they
+  // cannot reach the gate without a session, so the notice stands in for it.
   if (!data.session) {
     return {
       notice: `Check ${email} for a link to confirm your account, then sign in.`,
