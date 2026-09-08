@@ -59,6 +59,14 @@ is the shared helper and `box-border` is the pin.
 prototypes duplicate their chrome across five files because the design tool has no
 layout primitive; that is an artefact, not a pattern.
 
+**The database is the last line of defence, not the app.** `create_booking` is
+granted to `anon` — it is the guest-facing door, and the publishable key ships
+to every browser — so anything the slot engine enforces has to be enforced
+again in SQL. It re-checks the host, the meeting type, minimum notice, the
+booking window, the weekly availability, the buffer and the overlap. Skipping
+the availability check was a real hole: a direct RPC call booked 03:00 on a
+Sunday for a Monday-to-Friday host.
+
 **Double-booking has two independent guards.** The slot engine re-runs server-side
 against fresh availability and busy periods immediately before writing, and
 `create_booking` re-checks inside its own transaction behind a Postgres exclusion
@@ -68,6 +76,14 @@ no longer available … Nothing has been scheduled."
 **Cancelling is a POST behind a confirm step.** Mail clients and link previewers
 fetch every URL in an email; a GET that cancelled would cancel meetings nobody
 meant to.
+
+**Privilege flags and the audit log are service-role only.** `is_admin` and
+`is_suspended` are not in the `authenticated` UPDATE grant, because
+`profiles_update_own` would otherwise let a suspended user clear their own
+suspension — suspension does not invalidate their JWT. `admin_activity` has no
+INSERT policy for the same reason: an audit log a browser session can write to
+is one an admin could forge entries in. Both writes go through
+`src/lib/actions/admin.ts` behind `requireAdmin()`.
 
 **Calendar tokens live behind the service role.** `calendar_connections` has RLS
 enabled and no policy, so no browser session can reach it. Everything that touches
@@ -83,11 +99,12 @@ With nothing measured yet the card shows "—" rather than an invented figure.
   `<origin>/api/google/callback` has to be registered in Google Cloud for
   **every** origin — localhost, each Vercel preview domain, production. A
   missing one fails as `redirect_uri_mismatch` and gives no other signal.
-- **Photography.** The six Use cases cards render labelled frames until photos
-  exist. Dropping `public/use-cases/<id>.jpg` is the whole wiring — the page
-  reads the directory at build time, so a partial set degrades one card at a
-  time. `public/use-cases/README.md` has the ids and the two crops each photo
-  has to survive. Stock or generated images were explicitly not a substitute.
+- **Photography rights.** The photographs are in and wired, but they are of
+  identifiable people, and the assets bundle's own README says the design work
+  assumed they were placeholders. Confirm the right to use each one
+  commercially. Replacing one is a matter of overwriting the file — see
+  `public/use-cases/README.md`. The featured panel would also like a 1600px
+  source rather than 1024 to be crisp at 2×.
 - **`EMAIL_POSTAL_ADDRESS`** is set to a city and state. CAN-SPAM wants a full
   physical address — street line, or a registered PO box.
 - **Five legal decisions** are visible amber callouts on `/terms` and `/privacy`,

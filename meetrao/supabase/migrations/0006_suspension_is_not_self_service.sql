@@ -1,0 +1,17 @@
+-- A suspended user could lift their own suspension.
+--
+-- `profiles_update_own` lets a signed-in user write their own row, which is
+-- right for a name or a timezone. But `is_suspended` was in the UPDATE column
+-- grant for `authenticated` alongside them, and suspension does not invalidate
+-- the user's JWT — the app only redirects them to /suspended. So a suspended
+-- host could skip the app entirely and PATCH their own profile through
+-- PostgREST. Verified against the live database: suspended by an admin, then
+-- self-cleared in one statement, rows affected 1.
+--
+-- `is_admin` was already service-role only, which is exactly the right
+-- treatment; this gives the other privilege flag the same.
+--
+-- setSuspended() in src/lib/actions/admin.ts now performs this write with the
+-- service-role client, so the admin console is unaffected. It still checks
+-- requireAdmin() first, and admins cannot suspend themselves.
+revoke update (is_suspended) on public.profiles from anon, authenticated;
