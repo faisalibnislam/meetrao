@@ -17,7 +17,7 @@ beforeAll(() => {
     GOOGLE_CLIENT_SECRET: "test-client-secret",
     RESEND_API_KEY: "re_test_00000000",
     EMAIL_FROM: "Meetrao <hello@meetrao.com>",
-    EMAIL_POSTAL_ADDRESS: "Alexandria, Virginia",
+    EMAIL_POSTAL_ADDRESS: "301 King St, Alexandria, VA 22314",
     NEXT_PUBLIC_SITE_URL: "https://meetrao.vercel.app",
   })) {
     vi.stubEnv(k, v);
@@ -87,6 +87,12 @@ describe("every transactional email renders", () => {
       expect(e.html.length).toBeGreaterThan(500);
     }
     console.log("\n" + sent.map((e) => `  ${e.to.padEnd(22)} ${e.subject}`).join("\n"));
+  });
+
+  it("prints the postal address in every footer, which anti-spam law requires", () => {
+    for (const e of sent) {
+      expect(e.html, `no postal address in "${e.subject}"`).toContain("301 King St, Alexandria, VA 22314");
+    }
   });
 
   it("escapes guest input rather than injecting it", () => {

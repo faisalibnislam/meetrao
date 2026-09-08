@@ -55,7 +55,7 @@ export default function TermsPage() {
         </p>
         <p>
           You can reach us at <a href="mailto:hello@airlystudio.com">hello@airlystudio.com</a>, or by post at
-          44/A Judge Court Road, Cumilla, Bangladesh, or Alexandria, VA, USA.
+          44/A Judge Court Road, Cumilla, Bangladesh, or 301 King St, Alexandria, VA 22314, USA.
         </p>
 
         <NeedsDecision>

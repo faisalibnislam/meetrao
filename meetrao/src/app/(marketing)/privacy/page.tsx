@@ -305,7 +305,7 @@ export default function PrivacyPage() {
 
         <DocFooterNote title="Privacy questions or requests">
           Email <a href="mailto:hello@airlystudio.com">hello@airlystudio.com</a>, or write to 44/A Judge Court
-          Road, Cumilla, Bangladesh, or Alexandria, VA, USA.
+          Road, Cumilla, Bangladesh, or 301 King St, Alexandria, VA 22314, USA.
         </DocFooterNote>
       </DocLayout>
     </>

@@ -150,8 +150,6 @@ changes on every push — an address that can never be allow-listed.
   commercially. Replacing one is a matter of overwriting the file — see
   `public/use-cases/README.md`. The featured panel would also like a 1600px
   source rather than 1024 to be crisp at 2×.
-- **`EMAIL_POSTAL_ADDRESS`** is set to a city and state. CAN-SPAM wants a full
-  physical address — street line, or a registered PO box.
 - **Five legal decisions** are visible amber callouts on `/terms` and `/privacy`,
   including a cookie-consent banner that does not exist and that EU/UK visitors
   legally require.

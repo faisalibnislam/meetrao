@@ -54,8 +54,9 @@ The other five go out through Resend from `src/lib/email/send.ts`.
 - **The logo is drawn in type** (a green rounded square plus the wordmark)
   because a repo-relative asset will not resolve for a recipient. Swap in a
   hosted https PNG; the cell is sized for a 22px square.
-- **`EMAIL_POSTAL_ADDRESS` is empty by default** and falls back to "Meetrao".
-  A real postal address is required by anti-spam law before launch.
+- **`EMAIL_POSTAL_ADDRESS` is empty by default** and falls back to "Meetrao",
+  which does not satisfy anti-spam law. It must be a full physical address —
+  street, city, state, postcode — and it prints in the footer of every template.
 - **Welcome and preferences.** The design's table marks the welcome email as
   honouring preferences, but none of the five switches names it, and gating it
   on "Product news" (off by default) would silence a message the host's own
