@@ -1,0 +1,60 @@
+/* Meetrao — typography. Three families, strictly divided by role.
+   DM Sans: all product UI. Instrument Serif: display moments only.
+   DM Mono: machine strings and micro-labels. */
+:root{
+  --font-sans:"DM Sans",system-ui,-apple-system,sans-serif;
+  --font-serif:"Instrument Serif",Georgia,serif;
+  --font-mono:"DM Mono",ui-monospace,monospace;
+  --font-icon:"Font Awesome 6 Sharp";
+
+  /* roles */
+  --font-ui:var(--font-sans);
+  --font-display:var(--font-serif);
+  --font-machine:var(--font-mono);
+
+  /* product scale (px) */
+  --text-page-title:19px;          /* h1, 600, -0.012em, lh 1.35 */
+  --text-section:14.5px;           /* h2, 600 */
+  --text-body:13.5px;              /* lh 1.5–1.6 */
+  --text-body-sm:13px;
+  --text-cell:13px;                /* table cell; primary cell text 13.5/600 */
+  --text-label:12.5px;             /* field label, 600 */
+  --text-meta:12px;                /* helper / meta, --ink-3 */
+  --text-badge:11.5px;             /* badge / pill, 600 */
+  --text-count:10.5px;             /* count badge, 600 */
+  --text-col-head:10px;            /* DM Mono, 0.07em, uppercase */
+  --text-eyebrow:10.5px;           /* DM Mono, 0.07–0.08em, uppercase */
+  --text-metric:26px;              /* 600, -0.022em, lh 1 */
+  --text-metric-sm:20px;           /* admin metric strip, 600, -0.015em */
+
+  /* display scale */
+  --display-greeting:clamp(30px,3.4vw,38px); /* @kind font */  /* serif 400, -0.012em, lh 1.08 */
+  --display-auth:38px;
+  --display-onboarding:32px;
+  --display-booking:31px;
+  --display-confirmed:30px;
+  --display-guest:28px;
+  --display-cancelled:27px;
+  --display-hero:clamp(44px,6.4vw,82px); /* @kind font */      /* serif 400, -0.022em, lh 1 */
+  --display-hero-mobile:clamp(40px,11.5vw,50px); /* @kind font */
+  --display-h2:clamp(30px,3.6vw,44px); /* @kind font */        /* -0.018em, lh 1.06 */
+  --display-h3:clamp(26px,3vw,36px); /* @kind font */          /* -0.015em, lh 1.1 */
+
+  /* weights */
+  --weight-regular:400;
+  --weight-medium:500;
+  --weight-semibold:600;
+  --weight-bold:700;
+
+  /* tracking */
+  --track-display:-0.022em;
+  --track-title:-0.012em;
+  --track-mono:0.07em;
+  --track-mono-wide:0.08em;
+
+  /* leading */
+  --leading-display:1.05;
+  --leading-title:1.35;
+  --leading-body:1.55;
+  --leading-tight:1.45;
+}

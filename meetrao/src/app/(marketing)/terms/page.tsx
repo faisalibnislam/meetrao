@@ -1,0 +1,211 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import {
+  DocContextStrip,
+  DocFooterNote,
+  DocHeader,
+  DocLayout,
+  DraftNotice,
+  NeedsDecision,
+  type TocEntry,
+} from "@/components/marketing/legal-doc";
+
+export const metadata: Metadata = {
+  title: "Terms of Service",
+  description: "The agreement between you and Meetrao, written plainly.",
+};
+
+const TOC: TocEntry[] = [
+  { id: "t-who", label: "1. Who we are" },
+  { id: "t-account", label: "2. Your account" },
+  { id: "t-google", label: "3. Connecting Google Calendar" },
+  { id: "t-use", label: "4. Acceptable use" },
+  { id: "t-price", label: "5. What it costs" },
+  { id: "t-ip", label: "6. Who owns what" },
+  { id: "t-close", label: "7. Ending your account" },
+  { id: "t-liability", label: "8. What we do not promise" },
+  { id: "t-changes", label: "9. Changes to these terms" },
+  { id: "t-law", label: "10. Governing law" },
+];
+
+export default function TermsPage() {
+  return (
+    <>
+      <DocContextStrip title="Terms of Service" otherLabel="Privacy Policy" otherHref="/privacy" />
+
+      <DraftNotice>
+        Written from how Meetrao actually works, not from a template. A lawyer in Bangladesh and the US should
+        review it before it goes live. Three things in these terms still need a decision — they are marked in
+        yellow inline.
+      </DraftNotice>
+
+      <DocLayout toc={TOC} ariaLabel="Terms of Service contents">
+        <DocHeader
+          eyebrow="Terms of Service"
+          title="The agreement between you and Meetrao"
+          intro="Meetrao is a scheduling tool. You share one link, guests pick a time you are genuinely free, and each booking gets a Google Meet link. These terms say what you can expect from us and what we expect from you. They are written plainly on purpose."
+          meta={["Last updated 7 September 2026", "Operated by Airly Studio"]}
+        />
+
+        <h2 id="t-who">1. Who we are</h2>
+        <p>
+          Meetrao is operated by Airly Studio. When these terms say &ldquo;we&rdquo;, &ldquo;us&rdquo; or
+          &ldquo;Meetrao&rdquo;, they mean Airly Studio. When they say &ldquo;you&rdquo;, they mean the person
+          or organisation using the service.
+        </p>
+        <p>
+          You can reach us at <a href="mailto:hello@airlystudio.com">hello@airlystudio.com</a>, or by post at
+          44/A Judge Court Road, Cumilla, Bangladesh, or Alexandria, VA, USA.
+        </p>
+
+        <NeedsDecision>
+          if Airly Studio is an incorporated company, add its full registered name and company number here. If
+          it is a sole proprietorship, say so — it changes who carries liability.
+        </NeedsDecision>
+
+        <h2 id="t-account">2. Your account</h2>
+        <p>You need an account to host meetings. Your guests do not — they book without signing up.</p>
+        <p>
+          If you sign up with an email address, you must confirm that address before you can use Meetrao. The
+          confirmation link expires after 24 hours; you can ask for a new one. If you sign up with Google, your
+          address is already confirmed and we skip that step.
+        </p>
+        <p>
+          You are responsible for keeping your password to yourself and for everything that happens under your
+          account. Tell us promptly if you think someone else has access. One account is for one person — do not
+          share logins.
+        </p>
+        <p>
+          You choose a username, and it becomes your public booking link — for example{" "}
+          <code>meetrao.com/adam</code>. We may reclaim a username that impersonates someone, infringes a
+          trademark, or is being held without use.
+        </p>
+
+        <NeedsDecision>
+          a minimum age. This draft says 16, which keeps you clear of GDPR&rsquo;s child-consent rules and most
+          US school-data questions. Change it to 13 or 18 if you would rather.
+        </NeedsDecision>
+
+        <p>
+          You must be at least 16 to use Meetrao. If you are using it for an employer, you confirm you are
+          allowed to accept these terms on their behalf.
+        </p>
+
+        <h2 id="t-google">3. Connecting Google Calendar</h2>
+        <p>
+          Meetrao works by reading your Google Calendar. When you connect it, you give us permission to see when
+          you are busy and to create events on your behalf. We use that permission for two things only: avoiding
+          times you already have something in, and creating the event for each confirmed booking — with its own
+          Google Meet link, and your guest invited so it appears on their calendar too.
+        </p>
+        <p>
+          We do not read the contents of your existing events — titles, guests, notes and attachments are none of
+          our business. We look at busy and free.
+        </p>
+        <p>
+          You can disconnect at any time from Settings, or revoke access in your Google account. Doing so stops
+          us checking for conflicts, which means guests may be offered times you are not actually free. Google
+          Calendar and Google Meet are Google&rsquo;s services, governed by Google&rsquo;s own terms — we cannot
+          control their availability or behaviour.
+        </p>
+
+        <h2 id="t-use">4. Acceptable use</h2>
+        <p>Use Meetrao to schedule meetings people actually want. Do not use it to:</p>
+        <ul>
+          <li>send unsolicited bulk messages, or collect email addresses for that purpose;</li>
+          <li>impersonate another person or organisation;</li>
+          <li>harass, threaten or deceive the people who book with you;</li>
+          <li>break the law where you or your guests are;</li>
+          <li>probe, scrape, overload or reverse-engineer the service, or work around its limits;</li>
+          <li>resell Meetrao as your own product without a written agreement with us.</li>
+        </ul>
+        <p>
+          If your booking page collects information from guests, you are the one answerable to them for how it is
+          used. That includes anything a guest types into the optional note field.
+        </p>
+
+        <h2 id="t-price">5. What it costs</h2>
+        <p>Meetrao is free while it is in beta. We intend to introduce paid plans later.</p>
+        <p>
+          When we do, we will tell you by email before anything becomes chargeable, and you will have to opt in —
+          we will not start billing a free account automatically. If you choose not to pay, you will be able to
+          export your data and close your account. Payments, when they exist, will be handled by Stripe; we will
+          not see or store your full card number.
+        </p>
+        <p>
+          Because it is a beta, features may change or disappear, and we may set limits on usage. We will not do
+          that in a way designed to break your existing bookings.
+        </p>
+
+        <h2 id="t-ip">6. Who owns what</h2>
+        <p>
+          You own your content: your profile, your meeting descriptions, your availability, and the booking
+          records that belong to you. You give us only the permission we need to run the service — to store that
+          content, show it on your booking page, and send it in the emails Meetrao sends on your behalf.
+        </p>
+        <p>
+          We own Meetrao: the software, the name, the logo and the design. These terms do not give you any right
+          to use our brand beyond what the product itself does.
+        </p>
+        <p>
+          If you send us feedback, we may act on it without owing you anything. We appreciate it and we are not
+          going to run a royalty scheme for suggestions.
+        </p>
+
+        <h2 id="t-close">7. Ending your account</h2>
+        <p>
+          You can delete your account yourself from Settings, at any time. When you do, your booking page stops
+          working, every upcoming meeting is cancelled, and your guests are notified.
+        </p>
+        <p>
+          We can suspend or remove an account that breaks these terms. Suspension blocks sign-in and stops new
+          bookings, but leaves existing bookings on the calendar; it can be reversed. Removal is permanent —
+          profile, booking link, meetings, availability and booking history are deleted, upcoming meetings
+          cancelled, guests notified, and you would have to sign up again from scratch. Where it is reasonable
+          and lawful to do so, we will warn you first.
+        </p>
+        <p>
+          Deletion is immediate and irreversible. We do not keep a copy for you, so export anything you need
+          before you delete it.
+        </p>
+
+        <h2 id="t-liability">8. What we do not promise</h2>
+        <p>
+          Meetrao is provided as it is. We work to keep it accurate and available, but we cannot promise it will
+          never be down, never show a wrong time, or never miss a conflict — particularly when the cause is
+          Google&rsquo;s side, your calendar settings, or a disconnected integration.
+        </p>
+        <p>
+          A scheduling tool sits in the middle of arrangements that matter to you. Check anything important. To
+          the fullest extent the law allows, we are not liable for meetings missed, double-booked or held at the
+          wrong time, nor for lost profits, lost business or lost data arising from your use of the service.
+        </p>
+
+        <NeedsDecision>
+          a liability cap. While Meetrao is free there is no amount paid to cap against, so a lawyer should set a
+          fixed figure or a paid-in-the-last-12-months formula that also works once paid plans exist.
+        </NeedsDecision>
+
+        <h2 id="t-changes">9. Changes to these terms</h2>
+        <p>
+          We may update these terms. If a change materially affects you, we will email you at least 14 days
+          before it takes effect, using the address on your account. Continuing to use Meetrao after that means
+          you accept the new terms. If you do not, delete your account.
+        </p>
+
+        <h2 id="t-law">10. Governing law</h2>
+        <p>
+          These terms are governed by the laws of Bangladesh, and the courts of Bangladesh have jurisdiction over
+          any dispute. If you are a consumer somewhere else, this does not take away rights your local law gives
+          you that cannot be waived by agreement.
+        </p>
+        <p>Before going to court, please email us — most things are quicker to sort out directly.</p>
+
+        <DocFooterNote title="Questions about these terms">
+          Email <a href="mailto:hello@airlystudio.com">hello@airlystudio.com</a>. A person reads it. You can also{" "}
+          <Link href="/support">use the contact form</Link>.
+        </DocFooterNote>
+      </DocLayout>
+    </>
+  );
+}

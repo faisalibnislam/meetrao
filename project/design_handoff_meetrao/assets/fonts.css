@@ -1,0 +1,8 @@
+/* Meetrao — webfonts for the design prototypes in this folder.
+   DM Mono / Instrument Sans / Instrument Serif are OFL and come from Google Fonts.
+   Font Awesome 6 Sharp is a LICENSED family. The Light and Solid cuts shipped with the
+   design source and are included so the prototypes render; use your own licensed copy in
+   production, or substitute an equivalent set keeping the weight convention
+   (Light 300 for objects and navigation, Solid 900 for status, check and close). */
+@font-face{font-family:"Font Awesome 6 Sharp";font-style:normal;font-weight:300;font-display:block;src:url("./fonts/FontAwesome6Sharp-Light.otf") format("opentype")}
+@font-face{font-family:"Font Awesome 6 Sharp";font-style:normal;font-weight:900;font-display:block;src:url("./fonts/FontAwesome6Sharp-Solid.otf") format("opentype")}

@@ -1,0 +1,75 @@
+"use server";
+
+import { Resend } from "resend";
+import { z } from "zod";
+import { env } from "@/lib/env";
+import { escapeHtml } from "@/lib/email/send";
+import { optionalSession } from "@/lib/data/session";
+import { supabaseAdmin } from "@/lib/supabase/admin";
+
+/* The contact form. Signed in, the identity comes from the account rather than
+   from two fields the sender could get wrong. */
+
+const TOPICS = ["account", "calendar", "booking", "billing", "other"] as const;
+
+const Body = z.object({
+  name: z.string().trim().max(120).optional().default(""),
+  email: z.string().trim().max(200).optional().default(""),
+  topic: z.enum(TOPICS),
+  message: z.string().trim().min(10, "A sentence or two is enough — we just need something to go on."),
+});
+
+export type SupportResult = { error?: string; sentTo?: string };
+
+export async function sendSupportMessage(input: {
+  name: string;
+  email: string;
+  topic: string;
+  message: string;
+}): Promise<SupportResult> {
+  const parsed = Body.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Check the form and try again." };
+  }
+
+  const session = await optionalSession();
+  const fromName = session ? session.profile.full_name || session.profile.username : parsed.data.name;
+  const fromEmail = session ? session.profile.email : parsed.data.email;
+
+  if (!fromName.trim()) return { error: "Tell us who you are." };
+  if (!fromEmail.includes("@")) return { error: "We need somewhere to reply." };
+
+  const { data: settings } = await supabaseAdmin()
+    .from("platform_settings")
+    .select("support_email")
+    .eq("id", true)
+    .maybeSingle();
+
+  const to = (settings?.support_email as string | undefined) || "hello@airlystudio.com";
+
+  // Every value here was typed by the sender, so every value is escaped.
+  const html = `
+    <div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1A1917">
+      <p style="margin:0 0 12px"><strong>${escapeHtml(fromName)}</strong> &lt;${escapeHtml(fromEmail)}&gt;</p>
+      <p style="margin:0 0 12px">Topic: ${escapeHtml(parsed.data.topic)}${session ? " · signed in" : " · signed out"}</p>
+      <hr style="border:0;border-top:1px solid #E0DDD4;margin:16px 0">
+      <p style="margin:0;white-space:pre-wrap">${escapeHtml(parsed.data.message)}</p>
+    </div>`;
+
+  try {
+    const e = env();
+    const { error } = await new Resend(e.RESEND_API_KEY).emails.send({
+      from: e.EMAIL_FROM,
+      to,
+      replyTo: fromEmail,
+      subject: `Support · ${parsed.data.topic} · ${fromName}`,
+      html,
+    });
+
+    if (error) return { error: "That did not send. Email us directly at hello@airlystudio.com." };
+  } catch {
+    return { error: "That did not send. Email us directly at hello@airlystudio.com." };
+  }
+
+  return { sentTo: fromEmail };
+}

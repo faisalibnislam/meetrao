@@ -1,0 +1,12 @@
+/* Meetrao — base document rules. */
+html,body{margin:0;background:var(--ground)}
+body{font-family:var(--font-sans);color:var(--ink);-webkit-font-smoothing:antialiased;font-variant-numeric:tabular-nums}
+a{color:var(--ink);text-decoration:underline;text-underline-offset:2px;text-decoration-color:var(--line-strong);font-weight:500}
+a:hover{color:var(--accent);text-decoration-color:var(--accent)}
+input::placeholder,textarea::placeholder{color:var(--ink-3)}
+img{display:block;max-width:100%}
+*:focus-visible{outline:none;box-shadow:var(--ring)}
+/* Icon helper — Font Awesome 6 Sharp, referenced by codepoint.
+   Light 300 for objects and navigation; Solid 900 for status, close and check. */
+.mr-icon{font-family:var(--font-icon);font-weight:300;font-style:normal;line-height:1;display:inline-block}
+.mr-icon-solid{font-weight:900}
