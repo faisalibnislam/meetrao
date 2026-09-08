@@ -120,7 +120,11 @@ export const config = {
   matcher: [
     /* Everything except static assets and image files. The public booking page
        is matched too — it has no session, but the cookie refresh is harmless
-       and keeps a signed-in host's own header correct while previewing. */
+       and keeps a signed-in host's own header correct while previewing.
+
+       Next serves the app icons as /icon.png, /icon1.png and /apple-icon.png,
+       so the extension rule below already excludes them — no session refresh
+       to hand back a 32px PNG. */
     "/((?!_next/static|_next/image|favicon.ico|brand/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],
 };
