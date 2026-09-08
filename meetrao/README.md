@@ -93,6 +93,26 @@ it goes through `src/lib/google/connection.ts`.
 nothing recorded before, so `booking_page_views` and `avg_reply_minutes` were added.
 With nothing measured yet the card shows "—" rather than an invented figure.
 
+## Supabase Auth URL configuration
+
+Set these in the Supabase dashboard under **Authentication → URL Configuration**.
+They are not in a migration because they are project settings, not schema.
+
+- **Site URL** — an origin that actually serves this app.
+- **Redirect URLs** — must include `<origin>/**` for every origin that signs
+  people in: production, each preview domain, and `http://localhost:3000/**`.
+
+This matters more than it looks. Supabase does not reject a `redirectTo` that
+is missing from the allow-list — it silently substitutes the Site URL, which is
+a bare origin with no path. The browser then lands on `/` holding `?code=…`,
+nothing exchanges it, and sign-in looks like it did nothing. `auth.flow_state`
+is where to check: its `referrer` column shows the URL Supabase actually chose,
+and a bare origin there means the allow-list rejected ours.
+
+`NEXT_PUBLIC_SITE_URL` must be set on Vercel to that same origin. Without it,
+`siteUrl()` falls back to Vercel's host variables, and the per-deployment one
+changes on every push — an address that can never be allow-listed.
+
 ## Still open
 
 - **Google redirect URIs.** The credentials are verified working, but which

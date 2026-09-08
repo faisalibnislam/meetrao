@@ -66,9 +66,33 @@ export function publicEnv() {
   return { url, key };
 }
 
+/**
+ * The origin this deployment is reachable at. Every OAuth redirect URI and
+ * every link inside an email is built from it, so it has to be an address that
+ * actually serves this app — and one that can be registered ahead of time in
+ * Supabase's redirect allow-list and Google's authorised URIs.
+ *
+ * `VERCEL_URL` is the per-deployment host (meetrao-a1b2c3-….vercel.app). It
+ * changes on every push, so it can never be allow-listed, and Supabase silently
+ * falls back to its own Site URL when a redirect is not on the list. That is
+ * how sign-in ended up on a domain with no deployment behind it.
+ * `VERCEL_PROJECT_PRODUCTION_URL` is the stable production host, so it is
+ * preferred; the per-deployment host is a last resort before localhost.
+ *
+ * Trailing slash is trimmed: `${siteUrl()}/auth/callback` on a value ending in
+ * "/" produces a double slash, and an allow-list match is exact.
+ */
 export function siteUrl(): string {
-  return (
-    process.env.NEXT_PUBLIC_SITE_URL ??
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")
-  );
+  // Not `??` — an env var set to "" in a dashboard is empty, not undefined,
+  // and would otherwise win and produce relative redirects.
+  const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  if (configured) return configured.replace(/\/+$/, "");
+
+  const production = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+  if (production) return `https://${production}`;
+
+  const deployment = process.env.VERCEL_URL?.trim();
+  if (deployment) return `https://${deployment}`;
+
+  return "http://localhost:3000";
 }

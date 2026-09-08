@@ -18,7 +18,41 @@ const PRIVATE_PREFIXES = ["/dashboard", "/bookings", "/meetings", "/availability
 /** Signed-out-only. A signed-in visitor is sent on to the app. */
 const AUTH_PAGES = ["/login", "/signup", "/forgot"];
 
+/**
+ * An OAuth code that landed on the site root instead of `/auth/callback`.
+ *
+ * Supabase only honours a `redirectTo` that matches its redirect allow-list.
+ * When it does not match, Supabase does not fail — it quietly substitutes the
+ * project's Site URL, which is a bare origin with no path. The browser then
+ * arrives at `/` carrying `?code=…`, the landing page renders, the code is
+ * never exchanged, and sign-in appears to do nothing at all.
+ *
+ * The real fix is the allow-list, and it is written up in README.md. This
+ * forwards the code to the route that knows what to do with it, so a
+ * misconfigured allow-list degrades to a working sign-in rather than a silent
+ * dead end.
+ *
+ * Deliberately narrow: only the site root, and only when nothing else claims
+ * the parameter. `/api/google/callback` carries its own `code` for Calendar
+ * consent and must never be touched by this.
+ */
+function strandedAuthCode(request: NextRequest): URL | null {
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname !== "/") return null;
+
+  const code = searchParams.get("code");
+  const error = searchParams.get("error") ?? searchParams.get("error_description");
+  if (!code && !error) return null;
+
+  const to = request.nextUrl.clone();
+  to.pathname = "/auth/callback";
+  return to;
+}
+
 export async function proxy(request: NextRequest) {
+  const stranded = strandedAuthCode(request);
+  if (stranded) return NextResponse.redirect(stranded);
+
   let response = NextResponse.next({ request });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
