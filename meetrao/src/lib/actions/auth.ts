@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { siteUrl } from "@/lib/env";
+import { supportedTimezone } from "@/lib/timezones";
 
 /* Auth server actions. Each returns a plain `{ error }` so the form can render
    the message inline rather than throwing. */
@@ -35,6 +36,10 @@ export async function signUpWithPassword(_prev: AuthResult, formData: FormData):
   const fullName = String(formData.get("full_name") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  // The browser's own zone, carried in a hidden field. Checked against the
+  // list this app offers before it goes anywhere near the account: it arrives
+  // from a client, and the slot engine reads the result.
+  const timezone = supportedTimezone(formData.get("timezone"));
 
   if (!fullName) return { error: "Enter your full name." };
   if (!email.includes("@")) return { error: "Enter an email we can send the confirmation to." };
@@ -45,7 +50,9 @@ export async function signUpWithPassword(_prev: AuthResult, formData: FormData):
     email,
     password,
     options: {
-      data: { full_name: fullName },
+      // handle_new_user reads this and writes it to the profile, so the host
+      // lands on their real hours rather than UTC. See migration 0008.
+      data: { full_name: fullName, timezone },
       emailRedirectTo: `${siteUrl()}/auth/confirm`,
     },
   });
@@ -85,13 +92,20 @@ export async function signOut() {
   redirect("/login");
 }
 
-/** Returns Google's consent URL; the caller navigates to it. */
-export async function startGoogleSignIn(): Promise<{ url?: string; error?: string }> {
+/**
+ * Returns Google's consent URL; the caller navigates to it.
+ *
+ * A Google sign-up has no form to carry the detected zone, so it rides on the
+ * return URL instead and /auth/callback applies it. Not sensitive, and
+ * validated again on the way back — the round trip goes through Google.
+ */
+export async function startGoogleSignIn(detected?: string): Promise<{ url?: string; error?: string }> {
   const supabase = await supabaseServer();
+  const timezone = supportedTimezone(detected);
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${siteUrl()}/auth/callback`,
+      redirectTo: `${siteUrl()}/auth/callback?tz=${encodeURIComponent(timezone)}`,
       queryParams: { prompt: "select_account" },
     },
   });

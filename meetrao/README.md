@@ -89,6 +89,14 @@ is one an admin could forge entries in. Both writes go through
 enabled and no policy, so no browser session can reach it. Everything that touches
 it goes through `src/lib/google/connection.ts`.
 
+**Timezone is detected at registration, once.** A new account used to sit on
+UTC until someone reached onboarding step 4, and every slot, email and booking
+page reads that column. The browser's zone now travels with the sign-up — a
+hidden field for email, the OAuth return URL for Google — and the profile
+trigger writes it, validated against the zones this app offers. `timezone_auto`
+is what stops it happening twice: it is cleared the moment a host picks a zone
+themselves, so signing in from a laptop abroad never moves someone who chose.
+
 **Avg. reply time is real.** It measures booking-page-opened → booked, which
 nothing recorded before, so `booking_page_views` and `avg_reply_minutes` were added.
 With nothing measured yet the card shows "—" rather than an invented figure.

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { applyDetectedTimezone } from "@/lib/data/timezone";
 import { sendWelcomeOnce } from "@/lib/email/welcome-once";
 import { supabaseServer } from "@/lib/supabase/server";
 
@@ -37,6 +38,11 @@ export async function GET(request: NextRequest) {
   // The design's other trigger for the welcome mail. This route runs on every
   // Google sign-in, so the claim in sendWelcomeOnce is what makes it the first
   // one only.
+  // A Google sign-up carries no form, so the zone detected before the redirect
+  // comes back on the return URL. Only applied while the host has not chosen
+  // one themselves.
+  await applyDetectedTimezone(user.id, searchParams.get("tz"));
+
   await sendWelcomeOnce(user.id);
 
   const { data: profile } = await supabase

@@ -99,3 +99,16 @@ export function nearestSupportedTimezone(zone: string, at: Date = new Date()): s
   }
   return best;
 }
+
+/**
+ * A zone this app offers, or "UTC".
+ *
+ * Everything that reaches here came from a browser — a hidden form field or a
+ * query parameter that travelled through Google — so it is checked against the
+ * list rather than trusted. The list is the same one the picker shows, which
+ * keeps a detected zone and a chosen zone the same kind of value.
+ */
+export function supportedTimezone(value: unknown): string {
+  const zone = typeof value === "string" ? value.trim() : "";
+  return TIMEZONES.includes(zone as (typeof TIMEZONES)[number]) ? zone : "UTC";
+}

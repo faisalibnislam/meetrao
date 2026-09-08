@@ -8,6 +8,8 @@ import { Callout } from "@/components/ui/panels";
 import { GoogleG } from "@/components/ui/logo";
 import { Eyebrow } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button-class";
+import { useClientValue } from "@/lib/use-client-value";
+import { detectTimezone, nearestSupportedTimezone } from "@/lib/timezones";
 import {
   sendPasswordReset,
   signInWithPassword,
@@ -34,6 +36,11 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
   const isForgot = mode === "forgot";
   const isSignup = mode === "signup";
 
+  // The device's own zone, mapped to one this app offers. Read through
+  // useClientValue so the server renders "UTC" and the client corrects it
+  // after hydration — reading Intl during render would mismatch.
+  const timezone = useClientValue(() => nearestSupportedTimezone(detectTimezone()), "UTC");
+
   return (
     <div className="flex flex-col gap-[14px]">
       {state.error ? <Callout tone="red">{state.error}</Callout> : null}
@@ -41,6 +48,10 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
 
       <form action={formAction} className="flex flex-col gap-[14px]">
         {next ? <input type="hidden" name="next" value={next} /> : null}
+        {/* Registration sets the host's timezone from their own device, so a
+            new account never offers its hours in UTC by accident. Changed
+            later in Settings like any other. */}
+        {isSignup ? <input type="hidden" name="timezone" value={timezone} /> : null}
 
         {isSignup ? (
           <Field label="Full name" htmlFor="full_name">
@@ -105,7 +116,7 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
             onClick={() =>
               startGoogle(async () => {
                 setGoogleError(null);
-                const result = await startGoogleSignIn();
+                const result = await startGoogleSignIn(timezone);
                 if (result.url) window.location.href = result.url;
                 else setGoogleError(result.error ?? "Google sign-in is unavailable.");
               })

@@ -55,7 +55,8 @@ export async function saveTimezone(timezone: string): Promise<SettingsResult> {
   const session = await requireSession();
   const supabase = await supabaseServer();
 
-  const { error } = await supabase.from("profiles").update({ timezone }).eq("id", session.userId);
+  const { error } = await supabase.from("profiles")// Chosen, not detected — registration must never overwrite it.
+    .update({ timezone, timezone_auto: false }).eq("id", session.userId);
   if (error) return { error: error.message };
 
   revalidatePath("/settings");

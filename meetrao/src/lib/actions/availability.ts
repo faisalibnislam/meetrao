@@ -44,7 +44,8 @@ export async function saveAvailability(input: {
 
   const { error: tzError } = await supabase
     .from("profiles")
-    .update({ timezone: input.timezone })
+    // Chosen, not detected — registration must never overwrite it.
+    .update({ timezone: input.timezone, timezone_auto: false })
     .eq("id", session.userId);
   if (tzError) return { error: tzError.message };
 
