@@ -79,16 +79,17 @@ With nothing measured yet the card shows "—" rather than an invented figure.
 
 ## Still open
 
-- **Google Cloud OAuth credentials** are not set. Calendar connect, and therefore
-  conflict checking and event creation, cannot work until `GOOGLE_CLIENT_ID` and
-  `GOOGLE_CLIENT_SECRET` are in the environment and the redirect URI
-  `<origin>/api/google/callback` is registered for **every** origin — localhost,
-  the Vercel preview domain and production. A missing one fails as
-  `redirect_uri_mismatch` and nothing else.
-- **`SUPABASE_SERVICE_ROLE_KEY`** is not set. The public booking path, calendar
-  tokens and account removal all need it.
-- **Ten photography placeholders** on the landing page render as labelled frames.
-  Stock or generated images are explicitly not a substitute.
+- **Google redirect URIs.** The credentials are set, but
+  `<origin>/api/google/callback` has to be registered in Google Cloud for
+  **every** origin — localhost, each Vercel preview domain, production. A
+  missing one fails as `redirect_uri_mismatch` and gives no other signal.
+- **Photography.** The six Use cases cards render labelled frames until photos
+  exist. Dropping `public/use-cases/<id>.jpg` is the whole wiring — the page
+  reads the directory at build time, so a partial set degrades one card at a
+  time. `public/use-cases/README.md` has the ids and the two crops each photo
+  has to survive. Stock or generated images were explicitly not a substitute.
+- **`EMAIL_POSTAL_ADDRESS`** is set to a city and state. CAN-SPAM wants a full
+  physical address — street line, or a registered PO box.
 - **Five legal decisions** are visible amber callouts on `/terms` and `/privacy`,
   including a cookie-consent banner that does not exist and that EU/UK visitors
   legally require.

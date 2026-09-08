@@ -11,6 +11,7 @@ import { UseCases } from "@/components/marketing/use-cases";
 import { Walkthrough } from "@/components/marketing/walkthrough";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
+import { useCasePhotos } from "@/lib/use-case-photos";
 
 export const metadata: Metadata = {
   title: "Meetrao — one link, no back-and-forth",
@@ -83,6 +84,10 @@ const BENEFITS: [IconName, string, string][] = [
 ];
 
 export default function LandingPage() {
+  // Read off disk at build time: a photo dropped into public/use-cases/ shows up
+  // on the next deploy, with no code change.
+  const photos = useCasePhotos();
+
   return (
     <>
       <Hero />
@@ -418,7 +423,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <UseCases />
+              <UseCases photos={photos} />
             </div>
           </Reveal>
         </div>

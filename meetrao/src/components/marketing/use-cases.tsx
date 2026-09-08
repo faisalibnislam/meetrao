@@ -7,10 +7,12 @@ import { ImageFrame } from "./image-frame";
 import { cx } from "@/lib/cx";
 
 /* Six use cases: one featured panel plus the next three as strips. Each appears
-   either as the feature or as a strip, never both.
+   either as the feature or as a strip, never both — so one photograph per use
+   case covers both roles and is cropped to fit.
 
-   The photography is not here yet. Stock or generated images are explicitly not
-   a substitute, so the frames ship labelled until real photos exist. */
+   Photographs are read off disk by the page, not listed here: drop
+   `public/use-cases/<id>.jpg` and that card stops being a frame. See
+   src/lib/use-case-photos.ts. */
 
 type UseCase = {
   id: string;
@@ -72,7 +74,7 @@ const USE: UseCase[] = [
   },
 ];
 
-export function UseCases() {
+export function UseCases({ photos = {} }: { photos?: Record<string, string> }) {
   const [index, setIndex] = useState(0);
   const feature = USE[index];
   const strips = [1, 2, 3].map((offset) => USE[(index + offset) % USE.length]);
@@ -89,6 +91,8 @@ export function UseCases() {
         >
           <ImageFrame
             label={`${feature.tag} photography`}
+            src={photos[feature.id]}
+            sizes="(max-width: 860px) 100vw, 640px"
             className="absolute inset-0 z-1 h-full w-full"
             rounded="rounded-none"
             ground="bg-transparent"
@@ -139,6 +143,8 @@ export function UseCases() {
             >
               <ImageFrame
                 label={item.tag}
+                src={photos[item.id]}
+                sizes="(max-width: 860px) 34vw, 220px"
                 className="absolute inset-0 z-1 h-full w-full"
                 rounded="rounded-none"
                 ground="bg-transparent"

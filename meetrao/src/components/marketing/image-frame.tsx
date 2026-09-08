@@ -1,12 +1,14 @@
+import Image from "next/image";
 import { Icon } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 
 /**
- * A labelled empty frame where real photography goes.
+ * A photograph, or a labelled frame standing in for one.
  *
- * The design leaves ten of these. Stock or generated images are explicitly not
- * a substitute, so the frames ship as frames until real photos exist — visible,
- * named, and impossible to mistake for finished art.
+ * The design leaves ten of these to real photography. Given a `src` this is
+ * simply the photo; without one it is a visible, named frame — impossible to
+ * mistake for finished art, and it degrades one slot at a time as photos
+ * arrive rather than all-or-nothing.
  */
 export function ImageFrame({
   label,
@@ -14,6 +16,8 @@ export function ImageFrame({
   ground = "bg-fill-2",
   rounded = "rounded-[14px]",
   avatar = false,
+  src,
+  sizes,
 }: {
   label: string;
   className?: string;
@@ -23,7 +27,21 @@ export function ImageFrame({
       nonsense ("GUEST" renders as "UES"), so it shows a figure and nothing else.
       The frame still reads as a placeholder; it just stops reading as broken. */
   avatar?: boolean;
+  /** Public path to the real photograph, when one exists. */
+  src?: string;
+  /** Passed to next/image. Worth setting wherever the rendered width is known. */
+  sizes?: string;
 }) {
+  if (src) {
+    return (
+      <div className={cx("relative overflow-hidden", rounded, className)}>
+        {/* Decorative: every one of these sits behind a caption that already
+            names the thing, so a description here would only repeat it. */}
+        <Image src={src} alt="" fill sizes={sizes} className="object-cover" />
+      </div>
+    );
+  }
+
   return (
     <div
       role="img"
