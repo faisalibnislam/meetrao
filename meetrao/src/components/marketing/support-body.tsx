@@ -1,14 +1,15 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { SupportForm } from "@/components/marketing/support-form";
 import { Eyebrow } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import { optionalSession } from "@/lib/data/session";
 
-export const metadata: Metadata = {
-  title: "Support",
-  description: "Tell us what you were trying to do and what happened instead. A person reads every message.",
-};
+/* The Support page's content, chrome aside.
+
+   One body, two shells: signed out it sits under the marketing nav, signed in
+   it sits inside the app shell beside the sidebar. Clicking "Support" from
+   inside the product and landing on a page inviting you to sign up is the
+   thing this avoids, and keeping the body in one place is what stops the two
+   drifting apart. */
 
 const SHORTCUTS: [string, string][] = [
   ["/help#start", "I signed up but cannot sign in"],
@@ -18,10 +19,19 @@ const SHORTCUTS: [string, string][] = [
   ["/help#faq", "Can guests reschedule?"],
 ];
 
-export default async function SupportPage() {
-  // Signed in, the form takes the identity from the account rather than asking
-  // for a name and address the sender could get wrong.
-  const session = await optionalSession();
+export function SupportBody({
+  signedIn,
+  accountName,
+  accountEmail,
+  helpInNewTab = false,
+}: {
+  signedIn: boolean;
+  accountName: string;
+  accountEmail: string;
+  /** Signed in, the Help centre opens alongside the app rather than replacing it. */
+  helpInNewTab?: boolean;
+}) {
+  const newTab = helpInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {};
 
   return (
     <>
@@ -30,6 +40,7 @@ export default async function SupportPage() {
           <span className="text-[13.5px] font-semibold text-ink">Support</span>
           <Link
             href="/help"
+            {...newTab}
             className="unlink inline-flex items-center gap-[8px] rounded-[6px] px-[9px] py-[5px] text-[13px] text-ink-2 hover:bg-fill hover:text-ink"
           >
             <Icon name="circle-question" size={12} />
@@ -49,11 +60,7 @@ export default async function SupportPage() {
             </p>
           </div>
 
-          <SupportForm
-            signedIn={Boolean(session)}
-            accountName={session ? session.profile.full_name || session.profile.username : ""}
-            accountEmail={session?.profile.email ?? ""}
-          />
+          <SupportForm signedIn={signedIn} accountName={accountName} accountEmail={accountEmail} />
         </div>
 
         <aside className="flex w-[320px] flex-none flex-col gap-[16px] max-[880px]:w-full">
@@ -67,6 +74,7 @@ export default async function SupportPage() {
                 <Link
                   key={label}
                   href={href}
+                  {...newTab}
                   className="unlink flex items-center gap-[10px] rounded-[6px] px-[9px] py-[8px] text-[13px] text-ink-2 hover:bg-fill hover:text-ink"
                 >
                   <Icon name="chevron-right" size={9} className="flex-none text-ink-3" />

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Logo } from "@/components/ui/logo";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { SiteAccountMenu } from "./site-account-menu";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Marketing chrome — one sticky nav and one footer, shared by the landing page
@@ -15,7 +16,21 @@ export function demoBookingPath(): string | null {
   return process.env.NEXT_PUBLIC_DEMO_BOOKING_PATH || null;
 }
 
-export function SiteNav({ sectionLinks = true }: { sectionLinks?: boolean }) {
+export type NavAccount = {
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+  onSignOut: () => void | Promise<void>;
+};
+
+export function SiteNav({
+  sectionLinks = true,
+  account,
+}: {
+  sectionLinks?: boolean;
+  /** Signed in, the two sign-up buttons make no sense — show the way back. */
+  account?: NavAccount | null;
+}) {
   return (
     <header className="pointer-events-none sticky top-0 z-60 px-[26px] pt-[20px] max-[720px]:px-[12px] max-[720px]:pt-[12px]">
       <div className="pointer-events-auto mx-auto flex max-w-[1148px] items-center gap-[22px] rounded-[12px] border border-line bg-white py-[10px] pr-[14px] pl-[18px] shadow-[0_1px_2px_rgba(26,25,23,0.04),0_12px_28px_-14px_rgba(26,25,23,0.22)] max-[720px]:gap-[12px] max-[720px]:p-[10px_12px]">
@@ -33,18 +48,29 @@ export function SiteNav({ sectionLinks = true }: { sectionLinks?: boolean }) {
         ) : null}
 
         <div className="ml-auto flex flex-none items-center gap-[12px]">
-          <Link
-            href="/login"
-            className="unlink inline-flex min-h-[38px] items-center px-[8px] text-[13.5px] text-ink-2"
-          >
-            Log in
-          </Link>
-          <Link
-            href="/signup"
-            className="unlink inline-flex h-[38px] items-center gap-[8px] rounded-[7px] bg-accent px-[15px] text-[13px] font-semibold whitespace-nowrap text-white transition-colors duration-[120ms] hover:bg-accent-2 hover:text-white"
-          >
-            Get started — Free
-          </Link>
+          {account ? (
+            <SiteAccountMenu
+              name={account.name}
+              email={account.email}
+              avatarUrl={account.avatarUrl}
+              onSignOut={account.onSignOut}
+            />
+          ) : (
+            <>
+              <Link
+                href="/login"
+                className="unlink inline-flex min-h-[38px] items-center px-[8px] text-[13.5px] text-ink-2"
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                className="unlink inline-flex h-[38px] items-center gap-[8px] rounded-[7px] bg-accent px-[15px] text-[13px] font-semibold whitespace-nowrap text-white transition-colors duration-[120ms] hover:bg-accent-2 hover:text-white"
+              >
+                Get started — Free
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

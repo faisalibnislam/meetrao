@@ -137,7 +137,7 @@ export function StepRail({
                 </span>
               </div>
               <span aria-hidden="true" className="mx-[2px] mb-[5px] block h-[1px] bg-line-soft" />
-              <Link href="/help" role="menuitem" className={item}>
+              <Link href="/help" role="menuitem" className={item} target="_blank" rel="noopener noreferrer">
                 <Icon name="circle-question" size={12} className="w-[15px] flex-none text-ink-3" />
                 <span>Help centre</span>
               </Link>

@@ -218,7 +218,7 @@ export function Sidebar({
             </span>
           </div>
           {!isAdmin ? <DrawerLink href="/settings" icon="gear" label="Settings" /> : null}
-          <DrawerLink href="/help" icon="circle-question" label="Help centre" />
+          <DrawerLink href="/help" icon="circle-question" label="Help centre" newTab />
           <DrawerLink href="/support" icon="envelope" label="Contact support" />
           <button type="button" onClick={onSignOut} className={drawerItem}>
             <Icon name="sign-out" size={13} className="w-[16px] flex-none text-ink-3" />
@@ -269,7 +269,7 @@ export function Sidebar({
               className="animate-in absolute bottom-[calc(100%+6px)] left-0 z-95 w-full min-w-[190px] rounded-[8px] border border-line bg-surface p-[6px] shadow-[var(--pop)]"
             >
               {!isAdmin ? <MenuLink href="/settings" icon="gear" label="Settings" /> : null}
-              <MenuLink href="/help" icon="circle-question" label="Help centre" />
+              <MenuLink href="/help" icon="circle-question" label="Help centre" newTab />
               <MenuLink href="/support" icon="envelope" label="Support" />
               <span aria-hidden="true" className="mx-[2px] my-[5px] block h-[1px] bg-line-soft" />
               <button type="button" role="menuitem" onClick={onSignOut} className={menuItem}>
@@ -292,20 +292,53 @@ const drawerItem =
   "unlink box-border flex min-h-[44px] w-full cursor-pointer items-center gap-[11px] rounded-[8px] border-0 " +
   "bg-transparent px-[12px] text-left font-sans text-[13.5px] font-medium text-ink hover:bg-fill";
 
-function MenuLink({ href, icon, label }: { href: string; icon: IconName; label: string }) {
+/* `newTab` is for the Help centre. Reading an answer should not close the
+   screen the question is about, and coming back should not mean losing it. */
+function MenuLink({
+  href,
+  icon,
+  label,
+  newTab,
+}: {
+  href: string;
+  icon: IconName;
+  label: string;
+  newTab?: boolean;
+}) {
   return (
-    <Link href={href} role="menuitem" className={menuItem}>
+    <Link
+      href={href}
+      role="menuitem"
+      className={menuItem}
+      {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
       <Icon name={icon} size={12} className="w-[15px] flex-none text-ink-3" />
-      <span>{label}</span>
+      <span className="flex-1">{label}</span>
+      {newTab ? <Icon name="external-link" size={10} className="flex-none text-ink-3" /> : null}
     </Link>
   );
 }
 
-function DrawerLink({ href, icon, label }: { href: string; icon: IconName; label: string }) {
+function DrawerLink({
+  href,
+  icon,
+  label,
+  newTab,
+}: {
+  href: string;
+  icon: IconName;
+  label: string;
+  newTab?: boolean;
+}) {
   return (
-    <Link href={href} className={drawerItem}>
+    <Link
+      href={href}
+      className={drawerItem}
+      {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+    >
       <Icon name={icon} size={13} className="w-[16px] flex-none text-ink-3" />
-      <span>{label}</span>
+      <span className="flex-1">{label}</span>
+      {newTab ? <Icon name="external-link" size={10} className="flex-none text-ink-3" /> : null}
     </Link>
   );
 }
