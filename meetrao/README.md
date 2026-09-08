@@ -77,6 +77,13 @@ no longer available … Nothing has been scheduled."
 fetch every URL in an email; a GET that cancelled would cancel meetings nobody
 meant to.
 
+**Adding a column to `profiles` needs a grant.** `authenticated` has no
+table-level UPDATE on it — revoking a single column converted the grant into
+per-column grants — so a new column starts unwritable and the failure reads as
+`permission denied for table profiles`, naming the table rather than the
+column. Grant it explicitly, or leave it ungranted deliberately, as
+`welcomed_at` is.
+
 **Privilege flags and the audit log are service-role only.** `is_admin` and
 `is_suspended` are not in the `authenticated` UPDATE grant, because
 `profiles_update_own` would otherwise let a suspended user clear their own

@@ -1,0 +1,22 @@
+-- Saving availability failed with "permission denied for table profiles".
+--
+-- 0006 revoked UPDATE on a single column:
+--
+--   revoke update (is_suspended) on public.profiles from anon, authenticated;
+--
+-- Postgres cannot express "every column except this one" as a table grant, so
+-- it silently converts: the table-level UPDATE grant is dropped and replaced
+-- with a column-level grant on each remaining column. That is the right
+-- outcome, and it has a consequence worth knowing —
+--
+--   ANY COLUMN ADDED TO public.profiles AFTER 0006 STARTS WITH NO GRANT AT ALL.
+--
+-- 0008 added timezone_auto and the app writes it whenever a host picks a zone,
+-- in onboarding step 4 and in Settings. Both updates were denied, and because
+-- the timezone is written in the same statement as the availability, step 4
+-- could not be completed at all.
+--
+-- welcomed_at, added in 0007, is deliberately not granted: only the service
+-- role sets it. timezone_auto is different — it is a preference marker, not a
+-- privilege flag, and clearing it is exactly what a host does by choosing.
+grant update (timezone_auto) on public.profiles to authenticated;
