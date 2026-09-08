@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/toast";
 import { addDays, dateKey, type PlainDate } from "@/lib/booking/slots";
 import { formatMonth, formatPlainLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
 import { detectTimezone, timezoneLabel } from "@/lib/timezones";
+import { useClientValue } from "@/lib/use-client-value";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -51,7 +52,10 @@ export function BookingFlow(props: FlowProps) {
   const router = useRouter();
   const toast = useToast();
 
-  const [timezone, setTimezone] = useState(props.initial.timezone);
+  // The server rendered in the host's zone because it cannot know the guest's.
+  // This reads the real one on the first client render, with no flash and no
+  // hydration mismatch.
+  const timezone = useClientValue(detectTimezone, props.initial.timezone);
   const [year, setYear] = useState(props.initial.year);
   const [month, setMonth] = useState(props.initial.month);
   const [selected, setSelected] = useState<PlainDate | null>(
@@ -103,16 +107,16 @@ export function BookingFlow(props: FlowProps) {
     [props.username, props.slug],
   );
 
-  // The server rendered in the host's zone because it cannot know the guest's.
-  // Correct it as soon as the browser can say.
+  // Slots were computed in the host's zone; re-fetch them in the guest's the
+  // moment we know it differs. This is a subscription to an external system —
+  // the loading flag it raises is the fetch starting, not a derived value.
   useEffect(() => {
-    const detected = detectTimezone();
-    if (detected === props.initial.timezone) return;
-    setTimezone(detected);
-    void load(props.initial.year, props.initial.month, props.initial.day, detected);
+    if (timezone === props.initial.timezone) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void load(props.initial.year, props.initial.month, props.initial.day, timezone);
     // Only ever runs for the first paint's values.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [timezone]);
 
   const monthCells = buildMonth(year, month);
   const todayKey = dateKey(todayIn(timezone));

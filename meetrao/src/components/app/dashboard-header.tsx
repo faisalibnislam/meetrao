@@ -1,13 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { greetingFor } from "@/lib/booking/time";
+import { useNow } from "@/lib/use-client-value";
 
-/* The dashboard's greeting and clock. Re-renders every 30 seconds, so the time
-   beside the greeting is never stale by more than half a minute.
+/* The dashboard's greeting and clock. Re-reads the time every 30 seconds, so
+   the line beside the greeting is never stale by more than half a minute.
 
-   Rendered from the server's `now` on the first paint and only then handed to
-   the browser's clock, so the markup matches and hydration stays quiet. */
+   The server's `now` is rendered first and the browser's clock takes over on
+   hydration, so the markup matches and nothing flashes. */
 export function DashboardHeader({
   firstName,
   timeZone,
@@ -17,13 +18,8 @@ export function DashboardHeader({
   timeZone: string;
   initialNow: string;
 }) {
-  const [now, setNow] = useState(() => new Date(initialNow));
-
-  useEffect(() => {
-    setNow(new Date());
-    const id = setInterval(() => setNow(new Date()), 30_000);
-    return () => clearInterval(id);
-  }, []);
+  const serverNow = useMemo(() => new Date(initialNow), [initialNow]);
+  const now = useNow(30_000, serverNow);
 
   const date = new Intl.DateTimeFormat("en-US", {
     weekday: "long",

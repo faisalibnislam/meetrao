@@ -15,7 +15,6 @@ import {
 const NY = "America/New_York";
 const LA = "America/Los_Angeles";
 const IST = "Asia/Kolkata";
-const UTC = "UTC";
 
 /** 09:00–12:00 on Mondays, host-local. */
 const MON_MORNING: AvailabilityRule[] = [{ weekday: 1, startMinute: 540, endMinute: 720 }];

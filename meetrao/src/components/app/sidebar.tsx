@@ -48,12 +48,16 @@ export function Sidebar({
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [lastPath, setLastPath] = useState(pathname);
   const navRef = useRef<HTMLElement>(null);
 
-  useEffect(() => {
+  // Navigating closes both menus. Adjusted during render rather than in an
+  // effect, so the open menu never paints for a frame on the new route.
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
     setDrawerOpen(false);
     setMenuOpen(false);
-  }, [pathname]);
+  }
 
   useEffect(() => {
     if (!drawerOpen && !menuOpen) return;

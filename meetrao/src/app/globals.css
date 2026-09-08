@@ -221,3 +221,227 @@ textarea::placeholder {
     padding-right: 12px;
   }
 }
+
+/* ── Landing hero ─────────────────────────────────────────────────────────────
+   The living ground behind the hero, and the one headline that genuinely needs
+   breakpoints: held on a single line it is either unreadable or wider than the
+   screen. ── */
+@keyframes mr-drift-a {
+  0% { transform: translate3d(-16%, -10%, 0) scale(1); }
+  33% { transform: translate3d(14%, 8%, 0) scale(1.34); }
+  66% { transform: translate3d(4%, -14%, 0) scale(1.12); }
+  100% { transform: translate3d(-16%, -10%, 0) scale(1); }
+}
+
+@keyframes mr-drift-b {
+  0% { transform: translate3d(16%, 12%, 0) scale(1.18); }
+  33% { transform: translate3d(-18%, -12%, 0) scale(0.86); }
+  66% { transform: translate3d(-4%, 16%, 0) scale(1.26); }
+  100% { transform: translate3d(16%, 12%, 0) scale(1.18); }
+}
+
+@keyframes mr-drift-c {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(-22%, 16%, 0) scale(1.42); }
+  66% { transform: translate3d(18%, -10%, 0) scale(1.1); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes mr-sweep {
+  0% { opacity: 0; transform: translateX(-70%) skewX(-8deg); }
+  40% { opacity: 0.9; }
+  100% { opacity: 0; transform: translateX(70%) skewX(-8deg); }
+}
+
+@keyframes mr-stage {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes mr-open {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes mr-fill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+.drift-a { animation: mr-drift-a 15s ease-in-out infinite; }
+.drift-b { animation: mr-drift-b 19s ease-in-out infinite; }
+.drift-c { animation: mr-drift-c 17s ease-in-out infinite; }
+.sweep { animation: mr-sweep 6.5s ease-in-out infinite; }
+.animate-stage { animation: mr-stage 620ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+.animate-open { animation: mr-open 560ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+.hero-headline {
+  font-size: min(5.7vw, 66px);
+  line-height: 1.04;
+  letter-spacing: -0.024em;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .hero-headline {
+    white-space: normal;
+    font-size: clamp(34px, 8.2vw, 52px);
+    max-width: 18ch;
+  }
+}
+
+/* Phone: the headline is the page's whole argument and reads small on a
+   handset. 30% up on the tablet values. Must come after the 860px rule. */
+@media (max-width: 640px) {
+  .hero-headline {
+    font-size: clamp(44px, 10.66vw, 68px);
+    letter-spacing: -0.03em;
+    line-height: 0.98;
+  }
+}
+
+/* Anchor links land below the sticky nav rather than under it. */
+section[id] {
+  scroll-margin-top: 94px;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* clip, not hidden: `hidden` makes body a scroll container and stops the sticky
+   nav pinning. */
+body {
+  overflow-x: clip;
+}
+
+/* The cost calculator's three inputs. */
+.mr-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 12px;
+  border-radius: 6px;
+  background: var(--line-strong);
+  outline: none;
+  cursor: pointer;
+}
+
+.mr-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(26, 25, 23, 0.3);
+  cursor: pointer;
+}
+
+.mr-range::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 3px solid #fff;
+  box-shadow: 0 2px 6px rgba(26, 25, 23, 0.3);
+  cursor: pointer;
+}
+
+/* ── Legal and help documents ─────────────────────────────────────────────────
+   The sticky contents rail is border-box, and its max-height budget covers the
+   sticky offset as well as its own padding — otherwise it hangs off the bottom
+   of the viewport at every screen height. Below 880px it goes static and full
+   width, and its list reverts to a wrapping chip row. ── */
+.doc-rail {
+  position: sticky;
+  top: 96px;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+}
+
+@media (max-width: 880px) {
+  .doc-rail {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .doc-rail-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .doc-rail-list > a {
+    flex: 0 0 auto;
+    border: 1px solid var(--line);
+    background: var(--surface);
+  }
+}
+
+/* Prose for the four standalone public pages. Everything is a real element,
+   so the type scale lives here rather than on every tag. */
+.doc-prose h2 {
+  margin: 34px 0 12px;
+  scroll-margin-top: 96px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--ink);
+}
+
+.doc-prose h3 {
+  margin: 24px 0 8px;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.doc-prose p {
+  margin: 0 0 14px;
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.doc-prose ul {
+  margin: 0 0 16px;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-prose li {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--ink-2);
+  text-wrap: pretty;
+}
+
+.doc-prose li::marker {
+  color: var(--line-strong);
+}
+
+.doc-prose strong {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.doc-prose a {
+  color: var(--accent);
+  text-decoration-color: var(--accent-line);
+}
+
+.doc-prose a:hover {
+  color: var(--accent-2);
+  text-decoration-color: var(--accent-2);
+}
+
+.doc-prose code {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--ink);
+}
