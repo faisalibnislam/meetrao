@@ -121,12 +121,6 @@ async function uniqueSlug(userId: string, name: string): Promise<string> {
 }
 
 /** Seeds the design's default week the first time step 4 is opened. */
-export async function ensureDefaultAvailability(): Promise<void> {
-  const session = await requireSession();
-  const supabase = await supabaseServer();
-  await supabase.rpc("seed_default_availability", { p_user_id: session.userId });
-}
-
 export async function completeOnboarding(): Promise<SaveResult> {
   const session = await requireSession();
   if (session.profile.onboarding_completed_at) return {};

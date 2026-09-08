@@ -10,7 +10,7 @@ import {
 } from "@/components/onboarding/steps";
 import { rulesToDays, type Day } from "@/components/app/availability-editor";
 import { signOut } from "@/lib/actions/auth";
-import { ensureDefaultAvailability } from "@/lib/actions/onboarding";
+import { ensureDefaultAvailability } from "@/lib/data/availability";
 import { minutesToLabel } from "@/lib/booking/time";
 import { requireSession } from "@/lib/data/session";
 import { connectionStatus } from "@/lib/google/connection";
@@ -93,8 +93,9 @@ async function stepContent(step: number, session: Session, supabase: Client, cal
 
   if (step === 4) {
     // The design's default week is seeded the first time this step is opened,
-    // so the host edits a sensible schedule rather than an empty one.
-    await ensureDefaultAvailability();
+    // so the host edits a sensible schedule rather than an empty one. Through
+    // the service role, and never fatal — see the helper.
+    await ensureDefaultAvailability(session.userId);
 
     const { data } = await supabase
       .from("availability_rules")
