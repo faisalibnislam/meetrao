@@ -63,10 +63,13 @@ export function Avatar({
   name,
   size = 38,
   tone = "accent",
+  src,
 }: {
   name: string;
   size?: 24 | 26 | 28 | 32 | 38 | 42;
   tone?: "accent" | "neutral";
+  /** The host's photograph. Initials are the fallback, not a lesser option. */
+  src?: string | null;
 }) {
   const initials = name
     .split(" ")
@@ -77,6 +80,24 @@ export function Avatar({
 
   const radius = size <= 26 ? 5 : size <= 32 ? 8 : 8;
   const fontSize = size <= 24 ? 10.5 : size <= 28 ? 10.5 : size <= 32 ? 12 : size <= 38 ? 13 : 14;
+
+  if (src) {
+    return (
+      // Plain <img>, not next/image: the source is a Supabase Storage URL that
+      // changes whenever the host re-crops, and these are 24-42px — there is
+      // nothing for the optimiser to save.
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt=""
+        aria-hidden="true"
+        width={size}
+        height={size}
+        className="flex-none object-cover"
+        style={{ width: size, height: size, borderRadius: radius }}
+      />
+    );
+  }
 
   return (
     <span

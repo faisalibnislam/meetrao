@@ -163,6 +163,5 @@ changes on every push — an address that can never be allow-listed.
   legally require.
 - **No reschedule flow.** Guests cancel and rebook. `booking-changed.html` and
   `sendRescheduled()` exist, unwired, for whenever it is built.
-- **Avatar upload** is stubbed; it needs Supabase Storage wiring.
 - **The verification email** is sent by Supabase, not by us — see the Auth
   settings section above for the template and the Confirm email switch.

@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Avatar, Badge, Eyebrow } from "@/components/ui/badge";
+import { Badge, Eyebrow } from "@/components/ui/badge";
+import { AvatarUpload } from "./avatar-upload";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Field, Help, Input, Switch } from "@/components/ui/controls";
 import { GoogleG } from "@/components/ui/logo";
@@ -111,23 +112,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
     <div className="flex flex-col gap-[15px]">
       <PanelHeading title="Profile" subtitle="How you appear to guests on your booking page." />
 
-      <div className="flex items-center gap-[14px] border-b border-line pb-[15px]">
-        <Avatar name={fullName || profile.username} size={42} />
-        <Button
-          variant="secondary"
-          size={30}
-          icon="upload"
-          onClick={() =>
-            toast({
-              tone: "neutral",
-              title: "Not built yet",
-              text: "Avatar uploads need Supabase Storage wiring.",
-            })
-          }
-        >
-          Upload photo
-        </Button>
-      </div>
+      <AvatarUpload userId={profile.id} name={fullName || profile.username} initialUrl={profile.avatar_url} />
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-[13px]">
         <Field label="Name" htmlFor="prof-name">

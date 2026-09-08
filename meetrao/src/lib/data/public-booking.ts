@@ -15,6 +15,7 @@ export type PublicHost = {
   fullName: string;
   jobTitle: string;
   timezone: string;
+  avatarUrl: string | null;
 };
 
 export type PublicMeeting = {
@@ -37,6 +38,7 @@ export async function getPublicHost(username: string): Promise<PublicHost | null
     fullName: row.full_name,
     jobTitle: row.job_title,
     timezone: row.timezone,
+    avatarUrl: row.avatar_url ?? null,
   };
 }
 

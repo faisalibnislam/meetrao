@@ -23,6 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         items={items}
         name={profile.full_name || profile.username}
         email={profile.email}
+        avatarUrl={profile.avatar_url}
         isAdmin
         onSignOut={signOut}
       />

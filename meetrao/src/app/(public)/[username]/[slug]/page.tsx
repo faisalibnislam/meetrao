@@ -106,6 +106,7 @@ export default async function BookingPage({
         username={host.username}
         slug={meeting.slug}
         hostName={host.fullName || host.username}
+        hostAvatarUrl={host.avatarUrl}
         hostJobTitle={host.jobTitle}
         hostTimezone={host.timezone}
         meetingName={meeting.name}

@@ -31,6 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         items={items}
         name={profile.full_name || profile.username}
         email={profile.email}
+        avatarUrl={profile.avatar_url}
         isAdmin={false}
         onSignOut={signOut}
       />

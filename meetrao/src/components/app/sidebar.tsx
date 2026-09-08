@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { Avatar } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
@@ -37,12 +38,14 @@ export function Sidebar({
   name,
   email,
   isAdmin,
+  avatarUrl,
   onSignOut,
 }: {
   items: NavItem[];
   name: string;
   email: string;
   isAdmin: boolean;
+  avatarUrl?: string | null;
   onSignOut: () => void | Promise<void>;
 }) {
   const pathname = usePathname();
@@ -198,9 +201,13 @@ export function Sidebar({
             without these Settings and Log out are unreachable on a phone. */}
         <div className="hidden max-[820px]:block">
           <div className="mt-[8px] flex items-center gap-[11px] border-t border-line-soft px-[12px] pt-[12px] pb-[11px]">
-            <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[12px] font-bold text-accent">
-              {initials}
-            </span>
+            {avatarUrl ? (
+              <Avatar name={name} size={32} src={avatarUrl} />
+            ) : (
+              <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[12px] font-bold text-accent">
+                {initials}
+              </span>
+            )}
             <span className="flex min-w-0 flex-1 flex-col gap-[1px]">
               <span className="overflow-hidden text-[13px] font-semibold text-ellipsis whitespace-nowrap text-ink">
                 {name}
@@ -233,9 +240,13 @@ export function Sidebar({
               menuOpen ? "border-line bg-surface" : "border-transparent bg-transparent hover:bg-white/55",
             )}
           >
-            <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[11px] font-bold text-accent">
-              {initials}
-            </span>
+            {avatarUrl ? (
+              <Avatar name={name} size={26} src={avatarUrl} />
+            ) : (
+              <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[11px] font-bold text-accent">
+                {initials}
+              </span>
+            )}
             <span className="flex min-w-0 flex-1 flex-col">
               <span className="overflow-hidden text-left text-[12.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
                 {name}

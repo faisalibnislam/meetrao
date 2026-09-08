@@ -29,6 +29,7 @@ export type FlowProps = {
   username: string;
   slug: string;
   hostName: string;
+  hostAvatarUrl?: string | null;
   hostJobTitle: string;
   hostTimezone: string;
   meetingName: string;
@@ -329,9 +330,21 @@ export function BookingFlow(props: FlowProps) {
       <div className="grid grid-cols-[minmax(0,0.78fr)_minmax(0,1fr)] overflow-hidden rounded-[12px] border border-line bg-surface max-[820px]:grid-cols-[1fr]">
         <div className="flex min-w-0 flex-col gap-[15px] border-r border-line bg-fill p-[30px] max-[820px]:border-r-0 max-[820px]:border-b max-[820px]:bg-surface max-[820px]:px-[22px] max-[820px]:py-[26px]">
           <div className="flex items-center gap-[11px]">
-            <span className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[13px] font-bold text-accent">
-              {initials(props.hostName)}
-            </span>
+            {props.hostAvatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={props.hostAvatarUrl}
+                alt=""
+                aria-hidden="true"
+                width={38}
+                height={38}
+                className="h-[38px] w-[38px] flex-none rounded-[8px] object-cover"
+              />
+            ) : (
+              <span className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[13px] font-bold text-accent">
+                {initials(props.hostName)}
+              </span>
+            )}
             <div className="flex min-w-0 flex-col gap-[1px]">
               <span className="text-[13.5px] font-semibold text-ink">{props.hostName}</span>
               {props.hostJobTitle ? (
