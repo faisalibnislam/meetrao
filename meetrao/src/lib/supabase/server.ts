@@ -9,8 +9,13 @@ import { publicEnv } from "@/lib/env";
  * code.
  */
 export async function supabaseServer() {
-  const { url, key } = publicEnv();
+  // cookies() first, and not by accident. Every caller of this is a per-request
+  // page, and awaiting cookies() is what tells Next to render it dynamically.
+  // Read the environment first instead and a missing variable throws during
+  // static prerendering, before the bailout — which fails the whole build with
+  // a prerender error pointing at a page, rather than at the variable.
   const store = await cookies();
+  const { url, key } = publicEnv();
 
   return createServerClient(url, key, {
     cookies: {
