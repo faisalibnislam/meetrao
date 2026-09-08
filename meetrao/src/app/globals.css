@@ -94,42 +94,49 @@
   --shadow-nav: var(--nav-shadow);
 }
 
-html,
-body {
-  margin: 0;
-  background: var(--ground);
-}
+/* These belong in @layer base and not outside it. Unlayered CSS beats every
+   layered rule, so an unlayered `a { color: … }` silently overrode `text-white`
+   on every anchor in the product — the footer links and the nav's own call to
+   action rendered ink-on-dark-green. Inside base, a utility class wins, which
+   is the whole point of having them. */
+@layer base {
+  html,
+  body {
+    margin: 0;
+    background: var(--ground);
+  }
 
-body {
-  font-family: var(--sans);
-  color: var(--ink);
-  -webkit-font-smoothing: antialiased;
-  font-variant-numeric: tabular-nums;
-}
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
 
-/* The prototype styles bare anchors this way; product links inherit it. */
-a {
-  color: var(--ink);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-color: var(--line-strong);
-  font-weight: 500;
-}
+  /* The prototype styles bare anchors this way; product links inherit it. */
+  a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--line-strong);
+    font-weight: 500;
+  }
 
-a:hover {
-  color: var(--accent);
-  text-decoration-color: var(--accent);
-}
+  a:hover {
+    color: var(--accent);
+    text-decoration-color: var(--accent);
+  }
 
-/* Links that are buttons, cards or nav rows opt out. */
-a.unlink,
-a.unlink:hover {
-  text-decoration: none;
-}
+  /* Links that are buttons, cards or nav rows opt out. */
+  a.unlink,
+  a.unlink:hover {
+    text-decoration: none;
+  }
 
-input::placeholder,
-textarea::placeholder {
-  color: var(--ink-3);
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--ink-3);
+  }
 }
 
 *:focus-visible {

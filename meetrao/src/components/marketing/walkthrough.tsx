@@ -310,6 +310,7 @@ export function Walkthrough() {
                           <div className="flex items-center gap-[10px]">
                             <ImageFrame
                               label="Host"
+                              avatar
                               className="h-[32px] w-[32px] flex-none"
                               rounded="rounded-[8px]"
                               ground="bg-accent-soft"

@@ -13,11 +13,16 @@ export function ImageFrame({
   className,
   ground = "bg-fill-2",
   rounded = "rounded-[14px]",
+  avatar = false,
 }: {
   label: string;
   className?: string;
   ground?: string;
   rounded?: string;
+  /** An avatar slot — 28 to 38px. Too small for the caption, which clips into
+      nonsense ("GUEST" renders as "UES"), so it shows a figure and nothing else.
+      The frame still reads as a placeholder; it just stops reading as broken. */
+  avatar?: boolean;
 }) {
   return (
     <div
@@ -30,10 +35,14 @@ export function ImageFrame({
         className,
       )}
     >
-      <span className="flex flex-col items-center gap-[6px] px-[10px] text-center">
-        <Icon name="tag" size={14} className="text-ink-3" />
-        <span className="font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">{label}</span>
-      </span>
+      {avatar ? (
+        <Icon name="user" size={13} className="text-ink-3" />
+      ) : (
+        <span className="flex flex-col items-center gap-[6px] px-[10px] text-center">
+          <Icon name="tag" size={14} className="text-ink-3" />
+          <span className="font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">{label}</span>
+        </span>
+      )}
     </div>
   );
 }

@@ -278,7 +278,7 @@ export function LiveBookingsTable() {
                     style={{ gridTemplateColumns: BOOK_COLS }}
                   >
                     <span role="cell" className="flex min-w-0 items-center gap-[10px]">
-                      <ImageFrame label="Guest" className="h-[28px] w-[28px] flex-none" rounded="rounded-[7px]" />
+                      <ImageFrame label="Guest" avatar className="h-[28px] w-[28px] flex-none" rounded="rounded-[7px]" />
                       <span className="flex min-w-0 flex-col gap-[1px]">
                         <span className="overflow-hidden text-[13.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
                           {guest}
@@ -342,7 +342,7 @@ export function LiveBookingsTable() {
               return (
                 <div key={guest} className="flex flex-col gap-[11px] border-t border-line-soft px-[15px] py-[14px]">
                   <div className="flex items-center gap-[11px]">
-                    <ImageFrame label="Guest" className="h-[28px] w-[28px] flex-none" rounded="rounded-[7px]" />
+                    <ImageFrame label="Guest" avatar className="h-[28px] w-[28px] flex-none" rounded="rounded-[7px]" />
                     <span className="flex min-w-0 flex-1 flex-col gap-[1px]">
                       <span className="overflow-hidden text-[14px] font-semibold text-ellipsis whitespace-nowrap text-ink">
                         {guest}

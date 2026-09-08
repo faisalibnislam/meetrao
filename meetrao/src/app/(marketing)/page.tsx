@@ -117,11 +117,13 @@ export default function LandingPage() {
                 <span className="flex flex-none">
                   <ImageFrame
                     label="Guest"
+                    avatar
                     className="h-[34px] w-[34px] shadow-[0_0_0_2px_var(--surface)]"
                     rounded="rounded-full"
                   />
                   <ImageFrame
                     label="Host"
+                    avatar
                     className="-ml-[11px] h-[34px] w-[34px] shadow-[0_0_0_2px_var(--surface)]"
                     rounded="rounded-full"
                     ground="bg-accent-soft"

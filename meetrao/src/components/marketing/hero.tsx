@@ -172,6 +172,7 @@ export function Hero() {
                 <div className="flex items-center gap-[11px]">
                   <ImageFrame
                     label="Host"
+                    avatar
                     className="h-[38px] w-[38px] flex-none"
                     rounded="rounded-[9px]"
                     ground="bg-accent-soft"
