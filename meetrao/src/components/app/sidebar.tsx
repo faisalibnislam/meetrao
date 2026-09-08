@@ -100,7 +100,10 @@ export function Sidebar({
       className={cx(
         "flex-none border-line",
         // desktop
-        "box-border flex w-[218px] flex-col border-r bg-sidebar pt-[14px] pr-[12px] pb-[58px] pl-[12px]",
+        // pb mirrors pt. The design file says `padding:14px 12px 58px`, and 58px
+        // left the account block floating ~60px clear of the bottom edge —
+        // measured, not guessed. Deliberate departure from the token.
+        "box-border flex w-[218px] flex-col border-r bg-sidebar pt-[14px] pr-[12px] pb-[14px] pl-[12px]",
         // mobile: a bar above the content
         "max-[820px]:relative max-[820px]:z-70 max-[820px]:w-full max-[820px]:flex-row max-[820px]:items-center",
         "max-[820px]:gap-[10px] max-[820px]:border-r-0 max-[820px]:border-b max-[820px]:bg-ground max-[820px]:p-[8px_12px]",
