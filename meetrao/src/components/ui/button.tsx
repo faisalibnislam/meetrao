@@ -58,7 +58,12 @@ export function Button({
         variant={variant}
         size={size}
       />
-      {children != null ? <span>{children}</span> : null}
+      {/* `contents`, not a plain span. The span exists to keep a text label as
+          one flex item, but an inline box also traps a block-level child — a
+          <GoogleG> beside a word stacked above it instead of sitting inline.
+          Dissolving the box makes each child a flex item of the button, which
+          is exactly the design's shape: the mark, then the label. */}
+      {children != null ? <span className="contents">{children}</span> : null}
     </button>
   );
 }
@@ -84,7 +89,12 @@ export function ButtonLink({
       {...rest}
     >
       <Leading icon={icon} iconWeight={iconWeight} iconSize={iconSize} variant={variant} size={size} />
-      {children != null ? <span>{children}</span> : null}
+      {/* `contents`, not a plain span. The span exists to keep a text label as
+          one flex item, but an inline box also traps a block-level child — a
+          <GoogleG> beside a word stacked above it instead of sitting inline.
+          Dissolving the box makes each child a flex item of the button, which
+          is exactly the design's shape: the mark, then the label. */}
+      {children != null ? <span className="contents">{children}</span> : null}
       {trailingIcon ? <Icon name={trailingIcon} size={10} /> : null}
     </Link>
   );
