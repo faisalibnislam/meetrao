@@ -54,7 +54,7 @@ export default function TermsPage() {
           or organisation using the service.
         </p>
         <p>
-          You can reach us at <a href="mailto:hello@airlystudio.com">hello@airlystudio.com</a>, or by post at
+          You can reach us at <a href="mailto:support@meetrao.com">support@meetrao.com</a>, or by post at
           44/A Judge Court Road, Cumilla, Bangladesh, or 301 King St, Alexandria, VA 22314, USA.
         </p>
 
@@ -202,7 +202,7 @@ export default function TermsPage() {
         <p>Before going to court, please email us — most things are quicker to sort out directly.</p>
 
         <DocFooterNote title="Questions about these terms">
-          Email <a href="mailto:hello@airlystudio.com">hello@airlystudio.com</a>. A person reads it. You can also{" "}
+          Email <a href="mailto:support@meetrao.com">support@meetrao.com</a>. A person reads it. You can also{" "}
           <Link href="/support">use the contact form</Link>.
         </DocFooterNote>
       </DocLayout>

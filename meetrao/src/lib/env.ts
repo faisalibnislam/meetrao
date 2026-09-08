@@ -24,8 +24,17 @@ const serverSchema = z.object({
   GOOGLE_CLIENT_SECRET: z.string().min(10),
 
   RESEND_API_KEY: z.string().min(10),
-  /** From address for every transactional email. Must be on a verified domain. */
-  EMAIL_FROM: z.string().default("Meetrao <hello@meetrao.com>"),
+  /**
+   * From address for every transactional email. Must be on a verified domain.
+   *
+   * support@ rather than hello@: this is the most-seen address in the product —
+   * it heads every booking confirmation — and it is the one address a visitor
+   * is shown anywhere else. Two addresses would be two, and only one of them is
+   * forwarded to an inbox someone reads.
+   *
+   * This is only the default. Set on Vercel, the variable wins.
+   */
+  EMAIL_FROM: z.string().default("Meetrao <support@meetrao.com>"),
   /** Shown in the footer of every email; required by anti-spam law. */
   EMAIL_POSTAL_ADDRESS: z.string().default(""),
 

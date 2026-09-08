@@ -16,7 +16,7 @@ beforeAll(() => {
     GOOGLE_CLIENT_ID: "test-client-id",
     GOOGLE_CLIENT_SECRET: "test-client-secret",
     RESEND_API_KEY: "re_test_00000000",
-    EMAIL_FROM: "Meetrao <hello@meetrao.com>",
+    EMAIL_FROM: "Meetrao <support@meetrao.com>",
     EMAIL_POSTAL_ADDRESS: "301 King St, Alexandria, VA 22314",
     NEXT_PUBLIC_SITE_URL: "https://meetrao.vercel.app",
   })) {

@@ -64,7 +64,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ ref
     line("SUMMARY", `${booking.meetingName} — ${booking.hostName}`),
     line("DESCRIPTION", description),
     booking.meetUrl ? line("LOCATION", booking.meetUrl) : line("LOCATION", "Google Meet"),
-    line("ORGANIZER;CN=" + booking.hostName, `mailto:noreply@meetrao.com`),
+    // Calendar apps show this address beside the host's name. It used to be
+    // noreply@, which was honest when nothing on the domain was received; now
+    // that support@ is forwarded to a real inbox, an address that reaches a
+    // person is the better one to put in front of a guest.
+    line("ORGANIZER;CN=" + booking.hostName, `mailto:support@meetrao.com`),
     `STATUS:${cancelled ? "CANCELLED" : "CONFIRMED"}`,
     "SEQUENCE:0",
     "END:VEVENT",

@@ -245,7 +245,7 @@ export default function PrivacyPage() {
         <h2 id="p-rights">7. Your rights</h2>
         <p>
           Wherever you are, you can ask us to show you what we hold, correct it, delete it, or send you a copy.
-          Email <a href="mailto:hello@airlystudio.com">hello@airlystudio.com</a> and we will reply within 30
+          Email <a href="mailto:support@meetrao.com">support@meetrao.com</a> and we will reply within 30
           days. We will not charge you or treat you differently for asking.
         </p>
         <p>
@@ -304,7 +304,7 @@ export default function PrivacyPage() {
         </p>
 
         <DocFooterNote title="Privacy questions or requests">
-          Email <a href="mailto:hello@airlystudio.com">hello@airlystudio.com</a>, or write to 44/A Judge Court
+          Email <a href="mailto:support@meetrao.com">support@meetrao.com</a>, or write to 44/A Judge Court
           Road, Cumilla, Bangladesh, or 301 King St, Alexandria, VA 22314, USA.
         </DocFooterNote>
       </DocLayout>

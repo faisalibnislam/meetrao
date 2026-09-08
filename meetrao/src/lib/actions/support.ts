@@ -10,6 +10,16 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 /* The contact form. Signed in, the identity comes from the account rather than
    from two fields the sender could get wrong. */
 
+/**
+ * The one address a visitor is ever shown.
+ *
+ * An admin can point `platform_settings.support_email` somewhere else, and the
+ * form will deliver there — but this is what the failure message offers when
+ * sending did not work, so it has to be an address that is genuinely watched
+ * rather than whatever the row happens to hold.
+ */
+const SUPPORT_ADDRESS = "support@meetrao.com";
+
 const TOPICS = ["account", "calendar", "booking", "billing", "other"] as const;
 
 const Body = z.object({
@@ -45,7 +55,7 @@ export async function sendSupportMessage(input: {
     .eq("id", true)
     .maybeSingle();
 
-  const to = (settings?.support_email as string | undefined) || "hello@airlystudio.com";
+  const to = (settings?.support_email as string | undefined) || SUPPORT_ADDRESS;
 
   // Every value here was typed by the sender, so every value is escaped.
   const html = `
@@ -66,9 +76,9 @@ export async function sendSupportMessage(input: {
       html,
     });
 
-    if (error) return { error: "That did not send. Email us directly at hello@airlystudio.com." };
+    if (error) return { error: `That did not send. Email us directly at ${SUPPORT_ADDRESS}.` };
   } catch {
-    return { error: "That did not send. Email us directly at hello@airlystudio.com." };
+    return { error: `That did not send. Email us directly at ${SUPPORT_ADDRESS}.` };
   }
 
   return { sentTo: fromEmail };

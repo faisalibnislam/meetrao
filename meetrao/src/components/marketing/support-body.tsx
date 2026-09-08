@@ -90,8 +90,8 @@ export function SupportBody({
             <div className="flex gap-[11px]">
               <Icon name="envelope" size={13} className="mt-[3px] w-[16px] flex-none text-ink-3" />
               <div className="flex min-w-0 flex-col gap-[2px]">
-                <a href="mailto:hello@airlystudio.com" className="text-[13.5px]">
-                  hello@airlystudio.com
+                <a href="mailto:support@meetrao.com" className="text-[13.5px]">
+                  support@meetrao.com
                 </a>
                 <span className="text-[12.5px] leading-[1.5] text-ink-3">
                   Or just reply to any Meetrao email.
