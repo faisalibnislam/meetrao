@@ -451,7 +451,9 @@ export default function LandingPage() {
             <span className="min-w-[210px] flex-1 text-[13.5px] leading-[1.55] text-ink-2">
               Something not answered here?
             </span>
-            <div className="flex flex-none flex-wrap gap-[9px]">
+            {/* flex-initial for the same reason as the footer's CTA row: a
+                non-shrinking flex container cannot wrap its own children. */}
+            <div className="flex min-w-0 flex-initial flex-wrap gap-[9px]">
               <Link
                 href="/help"
                 className="unlink inline-flex h-[36px] items-center rounded-[7px] border border-line-strong bg-surface px-[13px] text-[13px] font-semibold text-ink hover:bg-fill-2 hover:text-ink"

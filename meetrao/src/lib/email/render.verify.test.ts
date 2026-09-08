@@ -95,6 +95,15 @@ describe("every transactional email renders", () => {
     }
   });
 
+  it("carries an absolute PNG logo, since email clients render no SVG", () => {
+    for (const e of sent) {
+      expect(e.html, `no logo in "${e.subject}"`).toContain(
+        'src="https://meetrao.vercel.app/brand/meetrao-email-logo.png"',
+      );
+      expect(e.html, `logo must not be an SVG in "${e.subject}"`).not.toMatch(/<img[^>]+\.svg/);
+    }
+  });
+
   it("escapes guest input rather than injecting it", () => {
     const withNote = sent.find((e) => e.html.includes("Happy to discuss"));
     expect(withNote).toBeDefined();

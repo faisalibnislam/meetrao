@@ -114,6 +114,9 @@ async function deliver({ to, subject, html, idempotencyKey, marketing }: SendInp
 /** Footer values every template shares. */
 function chrome() {
   return {
+    // Absolute, and a PNG. Email clients do not render SVG — Gmail and Outlook
+    // drop it entirely — and a relative path has no page to be relative to.
+    logo_url: `${siteUrl()}/brand/meetrao-email-logo.png`,
     postal_address: env().EMAIL_POSTAL_ADDRESS || "Meetrao",
     preferences_url: `${siteUrl()}/settings/notifications`,
     unsubscribe_url: `${siteUrl()}/settings/notifications`,

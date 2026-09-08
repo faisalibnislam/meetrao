@@ -153,7 +153,14 @@ export function SiteFooter() {
               Let Meetrao handle the scheduling. It&rsquo;s completely free to use — no card, no subscription.
             </p>
           </div>
-          <div className="flex flex-none flex-wrap gap-[10px]">
+          {/* flex-initial, not flex-none. The design file says `flex:none` here, which
+              was authored at desktop width where the row sits beside the heading and
+              fits. flex-none is `flex: 0 0 auto` — the row sizes to its content and
+              refuses to shrink, so its own flex-wrap can never engage and two 15px
+              buttons hold the page at 466px. On a 390px phone that is what makes the
+              whole site pan sideways. flex-initial keeps it from stretching and lets
+              it wrap. */}
+          <div className="flex min-w-0 flex-initial flex-wrap gap-[10px]">
             <Link
               href="/signup"
               className="unlink inline-flex h-[52px] items-center justify-center gap-[10px] rounded-[8px] bg-white px-[24px] text-[15px] font-semibold text-accent-2 transition-opacity duration-[120ms] hover:text-accent-2 hover:opacity-90"

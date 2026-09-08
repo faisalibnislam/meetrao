@@ -317,9 +317,23 @@ html {
 }
 
 /* clip, not hidden: `hidden` makes body a scroll container and stops the sticky
-   nav pinning. */
+   nav pinning.
+
+   On html as well as body, because Safari does not reliably honour it on body
+   alone — the page still pans, which is what iPhone users were seeing. This is
+   a backstop, not the fix: the overflow that caused it was a non-shrinking flex
+   row in the footer, and that is corrected at the source in site-chrome.tsx. A
+   clip here only stops a future one from being able to drag the whole page
+   sideways. */
+html,
 body {
   overflow-x: clip;
+}
+
+/* Nothing should be able to establish a wider box than the screen. */
+html,
+body {
+  max-width: 100%;
 }
 
 /* The cost calculator's three inputs. */
