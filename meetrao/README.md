@@ -95,10 +95,20 @@ With nothing measured yet the card shows "—" rather than an invented figure.
 
 ## Still open
 
-- **Google redirect URIs.** The credentials are set, but
-  `<origin>/api/google/callback` has to be registered in Google Cloud for
-  **every** origin — localhost, each Vercel preview domain, production. A
-  missing one fails as `redirect_uri_mismatch` and gives no other signal.
+- **Google redirect URIs.** The credentials are verified working, but which
+  origins are registered cannot be checked from outside — Google validates the
+  authorization code before the redirect URI, so every probe returns the same
+  error. `<origin>/api/google/callback` must be registered for **every** origin
+  by hand: localhost, each Vercel preview domain, production. A missing one
+  fails as `redirect_uri_mismatch` and gives no other signal.
+- **The calendar privacy copy overstates what the grant enforces.** /help, the
+  FAQ and the footer all say Meetrao never reads event titles, guests or
+  descriptions. That is true of the code — `busyPeriods` calls freeBusy and is
+  the only read — but `calendar.events` is required to invite the guest as an
+  attendee, and it permits reading them. Verified: with the granted scopes,
+  listing event details returns 200. Google's consent screen will describe the
+  broader access, right after the page promising the narrower one. Either soften
+  the copy or say plainly what Google will ask for.
 - **Photography rights.** The photographs are in and wired, but they are of
   identifiable people, and the assets bundle's own README says the design work
   assumed they were placeholders. Confirm the right to use each one

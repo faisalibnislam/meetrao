@@ -14,14 +14,34 @@ import { env, siteUrl } from "@/lib/env";
        registered for EVERY origin — localhost, the Vercel preview domain and
        production. A missing one fails as redirect_uri_mismatch and nothing else.
 
-   The scope is write-with-attendees, not read-only free/busy, because the guest
-   is an attendee on the event. Expect a higher drop-off at the permission step
-   than a read-only scope would see.
+   Writing needs calendar.events, because the guest is an attendee on the event
+   rather than a line in its description. Expect a higher drop-off at the
+   permission step than a read-only scope would see.
+
+   Reading is freeBusy.query and nothing else, so calendar.freebusy is the
+   scope for it. calendar.readonly was requested here and has been dropped: it
+   added read of the calendar list and settings and bought nothing.
+
+   Be careful about what this does and does not achieve. calendar.events is
+   read AND write — it already permits reading every event's title, guests and
+   description, and no scope grants attendee-writing without it. Verified
+   against the live grant: with only events + freebusy, listing event details
+   still returns 200.
+
+   So the product's promise —
+
+     "Meetrao reads only whether a period is busy or free. Never event titles,
+      guests, descriptions, locations or attachments."   — /help, the FAQ, the footer
+
+   is true of what this code does (busyPeriods is the only read, and it calls
+   freeBusy), but it is not enforced by the grant, and Google's consent screen
+   will describe the broader access. That gap is a copy decision, not a code
+   one; it is listed in README.md under "Still open".
    ───────────────────────────────────────────────────────────────────────────── */
 
 export const CALENDAR_SCOPES = [
   "https://www.googleapis.com/auth/calendar.events",
-  "https://www.googleapis.com/auth/calendar.readonly",
+  "https://www.googleapis.com/auth/calendar.freebusy",
   "https://www.googleapis.com/auth/userinfo.email",
 ];
 
