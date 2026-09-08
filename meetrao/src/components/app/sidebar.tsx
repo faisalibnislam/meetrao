@@ -28,6 +28,8 @@ export type NavItem = {
   count?: number | null;
   /** Extra paths that keep this row active (e.g. /meetings/new under Meetings). */
   match?: string[];
+  /** Only the exact path activates the row — for an index like /admin. */
+  exact?: boolean;
 };
 
 export function Sidebar({
@@ -77,7 +79,7 @@ export function Sidebar({
 
   const isActive = (item: NavItem) =>
     pathname === item.href ||
-    pathname.startsWith(`${item.href}/`) ||
+    (!item.exact && pathname.startsWith(`${item.href}/`)) ||
     (item.match ?? []).some((m) => pathname === m || pathname.startsWith(`${m}/`));
 
   const initials = name

@@ -202,7 +202,7 @@ export function computeSlots({
  * immediately before writing a booking, so the "someone booked it while you
  * were filling this in" state is the truth rather than a guess.
  */
-export function isSlotBookable(input: ComputeSlotsInput & { start: Date }): boolean {
+export function isSlotBookable(input: Omit<ComputeSlotsInput, "date"> & { start: Date }): boolean {
   const date = plainDateIn(input.start, input.guestTimezone);
   return computeSlots({ ...input, date }).some((s) => s.getTime() === input.start.getTime());
 }
