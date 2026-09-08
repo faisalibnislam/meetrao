@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AppScreen } from "@/components/app/app-screen";
 import { AvailabilityScreen } from "@/components/app/availability-screen";
-import { rulesToDays } from "@/components/app/availability-editor";
+import { rulesToDays } from "@/lib/availability";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { supabaseServer } from "@/lib/supabase/server";
 import { timezoneOptions } from "@/lib/timezones";

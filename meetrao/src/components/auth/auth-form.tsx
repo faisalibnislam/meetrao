@@ -7,7 +7,7 @@ import { Field, Help, Input } from "@/components/ui/controls";
 import { Callout } from "@/components/ui/panels";
 import { GoogleG } from "@/components/ui/logo";
 import { Eyebrow } from "@/components/ui/badge";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-class";
 import {
   sendPasswordReset,
   signInWithPassword,

@@ -1,5 +1,6 @@
 "use client";
 
+import type { Day } from "@/lib/availability";
 import { CheckBox } from "@/components/ui/controls";
 import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
@@ -14,25 +15,8 @@ import { cx } from "@/lib/cx";
    last range on a day switches the day off.
    ───────────────────────────────────────────────────────────────────────────── */
 
-export type Range = { start: number; end: number };
-export type Day = { weekday: number; label: string; on: boolean; ranges: Range[] };
-
-export const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
-/** Monday first — the working week is what a host is setting. */
-export const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
-
 const START_OPTIONS = timeOptions();
 const END_OPTIONS = timeOptions(true);
-
-export function emptyWeek(): Day[] {
-  return WEEK_ORDER.map((weekday) => ({
-    weekday,
-    label: DAY_LABELS[weekday],
-    on: false,
-    ranges: [{ start: 540, end: 1020 }],
-  }));
-}
 
 export function AvailabilityEditor({ days, onChange }: { days: Day[]; onChange: (next: Day[]) => void }) {
   const patch = (index: number, next: Partial<Day>) =>
@@ -133,33 +117,4 @@ export function AvailabilityEditor({ days, onChange }: { days: Day[]; onChange: 
   );
 }
 
-/** Rows as the database stores them: only enabled days, only real ranges. */
-export function daysToRules(days: Day[]): { weekday: number; start_minute: number; end_minute: number }[] {
-  return days
-    .filter((d) => d.on)
-    .flatMap((d) =>
-      d.ranges
-        .filter((r) => r.end > r.start)
-        .map((r) => ({ weekday: d.weekday, start_minute: r.start, end_minute: r.end })),
-    );
-}
 
-export function rulesToDays(
-  rules: { weekday: number; start_minute: number; end_minute: number }[],
-): Day[] {
-  return WEEK_ORDER.map((weekday) => {
-    const ranges = rules
-      .filter((r) => r.weekday === weekday)
-      .sort((a, b) => a.start_minute - b.start_minute)
-      .map((r) => ({ start: r.start_minute, end: r.end_minute }));
-
-    return {
-      weekday,
-      label: DAY_LABELS[weekday],
-      on: ranges.length > 0,
-      // A day that is off still remembers a sensible range for when it is
-      // switched back on.
-      ranges: ranges.length ? ranges : [{ start: 540, end: 1020 }],
-    };
-  });
-}

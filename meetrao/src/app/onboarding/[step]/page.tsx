@@ -8,7 +8,7 @@ import {
   StepFirstMeeting,
   StepReady,
 } from "@/components/onboarding/steps";
-import { rulesToDays, type Day } from "@/components/app/availability-editor";
+import { rulesToDays, type Day } from "@/lib/availability";
 import { signOut } from "@/lib/actions/auth";
 import { ensureDefaultAvailability } from "@/lib/data/availability";
 import { minutesToLabel } from "@/lib/booking/time";

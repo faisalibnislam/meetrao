@@ -3,14 +3,16 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button, ButtonLink, buttonClass } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-class";
 import { ChoiceChip, Field, Help, Input, Textarea } from "@/components/ui/controls";
 import { Eyebrow } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Callout } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
-import { AvailabilityEditor, daysToRules, type Day } from "@/components/app/availability-editor";
+import { AvailabilityEditor } from "@/components/app/availability-editor";
+import { daysToRules, type Day } from "@/lib/availability";
 import { OnboardingCard } from "./onboarding-card";
 import { saveAvailability } from "@/lib/actions/availability";
 import { completeOnboarding, saveFirstMeeting } from "@/lib/actions/onboarding";

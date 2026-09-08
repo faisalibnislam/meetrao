@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { Button, buttonClass } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-class";
 import { Field, Input, Textarea } from "@/components/ui/controls";
 import { Icon } from "@/components/ui/icon";
 import { sendSupportMessage } from "@/lib/actions/support";

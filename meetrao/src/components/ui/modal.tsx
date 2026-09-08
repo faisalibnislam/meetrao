@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, type ReactNode } from "react";
-import { Button, type ButtonVariant } from "./button";
+import { Button } from "./button";
+import type { ButtonVariant } from "./button-class";
 import { Icon } from "./icon";
 import { cx } from "@/lib/cx";
 

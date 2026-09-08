@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { buttonClass } from "@/components/ui/button";
+import { buttonClass } from "@/components/ui/button-class";
 import { LogoLink } from "@/components/ui/logo";
 import { formatLongDate, formatTimeRange } from "@/lib/booking/time";
 import { cancelAsGuest } from "@/lib/actions/guest-cancel";
