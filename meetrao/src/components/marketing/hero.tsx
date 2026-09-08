@@ -173,6 +173,8 @@ export function Hero() {
                   <ImageFrame
                     label="Host"
                     avatar
+                    src="/people/host-avatar.webp"
+                    sizes="38px"
                     className="h-[38px] w-[38px] flex-none"
                     rounded="rounded-[9px]"
                     ground="bg-accent-soft"

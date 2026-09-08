@@ -311,6 +311,8 @@ export function Walkthrough() {
                             <ImageFrame
                               label="Host"
                               avatar
+                              src="/people/host-avatar-stage.webp"
+                              sizes="32px"
                               className="h-[32px] w-[32px] flex-none"
                               rounded="rounded-[8px]"
                               ground="bg-accent-soft"

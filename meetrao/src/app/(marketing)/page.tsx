@@ -123,12 +123,16 @@ export default function LandingPage() {
                   <ImageFrame
                     label="Guest"
                     avatar
+                    src="/people/chat-guest.webp"
+                    sizes="34px"
                     className="h-[34px] w-[34px] shadow-[0_0_0_2px_var(--surface)]"
                     rounded="rounded-full"
                   />
                   <ImageFrame
                     label="Host"
                     avatar
+                    src="/people/chat-host.webp"
+                    sizes="34px"
                     className="-ml-[11px] h-[34px] w-[34px] shadow-[0_0_0_2px_var(--surface)]"
                     rounded="rounded-full"
                     ground="bg-accent-soft"

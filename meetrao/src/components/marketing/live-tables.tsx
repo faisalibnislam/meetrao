@@ -20,6 +20,19 @@ const TYPES = [
   ["t3", "Intro Call", "Fifteen minutes to see if we're a fit.", 15, "intro-call"],
 ] as const;
 
+/** Guest photo path from the guest's name. The asset filenames are the slugged
+    names, so the rows need no extra column — and an accent has to be stripped
+    for Tomás to find tomas-rivera.webp. */
+function guestPhoto(name: string): string {
+  const slug = name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return `/people/${slug}.webp`;
+}
+
 const UPCOMING = [
   ["John Smith", "john@example.com", "30 Minute Consultation", "Today", "3:00 – 3:30 PM", 30, true],
   ["Amina Chowdhury", "amina@northbridge.io", "Project Deep Dive", "Tomorrow", "11:00 – 12:00 PM", 60, true],
@@ -278,7 +291,14 @@ export function LiveBookingsTable() {
                     style={{ gridTemplateColumns: BOOK_COLS }}
                   >
                     <span role="cell" className="flex min-w-0 items-center gap-[10px]">
-                      <ImageFrame label="Guest" avatar className="h-[28px] w-[28px] flex-none" rounded="rounded-[7px]" />
+                      <ImageFrame
+                      label="Guest"
+                      avatar
+                      src={guestPhoto(guest)}
+                      sizes="28px"
+                      className="h-[28px] w-[28px] flex-none"
+                      rounded="rounded-[7px]"
+                    />
                       <span className="flex min-w-0 flex-col gap-[1px]">
                         <span className="overflow-hidden text-[13.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
                           {guest}
@@ -342,7 +362,14 @@ export function LiveBookingsTable() {
               return (
                 <div key={guest} className="flex flex-col gap-[11px] border-t border-line-soft px-[15px] py-[14px]">
                   <div className="flex items-center gap-[11px]">
-                    <ImageFrame label="Guest" avatar className="h-[28px] w-[28px] flex-none" rounded="rounded-[7px]" />
+                    <ImageFrame
+                      label="Guest"
+                      avatar
+                      src={guestPhoto(guest)}
+                      sizes="28px"
+                      className="h-[28px] w-[28px] flex-none"
+                      rounded="rounded-[7px]"
+                    />
                     <span className="flex min-w-0 flex-1 flex-col gap-[1px]">
                       <span className="overflow-hidden text-[14px] font-semibold text-ellipsis whitespace-nowrap text-ink">
                         {guest}
