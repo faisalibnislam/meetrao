@@ -27,6 +27,24 @@ const escape = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").rep
 describe("verifyWebhook", () => {
   const body = JSON.stringify({ type: "email.received", data: { id: "1" } });
 
+  // Everything else here signs with the same code path it verifies, which would
+  // pass just as happily if both halves were wrong in the same way. This vector
+  // is published by Svix, so it checks the scheme rather than the symmetry.
+  it("matches the published Svix test vector", () => {
+    const headers = new Headers({
+      "svix-id": "msg_p5jXN8AQM9LWM0D4loKWxJek",
+      "svix-timestamp": "1614265330",
+      "svix-signature": "v1,g0hM9SsE+OTPJTGt/tmIKtSyZlE3uFJELVlNIOLJ1OE=",
+    });
+    const verified = verifyWebhook({
+      secret: "whsec_MfKQ9r8GKYqrTwjUPD8ILPZIo2LaLaSw",
+      body: '{"test": 2432232314}',
+      headers,
+      now: 1614265330,
+    });
+    expect(verified).toEqual({ ok: true });
+  });
+
   it("accepts a correctly signed delivery", () => {
     expect(verifyWebhook({ secret: SECRET, body, headers: sign(body) })).toEqual({ ok: true });
   });
