@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
 import { supabaseServer } from "@/lib/supabase/server";
 import { sanitizeUsername, slugify, usernameIdeas, usernameStatus } from "@/lib/username";
-import { sendWelcome } from "@/lib/email/send";
 
 /* Onboarding is five steps and every one of them writes as it goes, so a host
    who stops halfway keeps what they entered — "Your progress is saved. You can
@@ -139,10 +138,6 @@ export async function completeOnboarding(): Promise<SaveResult> {
     .eq("id", session.userId);
 
   if (error) return { error: error.message };
-
-  // Welcome mail honours the host's preferences; a failure here must never
-  // block the host from reaching their dashboard.
-  await sendWelcome(session.profile).catch(() => {});
 
   revalidatePath("/dashboard");
   return {};

@@ -93,6 +93,21 @@ it goes through `src/lib/google/connection.ts`.
 nothing recorded before, so `booking_page_views` and `avg_reply_minutes` were added.
 With nothing measured yet the card shows "—" rather than an invented figure.
 
+## Supabase Auth settings that the app cannot enforce
+
+**Confirm email must be ON.** Authentication → Providers → Email → *Confirm
+email*. With it off, Supabase creates every account already confirmed — it
+stamps `email_confirmed_at` within a tenth of a second of `created_at`, leaves
+`confirmation_sent_at` null, and sends nothing. The app's verification gate
+then works exactly as written and lets the user straight through, because
+Supabase is telling it the address is verified. Both halves of "no verification
+email, and no gate" are that one switch.
+
+**Paste the confirmation template.** Authentication → Email Templates → Confirm
+signup, replaced with `src/emails/supabase/confirm-signup.html`. That email is
+sent by Supabase, not by this app, so it is the design's only email that is not
+already wired.
+
 ## Supabase Auth URL configuration
 
 Set these in the Supabase dashboard under **Authentication → URL Configuration**.
@@ -143,6 +158,5 @@ changes on every push — an address that can never be allow-listed.
 - **No reschedule flow.** Guests cancel and rebook. `booking-changed.html` and
   `sendRescheduled()` exist, unwired, for whenever it is built.
 - **Avatar upload** is stubbed; it needs Supabase Storage wiring.
-- **The verification email** is sent by Supabase, not by us. Paste
-  `src/emails/supabase/confirm-signup.html` into the Supabase dashboard to use the
-  design rather than Supabase's default.
+- **The verification email** is sent by Supabase, not by us — see the Auth
+  settings section above for the template and the Confirm email switch.

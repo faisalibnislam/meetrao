@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
+import { sendWelcomeOnce } from "@/lib/email/welcome-once";
 import { supabaseServer } from "@/lib/supabase/server";
 
 /**
@@ -32,13 +33,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/verify?expired=1", origin));
   }
 
-  if (next && next.startsWith("/")) {
-    return NextResponse.redirect(new URL(next, origin));
-  }
-
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  // "Email confirmed" is the design's trigger for the welcome mail, and this
+  // is that moment. Claimed, so the password-reset link through here cannot
+  // send a second one.
+  if (user) await sendWelcomeOnce(user.id);
+
+  if (next && next.startsWith("/")) {
+    return NextResponse.redirect(new URL(next, origin));
+  }
 
   if (!user) return NextResponse.redirect(new URL("/login", origin));
 

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { sendWelcomeOnce } from "@/lib/email/welcome-once";
 import { supabaseServer } from "@/lib/supabase/server";
 
 /**
@@ -32,6 +33,11 @@ export async function GET(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   if (!user) return NextResponse.redirect(new URL("/login", origin));
+
+  // The design's other trigger for the welcome mail. This route runs on every
+  // Google sign-in, so the claim in sendWelcomeOnce is what makes it the first
+  // one only.
+  await sendWelcomeOnce(user.id);
 
   const { data: profile } = await supabase
     .from("profiles")
