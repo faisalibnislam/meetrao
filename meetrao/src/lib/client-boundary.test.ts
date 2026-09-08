@@ -63,6 +63,18 @@ describe("the client boundary", () => {
       if (isClientModule(file)) continue; // client calling client is fine
 
       const source = readFileSync(file, "utf8");
+      // A default import binds under whatever name the importer chooses, so the
+      // same PascalCase rule applies to it.
+      const defaults = source.matchAll(/import\s+(type\s+)?([A-Za-z_$][\w$]*)\s*(?:,\s*\{[^}]*\})?\s+from\s+["']([^"']+)["']/g);
+      for (const [, typeOnly, name, spec] of defaults) {
+        if (typeOnly || /^[A-Z][a-z]/.test(name)) continue;
+        const target = resolve(file, spec);
+        if (!target || !isClientModule(target)) continue;
+        offences.push(
+          `${path.relative(SRC, file)} default-imports \`${name}\` from the client module ${spec}`,
+        );
+      }
+
       const imports = source.matchAll(/import\s+(type\s+)?\{([^}]*)\}\s+from\s+["']([^"']+)["']/g);
 
       for (const [, typeOnly, names, spec] of imports) {
@@ -74,8 +86,12 @@ describe("the client boundary", () => {
         for (const raw of names.split(",")) {
           const name = raw.trim().replace(/^type\s+/, "").split(/\s+as\s+/)[0].trim();
           if (!name || raw.trim().startsWith("type ")) continue;
-          // Components are PascalCase and get rendered, not called.
-          if (/^[A-Z]/.test(name)) continue;
+          // A component is PascalCase — a capital followed by a lowercase.
+          // Not merely "starts with a capital": SETTINGS_TABS does that too,
+          // and it is a constant, which on the server is a client reference
+          // rather than an array. That exact gap let the settings page ship
+          // broken after this guard was already in place.
+          if (/^[A-Z][a-z]/.test(name)) continue;
 
           offences.push(
             `${path.relative(SRC, file)} imports \`${name}\` from the client module ${spec} — ` +

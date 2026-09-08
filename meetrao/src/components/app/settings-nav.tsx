@@ -2,16 +2,8 @@
 
 import Link from "next/link";
 import { cx } from "@/lib/cx";
+import { SETTINGS_TABS, type SettingsTab } from "@/lib/settings-tabs";
 
-export const SETTINGS_TABS = [
-  { key: "profile", label: "Profile" },
-  { key: "calendar", label: "Calendar" },
-  { key: "booking", label: "Booking" },
-  { key: "notifications", label: "Notifications" },
-  { key: "account", label: "Account" },
-] as const;
-
-export type SettingsTab = (typeof SETTINGS_TABS)[number]["key"];
 
 /* A sticky sub-nav on desktop, a horizontal chip row on mobile. Real links, so
    each panel has its own URL and the browser's back button behaves. */

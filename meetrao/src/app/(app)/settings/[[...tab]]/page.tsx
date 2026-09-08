@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppScreen } from "@/components/app/app-screen";
-import { SettingsNav, SETTINGS_TABS, type SettingsTab } from "@/components/app/settings-nav";
+import { SettingsNav } from "@/components/app/settings-nav";
+import { SETTINGS_TABS, type SettingsTab } from "@/lib/settings-tabs";
 import {
   AccountPanel,
   BookingPanel,
