@@ -1,0 +1,223 @@
+@import "tailwindcss";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Design tokens — transcribed verbatim from design_handoff_meetrao/README.md
+   § "Design tokens". The values are irregular on purpose (13.5px, 12.5px,
+   half-pixel steps). Do not re-derive or tidy them.
+   ───────────────────────────────────────────────────────────────────────────── */
+:root {
+  /* Surface + line */
+  --ground: #e7e4dc;
+  --surface: #ffffff;
+  --fill: #f4f3ee;
+  --fill-2: #eae8e1;
+  --line: #e0ddd4;
+  --line-soft: #edebe4;
+  --line-strong: #cfcbc0;
+
+  /* Ink. --ink-3 was darkened to clear 4.5:1 on ground, surface and fill — do not lighten it. */
+  --ink: #1a1917;
+  --ink-2: #575550;
+  --ink-3: #66635c;
+
+  /* Accent */
+  --accent: #14554a;
+  --accent-2: #0e4038;
+  --accent-soft: #e4edea;
+  --accent-line: #c2d6d0;
+  --accent-soft-hover: #d7e6e0;
+
+  /* Status */
+  --red: #98291f;
+  --red-soft: #f8e9e5;
+  --red-line: #e7d2cb;
+  --red-hover: #7f221a;
+  --red-ink: #77332b;
+  --amber: #7d5406;
+  --amber-soft: #f7efdd;
+  --amber-line: #e5d6b4;
+  --amber-ink: #6a4705;
+
+  /* Literals named in the spec */
+  --sidebar: #efede7;
+  --slate-soft: #eaeff3;
+  --slate-line: #d3dee6;
+  --slate: #2f4c63;
+
+  --ring: 0 0 0 3px rgba(26, 25, 23, 0.12);
+  --pop: 0 1px 2px rgba(26, 25, 23, 0.05), 0 16px 34px -12px rgba(26, 25, 23, 0.24);
+  --hero-shadow: 0 1px 2px rgba(26, 25, 23, 0.05), 0 30px 60px -24px rgba(26, 25, 23, 0.34);
+  --nav-shadow: 0 1px 1px rgba(26, 25, 23, 0.03);
+
+  --serif: var(--font-instrument-serif), Georgia, serif;
+  --mono: var(--font-dm-mono), ui-monospace, monospace;
+  --sans: var(--font-instrument-sans), system-ui, -apple-system, sans-serif;
+}
+
+/* Re-export the tokens to Tailwind so `bg-surface`, `text-ink-3`, `border-line-strong`
+   resolve. Arbitrary values carry the irregular sizes (text-[13.5px], h-[38px]). */
+@theme inline {
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-fill: var(--fill);
+  --color-fill-2: var(--fill-2);
+  --color-line: var(--line);
+  --color-line-soft: var(--line-soft);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-line: var(--accent-line);
+  --color-red: var(--red);
+  --color-red-soft: var(--red-soft);
+  --color-red-line: var(--red-line);
+  --color-red-hover: var(--red-hover);
+  --color-red-ink: var(--red-ink);
+  --color-amber: var(--amber);
+  --color-amber-soft: var(--amber-soft);
+  --color-amber-line: var(--amber-line);
+  --color-amber-ink: var(--amber-ink);
+  --color-sidebar: var(--sidebar);
+  --color-slate: var(--slate);
+  --color-slate-soft: var(--slate-soft);
+  --color-slate-line: var(--slate-line);
+
+  --font-sans: var(--sans);
+  --font-serif: var(--serif);
+  --font-mono: var(--mono);
+
+  --shadow-pop: var(--pop);
+  --shadow-hero: var(--hero-shadow);
+  --shadow-nav: var(--nav-shadow);
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--ground);
+}
+
+body {
+  font-family: var(--sans);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The prototype styles bare anchors this way; product links inherit it. */
+a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--line-strong);
+  font-weight: 500;
+}
+
+a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+/* Links that are buttons, cards or nav rows opt out. */
+a.unlink,
+a.unlink:hover {
+  text-decoration: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--ink-3);
+}
+
+*:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* ── Motion ───────────────────────────────────────────────────────────────── */
+@keyframes mu-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mu-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mu-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mu-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-in {
+  animation: mu-in 160ms ease both;
+}
+
+.animate-pop {
+  animation: mu-pop 120ms ease both;
+}
+
+.animate-up {
+  animation: mu-up 500ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-spin-slow {
+  animation: mu-spin 700ms linear infinite;
+}
+
+/* Tables scroll inside their card; the page body never scrolls sideways. */
+.scroll-x {
+  overflow-x: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ── Touch targets ────────────────────────────────────────────────────────────
+   The 26–30px control scale is right for a mouse; on a touch screen the row
+   actions inside tables need more height. Scoped to table cells so inline chips,
+   switches and badges keep their geometry. ── */
+@media (max-width: 820px) {
+  td button,
+  td a {
+    min-height: 36px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
