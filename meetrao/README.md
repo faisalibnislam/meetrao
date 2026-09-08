@@ -143,6 +143,36 @@ and a bare origin there means the allow-list rejected ours.
 `siteUrl()` falls back to Vercel's host variables, and the per-deployment one
 changes on every push — an address that can never be allow-listed.
 
+## Receiving support mail
+
+`support@meetrao.com` is the address the contact form delivers to, and it is a
+Resend receiving address — the domain has `Receiving: enabled` and its MX record
+(`inbound-smtp.us-east-1.amazonaws.com`, priority 9, at the root) is verified.
+
+**Resend inbound is not a mailbox.** There is no IMAP, no POP, no webmail. A
+received message lands in Resend's store and is visible under Emails →
+Receiving; nothing tells a person it arrived. Without the piece below, mail to
+support@meetrao.com is *received* and never *read*.
+
+`POST /api/resend/inbound` closes that gap: it verifies Resend's Svix signature,
+and forwards the message to a real inbox with `Reply-To` set to whoever wrote
+in, so replying answers them directly rather than the app. Two variables switch
+it on, both optional — unset, the route no-ops and nothing else changes:
+
+- `RESEND_WEBHOOK_SECRET` — the `whsec_…` signing secret, shown once when the
+  webhook is created. Unset, nothing is processed at all: an unverified webhook
+  body is an anonymous stranger asking Meetrao to send mail.
+- `SUPPORT_INBOX` — where forwards go. **Not an address on meetrao.com.**
+  Receiving is enabled at the *root* of the domain, so every address on it
+  routes back into Resend and forwarding there loops forever; `refuseToForward`
+  rejects that rather than discovering it in production.
+
+The webhook itself is created in the Resend dashboard under Webhooks, pointed at
+`<origin>/api/resend/inbound` and subscribed to `email.received`.
+
+Forwarding is deliberately dumb — it does not parse, thread or file anything. It
+turns an API-only inbox back into ordinary email and stops there.
+
 ## Still open
 
 - **Google redirect URIs.** The credentials are verified working, but which

@@ -29,6 +29,14 @@ const serverSchema = z.object({
   /** Shown in the footer of every email; required by anti-spam law. */
   EMAIL_POSTAL_ADDRESS: z.string().default(""),
 
+  /* Inbound mail. Both optional: unset, /api/resend/inbound does nothing and
+     the rest of the app is unaffected. See README § "Receiving support mail". */
+
+  /** Svix signing secret (`whsec_…`), shown once when the webhook is created. */
+  RESEND_WEBHOOK_SECRET: z.string().default(""),
+  /** Real inbox that mail to support@meetrao.com is forwarded to. */
+  SUPPORT_INBOX: z.string().default(""),
+
   /** Absolute origin, used for OAuth redirect URIs and links inside emails. */
   NEXT_PUBLIC_SITE_URL: z.string().url(),
 });
