@@ -10,6 +10,21 @@ import { cx } from "@/lib/cx";
  * mistake for finished art, and it degrades one slot at a time as photos
  * arrive rather than all-or-nothing.
  */
+/**
+ * `next/image` with `fill` needs a positioned ancestor, so this supplies one —
+ * but only when the caller has not already positioned the box itself.
+ *
+ * Emitting both is not a harmless duplicate. Tailwind orders its position
+ * utilities static, fixed, absolute, relative, sticky, so `.relative` lands
+ * after `.absolute` in the stylesheet and wins on equal specificity no matter
+ * which order the class attribute lists them. A card that passed
+ * `absolute inset-0` got a relatively-positioned box that sized to its content
+ * instead of filling: 659 × 248 inside a 659 × 408 panel.
+ */
+function positionClass(className?: string): string {
+  return /(^|\s)(absolute|fixed|sticky|relative)(\s|$)/.test(className ?? "") ? "" : "relative";
+}
+
 export function ImageFrame({
   label,
   className,
@@ -34,7 +49,7 @@ export function ImageFrame({
 }) {
   if (src) {
     return (
-      <div className={cx("relative overflow-hidden", rounded, className)}>
+      <div className={cx(positionClass(className), "overflow-hidden", rounded, className)}>
         {/* Decorative: every one of these sits behind a caption that already
             names the thing, so a description here would only repeat it. */}
         <Image src={src} alt="" fill sizes={sizes} className="object-cover" />

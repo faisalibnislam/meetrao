@@ -144,7 +144,7 @@ export function UseCases({ photos = {} }: { photos?: Record<string, string> }) {
               <ImageFrame
                 label={item.tag}
                 src={photos[item.id]}
-                sizes="(max-width: 860px) 50vw, 340px"
+                sizes="(max-width: 860px) 50vw, 420px"
                 className="absolute inset-0 z-1 h-full w-full"
                 rounded="rounded-none"
                 ground="bg-transparent"
