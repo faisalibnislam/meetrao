@@ -17,6 +17,10 @@ export type BookingView = {
   duration: number;
   startsAt: string;
   dayLabel: string;
+  /** Host-local calendar day, for grouping. */
+  dateKey: string;
+  /** "Thu 10 Sep" — the heading above a day's rows. */
+  dayHeading: string;
   timeRange: string;
   status: "Confirmed" | "Cancelled";
   cancelled: boolean;
@@ -45,6 +49,18 @@ export function toView(row: Booking, timeZone: string, now: Date): BookingView {
     duration: row.duration_minutes,
     startsAt: row.starts_at,
     dayLabel: formatDayLabel(start, timeZone, now),
+    dateKey: new Intl.DateTimeFormat("en-CA", {
+      timeZone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(start),
+    dayHeading: new Intl.DateTimeFormat("en-GB", {
+      timeZone,
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    }).format(start),
     timeRange: formatTimeRange(start, end, timeZone),
     status: cancelled ? "Cancelled" : "Confirmed",
     cancelled,

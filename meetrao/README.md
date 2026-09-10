@@ -27,7 +27,7 @@ npm run dev
 | `src/app/(marketing)/` | Landing page, Terms, Privacy, Help, Support |
 | `src/app/(auth)/` | Log in, sign up, forgot, reset, the verification gate, suspended |
 | `src/app/onboarding/[step]/` | The five setup steps |
-| `src/app/(app)/` | Dashboard, Bookings, Meetings, Contacts, Availability, Settings |
+| `src/app/(app)/` | Dashboard, Bookings, Meetings, Contacts, Notifications, Availability, Settings |
 | `src/app/(admin)/` | The admin console |
 | `src/app/(public)/` | The guest path: booking page, confirmation, cancellation, `.ics` |
 | `src/app/api/` | The slot query, booking creation, Google OAuth |
@@ -179,6 +179,23 @@ those are what a real address book contains — a company called "Acme, Inc.", a
 note with a line break. `line.split(",")` mangles all three silently, and an
 importer that quietly corrupts data is worse than one that refuses. Thirteen
 tests, including a round-trip through the serialiser.
+
+**Notifications are written by triggers, never by the app.** Bookings arrive and
+change through several doors — the guest RPC granted to `anon`, the host's own
+scheduling action on the service role, the cancel action, the guest cancellation
+page — and application code would have to remember every one. Three kinds:
+booked, cancelled, moved. The times are rendered in the host's own zone by
+`local_when()`, because a notification that says 09:00 UTC to someone in Dhaka
+is worse than none.
+
+A booking the host scheduled themselves raises nothing. They already know.
+
+`read_at` is a timestamp rather than a boolean, so "mark all as read" is one
+statement and the moment stays recoverable.
+
+**Not wired: declines.** `bookings.guest_rsvp` exists but nothing syncs it from
+Google, so a "guest declined" notification would never fire. It is left unbuilt
+rather than added as a kind that never appears.
 
 ## Supabase Auth settings that the app cannot enforce
 

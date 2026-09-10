@@ -4,15 +4,38 @@ import { useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SearchField } from "@/components/ui/controls";
-import { EmptyState, TableCard } from "@/components/ui/panels";
-import { StackedCell, Table, Td, Th, Tr } from "@/components/ui/table";
+import { EmptyState } from "@/components/ui/panels";
 import { BookingDialogs, type DialogState } from "./booking-dialogs";
 import type { BookingView } from "@/lib/data/bookings";
 import { cx } from "@/lib/cx";
 
-/* Bookings: a tab row on a bottom border, a search field that filters on guest
-   name and email, and a table that scrolls sideways on desktop but becomes a
-   card list below 640px — a horizontally scrolled table is usable, not good. */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Bookings, grouped by day.
+
+   A flat table sorted by date makes you read the date column to work out where
+   one day ends and the next begins. Grouping says it once, in a heading, and
+   the rows underneath only have to carry the time — which is how a diary reads
+   and how anyone scanning this is already thinking.
+
+   The same shape serves every width, so there is no second card layout for
+   phones: a row is a flex line that wraps, not a table cell.
+
+   Upcoming and Past are unchanged. Past runs newest-first, because the thing
+   you want from a history is usually the thing that just happened.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+type Day = { key: string; heading: string; today: boolean; rows: BookingView[] };
+
+/** Consecutive runs of one calendar day, in the order the rows already have. */
+function byDay(rows: BookingView[]): Day[] {
+  const days: Day[] = [];
+  for (const row of rows) {
+    const last = days.at(-1);
+    if (last && last.key === row.dateKey) last.rows.push(row);
+    else days.push({ key: row.dateKey, heading: row.dayHeading, today: row.today, rows: [row] });
+  }
+  return days;
+}
 
 type Tab = "upcoming" | "past";
 
@@ -27,6 +50,10 @@ export function BookingsScreen({ bookings }: { bookings: BookingView[] }) {
   const source = tab === "upcoming" ? upcoming : past;
   const q = query.trim().toLowerCase();
   const rows = q ? source.filter((b) => `${b.guest} ${b.email}`.toLowerCase().includes(q)) : source;
+  // listBookings sorts ascending. Upcoming reads forwards from now; a history
+  // reads backwards from now.
+  const ordered = tab === "past" ? [...rows].reverse() : rows;
+  const days = byDay(ordered);
 
   const open = (booking: BookingView) => setDialog({ booking, view: "detail" });
 
@@ -88,100 +115,79 @@ export function BookingsScreen({ bookings }: { bookings: BookingView[] }) {
           }
         />
       ) : (
-        <>
-          <TableCard className="max-[640px]:hidden">
-            <Table minWidth={700}>
-              <thead>
-                <tr>
-                  <Th>Guest</Th>
-                  <Th>Meeting</Th>
-                  <Th>Date</Th>
-                  <Th>Time</Th>
-                  <Th>Status</Th>
-                  <Th align="right">
-                    <span className="sr-only">Actions</span>
-                  </Th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <Tr key={row.id}>
-                    <Td>
-                      <StackedCell primary={row.guest} secondary={row.email} />
-                    </Td>
-                    <Td className="text-[13px] text-ink-2">{row.meetingName}</Td>
-                    <Td className="text-[13px] whitespace-nowrap text-ink">{row.dayLabel}</Td>
-                    <Td className="text-[13px] whitespace-nowrap text-ink">
+        <div className="flex flex-col gap-[20px]">
+          {days.map((day) => (
+            <section key={day.key} className="flex flex-col gap-[9px]">
+              <div className="flex flex-wrap items-baseline gap-[9px]">
+                <h2 className="m-0 text-[14px] font-semibold text-ink">{day.heading}</h2>
+                {day.today ? (
+                  <span className="inline-flex h-[19px] items-center rounded-[4px] bg-accent-soft px-[7px] text-[10.5px] font-semibold tracking-[0.04em] text-accent uppercase">
+                    Today
+                  </span>
+                ) : null}
+                <span className="text-[12.5px] text-ink-3">
+                  {day.rows.length} {day.rows.length === 1 ? "meeting" : "meetings"}
+                </span>
+              </div>
+
+              <div className="overflow-hidden rounded-[8px] border border-line bg-surface">
+                {day.rows.map((row, i) => (
+                  <div
+                    key={row.id}
+                    className={cx(
+                      "flex flex-wrap items-center gap-x-[14px] gap-y-[8px] px-[15px] py-[12px]",
+                      "transition-colors duration-[120ms] hover:bg-fill",
+                      i > 0 && "border-t border-line-soft",
+                    )}
+                  >
+                    {/* The coloured edge is what the eye follows down a long day:
+                        cancelled reads at a glance without reaching the badge. */}
+                    <span
+                      aria-hidden="true"
+                      className={cx(
+                        "-my-[12px] -ml-[15px] mr-[1px] w-[3px] flex-none self-stretch",
+                        row.cancelled ? "bg-red" : row.today ? "bg-accent" : "bg-line-strong",
+                      )}
+                    />
+                    <span className="w-[134px] flex-none text-[13px] font-semibold whitespace-nowrap text-ink">
                       {row.timeRange}
-                      <span className="text-ink-3"> · {row.duration}m</span>
-                    </Td>
-                    <Td>
-                      <Badge tone={row.cancelled ? "bad" : "ok"}>{row.status}</Badge>
-                    </Td>
-                    <Td className="text-right whitespace-nowrap">
+                    </span>
+
+                    <div className="flex min-w-[180px] flex-1 flex-col gap-[1px]">
+                      <span className="text-[13.5px] font-semibold text-ink">
+                        {row.meetingName}
+                        <span className="font-normal text-ink-3"> with {row.guest}</span>
+                      </span>
+                      <span className="text-[12.5px] text-ink-3">
+                        {row.email} · {row.duration} min
+                      </span>
+                    </div>
+
+                    {row.cancelled ? <Badge tone="bad">Cancelled</Badge> : null}
+
+                    <div className="flex flex-none flex-wrap gap-[6px]">
+                      <Button variant="ghost" size={28} className="hover:bg-fill-2" onClick={() => open(row)}>
+                        Details
+                      </Button>
                       {row.joinable ? (
                         <Button
-                          variant="secondary"
-                          size={26}
-                          className="mr-[4px] hover:bg-fill-2"
+                          variant="accent"
+                          size={28}
+                          icon="video"
                           onClick={() =>
-                            row.meetUrl
-                              ? window.open(row.meetUrl, "_blank", "noopener,noreferrer")
-                              : open(row)
+                            row.meetUrl ? window.open(row.meetUrl, "_blank", "noopener,noreferrer") : open(row)
                           }
                         >
                           Join
                         </Button>
                       ) : null}
-                      <Button variant="ghost" size={26} className="hover:bg-fill-2" onClick={() => open(row)}>
-                        Details
-                      </Button>
-                    </Td>
-                  </Tr>
+                    </div>
+                  </div>
                 ))}
-              </tbody>
-            </Table>
-          </TableCard>
-
-          {/* Below 640px the same rows become cards. */}
-          <div className="hidden flex-col gap-[10px] max-[640px]:flex">
-            {rows.map((row) => (
-              <div
-                key={row.id}
-                className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-surface p-[14px]"
-              >
-                <div className="flex items-start justify-between gap-[12px]">
-                  <StackedCell primary={row.guest} secondary={row.email} />
-                  <Badge tone={row.cancelled ? "bad" : "ok"}>{row.status}</Badge>
-                </div>
-                <div className="flex flex-col gap-[2px]">
-                  <span className="text-[13px] text-ink">
-                    {row.dayLabel} · {row.timeRange}
-                  </span>
-                  <span className="text-[12.5px] text-ink-3">
-                    {row.meetingName} · {row.duration} min
-                  </span>
-                </div>
-                <div className="flex flex-wrap gap-[8px]">
-                  {row.joinable ? (
-                    <Button
-                      variant="secondary"
-                      size={36}
-                      onClick={() =>
-                        row.meetUrl ? window.open(row.meetUrl, "_blank", "noopener,noreferrer") : open(row)
-                      }
-                    >
-                      Join
-                    </Button>
-                  ) : null}
-                  <Button variant="ghost" size={36} onClick={() => open(row)}>
-                    Details
-                  </Button>
-                </div>
               </div>
-            ))}
-          </div>
-        </>
+            </section>
+          ))}
+        </div>
       )}
 
       <BookingDialogs

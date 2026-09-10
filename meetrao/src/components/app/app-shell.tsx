@@ -1,6 +1,7 @@
 import { Sidebar, type BookingLink, type NavItem } from "@/components/app/sidebar";
 import { signOut } from "@/lib/actions/auth";
 import { connectionStatus } from "@/lib/google/connection";
+import { unreadNotifications } from "@/lib/data/notifications";
 import { supabaseServer } from "@/lib/supabase/server";
 import { bookingLink } from "@/lib/username";
 import type { MeetingType, Profile } from "@/lib/types";
@@ -24,7 +25,7 @@ export async function AppShell({
 
   // Three reads, in parallel, for chrome that is on every screen: the Bookings
   // badge, the rail's link list, and the calendar status row.
-  const [{ count }, { data: meetingRows }, calendar] = await Promise.all([
+  const [{ count }, { data: meetingRows }, calendar, unread] = await Promise.all([
     supabase
       .from("bookings")
       .select("id", { count: "exact", head: true })
@@ -38,6 +39,7 @@ export async function AppShell({
       .eq("is_active", true)
       .order("created_at"),
     connectionStatus(profile.id),
+    unreadNotifications(profile.id),
   ]);
 
   const active = (meetingRows ?? []) as Pick<MeetingType, "id" | "name" | "slug">[];
@@ -55,6 +57,7 @@ export async function AppShell({
     { href: "/bookings", label: "Bookings", icon: "calendar", count: count || null },
     { href: "/meetings", label: "Meetings", icon: "list" },
     { href: "/contacts", label: "Contacts", icon: "users" },
+    { href: "/notifications", label: "Notifications", icon: "circle-info", count: unread || null },
     { href: "/availability", label: "Availability", icon: "clock" },
   ];
 

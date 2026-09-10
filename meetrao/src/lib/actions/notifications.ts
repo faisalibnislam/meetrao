@@ -1,0 +1,58 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { requireSession } from "@/lib/data/session";
+import { supabaseServer } from "@/lib/supabase/server";
+
+/* Read state is the only thing a host changes here — the rows themselves are
+   written by the database. `read_at` is a timestamp rather than a boolean so
+   "mark all as read" is one statement and the moment is recoverable. */
+
+export type NotificationResult = { error?: string };
+
+export async function markAllRead(): Promise<NotificationResult> {
+  const session = await requireSession();
+  const supabase = await supabaseServer();
+
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read_at: new Date().toISOString() })
+    .eq("user_id", session.userId)
+    .is("read_at", null);
+
+  if (error) return { error: error.message };
+  revalidatePath("/notifications");
+  revalidatePath("/dashboard");
+  return {};
+}
+
+export async function markRead(id: string, read: boolean): Promise<NotificationResult> {
+  const session = await requireSession();
+  const supabase = await supabaseServer();
+
+  const { error } = await supabase
+    .from("notifications")
+    .update({ read_at: read ? new Date().toISOString() : null })
+    .eq("id", id)
+    .eq("user_id", session.userId);
+
+  if (error) return { error: error.message };
+  revalidatePath("/notifications");
+  return {};
+}
+
+/** Clears what has been read, leaving anything unseen alone. */
+export async function clearRead(): Promise<NotificationResult> {
+  const session = await requireSession();
+  const supabase = await supabaseServer();
+
+  const { error } = await supabase
+    .from("notifications")
+    .delete()
+    .eq("user_id", session.userId)
+    .not("read_at", "is", null);
+
+  if (error) return { error: error.message };
+  revalidatePath("/notifications");
+  return {};
+}
