@@ -74,16 +74,64 @@ export function toView(row: Booking, timeZone: string, now: Date): BookingView {
   };
 }
 
-export async function listBookings(hostId: string, timeZone: string): Promise<BookingView[]> {
-  const supabase = await supabaseServer();
-  const { data } = await supabase
-    .from("bookings")
-    .select("*")
-    .eq("host_id", hostId)
-    .order("starts_at", { ascending: true });
+/**
+ * How far back the Bookings screen's history reaches.
+ *
+ * This read used to be `select *` with no bound at all: every booking the host
+ * had ever taken, fetched on the Bookings screen AND on the dashboard, which
+ * then discarded all of it except the next few. Fine at six bookings; a page
+ * that gets slower every month, forever, by construction.
+ *
+ * The Past tab reads backwards from now, so a cap is the natural shape — this
+ * is the most recent 250, not an arbitrary slice. A host who needs more than
+ * their last 250 bookings needs an export, not a longer page.
+ */
+const PAST_LIMIT = 250;
 
+/**
+ * Bookings for the host's screens.
+ *
+ * `history: false` fetches only what is still to come — that is all the
+ * dashboard has ever displayed, and it means the dashboard no longer pays for
+ * a history it throws away.
+ */
+export async function listBookings(
+  hostId: string,
+  timeZone: string,
+  { history = true }: { history?: boolean } = {},
+): Promise<BookingView[]> {
+  const supabase = await supabaseServer();
   const now = new Date();
-  const rows = (data ?? []) as Booking[];
+
+  // A booking is "past" once it has *ended*, so the boundary is ends_at.
+  const boundary = now.toISOString();
+
+  // Two bounded reads in parallel rather than one unbounded one. Upcoming is
+  // naturally small — it is a calendar, not an archive — so only the history
+  // needs a cap, taken newest-first and then flipped back into the ascending
+  // order every caller expects.
+  const [upcoming, past] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("*")
+      .eq("host_id", hostId)
+      .gte("ends_at", boundary)
+      .order("starts_at", { ascending: true }),
+    history
+      ? supabase
+          .from("bookings")
+          .select("*")
+          .eq("host_id", hostId)
+          .lt("ends_at", boundary)
+          .order("starts_at", { ascending: false })
+          .limit(PAST_LIMIT)
+      : Promise.resolve({ data: [] as unknown[] }),
+  ]);
+
+  const rows = [
+    ...(((past.data ?? []) as Booking[]).slice().reverse()),
+    ...((upcoming.data ?? []) as Booking[]),
+  ];
   const views = rows.map((row) => toView(row, timeZone, now));
 
   // One query for every invitee rather than one per booking. Only bookings the

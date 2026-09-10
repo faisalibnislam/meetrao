@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Avatar, Eyebrow } from "@/components/ui/badge";
@@ -217,11 +217,7 @@ export function Sidebar({
                   : "border-transparent bg-transparent font-medium text-ink-2 hover:bg-white/55 hover:text-ink",
               )}
             >
-              <Icon
-                name={item.icon}
-                size={13}
-                className={cx("w-[15px] flex-none", active ? "text-accent" : "text-ink-3")}
-              />
+              <NavIcon name={item.icon} active={active} />
               <span className="min-w-0 flex-1 overflow-hidden text-left text-ellipsis whitespace-nowrap">
                 {item.label}
               </span>
@@ -369,6 +365,33 @@ export function Sidebar({
         </div>
       </div>
     </nav>
+  );
+}
+
+/**
+ * A nav row's icon, which doubles as its pending indicator.
+ *
+ * Every app route now has a loading.tsx, so a click usually paints a skeleton
+ * within a few milliseconds and this never becomes visible — the CSS holds it
+ * back for 120ms for exactly that reason. It earns its place in the cases a
+ * skeleton cannot cover: the first click after a cold start, or a prefetch that
+ * has not finished on a slow connection, where the rail would otherwise sit
+ * completely inert while the content area waits.
+ *
+ * It is the icon rather than an added dot deliberately. The rail is 218px wide
+ * and the labels already ellipsis; a 5px dot plus its gap would take 15px off
+ * every label forever, to show something that is usually invisible. Recolouring
+ * a glyph that is always there costs no layout at all.
+ *
+ * useLinkStatus only reports from inside a <Link>, so this has to be its own
+ * component rather than a value read in the row above.
+ */
+function NavIcon({ name, active }: { name: IconName; active: boolean }) {
+  const { pending } = useLinkStatus();
+  return (
+    <span data-pending={pending} className="nav-hint-slot flex w-[15px] flex-none items-center justify-center">
+      <Icon name={name} size={13} className={cx(active ? "text-accent" : "text-ink-3")} />
+    </span>
   );
 }
 

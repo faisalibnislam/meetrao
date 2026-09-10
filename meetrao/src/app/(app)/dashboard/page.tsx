@@ -24,7 +24,8 @@ export default async function DashboardPage() {
   const zone = profile.timezone;
 
   const [bookings, { data: meetingRows }, calendar, { data: replyMinutes }] = await Promise.all([
-    listBookings(profile.id, zone),
+    // The dashboard shows what is next; it has never rendered a past booking.
+    listBookings(profile.id, zone, { history: false }),
     supabase.from("meeting_types").select("*").eq("user_id", profile.id).order("created_at"),
     connectionStatus(profile.id),
     supabase.rpc("avg_reply_minutes", { p_user_id: profile.id, p_days: 30 }),

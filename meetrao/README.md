@@ -290,6 +290,52 @@ the gallery is most valuable exactly when you are away from a terminal, and a
 404 nobody can get past is a tool nobody opens. `src/lib/preview.test.ts` covers
 the environment half.
 
+## Why navigation is fast, and what keeps it that way
+
+A tab click used to take one to two seconds, and — worse — showed nothing at all
+while it did. Measured against a local production build with a stand-in Supabase
+that adds a fixed delay per call, the two causes were separable:
+
+| | before | after |
+|---|---|---|
+| render work with no database latency | ~20 ms | ~20 ms |
+| sequential Supabase round trips per navigation | ~4 | ~3 |
+| click → first pixel changes (at 100 ms a hop) | 445 ms | 9–19 ms |
+
+**The app was never the slow part.** Twenty milliseconds of rendering sat behind
+four *sequential* round trips to a database in another region, and nothing on
+screen moved until all four finished.
+
+**`loading.tsx` on every app route.** Next skips prefetching a dynamic route that
+has no loading boundary, and paints nothing until the server answers — its own
+docs call the result "the impression that the app is not responding". Every route
+in `(app)` is dynamic, and none had a boundary. Each sidebar destination now has
+its own, rendering the **real** header (every title and subtitle is a static
+string) over a shimmering body, so the header never moves when content arrives.
+`src/app/app-loading-boundaries.test.ts` fails if a new route ships without one.
+
+**One fewer round trip in the session.** `current_profile()` (migration 0015)
+filters by `auth.uid()` inside Postgres, so the profile read no longer waits on
+`getUser()` for an id — the two run together. `requireSession` is wrapped in React
+`cache()`, and that is load-bearing rather than tidy: the layout and the page both
+call it, Next dedupes identical GET fetches but an RPC is a POST and is not
+deduped, so without it the profile would be fetched twice per navigation.
+
+**`regions: ["hnd1"]` in `vercel.json`.** The Supabase project is in
+`ap-northeast-1` (Tokyo). Vercel functions default to `iad1` (Washington), which
+put a Pacific crossing — roughly 150–180 ms — on every one of those hops. Pinning
+the functions to Tokyo is the largest single win here and needs no code. Check it
+after a deploy: `curl -sI https://www.meetrao.com/login | grep x-vercel-id` — the
+region is the prefix. To undo it, delete the `regions` key.
+
+**Still open, deliberately.** The proxy calls `auth.getUser()` on every request,
+and that is the remaining fourth hop. `getClaims()` would verify the token
+in-process instead — but only when the project signs with *asymmetric* JWT keys;
+with a symmetric key `auth-js` falls back to a network `getUser()` and nothing is
+saved. Deriving the verified flag from claims is also not free: it lives in
+`user_metadata`, which the user can write. Confirm the signing key type under
+Settings → JWT Keys before touching this.
+
 ## Receiving support mail
 
 `support@meetrao.com` is the address the contact form delivers to, and it is a

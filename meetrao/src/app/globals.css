@@ -191,6 +191,46 @@
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Nav pending hint.
+
+   The icon of a sidebar row that has been clicked but has not arrived yet.
+   Recolouring the glyph rather than adding a dot is what keeps this free: the
+   rail is 218px and its labels already ellipsis, so an extra element would cost
+   every label 15px permanently to show something usually invisible.
+
+   The 120ms delay is the whole trick. With a loading.tsx on every route a
+   transition normally paints in single-digit milliseconds, and the animation
+   never starts — so this appears only when something is genuinely slow, and
+   never flashes on a fast navigation.
+   ───────────────────────────────────────────────────────────────────────────── */
+.nav-hint-slot[data-pending="true"] {
+  animation: nav-hint-pulse 900ms ease-in-out 120ms infinite;
+}
+
+@keyframes nav-hint-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* Reduced motion still gets the signal, just held rather than pulsing. */
+@media (prefers-reduced-motion: reduce) {
+  .nav-hint-slot[data-pending="true"] {
+    animation: nav-hint-dim 1ms linear 120ms forwards;
+  }
+
+  @keyframes nav-hint-dim {
+    to {
+      opacity: 0.45;
+    }
+  }
+}
+
 .animate-in {
   animation: mu-in 160ms ease both;
 }
