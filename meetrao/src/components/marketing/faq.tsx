@@ -87,7 +87,7 @@ export function Faq() {
   const columns = [FAQS.slice(0, 7), FAQS.slice(7)];
 
   return (
-    <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(360px,1fr))] items-start gap-[14px]">
+    <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(min(360px,100%),1fr))] items-start gap-[14px]">
       {columns.map((items, ci) => (
         <div
           key={ci}

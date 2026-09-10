@@ -292,6 +292,87 @@
   }
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Touch targets.
+
+   The design's control heights — 28, 30, 32, 34, 36px — are drawn for a mouse,
+   and at a desk they are right. Under a fingertip they are not: a measured pass
+   over the whole product found 360 controls below 44px across 22 screens, from
+   the dashboard's buttons to the booking page's date cells.
+
+   Keyed on `pointer: coarse`, deliberately, not on a width breakpoint. What
+   decides how big a target must be is what is pointing at it, not how wide the
+   window is — so a narrow desktop window keeps its dense controls, and a tablet
+   at 1024px gets the roomy ones.
+
+   44px is Apple's floor (WCAG 2.5.8 asks 24, Material 48). It is applied as
+   min-height so the design's own height utilities still set the PAINTED box
+   wherever a control centres its content: what grows is the area a thumb can
+   land on, not the ink.
+
+   min-height and not min-width, also deliberately. The booking page's date grid
+   is seven cells across a 320px screen — forcing each to 44px wide would push
+   the grid past the viewport and break the very layout this is meant to help.
+   Height is the axis that is always free.
+
+   Two exemptions, both marked rather than assumed:
+     · Links inside a sentence — `a` on its own is untouched, so only `a.unlink`
+       (the product's own link class, never used mid-sentence) grows. WCAG 2.5.8
+       exempts inline links by name, and stretching one to 44px would blow out
+       the line box around it. Inline boxes ignore min-height anyway.
+     · Controls whose smallness IS the design — the switch, the carousel dots,
+       the slider track. Those keep their paint and take their hit area from a
+       pseudo-element instead, right below.
+   ───────────────────────────────────────────────────────────────────────────── */
+@media (pointer: coarse) {
+  button:not([role="switch"]):not(.tap-keep),
+  [role="tab"]:not(button),
+  a.unlink,
+  select,
+  textarea,
+  input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not(.sr-only) {
+    min-height: 44px;
+  }
+
+  /* The switch keeps its 34x20 pill — that size is the design, and its border
+     and radius mean padding would inflate the drawn shape rather than the
+     target. So the target comes from a pseudo-element centred on it, painting
+     nothing. `position: relative` on the switch is load-bearing here.
+
+     Verified by hit-testing rather than by eye: a tap 18px to either side and
+     14px above or below resolves to the switch. */
+  [role="switch"]::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+
+  /* Icon-only buttons, opted in where there is room across. Width is not
+     raised globally for the reason given above — the date grid would break. */
+  .tap-square {
+    min-width: 44px;
+  }
+
+  /* The carousel dots take padding instead, deliberately. The same pseudo trick
+     fails here: six dots sit 6px apart, so 44px-wide hit areas would overlap
+     three deep and a tap would land on whichever won the paint order — worse
+     than a small target, because it would be a WRONG one. Padding grows the box
+     and pushes the dots apart, and `background-clip: content-box` keeps the
+     painted dot at its 8px. */
+  .tap-keep {
+    /* content-box is required, not stylistic: the reset sets border-box
+       globally, so the dot's own `height: 8px` would otherwise ABSORB the
+       padding and the box would come out 36px, not 44. Measured. */
+    box-sizing: content-box;
+    padding: 18px 8px;
+    background-clip: content-box;
+  }
+}
+
 /* Tables scroll inside their card; the page body never scrolls sideways. */
 .scroll-x {
   overflow-x: auto;
@@ -459,6 +540,21 @@ body {
   border: 3px solid #fff;
   box-shadow: 0 2px 6px rgba(26, 25, 23, 0.3);
   cursor: pointer;
+}
+
+/* The slider on a finger. Must come AFTER the rules above, not inside the
+   touch-target block further up: same specificity, so whichever is written last
+   wins — and the first attempt at this sat before them and did nothing.
+
+   The 12px track is the design, so the control grows to 44px and the track is
+   painted back as a centred background. The bar looks unchanged; the thumb is
+   catchable. */
+@media (pointer: coarse) {
+  .mr-range {
+    height: 44px;
+    background: linear-gradient(var(--line-strong), var(--line-strong)) center / 100% 12px no-repeat;
+    border-radius: 0;
+  }
 }
 
 /* ── Legal and help documents ─────────────────────────────────────────────────

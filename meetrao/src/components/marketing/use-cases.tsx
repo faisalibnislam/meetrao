@@ -178,7 +178,10 @@ export function UseCases({ photos = {} }: { photos?: Record<string, string> }) {
               aria-current={i === index}
               onClick={() => setIndex(i)}
               className={cx(
-                "h-[8px] cursor-pointer rounded-[4px] border-0 p-0",
+                // tap-keep: an 8px dot is the design, so it keeps its paint
+                // and takes a 44px hit area from a pseudo-element instead.
+                // See globals.css § Touch targets.
+                "relative tap-keep h-[8px] cursor-pointer rounded-[4px] border-0 p-0",
                 "transition-[width,background-color] duration-[220ms] ease-[cubic-bezier(.22,1,.36,1)]",
                 i === index ? "w-[22px] bg-accent" : "w-[8px] bg-line-strong",
               )}
@@ -201,7 +204,7 @@ function ArrowButton({ dir, onClick }: { dir: "prev" | "next"; onClick: () => vo
       type="button"
       aria-label={dir === "prev" ? "Previous use case" : "Next use case"}
       onClick={onClick}
-      className="inline-flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-[10px] border border-line bg-surface text-ink-2 transition-[background-color,border-color,color] duration-[140ms] hover:border-line-strong hover:bg-fill-2 hover:text-ink"
+      className="tap-square inline-flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-[10px] border border-line bg-surface text-ink-2 transition-[background-color,border-color,color] duration-[140ms] hover:border-line-strong hover:bg-fill-2 hover:text-ink"
     >
       <Icon name={dir === "prev" ? "chevron-left" : "chevron-right"} size={12} />
     </button>

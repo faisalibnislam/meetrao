@@ -65,9 +65,14 @@ export function SiteNav({
               </Link>
               <Link
                 href="/signup"
-                className="unlink inline-flex h-[38px] items-center gap-[8px] rounded-[7px] bg-accent px-[15px] text-[13px] font-semibold whitespace-nowrap text-white transition-colors duration-[120ms] hover:bg-accent-2 hover:text-white"
+                className="unlink inline-flex h-[38px] items-center gap-[8px] rounded-[7px] bg-accent px-[15px] text-[13px] font-semibold whitespace-nowrap text-white transition-colors duration-[120ms] hover:bg-accent-2 hover:text-white max-[400px]:px-[12px]"
               >
-                Get started — Free
+                {/* On a 320px screen the full label put this button 21px past
+                    the right edge, where it could not be tapped at all. The
+                    label shortens rather than the button shrinking, so the
+                    primary action keeps its full height and weight. */}
+                <span className="max-[400px]:hidden">Get started — Free</span>
+                <span className="hidden max-[400px]:inline">Get started</span>
               </Link>
             </>
           )}

@@ -378,13 +378,16 @@ export function BookingFlow(props: FlowProps) {
 
         <div className="flex min-w-0 flex-col gap-[18px] p-[30px] max-[820px]:px-[22px] max-[820px]:py-[24px]">
           <div className="flex flex-col gap-[12px]">
-            <div className="flex items-center justify-between gap-[12px]">
+            {/* Wraps rather than overflows: at 320px the eyebrow plus the
+                month stepper is 9px wider than the card, and the "next month"
+                arrow was the part that fell off. */}
+            <div className="flex flex-wrap items-center justify-between gap-x-[12px] gap-y-[8px]">
               <Eyebrow size={10.5} className="whitespace-nowrap">
                 Select a date
               </Eyebrow>
-              <div className="flex items-center gap-[4px]">
+              <div className="flex items-center gap-[4px] max-[380px]:ml-auto">
                 <MonthButton dir="prev" disabled={!canGoBack} onClick={() => goMonth(-1)} />
-                <span className="min-w-[118px] text-center text-[13.5px] font-semibold text-ink">
+                <span className="min-w-[118px] text-center text-[13.5px] font-semibold text-ink max-[380px]:min-w-[96px]">
                   {formatMonth(year, month)}
                 </span>
                 <MonthButton dir="next" disabled={!canGoForward} onClick={() => goMonth(1)} />
@@ -512,7 +515,7 @@ function MonthButton({ dir, disabled, onClick }: { dir: "prev" | "next"; disable
       title={dir === "prev" ? "Previous month" : "Next month"}
       aria-label={dir === "prev" ? "Previous month" : "Next month"}
       className={cx(
-        "inline-flex h-[28px] w-[28px] items-center justify-center rounded-[6px] border border-line bg-surface text-ink-2",
+        "tap-square inline-flex h-[28px] w-[28px] items-center justify-center rounded-[6px] border border-line bg-surface text-ink-2",
         disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer hover:bg-fill",
       )}
     >

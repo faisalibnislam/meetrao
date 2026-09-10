@@ -94,7 +94,7 @@ export default function LandingPage() {
 
       {/* ── The problem ─────────────────────────────────────────────────── */}
       <section className="bg-accent-2">
-        <div className="mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-center gap-[36px] px-[26px] py-[68px] max-[560px]:px-[18px]">
+        <div className="mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-center gap-[36px] px-[26px] py-[68px] max-[560px]:px-[18px]">
           <Reveal className="min-w-0">
             <div className="flex flex-col gap-[13px]">
               <Kicker>The problem</Kicker>
@@ -194,7 +194,7 @@ export default function LandingPage() {
       {/* ── Why it matters ──────────────────────────────────────────────── */}
       <section className="mt-[72px] border-t border-b border-line bg-fill">
         <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-stretch gap-[34px]">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-stretch gap-[34px]">
             <Reveal className="min-w-0">
               <div className="flex flex-col gap-[14px]">
                 <Kicker tone="dark">Why it matters</Kicker>
@@ -260,7 +260,7 @@ export default function LandingPage() {
             </div>
           </Reveal>
 
-          <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] items-stretch gap-[16px]">
+          <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-stretch gap-[16px]">
             <Reveal className="min-w-0">
               <div className="flex h-full flex-col overflow-hidden rounded-[14px] border border-red-line bg-surface">
                 <div className="flex flex-wrap items-center gap-[10px] border-b border-red-line bg-red-soft px-[18px] py-[14px]">
@@ -382,7 +382,7 @@ export default function LandingPage() {
           </div>
         </Reveal>
 
-        <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(288px,1fr))] gap-[18px]">
+        <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(min(288px,100%),1fr))] gap-[18px]">
           {BENEFITS.map(([glyph, title, text]) => (
             <div
               key={title}

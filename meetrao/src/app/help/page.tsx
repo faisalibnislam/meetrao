@@ -198,7 +198,7 @@ export default async function HelpPage() {
         </p>
       </div>
 
-      <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[14px]">
+      <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-[14px]">
         {PILLARS.map((pillar) => (
           <div
             key={pillar.title}

@@ -336,6 +336,57 @@ saved. Deriving the verified flag from claims is also not free: it lives in
 `user_metadata`, which the user can write. Confirm the signing key type under
 Settings → JWT Keys before touching this.
 
+## Mobile
+
+Audited by loading every route at 320, 360, 390 and 430 against a stand-in
+Supabase — 120 page loads — and measuring, not by reading the CSS.
+
+**Horizontal scrolling was already handled** and stayed handled: `html, body {
+overflow-x: clip }` plus `.scroll-x` on the wide tables. Note that `scrollWidth`
+is a misleading metric here — it reports intrinsic width even when clipped, and
+made two admin pages look broken when nothing could actually pan. The honest
+test is to set `scrollLeft` and see whether it moved, and the honest defect is
+content that overflows with no scrollable ancestor to reach it through. Both are
+zero, at every width.
+
+Three real clipping defects were found that way and fixed:
+
+  · `minmax(360px, 1fr)` in the FAQ is a floor a track cannot go below, so on a
+    320 or 360px screen the questions ran past the edge with no way to reach
+    them. Now `minmax(min(360px, 100%), 1fr)` — same two columns wide, collapses
+    when narrow. Same fix on the landing page's four grids and the help page's.
+  · The nav's "Get started — Free" sat 21px off a 320px screen. The label
+    shortens below 400px rather than the button shrinking.
+  · The booking page's month stepper overflowed by 9px at 320. The row wraps.
+
+**Touch targets were the real problem.** The design is drawn at 28–36px, which
+is right under a mouse and wrong under a thumb: 360 controls measured below 44px
+across 22 screens. `globals.css § Touch targets` sets a 44px floor, and three
+things about it are deliberate enough to be guarded by
+`src/app/touch-targets.test.ts`:
+
+  · Keyed on `pointer: coarse`, not a width breakpoint — what decides the size
+    of a target is what is pointing at it. A narrow desktop window keeps its
+    dense controls; a 1024px tablet gets the roomy ones. Verified: computed
+    `min-height` is 0px under a mouse and 44px under a finger.
+  · Height only. The booking calendar is seven cells across a 320px screen, so a
+    44px floor on WIDTH would push the grid off the edge and break the layout
+    this exists to protect. Icon buttons opt into width with `.tap-square`.
+  · The switch and the carousel dots keep their paint. The switch takes a 44px
+    hit area from a pseudo-element (hit-tested: a tap 18px to either side lands
+    on it). The dots take padding instead, because six dots 6px apart would have
+    given overlapping hit areas — a wrong target is worse than a small one.
+
+What is left, and why: 13 switches (paint 34×20, hit area 44×44), 8 `sr-only`
+inputs that are not controls, and 9 inline text links — breadcrumbs, "View all",
+the wordmark. WCAG 2.5.8 exempts inline links by name, stretching one to 44px
+would break the line box around it, and each of those destinations is reachable
+from the sidebar as well.
+
+Type sizes were left alone. The 10–10.5px eyebrows are design tokens transcribed
+from the handoff, they are micro-labels rather than reading copy, and body text
+is 12.5px and up.
+
 ## Receiving support mail
 
 `support@meetrao.com` is the address the contact form delivers to, and it is a
