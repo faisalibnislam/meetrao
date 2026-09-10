@@ -1,0 +1,62 @@
+{
+ "Main": {
+  "title": "Dashboard",
+  "height": 1532,
+  "bytes": 199146,
+  "who": "in"
+ },
+ "Bookings": {
+  "title": "Bookings",
+  "height": 1175,
+  "bytes": 200154,
+  "who": "in"
+ },
+ "Meetings": {
+  "title": "Meetings",
+  "height": 982,
+  "bytes": 208744,
+  "who": "in"
+ },
+ "Contacts": {
+  "title": "Contacts",
+  "height": 1108,
+  "bytes": 212214,
+  "who": "in"
+ },
+ "Notifications": {
+  "title": "Notifications",
+  "height": 844,
+  "bytes": 195542,
+  "who": "in"
+ },
+ "Availability": {
+  "title": "Availability",
+  "height": 1521,
+  "bytes": 199196,
+  "who": "in"
+ },
+ "Settings": {
+  "title": "Settings · Notifications",
+  "height": 848,
+  "bytes": 196881,
+  "who": "in"
+ },
+ "Landing": {
+  "title": "Landing page",
+  "height": 12831,
+  "bytes": 668456,
+  "who": "out"
+ },
+ "BookingPage": {
+  "title": "Public booking page",
+  "height": 1002,
+  "bytes": 186815,
+  "who": "out"
+ },
+ "Login": {
+  "title": "Log in",
+  "height": 844,
+  "bytes": 187806,
+  "who": "out"
+ }
+}

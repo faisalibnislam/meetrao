@@ -1,0 +1,38 @@
+{
+ "LandingHero": {
+  "title": "Landing · hero",
+  "bytes": 197046
+ },
+ "LandingProblem": {
+  "title": "Landing · the problem",
+  "bytes": 158966
+ },
+ "LandingHow": {
+  "title": "Landing · how it works",
+  "bytes": 165749
+ },
+ "LandingWhy": {
+  "title": "Landing · why it matters",
+  "bytes": 157542
+ },
+ "LandingCompare": {
+  "title": "Landing · before & after",
+  "bytes": 160669
+ },
+ "LandingProduct": {
+  "title": "Landing · what you get",
+  "bytes": 172850
+ },
+ "LandingUseCases": {
+  "title": "Landing · use cases",
+  "bytes": 525051
+ },
+ "LandingFaq": {
+  "title": "Landing · FAQ",
+  "bytes": 164241
+ },
+ "LandingFooter": {
+  "title": "Landing · footer",
+  "bytes": 178278
+ }
+}

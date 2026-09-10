@@ -141,10 +141,17 @@ export function SearchField({
   return (
     <div
       className={cx(
-        "flex h-[32px] max-w-full items-center gap-[8px] rounded-[6px] border border-line-strong bg-surface px-[10px]",
+        "flex h-[32px] w-[var(--search-w)] max-w-full items-center gap-[8px] rounded-[6px]",
+        "border border-line-strong bg-surface px-[10px]",
+        // Edge to edge on a phone. The width goes through a custom property
+        // rather than an inline `style={{ width }}`: an inline width beats every
+        // class, so a responsive rule could never take it back without
+        // !important. As a variable it is just another utility, and the
+        // narrow-screen one wins normally.
+        "max-[560px]:w-full",
         className,
       )}
-      style={{ width }}
+      style={{ "--search-w": typeof width === "number" ? `${width}px` : width } as React.CSSProperties}
     >
       <Icon name="search" size={12} className="text-ink-3" />
       <input

@@ -32,9 +32,9 @@ export function SiteNav({
   account?: NavAccount | null;
 }) {
   return (
-    <header className="pointer-events-none sticky top-0 z-60 px-[26px] pt-[20px] max-[720px]:px-[12px] max-[720px]:pt-[12px]">
-      <div className="pointer-events-auto mx-auto flex max-w-[1148px] items-center gap-[22px] rounded-[12px] border border-line bg-white py-[10px] pr-[14px] pl-[18px] shadow-[0_1px_2px_rgba(26,25,23,0.04),0_12px_28px_-14px_rgba(26,25,23,0.22)] max-[720px]:gap-[12px] max-[720px]:p-[10px_12px]">
-        <Link href="/" className="unlink block flex-none">
+    <header className="pointer-events-none sticky top-0 z-60 px-[26px] pt-[20px] max-[720px]:px-0 max-[720px]:pt-0">
+      <div className="pointer-events-auto mx-auto flex max-w-[1148px] items-center gap-[22px] rounded-[12px] border border-line bg-white py-[10px] pr-[14px] pl-[18px] shadow-[0_1px_2px_rgba(26,25,23,0.04),0_12px_28px_-14px_rgba(26,25,23,0.22)] max-[720px]:max-w-none max-[720px]:gap-[12px] max-[720px]:rounded-none max-[720px]:border-x-0 max-[720px]:border-t-0 max-[720px]:p-[10px_16px] max-[720px]:shadow-[0_1px_2px_rgba(26,25,23,0.06)]">
+        <Link href="/" className="unlink flex flex-none items-center">
           <Logo height={19} />
         </Link>
 

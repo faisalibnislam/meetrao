@@ -332,6 +332,12 @@
   textarea,
   input:not([type="range"]):not([type="checkbox"]):not([type="radio"]):not(.sr-only) {
     min-height: 44px;
+    /* The floor stretches the BOX; without this the content stays pinned to
+       its top edge. That is how the marketing logo came to sit 25px high
+       inside its own 44px link — measured, 0px above the mark and 25px below.
+       align-content applies to block containers in current browsers and is
+       inert where it does not, so it can only improve on the alternative. */
+    align-content: center;
   }
 
   /* The switch keeps its 34x20 pill — that size is the design, and its border

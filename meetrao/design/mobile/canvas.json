@@ -1,6 +1,87 @@
 {
  "artboards": [
   {
+   "file": "LandingHero.dc.html",
+   "title": "1 · Hero",
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 2199,
+   "page": "landing"
+  },
+  {
+   "file": "LandingProblem.dc.html",
+   "title": "2 · The problem",
+   "x": 480,
+   "y": 0,
+   "w": 390,
+   "h": 990,
+   "page": "landing"
+  },
+  {
+   "file": "LandingHow.dc.html",
+   "title": "3 · How it works",
+   "x": 960,
+   "y": 0,
+   "w": 390,
+   "h": 1403,
+   "page": "landing"
+  },
+  {
+   "file": "LandingWhy.dc.html",
+   "title": "4 · Why it matters",
+   "x": 1440,
+   "y": 0,
+   "w": 390,
+   "h": 1559,
+   "page": "landing"
+  },
+  {
+   "file": "LandingCompare.dc.html",
+   "title": "5 · Before & after",
+   "x": 1920,
+   "y": 0,
+   "w": 390,
+   "h": 1214,
+   "page": "landing"
+  },
+  {
+   "file": "LandingProduct.dc.html",
+   "title": "6 · What you get",
+   "x": 2400,
+   "y": 0,
+   "w": 390,
+   "h": 2452,
+   "page": "landing"
+  },
+  {
+   "file": "LandingUseCases.dc.html",
+   "title": "7 · Use cases",
+   "x": 2880,
+   "y": 0,
+   "w": 390,
+   "h": 1040,
+   "page": "landing"
+  },
+  {
+   "file": "LandingFaq.dc.html",
+   "title": "8 · FAQ",
+   "x": 3360,
+   "y": 0,
+   "w": 390,
+   "h": 1328,
+   "page": "landing"
+  },
+  {
+   "file": "LandingFooter.dc.html",
+   "title": "9 · Footer",
+   "x": 3840,
+   "y": 0,
+   "w": 390,
+   "h": 2138,
+   "page": "landing"
+  },
+  {
    "file": "Main.dc.html",
    "title": "Dashboard",
    "x": 0,
@@ -33,7 +114,7 @@
    "x": 1440,
    "y": 0,
    "w": 390,
-   "h": 1220,
+   "h": 1200,
    "page": "app"
   },
   {
@@ -42,7 +123,7 @@
    "x": 1920,
    "y": 0,
    "w": 390,
-   "h": 980,
+   "h": 930,
    "page": "app"
   },
   {
@@ -60,7 +141,7 @@
    "x": 2880,
    "y": 0,
    "w": 390,
-   "h": 980,
+   "h": 940,
    "page": "app"
   },
   {
@@ -69,7 +150,7 @@
    "x": 0,
    "y": 0,
    "w": 390,
-   "h": 980,
+   "h": 930,
    "page": "public"
   },
   {
@@ -78,20 +159,15 @@
    "x": 480,
    "y": 0,
    "w": 390,
-   "h": 1120,
-   "page": "public"
-  },
-  {
-   "file": "Landing.dc.html",
-   "title": "Landing page",
-   "x": 960,
-   "y": 0,
-   "w": 390,
-   "h": 13300,
+   "h": 1090,
    "page": "public"
   }
  ],
  "pages": [
+  {
+   "id": "landing",
+   "name": "Landing page"
+  },
   {
    "id": "app",
    "name": "Signed in"
@@ -103,40 +179,40 @@
  ],
  "annotations": [
   {
-   "id": "what-this-is",
+   "id": "landing-note",
+   "page": "landing",
+   "x": 0,
+   "y": -250,
+   "w": 470,
+   "text": "The mobile landing page, one frame per section, left to right in reading order.\n\nSplit rather than one 13,000px ribbon: that was slow to pan on iPhone Safari, and a comment on it could not point at anything in particular. Each section now loads on its own."
+  },
+  {
+   "id": "landing-fixes",
+   "page": "landing",
+   "x": 500,
+   "y": -250,
+   "w": 460,
+   "text": "Changed since your comments:\n· The header is full-bleed on mobile — it was a pill inset 12px a side.\n· The wordmark is vertically centred. It was pinned to the top of its own 44px touch target; my doing.\n· Search fields (Bookings, Contacts, Admin) now run edge to edge below 560px."
+  },
+  {
+   "id": "app-note",
    "page": "app",
    "x": 0,
-   "y": -240,
+   "y": -200,
    "w": 470,
-   "text": "The real mobile app at 390px — not a redrawing.\nEach frame is the page's own rendered DOM and its own compiled stylesheet, lifted out of a live render, so what you see is what the browser painted.\n\nComment anywhere and tell me what to change; I'll make it in the code and re-capture."
-  },
-  {
-   "id": "touch-note",
-   "page": "app",
-   "x": 500,
-   "y": -240,
-   "w": 430,
-   "text": "Touch sizing is ON in these frames.\nThe canvas runs in a desktop browser, where the app's `pointer: coarse` rules would not match — so the capture forces them on. Controls here are the 44px versions a phone actually gets."
-  },
-  {
-   "id": "data-note",
-   "page": "app",
-   "x": 960,
-   "y": -240,
-   "w": 430,
-   "text": "The content is stand-in data, chosen to stress the layout: deliberately long names and 40-character email addresses. Comment on the layout, not the names."
+   "text": "The signed-in app at 390px, captured from the running build. Touch sizing is forced on in these frames — the canvas is a desktop browser, where the app's pointer:coarse rules would not otherwise match."
   },
   {
    "id": "public-note",
    "page": "public",
    "x": 0,
-   "y": -190,
+   "y": -200,
    "w": 470,
-   "text": "Signed out, as a visitor sees them. The landing page is the full 13,000px scroll — pan down it or open it expanded."
+   "text": "Signed out, as a visitor sees them."
   }
  ],
  "launch": {
   "view": "canvas",
-  "page": "app"
+  "page": "landing"
  }
 }
