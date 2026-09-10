@@ -1,0 +1,23 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "title": "Landing — desktop 1440", "x": 0, "y": 0, "w": 1440, "h": 7050, "print": "flow" },
+    { "file": "Mobile.dc.html", "title": "Landing — phone 390", "x": 1600, "y": 0, "w": 390, "h": 12100, "print": "flow" }
+  ],
+  "annotations": [
+    {
+      "id": "source-of-truth",
+      "x": 0,
+      "y": -190,
+      "w": 460,
+      "text": "Rebuilt from the shipped source, not from a screenshot.\nEvery colour, size, radius and control height is lifted from globals.css, page.tsx, hero.tsx, site-chrome.tsx, cost-calculator.tsx, faq.tsx and demo-calendar.tsx.\n\nLive here: the hero's date grid and time slots, the cost calculator's three sliders, and the FAQ accordion."
+    },
+    {
+      "id": "phone-note",
+      "x": 1600,
+      "y": -190,
+      "w": 390,
+      "text": "The widths the real media queries actually produce at 390: 18px gutters, single-column grids, 44px headline, footer stacked. Checked for horizontal overflow — there is none."
+    }
+  ],
+  "launch": { "view": "focused", "file": "Main.dc.html" }
+}

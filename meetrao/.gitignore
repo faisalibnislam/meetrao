@@ -42,3 +42,12 @@ next-env.d.ts
 
 # but the template, which carries no values, is committed
 !.env.example
+
+# design canvases
+# The seeded canvas is a 2.6MB build output — the Claude Design editor bundled
+# with the artboards. It is regenerated from design/<name>/ by re-seeding, so
+# the sources are committed and the assembled page is not. Same for the
+# throwaway expansions used to measure artboard heights.
+design/**/*.measure.html
+design/**/*.png
+meetrao-landing-page.html
