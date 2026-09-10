@@ -118,8 +118,7 @@ export async function POST(request: NextRequest) {
       start,
       end,
       timeZone: host.timezone,
-      guestName: input.guestName,
-      guestEmail: input.guestEmail,
+      attendees: [{ email: input.guestEmail, name: input.guestName }],
     });
 
     meetUrl = event.meetUrl;

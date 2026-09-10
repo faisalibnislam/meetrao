@@ -130,6 +130,28 @@ transaction — a Wednesday slot that the host's *default* schedule allows is
 refused for a meeting pinned to a weekend-only schedule, and the Saturday slot
 is accepted.
 
+**A host can schedule a meeting and invite several people.** The product ran
+one way only — a guest opens the link and books. Migration 0011 adds the other
+direction. `bookings` still carries exactly one guest column pair and the first
+invitee is that guest, so the confirmation email, the `.ics`, the guest
+cancellation page and the admin console all keep working on a row shaped as
+before; extra invitees live in `booking_invitees`.
+
+Two rules differ from the guest path, on purpose. **The host's availability
+does not apply** — a host scheduling their own meeting has already decided they
+are free, and refusing because it is Saturday would be the tool arguing with its
+owner. **A clash still refuses**, because that is double-booking rather than a
+preference, and `bookings_no_overlap` catches it whatever the app believes.
+
+Inserted through the service role behind `requireOnboardedSession()`, because
+`bookings` has no INSERT policy for `authenticated` — the guest door is
+`create_booking`, which is SECURITY DEFINER — and adding one would open a table
+that has stayed closed on purpose.
+
+Cancelling emails **every** invitee, not just the guest of record. A meeting for
+three people that tells one of them it is cancelled leaves two sitting in an
+empty Meet.
+
 ## Supabase Auth settings that the app cannot enforce
 
 **Confirm email must be ON.** Authentication → Providers → Email → *Confirm

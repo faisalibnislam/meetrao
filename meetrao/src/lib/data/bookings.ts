@@ -25,6 +25,9 @@ export type BookingView = {
   joinable: boolean;
   meetUrl: string | null;
   note: string;
+  /** Everyone invited, when the host scheduled this. Empty for guest bookings. */
+  invitees: { name: string; email: string }[];
+  hostCreated: boolean;
 };
 
 export function toView(row: Booking, timeZone: string, now: Date): BookingView {
@@ -50,6 +53,8 @@ export function toView(row: Booking, timeZone: string, now: Date): BookingView {
     joinable: !cancelled && !past,
     meetUrl: row.meet_url,
     note: row.guest_note,
+    invitees: [],
+    hostCreated: Boolean((row as { host_created?: boolean }).host_created),
   };
 }
 
@@ -62,7 +67,25 @@ export async function listBookings(hostId: string, timeZone: string): Promise<Bo
     .order("starts_at", { ascending: true });
 
   const now = new Date();
-  return ((data ?? []) as Booking[]).map((row) => toView(row, timeZone, now));
+  const rows = (data ?? []) as Booking[];
+  const views = rows.map((row) => toView(row, timeZone, now));
+
+  // One query for every invitee rather than one per booking. Only bookings the
+  // host scheduled have any, so this is usually a very short list.
+  const hostCreated = rows.filter((r) => (r as { host_created?: boolean }).host_created).map((r) => r.id);
+  if (hostCreated.length) {
+    const { data: invitees } = await supabase
+      .from("booking_invitees")
+      .select("booking_id, name, email")
+      .in("booking_id", hostCreated);
+
+    for (const row of (invitees ?? []) as { booking_id: string; name: string; email: string }[]) {
+      const view = views.find((v) => v.id === row.booking_id);
+      if (view) view.invitees.push({ name: row.name, email: row.email });
+    }
+  }
+
+  return views;
 }
 
 export async function getBooking(hostId: string, bookingId: string, timeZone: string) {

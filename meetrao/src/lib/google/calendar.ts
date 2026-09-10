@@ -142,8 +142,8 @@ export async function createBookingEvent(input: {
   start: Date;
   end: Date;
   timeZone: string;
-  guestName: string;
-  guestEmail: string;
+  /** Everyone invited. The first is the guest of record on the booking row. */
+  attendees: { email: string; name?: string }[];
 }): Promise<CreatedEvent> {
   const auth = await accessTokenFor(input.userId);
   if (!auth) throw new CalendarError("not-connected", "No Google Calendar connection.");
@@ -163,10 +163,11 @@ export async function createBookingEvent(input: {
         description: input.description,
         start: { dateTime: input.start.toISOString(), timeZone: input.timeZone },
         end: { dateTime: input.end.toISOString(), timeZone: input.timeZone },
-        // The guest is an attendee, which is how the event reaches their
-        // calendar. Both parties therefore see each other's email address —
+        // Invitees are attendees, which is how the event reaches their
+        // calendars. Everyone on an invitation sees everyone else's address —
         // inherent to a Google invitation, and disclosed in the privacy policy.
-        attendees: [{ email: input.guestEmail, displayName: input.guestName }],
+        // It matters more now that a host can invite several people at once.
+        attendees: input.attendees.map((a) => ({ email: a.email, displayName: a.name || undefined })),
         guestsCanModify: false,
         conferenceData: {
           createRequest: {

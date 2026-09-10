@@ -85,8 +85,29 @@ export function BookingDialogs({
       secondary={{ label: "Cancel meeting", onClick: onOpenCancel }}
     >
       <div className="flex flex-col gap-[9px]">
-        <DetailRow label="Guest" value={booking.guest} />
-        <DetailRow label="Email" value={booking.email} mono />
+        {booking.invitees.length > 1 ? (
+          // A meeting the host scheduled for several people. Listing them beats
+          // showing the first one and calling it "Guest", which is what the row
+          // below would say on its own.
+          <DetailRow
+            label={`Invitees`}
+            value={
+              <span className="flex flex-col gap-[2px]">
+                {booking.invitees.map((i) => (
+                  <span key={i.email}>
+                    {i.name ? `${i.name} · ` : ""}
+                    <span className="font-mono text-[12px] text-ink-2">{i.email}</span>
+                  </span>
+                ))}
+              </span>
+            }
+          />
+        ) : (
+          <>
+            <DetailRow label="Guest" value={booking.guest} />
+            <DetailRow label="Email" value={booking.email} mono />
+          </>
+        )}
         <DetailRow label="When" value={`${booking.dayLabel} · ${booking.timeRange}`} />
         <DetailRow label="Duration" value={`${booking.duration} minutes`} />
         <DetailRow label="Status" value={booking.status} />

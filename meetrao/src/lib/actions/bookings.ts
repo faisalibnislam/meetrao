@@ -59,9 +59,23 @@ export async function cancelBooking(bookingId: string): Promise<CancelResult> {
   }
 
   const mail = cancellationMail(booking, session.profile, "host");
+
+  // Every invitee, not just the guest of record. A meeting the host scheduled
+  // for three people that only tells one of them it is cancelled leaves two
+  // sitting in an empty Meet — the failure this feature would otherwise add.
+  const { data: extra } = await supabase
+    .from("booking_invitees")
+    .select("name, email")
+    .eq("booking_id", bookingId);
+
+  const others = (extra ?? []).filter((i) => i.email.toLowerCase() !== booking.guest_email.toLowerCase());
+
   await Promise.allSettled([
     sendCancellationToHost(mail, session.profile),
     sendCancellationToGuest(mail),
+    ...others.map((i) =>
+      sendCancellationToGuest({ ...mail, guestName: i.name || i.email, guestEmail: i.email }),
+    ),
   ]);
 
   revalidatePath("/bookings");
