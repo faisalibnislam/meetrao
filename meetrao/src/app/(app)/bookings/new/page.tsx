@@ -6,7 +6,7 @@ import { requireOnboardedSession } from "@/lib/data/session";
 import { supabaseServer } from "@/lib/supabase/server";
 import { timezoneLabel } from "@/lib/timezones";
 
-export const metadata: Metadata = { title: "Schedule a meeting" };
+export const metadata: Metadata = { title: "Invite to Meet" };
 
 export default async function NewBookingPage() {
   const { profile } = await requireOnboardedSession();
@@ -37,9 +37,9 @@ export default async function NewBookingPage() {
 
   return (
     <AppScreen
-      title="Schedule a meeting"
+      title="Invite to Meet"
       crumb={{ label: "Bookings", href: "/bookings" }}
-      crumbCurrent="Schedule"
+      crumbCurrent="Invite"
       subtitle="Pick the time yourself and invite the people who should be there."
     >
       <ScheduleForm

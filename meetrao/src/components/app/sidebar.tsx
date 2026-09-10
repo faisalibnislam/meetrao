@@ -154,14 +154,17 @@ export function Sidebar({
         ) : null}
       </div>
 
-      {/* Creating a meeting used to mean going to Meetings first. Hidden on the
-          mobile bar, where the drawer already carries navigation. */}
+      {/* The everyday action gets the rail's one primary slot. Creating a
+          meeting TYPE is setup, done rarely, and already has a button on the
+          Meetings screen, its empty state and the dashboard's — a second copy
+          here would crowd out the thing a host does most days.
+          Hidden on the mobile bar; the drawer below carries its own row. */}
       <Link
-        href="/meetings/new"
+        href="/bookings/new"
         className="unlink mb-[12px] box-border inline-flex h-[32px] w-full items-center justify-center gap-[7px] rounded-[6px] border border-accent bg-accent px-[11px] text-[12.5px] font-semibold text-white transition-colors duration-[120ms] hover:border-accent-2 hover:bg-accent-2 hover:text-white max-[820px]:hidden"
       >
-        <Icon name="plus" size={12} />
-        New meeting
+        <Icon name="user-plus" size={12} />
+        Invite to Meet
       </Link>
 
       <button
@@ -260,6 +263,7 @@ export function Sidebar({
               </span>
             </span>
           </div>
+          {!isAdmin ? <DrawerLink href="/bookings/new" icon="user-plus" label="Invite to Meet" /> : null}
           {!isAdmin ? <DrawerLink href="/settings" icon="gear" label="Settings" /> : null}
           <DrawerLink href="/help" icon="circle-question" label="Help centre" newTab />
           <DrawerLink href="/support" icon="envelope" label="Contact support" />
