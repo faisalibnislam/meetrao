@@ -163,13 +163,20 @@ Two rules keep it honest, and both are load-bearing:
 - **It adds no colour, size or radius of its own.** Everything on it is a token
   or a component.
 
-**Never served in production.** `previewEnabled()` in `src/lib/preview.ts` allows
-it in `next dev` and on Vercel preview deployments, and refuses whenever
-`VERCEL_ENV` is `production` — that variable is set by the platform and cannot be
-overridden in project settings, so it is the one to trust when the two disagree.
-The page also carries `robots: { index: false }`. `src/lib/preview.test.ts`
-covers the gate; production was checked by building with `VERCEL_ENV=production`
-and confirming the route answers 404.
+**Two doors.** `previewEnabled()` in `src/lib/preview.ts` opens it in `next dev`
+and on Vercel preview deployments, and refuses whenever `VERCEL_ENV` is
+`production` — that variable is set by the platform and cannot be overridden in
+project settings, so it is the one to trust when it and `NODE_ENV` disagree. On
+production the page then falls back to an admin check: a signed-in admin sees
+the gallery, everyone else gets `notFound()`.
+
+`notFound()` rather than a redirect, deliberately — a stranger should not learn
+the route exists. The page also carries `robots: { index: false }`.
+
+The admin door is not a weaker gate, it is the one that makes the tool usable:
+the gallery is most valuable exactly when you are away from a terminal, and a
+404 nobody can get past is a tool nobody opens. `src/lib/preview.test.ts` covers
+the environment half.
 
 ## Receiving support mail
 

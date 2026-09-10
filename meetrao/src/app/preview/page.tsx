@@ -12,6 +12,7 @@ import { GoogleG, Logo } from "@/components/ui/logo";
 import { Callout, Card, EmptyState, PanelHeading, SectionHeading, TableCard } from "@/components/ui/panels";
 import { Spinner } from "@/components/ui/spinner";
 import { StackedCell, Table, Td, Th, Tr } from "@/components/ui/table";
+import { optionalSession } from "@/lib/data/session";
 import { previewEnabled } from "@/lib/preview";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -77,8 +78,17 @@ const TYPE_SCALE: [string, string, string][] = [
   ["26px", "text-[26px] font-semibold tracking-[-0.022em]", "Metric value"],
 ];
 
-export default function PreviewPage() {
-  if (!previewEnabled()) notFound();
+export default async function PreviewPage() {
+  // Two doors. Dev and preview deployments are open, because there is nothing
+  // to protect there. Production is admin-only rather than closed: the gallery
+  // is most useful exactly when you are away from a terminal, and a 404 that
+  // nobody can get past is a tool nobody uses.
+  //
+  // notFound(), not a redirect: a stranger should not learn the route exists.
+  if (!previewEnabled()) {
+    const session = await optionalSession();
+    if (!session?.profile.is_admin) notFound();
+  }
 
   return (
     <div className="min-h-screen bg-ground">
