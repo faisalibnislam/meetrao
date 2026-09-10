@@ -63,7 +63,7 @@ export function SupportForm({
         </p>
 
         <div className="flex flex-col gap-[7px] rounded-[10px] border border-line bg-fill px-[15px] py-[14px]">
-          <span className="font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">Your message</span>
+          <span className="text-[10px] tracking-[0.07em] text-ink-3 uppercase">Your message</span>
           <span className="text-[13px] font-semibold text-ink">
             {TOPICS.find(([k]) => k === sent.topic)?.[1] ?? "Something else"}
           </span>
@@ -113,7 +113,7 @@ export function SupportForm({
             <span className="text-[13.5px] font-semibold text-ink">{accountName}</span>
             <span className="text-[12.5px] text-ink-3">{accountEmail}</span>
           </div>
-          <span className="flex-none font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">
+          <span className="flex-none text-[10px] tracking-[0.07em] text-ink-3 uppercase">
             We&rsquo;ll reply here
           </span>
         </div>
@@ -182,7 +182,7 @@ export function SupportForm({
             {message.length > 0 ? (
               <span
                 className={cx(
-                  "font-mono text-[11px] font-normal",
+                  "text-[11px] font-normal",
                   message.length > 1800 ? "text-amber" : "text-ink-3",
                 )}
               >

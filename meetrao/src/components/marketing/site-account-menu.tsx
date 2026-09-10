@@ -95,7 +95,7 @@ export function SiteAccountMenu({
             <span className="overflow-hidden text-[12.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
               {name}
             </span>
-            <span className="overflow-hidden font-mono text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
+            <span className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
               {email}
             </span>
           </div>

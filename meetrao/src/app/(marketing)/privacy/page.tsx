@@ -198,7 +198,7 @@ export default function PrivacyPage() {
             <div key={name} className="flex flex-wrap items-baseline gap-x-[16px] gap-y-[3px] bg-surface px-[15px] py-[12px]">
               <span className="w-[110px] flex-none text-[13px] font-semibold text-ink">{name}</span>
               <span className="min-w-[200px] flex-1 text-[13px] text-ink-2">{role}</span>
-              <span className="flex-none font-mono text-[11.5px] text-ink-3">{region}</span>
+              <span className="flex-none text-[11.5px] text-ink-3">{region}</span>
             </div>
           ))}
         </div>

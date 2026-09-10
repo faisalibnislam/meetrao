@@ -90,7 +90,7 @@ export function CopyLinkControl({ accountLink, meetings }: { accountLink: string
               >
                 <span className="flex min-w-0 flex-1 flex-col gap-[1px] text-left">
                   <span className="text-[13px] font-semibold text-ink">{row.name}</span>
-                  <span className="overflow-hidden font-mono text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
+                  <span className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
                     {row.link}
                   </span>
                 </span>
@@ -128,7 +128,7 @@ export function CopyLinkChip({ link }: { link: string }) {
         toast({ tone: "ok", title: "Copied", text: link });
         timer.current = setTimeout(() => setCopied(false), FLASH_MS);
       }}
-      className="inline-flex h-[26px] max-w-[168px] cursor-pointer items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[8px] font-mono text-[11.5px] text-ink-2 hover:bg-fill-2 hover:text-ink"
+      className="inline-flex h-[26px] max-w-[168px] cursor-pointer items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[8px] text-[11.5px] text-ink-2 hover:bg-fill-2 hover:text-ink"
     >
       <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{link}</span>
       <Icon name={copied ? "check" : "copy"} weight={copied ? "solid" : "light"} size={10} className="flex-none" />

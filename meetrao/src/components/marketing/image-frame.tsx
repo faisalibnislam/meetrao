@@ -73,7 +73,7 @@ export function ImageFrame({
       ) : (
         <span className="flex flex-col items-center gap-[6px] px-[10px] text-center">
           <Icon name="tag" size={14} className="text-ink-3" />
-          <span className="font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">{label}</span>
+          <span className="text-[10px] tracking-[0.07em] text-ink-3 uppercase">{label}</span>
         </span>
       )}
     </div>

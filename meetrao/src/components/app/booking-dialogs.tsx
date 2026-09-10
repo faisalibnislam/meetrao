@@ -96,7 +96,7 @@ export function BookingDialogs({
                 {booking.invitees.map((i) => (
                   <span key={i.email}>
                     {i.name ? `${i.name} · ` : ""}
-                    <span className="font-mono text-[12px] text-ink-2">{i.email}</span>
+                    <span className="text-[12px] text-ink-2">{i.email}</span>
                   </span>
                 ))}
               </span>
@@ -105,7 +105,7 @@ export function BookingDialogs({
         ) : (
           <>
             <DetailRow label="Guest" value={booking.guest} />
-            <DetailRow label="Email" value={booking.email} mono />
+            <DetailRow label="Email" value={booking.email} machine />
           </>
         )}
         <DetailRow label="When" value={`${booking.dayLabel} · ${booking.timeRange}`} />
@@ -114,7 +114,7 @@ export function BookingDialogs({
         <DetailRow
           label="Meet"
           value={booking.cancelled ? "Removed with the event" : (booking.meetUrl ?? "Not created")}
-          mono={!booking.cancelled && Boolean(booking.meetUrl)}
+          machine={!booking.cancelled && Boolean(booking.meetUrl)}
         />
         <DetailRow
           label="Calendar"

@@ -4,6 +4,10 @@
    Design tokens — transcribed verbatim from design_handoff_meetrao/README.md
    § "Design tokens". The values are irregular on purpose (13.5px, 12.5px,
    half-pixel steps). Do not re-derive or tidy them.
+
+   One deliberate departure: the handoff's --mono (DM Mono) is gone. The
+   product uses no monospace face anywhere, and that is a decision rather than
+   an oversight — see --font-mono below, and src/lib/no-monospace.test.ts.
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
   /* Surface + line */
@@ -50,7 +54,6 @@
   --nav-shadow: 0 1px 1px rgba(26, 25, 23, 0.03);
 
   --serif: var(--font-instrument-serif), Georgia, serif;
-  --mono: var(--font-dm-mono), ui-monospace, monospace;
   --sans: var(--font-instrument-sans), system-ui, -apple-system, sans-serif;
 }
 
@@ -87,7 +90,11 @@
 
   --font-sans: var(--sans);
   --font-serif: var(--serif);
-  --font-mono: var(--mono);
+  /* No monospace anywhere in the product. This is not dead: Tailwind's
+     preflight styles <code>, <kbd>, <samp> and <pre> with --font-mono, and
+     falls back to ui-monospace when it is undefined — so the token has to
+     exist and has to say sans. */
+  --font-mono: var(--sans);
 
   --shadow-pop: var(--pop);
   --shadow-hero: var(--hero-shadow);
@@ -507,7 +514,7 @@ body {
 }
 
 .doc-prose code {
-  font-family: var(--mono);
+  font-family: var(--sans);
   font-size: 13px;
   color: var(--ink);
 }

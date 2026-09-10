@@ -32,7 +32,7 @@ export function Badge({ tone = "off", dot = true, children }: { tone?: Tone; dot
   );
 }
 
-/** DM Mono uppercase micro-label. 10–10.5px, 0.07–0.08em tracking. */
+/** Uppercase micro-label. 10–10.5px, 0.07–0.08em tracking. */
 export function Eyebrow({
   children,
   size = 10,
@@ -48,7 +48,7 @@ export function Eyebrow({
     <span
       id={id}
       className={cx(
-        "font-mono uppercase text-ink-3",
+        "uppercase text-ink-3",
         size === 10 ? "text-[10px] tracking-[0.07em]" : "text-[10.5px] tracking-[0.08em]",
         className,
       )}

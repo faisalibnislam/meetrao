@@ -13,19 +13,19 @@ export default async function AdminBookingPage({ params }: { params: Promise<{ i
   const booking = await getAdminBooking(id);
   if (!booking) notFound();
 
-  const groups: { label: string; rows: { key: string; value: string; mono?: boolean }[] }[] = [
+  const groups: { label: string; rows: { key: string; value: string; machine?: boolean }[] }[] = [
     {
       label: "Host",
       rows: [
         { key: "Name", value: booking.host },
-        { key: "Email", value: booking.hostEmail, mono: true },
+        { key: "Email", value: booking.hostEmail, machine: true },
       ],
     },
     {
       label: "Guest",
       rows: [
         { key: "Name", value: booking.guest },
-        { key: "Email", value: booking.guestEmail, mono: true },
+        { key: "Email", value: booking.guestEmail, machine: true },
       ],
     },
     {
@@ -43,7 +43,7 @@ export default async function AdminBookingPage({ params }: { params: Promise<{ i
         {
           key: "Link",
           value: booking.meetUrl ? booking.meetUrl.replace(/^https?:\/\//, "") : "No calendar event",
-          mono: Boolean(booking.meetUrl),
+          machine: Boolean(booking.meetUrl),
         },
       ],
     },
@@ -59,7 +59,7 @@ export default async function AdminBookingPage({ params }: { params: Promise<{ i
         <div className="flex flex-wrap items-center gap-[12px] border-b border-line pb-[16px]">
           <span className="text-[15px] font-semibold text-ink">{booking.meeting}</span>
           <Badge tone={booking.cancelled ? "bad" : "ok"}>{booking.cancelled ? "Cancelled" : "Confirmed"}</Badge>
-          <span className="ml-auto font-mono text-[11.5px] text-ink-3">
+          <span className="ml-auto text-[11.5px] text-ink-3">
             {booking.reference.slice(0, 12).toUpperCase()}
           </span>
         </div>
@@ -74,7 +74,7 @@ export default async function AdminBookingPage({ params }: { params: Promise<{ i
                   <span
                     className={cx(
                       "min-w-[150px] flex-1 break-all text-ink",
-                      row.mono ? "font-mono text-[12.5px]" : "text-[13px]",
+                      row.machine ? "text-[12.5px]" : "text-[13px]",
                     )}
                   >
                     {row.value}

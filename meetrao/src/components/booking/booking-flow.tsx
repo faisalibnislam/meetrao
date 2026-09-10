@@ -395,7 +395,7 @@ export function BookingFlow(props: FlowProps) {
               {WEEK.map((label) => (
                 <span
                   key={label}
-                  className="pb-[2px] text-center font-mono text-[10px] tracking-[0.04em] text-ink-3 uppercase"
+                  className="pb-[2px] text-center text-[10px] tracking-[0.04em] text-ink-3 uppercase"
                 >
                   {label}
                 </span>

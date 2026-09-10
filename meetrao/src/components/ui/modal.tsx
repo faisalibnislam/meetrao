@@ -114,12 +114,14 @@ export function Modal({
 export function DetailRow({
   label,
   value,
-  mono = false,
+  machine = false,
   keyWidth = 78,
 }: {
   label: string;
   value: ReactNode;
-  mono?: boolean;
+  /** A machine string — an email, a Meet URL, a reference. Set a shade
+      smaller than prose so it reads as data. */
+  machine?: boolean;
   keyWidth?: number;
 }) {
   return (
@@ -130,7 +132,7 @@ export function DetailRow({
       <span
         className={cx(
           "min-w-[140px] flex-1 break-words text-ink",
-          mono ? "font-mono text-[12.5px]" : "text-[13px]",
+          machine ? "text-[12.5px]" : "text-[13px]",
         )}
       >
         {value}

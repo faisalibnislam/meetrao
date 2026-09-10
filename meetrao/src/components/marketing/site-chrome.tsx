@@ -181,7 +181,7 @@ export function SiteFooter() {
         <div className="mt-[44px] mb-[30px] grid grid-cols-[minmax(240px,1.35fr)_repeat(auto-fit,minmax(140px,1fr))] items-start gap-x-[34px] gap-y-[44px] rounded-[20px] bg-[#206155] px-[30px] pt-[34px] pb-[36px] max-[700px]:grid-cols-[1fr] max-[700px]:gap-[30px]">
           {columns.map((column) => (
             <div key={column.title} className="flex min-w-0 flex-col gap-[14px]">
-              <span className="font-mono text-[10.5px] tracking-[0.08em] text-white/85 uppercase">
+              <span className="text-[10.5px] tracking-[0.08em] text-white/85 uppercase">
                 {column.title}
               </span>
               <div className="flex flex-col gap-[11px]">
@@ -250,12 +250,12 @@ export function SiteFooter() {
   );
 }
 
-/** The mono rule-and-label that opens every section. */
+/** The rule-and-label that opens every section. */
 export function Kicker({ children, tone = "light" }: { children: string; tone?: "light" | "dark" }) {
   const color = tone === "light" ? "text-[#7FD8C4]" : "text-accent";
   const rule = tone === "light" ? "bg-[#7FD8C4]" : "bg-accent";
   return (
-    <span className={`inline-flex items-center gap-[10px] font-mono text-[10.5px] font-medium tracking-[0.14em] uppercase ${color}`}>
+    <span className={`inline-flex items-center gap-[10px] text-[10.5px] font-medium tracking-[0.14em] uppercase ${color}`}>
       <span aria-hidden="true" className={`h-[2px] w-[18px] flex-none rounded-[1px] ${rule}`} />
       {children}
     </span>

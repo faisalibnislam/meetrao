@@ -142,7 +142,7 @@ export default function LandingPage() {
                   <span className="text-[13.5px] font-semibold text-ink">Priya Nair &amp; you</span>
                   <span className="text-[12px] text-ink-3">Trying to find half an hour</span>
                 </div>
-                <span className="flex-none font-mono text-[10px] tracking-[0.06em] text-ink-3 uppercase">
+                <span className="flex-none text-[10px] tracking-[0.06em] text-ink-3 uppercase">
                   Thu–Mon
                 </span>
               </div>
@@ -224,7 +224,7 @@ export default function LandingPage() {
                         </div>
                         <span
                           className={cx(
-                            "inline-flex h-[20px] flex-none items-center rounded-[5px] border px-[8px] font-mono text-[10px] tracking-[0.06em] uppercase",
+                            "inline-flex h-[20px] flex-none items-center rounded-[5px] border px-[8px] text-[10px] tracking-[0.06em] uppercase",
                             tone.tag,
                           )}
                         >
@@ -268,7 +268,7 @@ export default function LandingPage() {
                     <Icon name="xmark" weight="solid" size={11} />
                   </span>
                   <span className="min-w-0 flex-1 text-[14.5px] font-semibold text-red">The email thread</span>
-                  <span className="flex-none font-mono text-[10.5px] tracking-[0.06em] text-red-ink uppercase">
+                  <span className="flex-none text-[10.5px] tracking-[0.06em] text-red-ink uppercase">
                     Days, not minutes
                   </span>
                 </div>
@@ -285,7 +285,7 @@ export default function LandingPage() {
                     >
                       <span
                         className={cx(
-                          "flex-none font-mono text-[10.5px] tracking-[0.05em]",
+                          "flex-none text-[10.5px] tracking-[0.05em]",
                           waiting ? "text-red" : "text-ink-3",
                         )}
                       >
@@ -293,7 +293,7 @@ export default function LandingPage() {
                       </span>
                       <span className="min-w-0 flex-1 text-[13.5px] text-ink">{label}</span>
                       {waiting ? (
-                        <span className="flex-none font-mono text-[10px] tracking-[0.05em] text-red uppercase">
+                        <span className="flex-none text-[10px] tracking-[0.05em] text-red uppercase">
                           waiting
                         </span>
                       ) : null}
@@ -309,7 +309,7 @@ export default function LandingPage() {
                   ].map(([value, label]) => (
                     <div key={label} className="flex flex-col gap-[1px]">
                       <span className="font-serif text-[22px] leading-[1] text-red">{value}</span>
-                      <span className="font-mono text-[10px] tracking-[0.06em] text-red-ink uppercase">
+                      <span className="text-[10px] tracking-[0.06em] text-red-ink uppercase">
                         {label}
                       </span>
                     </div>
@@ -325,7 +325,7 @@ export default function LandingPage() {
                     <Icon name="check" size={13} className="text-[#7FD8C4]" />
                     With Meetrao
                   </span>
-                  <span className="font-mono text-[10px] font-medium tracking-[0.1em] text-[#7FD8C4] uppercase">
+                  <span className="text-[10px] font-medium tracking-[0.1em] text-[#7FD8C4] uppercase">
                     Minutes, not days
                   </span>
                 </div>
@@ -359,7 +359,7 @@ export default function LandingPage() {
                   ].map(([value, label]) => (
                     <div key={label} className="flex flex-col gap-[1px]">
                       <span className="font-serif text-[22px] leading-[1] text-white">{value}</span>
-                      <span className="font-mono text-[10px] tracking-[0.06em] text-[#7FD8C4] uppercase">
+                      <span className="text-[10px] tracking-[0.06em] text-[#7FD8C4] uppercase">
                         {label}
                       </span>
                     </div>

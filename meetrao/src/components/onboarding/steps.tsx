@@ -327,7 +327,7 @@ export function StepReady({
         <div className="flex flex-col gap-[7px]">
           <Eyebrow size={10.5}>Your booking link</Eyebrow>
           <div className="flex h-[40px] items-center gap-[10px] rounded-[6px] border border-line-strong bg-fill pr-[6px] pl-[12px]">
-            <span className="min-w-0 flex-1 overflow-hidden font-mono text-[13px] text-ellipsis whitespace-nowrap text-ink">
+            <span className="min-w-0 flex-1 overflow-hidden text-[13px] text-ellipsis whitespace-nowrap text-ink">
               {link}
             </span>
             <Button

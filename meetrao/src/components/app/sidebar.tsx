@@ -17,11 +17,10 @@ import { cx } from "@/lib/cx";
    the layout is unstyled. Only the drawer's open state and the account menu
    need state.
 
-   Below the nav the rail carries three things the product already knows: a way
-   to create a meeting, every bookable link, and whether Google Calendar is
-   connected. Four nav rows left roughly 600px of bare #EFEDE7 above the account
-   block; these fill it with work rather than decoration. Nothing here is new
-   state — the links are the meeting types, the status is connectionStatus().
+   Below the nav the rail carries two things the product already knows: a way to
+   create a meeting, and every bookable link. Four nav rows left roughly 600px of
+   bare #EFEDE7 above the account block; these fill it with work rather than
+   decoration. Nothing here is new state — the links are the meeting types.
 
    Settings is NOT a nav row — it lives in the account menu. The admin console
    keeps its own Settings row, because that is a different screen; an account
@@ -54,7 +53,6 @@ export function Sidebar({
   isAdmin,
   avatarUrl,
   links = [],
-  calendarConnected,
   onSignOut,
 }: {
   items: NavItem[];
@@ -64,8 +62,6 @@ export function Sidebar({
   avatarUrl?: string | null;
   /** Account link first, then one row per active meeting type. */
   links?: BookingLink[];
-  /** Omitted in the admin console, which has no calendar of its own. */
-  calendarConnected?: boolean;
   onSignOut: () => void | Promise<void>;
 }) {
   const pathname = usePathname();
@@ -148,7 +144,7 @@ export function Sidebar({
       <div className="flex items-center justify-between gap-[8px] px-[4px] pt-[2px] pb-[16px] max-[820px]:flex-none max-[820px]:gap-[8px] max-[820px]:p-0">
         <Logo height={20} />
         {isAdmin ? (
-          <span className="inline-flex h-[18px] items-center rounded-[4px] border border-line-strong px-[6px] font-mono text-[10px] tracking-[0.08em] text-ink-2">
+          <span className="inline-flex h-[18px] items-center rounded-[4px] border border-line-strong px-[6px] text-[10px] tracking-[0.08em] text-ink-2">
             ADMIN
           </span>
         ) : null}
@@ -276,10 +272,6 @@ export function Sidebar({
 
       {links.length ? (
         <div className="mt-auto flex flex-none flex-col gap-[7px] pt-[16px] pb-[12px] max-[820px]:hidden">
-          {/* The Eyebrow primitive, mono and all. The dashboard's date line and
-              trend chips moved to sans; whether every eyebrow in the product
-              follows is one decision to take once, everywhere — not by accident,
-              here. */}
           <Eyebrow size={10.5} className="px-[4px]">
             {links.length > 2 ? "Your links" : "Your link"}
           </Eyebrow>
@@ -321,33 +313,6 @@ export function Sidebar({
             ) : null}
           </div>
         </div>
-      ) : null}
-
-      {calendarConnected !== undefined ? (
-        <Link
-          href="/settings/calendar"
-          className={cx(
-            "unlink box-border flex w-full flex-none items-center gap-[8px] rounded-[6px] border px-[9px] py-[8px] mb-[12px] max-[820px]:hidden",
-            "transition-colors duration-[120ms]",
-            links.length ? "" : "mt-auto",
-            calendarConnected
-              ? "border-line bg-white/55 hover:bg-white/80"
-              : "border-amber-line bg-amber-soft hover:bg-amber-soft",
-          )}
-        >
-          <span
-            aria-hidden="true"
-            className={cx("h-[6px] w-[6px] flex-none rounded-full", calendarConnected ? "bg-accent" : "bg-amber")}
-          />
-          <span className="flex min-w-0 flex-1 flex-col gap-[1px]">
-            <span className="overflow-hidden text-[11.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
-              Google Calendar
-            </span>
-            <span className={cx("overflow-hidden text-[10.5px] text-ellipsis whitespace-nowrap", calendarConnected ? "text-ink-3" : "text-amber-ink")}>
-              {calendarConnected ? "Connected · conflicts checked" : "Not connected — connect it"}
-            </span>
-          </span>
-        </Link>
       ) : null}
 
       <div className="relative mt-auto flex flex-none items-center gap-[9px] border-t border-line px-[4px] pt-[12px] pb-[2px] max-[820px]:hidden">

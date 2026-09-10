@@ -52,7 +52,7 @@ export function Specimen({
       >
         {children}
       </div>
-      {caption ? <code className="font-mono text-[11px] leading-[1.5] text-ink-3">{caption}</code> : null}
+      {caption ? <code className="text-[11px] leading-[1.5] text-ink-3">{caption}</code> : null}
     </div>
   );
 }
@@ -77,5 +77,5 @@ export function Bare({ children, className }: { children: ReactNode; className?:
 }
 
 export function Caption({ children }: { children: string }) {
-  return <code className="font-mono text-[11px] leading-[1.5] text-ink-3">{children}</code>;
+  return <code className="text-[11px] leading-[1.5] text-ink-3">{children}</code>;
 }

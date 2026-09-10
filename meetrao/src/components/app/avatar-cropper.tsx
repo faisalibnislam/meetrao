@@ -193,7 +193,7 @@ export function AvatarCropper({
             onChange={(e) => setZoom(Number(e.target.value))}
             className="mr-range"
           />
-          <span className="w-[38px] flex-none text-right font-mono text-[11.5px] text-ink-3">
+          <span className="w-[38px] flex-none text-right text-[11.5px] text-ink-3">
             {zoom.toFixed(1)}×
           </span>
         </label>

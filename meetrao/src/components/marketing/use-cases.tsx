@@ -107,7 +107,7 @@ export function UseCases({ photos = {} }: { photos?: Record<string, string> }) {
           />
           <div className="relative z-3 mt-auto flex flex-wrap items-end justify-between gap-[16px] p-[24px]">
             <div className="flex min-w-0 flex-1 flex-col gap-[9px]">
-              <span className="inline-flex h-[24px] self-start items-center gap-[8px] rounded-[6px] border border-white/30 bg-white/15 px-[10px] font-mono text-[10px] font-medium tracking-[0.1em] text-white uppercase backdrop-blur-[6px]">
+              <span className="inline-flex h-[24px] self-start items-center gap-[8px] rounded-[6px] border border-white/30 bg-white/15 px-[10px] text-[10px] font-medium tracking-[0.1em] text-white uppercase backdrop-blur-[6px]">
                 <Icon name={feature.glyph} size={10} className="text-[#7FD8C4]" />
                 {feature.tag}
               </span>

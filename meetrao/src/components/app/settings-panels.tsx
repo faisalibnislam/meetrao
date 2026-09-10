@@ -152,7 +152,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
               ok ? "border-accent" : bad ? "border-red" : "border-line-strong",
             )}
           >
-            <span aria-hidden="true" className="flex-none pl-[11px] font-mono text-[13px] text-ink-3">
+            <span aria-hidden="true" className="flex-none pl-[11px] text-[13px] text-ink-3">
               meetrao.com/
             </span>
             <input
@@ -164,7 +164,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
               autoComplete="off"
               aria-describedby="prof-status"
               aria-invalid={bad}
-              className="h-full min-w-0 flex-1 border-0 bg-transparent py-0 pr-[11px] pl-[1px] font-mono text-[13px] font-medium text-ink outline-none"
+              className="h-full min-w-0 flex-1 border-0 bg-transparent py-0 pr-[11px] pl-[1px] text-[13px] font-medium text-ink outline-none"
             />
             {status === "checking" && changed ? (
               <span
@@ -201,7 +201,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
                   key={idea}
                   type="button"
                   onClick={() => editUsername(idea)}
-                  className="inline-flex h-[28px] cursor-pointer items-center gap-[7px] rounded-[6px] border border-accent-line bg-accent-soft px-[10px] font-mono text-[12px] text-accent transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
+                  className="inline-flex h-[28px] cursor-pointer items-center gap-[7px] rounded-[6px] border border-accent-line bg-accent-soft px-[10px] text-[12px] text-accent transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
                 >
                   <Icon name="plus" size={9} />
                   {idea}
@@ -213,7 +213,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
           {changed && ok ? (
             <Callout tone="amber">
               Changing this breaks your old link.{" "}
-              <span className="font-mono">{bookingLink(profile.username)}</span> will stop working, and anyone
+              <span className="font-semibold text-ink">{bookingLink(profile.username)}</span> will stop working, and anyone
               who saved it sees a page-not-found. Existing bookings are unaffected.
             </Callout>
           ) : null}
@@ -501,7 +501,7 @@ export function AccountPanel({
       <div className="flex flex-wrap items-center gap-[12px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px]">
         <div className="flex min-w-[170px] flex-1 flex-col gap-[2px]">
           <span className="text-[13.5px] font-semibold text-ink">Email address</span>
-          <span className="font-mono text-[12px] text-ink-3">{profile.email}</span>
+          <span className="text-[12px] text-ink-3">{profile.email}</span>
         </div>
         <Badge tone={verified ? "ok" : "warn"}>{verified ? "Verified" : "Unverified"}</Badge>
       </div>

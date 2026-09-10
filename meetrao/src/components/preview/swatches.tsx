@@ -30,8 +30,8 @@ export function TokenSwatch({ name, on = "surface" }: { name: string; on?: "surf
         style={{ background: `var(${name})` }}
       />
       <span className="flex min-w-0 flex-1 flex-col gap-[1px]">
-        <code className="overflow-hidden font-mono text-[11.5px] text-ellipsis whitespace-nowrap text-ink">{name}</code>
-        <code className="overflow-hidden font-mono text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
+        <code className="overflow-hidden text-[11.5px] text-ellipsis whitespace-nowrap text-ink">{name}</code>
+        <code className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
           {value || "—"}
         </code>
       </span>
@@ -61,8 +61,8 @@ export function TokenValue({ name, sample }: { name: string; sample?: "shadow" |
         </span>
       ) : null}
       <span className="flex min-w-0 flex-col gap-[1px]">
-        <code className="font-mono text-[11.5px] text-ink">{name}</code>
-        <code className="overflow-hidden font-mono text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
+        <code className="text-[11.5px] text-ink">{name}</code>
+        <code className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
           {value || "—"}
         </code>
       </span>

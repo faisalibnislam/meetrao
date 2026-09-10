@@ -1,6 +1,5 @@
 import { Sidebar, type BookingLink, type NavItem } from "@/components/app/sidebar";
 import { signOut } from "@/lib/actions/auth";
-import { connectionStatus } from "@/lib/google/connection";
 import { unreadNotifications } from "@/lib/data/notifications";
 import { supabaseServer } from "@/lib/supabase/server";
 import { bookingLink } from "@/lib/username";
@@ -24,8 +23,8 @@ export async function AppShell({
   const supabase = await supabaseServer();
 
   // Three reads, in parallel, for chrome that is on every screen: the Bookings
-  // badge, the rail's link list, and the calendar status row.
-  const [{ count }, { data: meetingRows }, calendar, unread] = await Promise.all([
+  // badge, the rail's link list, and the unread count on Notifications.
+  const [{ count }, { data: meetingRows }, unread] = await Promise.all([
     supabase
       .from("bookings")
       .select("id", { count: "exact", head: true })
@@ -38,7 +37,6 @@ export async function AppShell({
       .eq("user_id", profile.id)
       .eq("is_active", true)
       .order("created_at"),
-    connectionStatus(profile.id),
     unreadNotifications(profile.id),
   ]);
 
@@ -70,7 +68,6 @@ export async function AppShell({
         avatarUrl={profile.avatar_url}
         isAdmin={false}
         links={links}
-        calendarConnected={calendar.connected}
         onSignOut={signOut}
       />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-ground">{children}</div>

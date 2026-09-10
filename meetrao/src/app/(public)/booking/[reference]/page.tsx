@@ -22,7 +22,7 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ refe
   const start = new Date(booking.startsAt);
   const end = new Date(booking.endsAt);
 
-  const rows: { key: string; value: string; mono?: boolean }[] = [
+  const rows: { key: string; value: string; machine?: boolean }[] = [
     { key: "Meeting", value: booking.meetingName },
     { key: "Host", value: booking.hostName },
     { key: "When", value: `${formatLongDate(start, zone)} · ${formatTimeRange(start, end, zone)}` },
@@ -30,7 +30,7 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ refe
     {
       key: "Where",
       value: booking.meetUrl ? booking.meetUrl.replace(/^https?:\/\//, "") : "Link to follow by email",
-      mono: Boolean(booking.meetUrl),
+      machine: Boolean(booking.meetUrl),
     },
   ];
 
@@ -66,7 +66,7 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ refe
               <span
                 className={cx(
                   "min-w-[150px] flex-1 break-words text-ink",
-                  row.mono ? "font-mono text-[12.5px]" : "text-[13px] font-medium",
+                  row.machine ? "text-[12.5px]" : "text-[13px] font-medium",
                 )}
               >
                 {row.value}

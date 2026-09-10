@@ -149,7 +149,7 @@ export function Hero() {
           <span aria-hidden="true" className="h-[20px] w-[1px] flex-none bg-white/20" />
           <span className="inline-flex items-baseline gap-[8px] text-[13.5px] text-white/75">
             Your link is
-            <span className="font-mono text-[14.5px] font-medium text-white">meetrao.com/you</span>
+            <span className="text-[14.5px] font-medium text-white">meetrao.com/you</span>
           </span>
         </div>
 
@@ -162,7 +162,7 @@ export function Hero() {
                 <span className="h-[8px] w-[8px] rounded-full bg-line-strong" />
                 <span className="h-[8px] w-[8px] rounded-full bg-line-strong" />
               </span>
-              <span className="min-w-0 flex-1 overflow-hidden text-left font-mono text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
+              <span className="min-w-0 flex-1 overflow-hidden text-left text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
                 meetrao.com/adam
               </span>
             </div>
@@ -207,7 +207,7 @@ export function Hero() {
               <div className="flex min-w-0 flex-col gap-[15px] p-[24px]">
                 <div className="flex flex-col gap-[10px]">
                   <div className="flex items-center justify-between gap-[12px]">
-                    <span className="font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">
+                    <span className="text-[10px] tracking-[0.07em] text-ink-3 uppercase">
                       Select a date
                     </span>
                     <span className="text-[13px] font-semibold text-ink">September 2026</span>
@@ -223,7 +223,7 @@ export function Hero() {
 
                 <div className="flex flex-col gap-[10px] border-t border-line pt-[15px]">
                   <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
-                    <span className="font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">
+                    <span className="text-[10px] tracking-[0.07em] text-ink-3 uppercase">
                       Available times
                     </span>
                     <span className="text-[12.5px] text-ink-2">{demoDayLabel(day)}</span>

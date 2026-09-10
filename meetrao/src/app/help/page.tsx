@@ -272,7 +272,7 @@ export default async function HelpPage() {
             <div className="mb-[16px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
               {STEPS.map(([n, title, text]) => (
                 <div key={n} className="flex gap-[14px] bg-surface px-[15px] py-[13px]">
-                  <span className="inline-flex h-[24px] w-[24px] flex-none items-center justify-center rounded-full bg-accent-soft font-mono text-[11px] font-medium text-accent">
+                  <span className="inline-flex h-[24px] w-[24px] flex-none items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
                     {n}
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
@@ -427,7 +427,7 @@ export default async function HelpPage() {
                   <span className="min-w-[180px] flex-1 text-[13px] leading-[1.55] text-ink-2">{text}</span>
                   <span
                     className={cx(
-                      "inline-flex h-[20px] flex-none items-center rounded-[4px] border px-[8px] font-mono text-[10.5px] whitespace-nowrap",
+                      "inline-flex h-[20px] flex-none items-center rounded-[4px] border px-[8px] text-[10.5px] whitespace-nowrap",
                       def === "On"
                         ? "border-accent-line bg-accent-soft text-accent"
                         : "border-line bg-fill text-ink-3",

@@ -102,7 +102,7 @@ export function StepClaimLink({ initial }: { initial: string }) {
               ok ? "border-accent" : bad ? "border-red" : "border-line-strong",
             )}
           >
-            <span aria-hidden="true" className="flex-none pl-[12px] font-mono text-[13.5px] text-ink-3">
+            <span aria-hidden="true" className="flex-none pl-[12px] text-[13.5px] text-ink-3">
               meetrao.com/
             </span>
             <input
@@ -116,7 +116,7 @@ export function StepClaimLink({ initial }: { initial: string }) {
               autoComplete="off"
               aria-describedby="claim-status claim-rules"
               aria-invalid={bad}
-              className="h-full min-w-0 flex-1 border-0 bg-transparent py-0 pr-[12px] pl-[1px] font-mono text-[13.5px] font-medium text-ink outline-none"
+              className="h-full min-w-0 flex-1 border-0 bg-transparent py-0 pr-[12px] pl-[1px] text-[13.5px] font-medium text-ink outline-none"
             />
             {status === "checking" ? (
               <span
@@ -156,7 +156,7 @@ export function StepClaimLink({ initial }: { initial: string }) {
                   key={idea}
                   type="button"
                   onClick={() => run(idea)}
-                  className="inline-flex h-[31px] cursor-pointer items-center gap-[8px] rounded-[6px] border border-accent-line bg-accent-soft px-[11px] font-mono text-[12.5px] text-accent transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
+                  className="inline-flex h-[31px] cursor-pointer items-center gap-[8px] rounded-[6px] border border-accent-line bg-accent-soft px-[11px] text-[12.5px] text-accent transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
                 >
                   <Icon name="plus" size={9} />
                   {idea}

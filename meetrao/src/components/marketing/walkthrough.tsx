@@ -192,7 +192,7 @@ export function Walkthrough() {
                       {step.n}
                     </span>
                     <span aria-hidden="true" className="h-[1px] min-w-0 flex-1 bg-white/25" />
-                    <span className="flex-none font-mono text-[10px] tracking-[0.07em] text-[#7FD8C4] uppercase">
+                    <span className="flex-none text-[10px] tracking-[0.07em] text-[#7FD8C4] uppercase">
                       Step {i + 1} of {WALK.length}
                     </span>
                   </div>
@@ -319,7 +319,7 @@ export function Walkthrough() {
                             />
                             <div className="flex min-w-0 flex-col gap-[1px]">
                               <span className="text-[13px] font-semibold text-ink">Adam Voigt</span>
-                              <span className="font-mono text-[11px] text-ink-3">meetrao.com/adam</span>
+                              <span className="text-[11px] text-ink-3">meetrao.com/adam</span>
                             </div>
                             <span className="ml-auto inline-flex h-[24px] flex-none items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[9px] text-[11.5px] text-ink-2">
                               30 min · Google Meet
@@ -356,19 +356,14 @@ export function Walkthrough() {
                           </div>
 
                           {[
-                            ["Full name", "Priya Nair", false],
-                            ["Email address", "priya@nairstudio.com", true],
-                            ["Note (optional)", "Happy to share the brief beforehand.", false],
-                          ].map(([label, value, mono]) => (
-                            <div key={label as string} className="flex flex-col gap-[6px]">
-                              <span className="text-[12px] font-semibold text-ink">{label as string}</span>
-                              <div
-                                className={cx(
-                                  "rounded-[6px] border border-line-strong bg-surface px-[11px] py-[8px] text-[12.5px] text-ink",
-                                  mono && "font-mono",
-                                )}
-                              >
-                                {value as string}
+                            ["Full name", "Priya Nair"],
+                            ["Email address", "priya@nairstudio.com"],
+                            ["Note (optional)", "Happy to share the brief beforehand."],
+                          ].map(([label, value]) => (
+                            <div key={label} className="flex flex-col gap-[6px]">
+                              <span className="text-[12px] font-semibold text-ink">{label}</span>
+                              <div className="rounded-[6px] border border-line-strong bg-surface px-[11px] py-[8px] text-[12.5px] text-ink">
+                                {value}
                               </div>
                             </div>
                           ))}
@@ -408,7 +403,7 @@ export function Walkthrough() {
                               ["Host", "Adam Voigt", false],
                               ["When", `${demoDayLabel(day)} · ${slot || "10:00"} – 10:30 AM`, false],
                               ["Where", "meet.google.com/qvd-mspt-jrb", true],
-                            ].map(([k, v, mono], ri) => (
+                            ].map(([k, v, machine], ri) => (
                               <div
                                 key={k as string}
                                 className={cx(
@@ -420,7 +415,7 @@ export function Walkthrough() {
                                 <span
                                   className={cx(
                                     "min-w-[130px] flex-1 break-words text-ink",
-                                    mono ? "font-mono text-[12px]" : "text-[12.5px] font-medium",
+                                    machine ? "text-[12px]" : "text-[12.5px] font-medium",
                                   )}
                                 >
                                   {v as string}

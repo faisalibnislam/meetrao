@@ -10,11 +10,10 @@ import { useNow } from "@/lib/use-client-value";
    The server's `now` is rendered first and the browser's clock takes over on
    hydration, so the markup matches and nothing flashes.
 
-   Sans, not DM Mono. Mono earns its place on values you compare column-wise —
-   a booking reference, a link — and this line is neither; set in mono at 11.5px
-   with 0.04em tracking it read as a machine stamp under a serif greeting. The
-   tracking goes with it: mono's letter-spacing is wrong on a proportional
-   face. */
+   This line was the first thing moved off DM Mono, before the family was
+   dropped from the product entirely: at 11.5px with 0.04em tracking it read as
+   a machine stamp under a serif greeting. The tracking went with it — mono's
+   letter-spacing is wrong on a proportional face. */
 export function DashboardHeader({
   firstName,
   timeZone,

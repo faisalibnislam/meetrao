@@ -50,7 +50,7 @@ export function DemoMonthGrid({
       {DOW.map((label) => (
         <span
           key={label}
-          className="text-center font-mono text-[10px] tracking-[0.04em] text-ink-3 uppercase"
+          className="text-center text-[10px] tracking-[0.04em] text-ink-3 uppercase"
         >
           {label}
         </span>
@@ -135,7 +135,7 @@ export function BrowserFrame({
           <span className="h-[8px] w-[8px] rounded-full bg-line-strong" />
           <span className="h-[8px] w-[8px] rounded-full bg-line-strong" />
         </span>
-        <span className="min-w-0 flex-1 overflow-hidden font-mono text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
+        <span className="min-w-0 flex-1 overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
           {url}
         </span>
       </div>

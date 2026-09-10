@@ -125,8 +125,8 @@ export function DocHeader({
       </h1>
       <p className="mt-[14px] mb-0 text-[15px] leading-[1.65] text-pretty text-ink-2">{intro}</p>
       <div className="mt-[16px] mb-[26px] flex flex-wrap gap-x-[18px] gap-y-[6px] border-b border-line pb-[20px]">
-        <span className="font-mono text-[11.5px] text-ink-3">{meta[0]}</span>
-        <span className="font-mono text-[11.5px] text-ink-3">{meta[1]}</span>
+        <span className="text-[11.5px] text-ink-3">{meta[0]}</span>
+        <span className="text-[11.5px] text-ink-3">{meta[1]}</span>
       </div>
     </>
   );

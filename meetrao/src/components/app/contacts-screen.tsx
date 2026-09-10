@@ -276,7 +276,7 @@ export function ContactsScreen({ contacts }: { contacts: ContactView[] }) {
                       </span>
                     </Td>
                     <Td>
-                      <span className="font-mono text-[12px] text-ink-2">{c.email}</span>
+                      <span className="text-[12px] text-ink-2">{c.email}</span>
                     </Td>
                     <Td>
                       <span className="text-[13px] text-ink-2">{c.phone || "—"}</span>

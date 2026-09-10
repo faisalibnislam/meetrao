@@ -64,8 +64,8 @@ const STATUS_TOKENS = [
 ];
 
 const TYPE_SCALE: [string, string, string][] = [
-  ["10px / 0.07em", "text-[10px] tracking-[0.07em] uppercase font-mono", "EYEBROW, SMALL"],
-  ["10.5px / 0.08em", "text-[10.5px] tracking-[0.08em] uppercase font-mono", "EYEBROW, LARGE"],
+  ["10px / 0.07em", "text-[10px] tracking-[0.07em] uppercase", "EYEBROW, SMALL"],
+  ["10.5px / 0.08em", "text-[10.5px] tracking-[0.08em] uppercase", "EYEBROW, LARGE"],
   ["11.5px", "text-[11.5px]", "Metric note, sidebar email"],
   ["12px", "text-[12px]", "Table second line, crumbs"],
   ["12.5px", "text-[12.5px]", "Body small — the app's workhorse"],
@@ -172,7 +172,6 @@ export default async function PreviewPage() {
               <TokenValue name="--hero-shadow" sample="shadow" />
               <TokenValue name="--sans" sample="font" />
               <TokenValue name="--serif" sample="font" />
-              <TokenValue name="--mono" sample="font" />
             </Grid>
           </Bare>
         </Section>
@@ -181,12 +180,12 @@ export default async function PreviewPage() {
           <Card className="flex flex-col divide-y divide-line-soft">
             {TYPE_SCALE.map(([label, cls, sample]) => (
               <div key={label} className="flex flex-wrap items-baseline gap-x-[18px] gap-y-[4px] px-[14px] py-[11px]">
-                <code className="w-[120px] flex-none font-mono text-[11px] text-ink-3">{label}</code>
+                <code className="w-[120px] flex-none text-[11px] text-ink-3">{label}</code>
                 <span className={`min-w-0 flex-1 text-ink ${cls}`}>{sample}</span>
               </div>
             ))}
             <div className="flex flex-wrap items-baseline gap-x-[18px] gap-y-[4px] px-[14px] py-[11px]">
-              <code className="w-[120px] flex-none font-mono text-[11px] text-ink-3">serif, display</code>
+              <code className="w-[120px] flex-none text-[11px] text-ink-3">serif, display</code>
               <span className="min-w-0 flex-1 font-serif text-[38px] leading-[1.08] text-ink">
                 Good morning, Faisal.
               </span>
@@ -204,7 +203,7 @@ export default async function PreviewPage() {
               {ICON_NAMES.map((name) => (
                 <div key={name} className="flex flex-col items-center gap-[7px] bg-surface px-[6px] py-[13px]">
                   <Icon name={name} size={18} weight={FILLED_ICONS.includes(name) ? "solid" : "light"} className="text-ink" />
-                  <code className="w-full text-center font-mono text-[9.5px] leading-[1.3] break-all text-ink-3">
+                  <code className="w-full text-center text-[9.5px] leading-[1.3] break-all text-ink-3">
                     {name}
                   </code>
                 </div>
@@ -245,7 +244,7 @@ export default async function PreviewPage() {
                 {BUTTON_SIZES.map((size) => (
                   <Tr key={size}>
                     <Td>
-                      <code className="font-mono text-[11.5px] text-ink-3">{size}</code>
+                      <code className="text-[11.5px] text-ink-3">{size}</code>
                     </Td>
                     {BUTTON_VARIANTS.map((variant) => (
                       <Td key={variant}>

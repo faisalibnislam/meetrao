@@ -198,7 +198,7 @@ function OverlayDemos() {
         <div className="flex flex-col gap-[9px]">
           <DetailRow label="Guest" value="Priya Raman" />
           <DetailRow label="When" value="Thursday, September 10 · 10:00 – 10:30 AM" />
-          <DetailRow label="Reference" value="bkm-4f2a91" mono />
+          <DetailRow label="Reference" value="bkm-4f2a91" machine />
         </div>
       </Modal>
     </div>

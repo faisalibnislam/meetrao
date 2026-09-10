@@ -1,9 +1,9 @@
 import type { ComponentProps, ReactNode } from "react";
 import { cx } from "@/lib/cx";
 
-/* Column header: --fill row, DM Mono uppercase 10px labels. */
+/* Column header: --fill row, uppercase 10px labels. */
 const TH =
-  "border-b border-line bg-fill px-[14px] py-[9px] font-mono text-[10px] font-normal tracking-[0.07em] " +
+  "border-b border-line bg-fill px-[14px] py-[9px] text-[10px] font-normal tracking-[0.07em] " +
   "whitespace-nowrap text-ink-2 uppercase";
 
 export function Th({

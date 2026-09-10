@@ -59,7 +59,7 @@ export function CostCalculator() {
     <div className="box-border flex flex-col gap-[16px] self-start rounded-[14px] border border-line bg-surface p-[24px] shadow-[var(--pop)]">
       <div className="flex flex-wrap items-baseline justify-between gap-[10px]">
         <span className="text-[15px] font-semibold text-ink">What the back-and-forth costs you</span>
-        <span className="font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">Example only</span>
+        <span className="text-[10px] tracking-[0.07em] text-ink-3 uppercase">Example only</span>
       </div>
 
       {sliders.map((slider) => (
@@ -68,7 +68,7 @@ export function CostCalculator() {
             <label htmlFor={slider.id} className="cursor-pointer text-[13.5px] font-medium text-ink-2">
               {slider.label}
             </label>
-            <span className="font-mono text-[16px] font-medium text-accent">{slider.display}</span>
+            <span className="text-[16px] font-medium text-accent">{slider.display}</span>
           </div>
           <input
             id={slider.id}
@@ -81,8 +81,8 @@ export function CostCalculator() {
             onChange={(e) => slider.set(Number(e.target.value))}
           />
           <div className="flex justify-between gap-[10px]">
-            <span className="font-mono text-[10.5px] text-ink-3">{slider.minLabel}</span>
-            <span className="font-mono text-[10.5px] text-ink-3">{slider.maxLabel}</span>
+            <span className="text-[10.5px] text-ink-3">{slider.minLabel}</span>
+            <span className="text-[10.5px] text-ink-3">{slider.maxLabel}</span>
           </div>
         </div>
       ))}

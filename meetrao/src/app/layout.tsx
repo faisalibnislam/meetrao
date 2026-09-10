@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Mono, Instrument_Sans, Instrument_Serif } from "next/font/google";
+import { Instrument_Sans, Instrument_Serif } from "next/font/google";
 import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
-/* Three families, strictly divided by role.
-   Instrument Sans — all product UI.
-   Instrument Serif — display moments only (never a section heading, never body).
-   DM Mono — machine strings and micro-labels. */
+/* Two families, strictly divided by role.
+   Instrument Sans — all product UI, including the machine strings and
+     micro-labels. There is no monospace family: see globals.css § --font-mono.
+   Instrument Serif — display moments only (never a section heading, never body). */
 const sans = Instrument_Sans({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -18,13 +18,6 @@ const serif = Instrument_Serif({
   subsets: ["latin"],
   weight: "400",
   variable: "--font-instrument-serif",
-  display: "swap",
-});
-
-const mono = DM_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500"],
-  variable: "--font-dm-mono",
   display: "swap",
 });
 
@@ -44,7 +37,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${sans.variable} ${serif.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
         <ToastProvider>{children}</ToastProvider>
       </body>

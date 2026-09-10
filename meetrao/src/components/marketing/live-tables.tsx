@@ -45,7 +45,7 @@ const PAST = [
 ] as const;
 
 
-const TH = "font-mono text-[10px] tracking-[0.07em] uppercase whitespace-nowrap text-ink-2";
+const TH = "text-[10px] tracking-[0.07em] uppercase whitespace-nowrap text-ink-2";
 
 export function LiveMeetingsTable() {
   const phone = useMediaQuery("(max-width: 640px)");
@@ -114,7 +114,7 @@ export function LiveMeetingsTable() {
                         type="button"
                         title="Copy this link"
                         onClick={() => flash(id, `Copied ${link}`)}
-                        className="inline-flex h-[27px] max-w-full cursor-pointer items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[9px] font-mono text-[11.5px] text-ink-2 hover:bg-fill-2 hover:text-ink"
+                        className="inline-flex h-[27px] max-w-full cursor-pointer items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[9px] text-[11.5px] text-ink-2 hover:bg-fill-2 hover:text-ink"
                       >
                         <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{link}</span>
                         <Icon
@@ -182,7 +182,7 @@ export function LiveMeetingsTable() {
                   />
                 </div>
                 <div className="flex items-center gap-[8px]">
-                  <span className="flex-none font-mono text-[10px] tracking-[0.07em] text-ink-3 uppercase">
+                  <span className="flex-none text-[10px] tracking-[0.07em] text-ink-3 uppercase">
                     Duration
                   </span>
                   <span className="text-[13px] text-ink">{duration} min</span>
@@ -190,7 +190,7 @@ export function LiveMeetingsTable() {
                 <button
                   type="button"
                   onClick={() => flash(id, `Copied ${link}`)}
-                  className="box-border flex min-h-[44px] w-full cursor-pointer items-center gap-[9px] rounded-[8px] border border-line bg-fill px-[12px] text-left font-mono text-[12px] text-ink-2 hover:bg-fill-2 hover:text-ink"
+                  className="box-border flex min-h-[44px] w-full cursor-pointer items-center gap-[9px] rounded-[8px] border border-line bg-fill px-[12px] text-left text-[12px] text-ink-2 hover:bg-fill-2 hover:text-ink"
                 >
                   <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{link}</span>
                   <Icon
