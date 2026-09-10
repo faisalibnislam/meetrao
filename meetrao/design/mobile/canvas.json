@@ -1,0 +1,142 @@
+{
+ "artboards": [
+  {
+   "file": "Main.dc.html",
+   "title": "Dashboard",
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 1600,
+   "page": "app"
+  },
+  {
+   "file": "Bookings.dc.html",
+   "title": "Bookings",
+   "x": 480,
+   "y": 0,
+   "w": 390,
+   "h": 1260,
+   "page": "app"
+  },
+  {
+   "file": "Meetings.dc.html",
+   "title": "Meetings",
+   "x": 960,
+   "y": 0,
+   "w": 390,
+   "h": 1060,
+   "page": "app"
+  },
+  {
+   "file": "Contacts.dc.html",
+   "title": "Contacts",
+   "x": 1440,
+   "y": 0,
+   "w": 390,
+   "h": 1220,
+   "page": "app"
+  },
+  {
+   "file": "Notifications.dc.html",
+   "title": "Notifications",
+   "x": 1920,
+   "y": 0,
+   "w": 390,
+   "h": 980,
+   "page": "app"
+  },
+  {
+   "file": "Availability.dc.html",
+   "title": "Availability",
+   "x": 2400,
+   "y": 0,
+   "w": 390,
+   "h": 1610,
+   "page": "app"
+  },
+  {
+   "file": "Settings.dc.html",
+   "title": "Settings · Notifications",
+   "x": 2880,
+   "y": 0,
+   "w": 390,
+   "h": 980,
+   "page": "app"
+  },
+  {
+   "file": "Login.dc.html",
+   "title": "Log in",
+   "x": 0,
+   "y": 0,
+   "w": 390,
+   "h": 980,
+   "page": "public"
+  },
+  {
+   "file": "BookingPage.dc.html",
+   "title": "Public booking page",
+   "x": 480,
+   "y": 0,
+   "w": 390,
+   "h": 1120,
+   "page": "public"
+  },
+  {
+   "file": "Landing.dc.html",
+   "title": "Landing page",
+   "x": 960,
+   "y": 0,
+   "w": 390,
+   "h": 13300,
+   "page": "public"
+  }
+ ],
+ "pages": [
+  {
+   "id": "app",
+   "name": "Signed in"
+  },
+  {
+   "id": "public",
+   "name": "Public"
+  }
+ ],
+ "annotations": [
+  {
+   "id": "what-this-is",
+   "page": "app",
+   "x": 0,
+   "y": -240,
+   "w": 470,
+   "text": "The real mobile app at 390px — not a redrawing.\nEach frame is the page's own rendered DOM and its own compiled stylesheet, lifted out of a live render, so what you see is what the browser painted.\n\nComment anywhere and tell me what to change; I'll make it in the code and re-capture."
+  },
+  {
+   "id": "touch-note",
+   "page": "app",
+   "x": 500,
+   "y": -240,
+   "w": 430,
+   "text": "Touch sizing is ON in these frames.\nThe canvas runs in a desktop browser, where the app's `pointer: coarse` rules would not match — so the capture forces them on. Controls here are the 44px versions a phone actually gets."
+  },
+  {
+   "id": "data-note",
+   "page": "app",
+   "x": 960,
+   "y": -240,
+   "w": 430,
+   "text": "The content is stand-in data, chosen to stress the layout: deliberately long names and 40-character email addresses. Comment on the layout, not the names."
+  },
+  {
+   "id": "public-note",
+   "page": "public",
+   "x": 0,
+   "y": -190,
+   "w": 470,
+   "text": "Signed out, as a visitor sees them. The landing page is the full 13,000px scroll — pan down it or open it expanded."
+  }
+ ],
+ "launch": {
+  "view": "canvas",
+  "page": "app"
+ }
+}
