@@ -54,6 +54,7 @@ export async function AppShell({
     { href: "/dashboard", label: "Dashboard", icon: "house" },
     { href: "/bookings", label: "Bookings", icon: "calendar", count: count || null },
     { href: "/meetings", label: "Meetings", icon: "list" },
+    { href: "/contacts", label: "Contacts", icon: "users" },
     { href: "/availability", label: "Availability", icon: "clock" },
   ];
 

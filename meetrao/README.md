@@ -27,7 +27,7 @@ npm run dev
 | `src/app/(marketing)/` | Landing page, Terms, Privacy, Help, Support |
 | `src/app/(auth)/` | Log in, sign up, forgot, reset, the verification gate, suspended |
 | `src/app/onboarding/[step]/` | The five setup steps |
-| `src/app/(app)/` | Dashboard, Bookings, Meetings, Availability, Settings |
+| `src/app/(app)/` | Dashboard, Bookings, Meetings, Contacts, Availability, Settings |
 | `src/app/(admin)/` | The admin console |
 | `src/app/(public)/` | The guest path: booking page, confirmation, cancellation, `.ics` |
 | `src/app/api/` | The slot query, booking creation, Google OAuth |
@@ -151,6 +151,34 @@ that has stayed closed on purpose.
 Cancelling emails **every** invitee, not just the guest of record. A meeting for
 three people that tells one of them it is cancelled leaves two sitting in an
 empty Meet.
+
+**Contacts fill themselves in, from the database.** A trigger on `bookings` and
+another on `booking_invitees` mint a contact for every guest and every invitee.
+A trigger rather than application code because bookings arrive through three
+doors — `create_booking` called by `anon`, the host's scheduling action on the
+service role, and the invitees table — and app code would have to remember all
+three. A trigger cannot forget one.
+
+A name is only ever filled in, never overwritten: a host who corrected
+`ada@example.com` to "Ada Lovelace" should not have it reverted by the next
+booking where the guest typed "ada". Email is the identity, lowercased, unique
+per host.
+
+**The upsert needs a plain unique constraint, not the functional index.** 0012
+enforced uniqueness with `unique index on (user_id, lower(email))`, which is
+correct but cannot be named as an `ON CONFLICT` target — Postgres answers 42P10.
+Adding a contact by hand and importing a CSV both go through that upsert, so
+both would have failed on the first duplicate. 0013 moves the invariant onto the
+column (`check (email = lower(email))`) so a plain `unique (user_id, email)` is
+exactly as strong, and can be named. Found by testing the real statement against
+the live database rather than by reading it.
+
+**CSV is parsed properly, not split on commas.** `src/lib/csv.ts` handles quoted
+fields, embedded commas and newlines, doubled quotes and Excel's BOM, because
+those are what a real address book contains — a company called "Acme, Inc.", a
+note with a line break. `line.split(",")` mangles all three silently, and an
+importer that quietly corrupts data is worse than one that refuses. Thirteen
+tests, including a round-trip through the serialiser.
 
 ## Supabase Auth settings that the app cannot enforce
 
