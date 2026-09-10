@@ -31,12 +31,24 @@ export type MeetingType = {
   booking_window_days: number;
   location: string;
   is_active: boolean;
+  /** null = the host's default schedule. See migration 0010. */
+  schedule_id: string | null;
+  created_at: string;
+};
+
+/** A named set of weekly hours. A host has at least one, exactly one default. */
+export type AvailabilitySchedule = {
+  id: string;
+  user_id: string;
+  name: string;
+  is_default: boolean;
   created_at: string;
 };
 
 export type AvailabilityRule = {
   id: string;
   user_id: string;
+  schedule_id: string;
   weekday: number;
   start_minute: number;
   end_minute: number;

@@ -5,9 +5,25 @@ import { requireSession } from "@/lib/data/session";
 import { supabaseServer } from "@/lib/supabase/server";
 import { TIMEZONES } from "@/lib/timezones";
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Availability, per named schedule.
+
+   A host has one or more schedules — "Working hours", "Client calls", whatever
+   they name them — and each meeting type points at one, or at none, which means
+   the default. Migration 0010 has the shape and the reasoning.
+
+   Two invariants live here rather than in the UI, because the UI is not the
+   boundary: a host always has at least one schedule, and exactly one of them is
+   the default. The partial unique index in 0010 enforces the second; these
+   actions are what keep it from ever being violated in the first place.
+   ───────────────────────────────────────────────────────────────────────────── */
+
 export type SaveResult = { error?: string };
+export type ScheduleResult = { error?: string; id?: string };
 
 type Rule = { weekday: number; start_minute: number; end_minute: number };
+
+const MAX_NAME = 60;
 
 function valid(rules: Rule[]): string | null {
   for (const r of rules) {
@@ -26,8 +42,25 @@ function valid(rules: Rule[]): string | null {
   return null;
 }
 
-/** The whole week is replaced in one transaction — a partial save is not a state. */
+function cleanName(raw: string): string {
+  return raw.trim().replace(/\s+/g, " ").slice(0, MAX_NAME);
+}
+
+/** Postgres 23505 is a unique violation; here it can only be the name index. */
+function nameTaken(message: string): boolean {
+  return message.includes("availability_schedules_name_unique") || message.includes("duplicate key");
+}
+
+/**
+ * The whole week for ONE schedule is replaced in one pass — a partial save is
+ * not a state a host should ever be able to see.
+ *
+ * The timezone still belongs to the profile rather than to a schedule. A host
+ * has one timezone; giving each schedule its own would let two schedules
+ * disagree about when 09:00 is, which is a bug, not a feature.
+ */
 export async function saveAvailability(input: {
+  scheduleId: string;
   timezone: string;
   rules: Rule[];
 }): Promise<SaveResult> {
@@ -42,6 +75,16 @@ export async function saveAvailability(input: {
 
   const supabase = await supabaseServer();
 
+  // RLS already scopes this to the session, but the read also proves the
+  // schedule exists before anything is deleted.
+  const { data: schedule } = await supabase
+    .from("availability_schedules")
+    .select("id")
+    .eq("id", input.scheduleId)
+    .eq("user_id", session.userId)
+    .maybeSingle();
+  if (!schedule) return { error: "That schedule is gone. Reload the page." };
+
   const { error: tzError } = await supabase
     .from("profiles")
     // Chosen, not detected — registration must never overwrite it.
@@ -52,17 +95,138 @@ export async function saveAvailability(input: {
   const { error: clearError } = await supabase
     .from("availability_rules")
     .delete()
-    .eq("user_id", session.userId);
+    .eq("schedule_id", input.scheduleId);
   if (clearError) return { error: clearError.message };
 
   if (input.rules.length) {
     const { error } = await supabase
       .from("availability_rules")
-      .insert(input.rules.map((r) => ({ ...r, user_id: session.userId })));
+      .insert(input.rules.map((r) => ({ ...r, user_id: session.userId, schedule_id: input.scheduleId })));
     if (error) return { error: error.message };
   }
 
   revalidatePath("/availability");
   revalidatePath("/dashboard");
+  return {};
+}
+
+/** A new schedule starts Monday–Friday 09:00–17:00 rather than empty. */
+export async function createSchedule(input: { name: string; copyFrom?: string }): Promise<ScheduleResult> {
+  const session = await requireSession();
+  const name = cleanName(input.name);
+  if (!name) return { error: "Give the schedule a name." };
+
+  const supabase = await supabaseServer();
+
+  const { data: created, error } = await supabase
+    .from("availability_schedules")
+    .insert({ user_id: session.userId, name, is_default: false })
+    .select("id")
+    .single();
+
+  if (error) {
+    return { error: nameTaken(error.message) ? "You already have a schedule with that name." : error.message };
+  }
+
+  // Copy the source schedule's hours when duplicating; otherwise seed the
+  // ordinary working week. Either way the schedule is never born empty.
+  const source = input.copyFrom
+    ? (await supabase
+        .from("availability_rules")
+        .select("weekday, start_minute, end_minute")
+        .eq("schedule_id", input.copyFrom)).data ?? []
+    : [1, 2, 3, 4, 5].map((weekday) => ({ weekday, start_minute: 540, end_minute: 1020 }));
+
+  if (source.length) {
+    await supabase
+      .from("availability_rules")
+      .insert(source.map((r) => ({ ...r, user_id: session.userId, schedule_id: created.id })));
+  }
+
+  revalidatePath("/availability");
+  return { id: created.id };
+}
+
+export async function renameSchedule(input: { id: string; name: string }): Promise<SaveResult> {
+  const session = await requireSession();
+  const name = cleanName(input.name);
+  if (!name) return { error: "Give the schedule a name." };
+
+  const supabase = await supabaseServer();
+  const { error } = await supabase
+    .from("availability_schedules")
+    .update({ name })
+    .eq("id", input.id)
+    .eq("user_id", session.userId);
+
+  if (error) {
+    return { error: nameTaken(error.message) ? "You already have a schedule with that name." : error.message };
+  }
+
+  revalidatePath("/availability");
+  revalidatePath("/meetings");
+  return {};
+}
+
+/**
+ * Deleting is the one destructive action here, so it refuses two cases outright:
+ * the last remaining schedule, and the default. A host with no schedule has no
+ * bookable hours at all, and the meeting types that pointed at the deleted one
+ * fall back to the default — which has to still exist for that to mean
+ * anything. The foreign key does the reassignment (`on delete set null`), the
+ * UI says how many meetings will move before asking.
+ */
+export async function deleteSchedule(input: { id: string }): Promise<SaveResult> {
+  const session = await requireSession();
+  const supabase = await supabaseServer();
+
+  const { data: all } = await supabase
+    .from("availability_schedules")
+    .select("id, is_default")
+    .eq("user_id", session.userId);
+
+  const schedules = all ?? [];
+  const target = schedules.find((s) => s.id === input.id);
+  if (!target) return { error: "That schedule is already gone." };
+  if (schedules.length <= 1) return { error: "This is your only schedule — keep at least one." };
+  if (target.is_default) return { error: "Make another schedule the default first." };
+
+  const { error } = await supabase
+    .from("availability_schedules")
+    .delete()
+    .eq("id", input.id)
+    .eq("user_id", session.userId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/availability");
+  revalidatePath("/meetings");
+  return {};
+}
+
+/**
+ * Exactly one default. The index in 0010 makes two impossible, so the old one
+ * is cleared before the new one is set rather than after — the other order
+ * fails on the constraint.
+ */
+export async function setDefaultSchedule(input: { id: string }): Promise<SaveResult> {
+  const session = await requireSession();
+  const supabase = await supabaseServer();
+
+  const { error: clearError } = await supabase
+    .from("availability_schedules")
+    .update({ is_default: false })
+    .eq("user_id", session.userId)
+    .eq("is_default", true);
+  if (clearError) return { error: clearError.message };
+
+  const { error } = await supabase
+    .from("availability_schedules")
+    .update({ is_default: true })
+    .eq("id", input.id)
+    .eq("user_id", session.userId);
+  if (error) return { error: error.message };
+
+  revalidatePath("/availability");
+  revalidatePath("/meetings");
   return {};
 }

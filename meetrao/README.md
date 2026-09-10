@@ -108,6 +108,28 @@ themselves, so signing in from a laptop abroad never moves someone who chose.
 nothing recorded before, so `booking_page_views` and `avg_reply_minutes` were added.
 With nothing measured yet the card shows "—" rather than an invented figure.
 
+**Availability is per named schedule.** A host keeps as many weekly patterns as
+they need and each meeting type points at one — migration 0010. `schedule_id`
+on `meeting_types` is NULL for "follow my default", which is what makes the
+change backward compatible: every existing meeting kept behaving exactly as it
+did, and the backfill gave every profile a schedule called "Working hours"
+holding the rules it already had.
+
+Two invariants: a host always has at least one schedule, and exactly one is the
+default. The partial unique index enforces the second; `deleteSchedule` refuses
+the last schedule and refuses the default, which is what keeps the first true.
+Deleting a schedule moves its meetings to the default rather than orphaning
+them — that is `on delete set null` plus NULL-means-default, and the dialog says
+how many will move before it asks.
+
+**The booking door reads the meeting's schedule, not the host's rules.** This is
+the same hole 0005 closed, reopened by having more than one set of hours: a host
+with a weekend schedule on one meeting would otherwise accept weekend bookings
+on all of them. Verified against the live database inside a rolled-back
+transaction — a Wednesday slot that the host's *default* schedule allows is
+refused for a meeting pinned to a weekend-only schedule, and the Saturday slot
+is accepted.
+
 ## Supabase Auth settings that the app cannot enforce
 
 **Confirm email must be ON.** Authentication → Providers → Email → *Confirm

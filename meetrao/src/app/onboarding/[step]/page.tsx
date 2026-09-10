@@ -97,13 +97,27 @@ async function stepContent(step: number, session: Session, supabase: Client, cal
     // the service role, and never fatal — see the helper.
     await ensureDefaultAvailability(session.userId);
 
+    // Onboarding edits the default schedule. A new host has exactly one, and
+    // naming schedules is not a step-4 concern — the Availability screen is
+    // where a host adds more.
+    const { data: defaultSchedule } = await supabase
+      .from("availability_schedules")
+      .select("id")
+      .eq("user_id", session.userId)
+      .order("is_default", { ascending: false })
+      .order("created_at")
+      .limit(1)
+      .maybeSingle();
+
     const { data } = await supabase
       .from("availability_rules")
       .select("weekday, start_minute, end_minute")
-      .eq("user_id", session.userId);
+      .eq("user_id", session.userId)
+      .eq("schedule_id", defaultSchedule?.id ?? "");
 
     return (
       <StepAvailability
+        scheduleId={defaultSchedule?.id ?? ""}
         initialDays={rulesToDays(data ?? [])}
         initialTimezone={session.profile.timezone}
         timezones={timezoneOptions()}

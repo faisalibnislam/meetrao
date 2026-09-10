@@ -201,11 +201,14 @@ export function StepAvailability({
   initialDays,
   initialTimezone,
   timezones,
+  scheduleId,
   detected,
 }: {
   initialDays: Day[];
   initialTimezone: string;
   timezones: TimezoneOption[];
+  /** The default schedule. Onboarding never shows the schedule picker. */
+  scheduleId: string;
   detected: boolean;
 }) {
   const router = useRouter();
@@ -225,7 +228,7 @@ export function StepAvailability({
           busy={saving}
           onClick={() =>
             startSave(async () => {
-              const result = await saveAvailability({ timezone, rules: daysToRules(days) });
+              const result = await saveAvailability({ scheduleId, timezone, rules: daysToRules(days) });
               if (result.error) {
                 toast({ tone: "bad", title: "Could not save", text: result.error });
                 return;

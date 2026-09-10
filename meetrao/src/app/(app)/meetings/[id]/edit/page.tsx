@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { AppScreen } from "@/components/app/app-screen";
 import { MeetingForm } from "@/components/app/meeting-form";
 import { requireOnboardedSession } from "@/lib/data/session";
+import { scheduleOptions } from "@/lib/data/schedules";
 import { supabaseServer } from "@/lib/supabase/server";
 import type { MeetingType } from "@/lib/types";
 
@@ -26,6 +27,7 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
   return (
     <AppScreen title="Edit meeting" crumb={{ label: "Meetings", href: "/meetings" }} crumbCurrent="Edit">
       <MeetingForm
+        schedules={await scheduleOptions(profile.id)}
         initial={{
           id: meeting.id,
           name: meeting.name,
@@ -35,6 +37,7 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
           notice: meeting.minimum_notice_minutes,
           window: meeting.booking_window_days,
           active: meeting.is_active,
+          scheduleId: meeting.schedule_id,
         }}
       />
     </AppScreen>

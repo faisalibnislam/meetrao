@@ -13,6 +13,8 @@ export type MeetingInput = {
   description: string;
   duration: number;
   buffer: number;
+  /** null = the host's default schedule. */
+  scheduleId?: string | null;
   notice: number;
   window: number;
   active: boolean;
@@ -45,6 +47,7 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
     description: input.description.trim(),
     duration_minutes: input.duration,
     buffer_minutes: input.buffer,
+    schedule_id: input.scheduleId ?? null,
     minimum_notice_minutes: input.notice,
     booking_window_days: input.window,
     is_active: input.active,

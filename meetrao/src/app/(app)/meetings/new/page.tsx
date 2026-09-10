@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { AppScreen } from "@/components/app/app-screen";
 import { MeetingForm } from "@/components/app/meeting-form";
 import { requireOnboardedSession } from "@/lib/data/session";
+import { scheduleOptions } from "@/lib/data/schedules";
 
 export const metadata: Metadata = { title: "New meeting" };
 
@@ -11,6 +12,7 @@ export default async function NewMeetingPage() {
   return (
     <AppScreen title="New meeting" crumb={{ label: "Meetings", href: "/meetings" }} crumbCurrent="New">
       <MeetingForm
+        schedules={await scheduleOptions(profile.id)}
         initial={{
           name: "",
           description: "",
@@ -20,6 +22,7 @@ export default async function NewMeetingPage() {
           notice: profile.default_notice_minutes,
           window: 30,
           active: true,
+          scheduleId: null,
         }}
       />
     </AppScreen>

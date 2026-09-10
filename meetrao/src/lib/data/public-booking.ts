@@ -71,8 +71,17 @@ export async function getPublicMeetings(username: string): Promise<PublicMeeting
   }));
 }
 
-export async function getPublicAvailability(hostId: string): Promise<AvailabilityRule[]> {
-  const { data } = await supabaseAdmin().rpc("get_public_availability", { p_user_id: hostId });
+/**
+ * The hours behind ONE meeting.
+ *
+ * Not the host's — a host can have several named schedules and each meeting
+ * points at one, so asking by host would offer every window the host has ever
+ * opened. `get_meeting_availability` resolves the meeting's own schedule, or
+ * the host's default when it has none. Only the hours come back: a schedule's
+ * name is the host's private note to themselves.
+ */
+export async function getMeetingAvailability(meetingId: string): Promise<AvailabilityRule[]> {
+  const { data } = await supabaseAdmin().rpc("get_meeting_availability", { p_meeting_id: meetingId });
 
   return ((data ?? []) as { weekday: number; start_minute: number; end_minute: number }[]).map((r) => ({
     weekday: r.weekday,

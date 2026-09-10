@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { isSlotBookable } from "@/lib/booking/slots";
 import { formatDuration, formatLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
-import { getBusy, getPublicAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
 import { CalendarError, createBookingEvent } from "@/lib/google/calendar";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
   const meeting = (await getPublicMeetings(input.username)).find((m) => m.slug === input.slug);
   if (!meeting) return NextResponse.json({ error: "Unknown meeting." }, { status: 404 });
 
-  const availability = await getPublicAvailability(host.id);
+  const availability = await getMeetingAvailability(meeting.id);
   const { busy } = await getBusy(host.id, new Date(start.getTime() - DAY), new Date(start.getTime() + DAY));
 
   const guestTimezone = input.guestTimezone || host.timezone;

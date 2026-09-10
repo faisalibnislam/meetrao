@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { bookableDatesInMonth, computeSlots, dateKey, type PlainDate } from "@/lib/booking/slots";
-import { getBusy, getPublicAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 
 /* The slot query the booking page calls. Public, because the guest has no
    session — and read-only, so it exposes availability and nothing else about
@@ -29,7 +29,8 @@ export async function GET(request: NextRequest) {
   const meeting = (await getPublicMeetings(username)).find((m) => m.slug === slug);
   if (!meeting) return NextResponse.json({ error: "Unknown meeting." }, { status: 404 });
 
-  const availability = await getPublicAvailability(host.id);
+  // Per meeting, not per host: two meetings can sit on different schedules.
+  const availability = await getMeetingAvailability(meeting.id);
 
   // A month, with a day either side so a guest-local day that straddles two
   // host-local days is still covered.

@@ -6,7 +6,7 @@ import { Logo } from "@/components/ui/logo";
 import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import {
   getBusy,
-  getPublicAvailability,
+  getMeetingAvailability,
   getPublicHost,
   getPublicMeetings,
 } from "@/lib/data/public-booking";
@@ -45,7 +45,7 @@ export default async function BookingPage({
   const meeting = (await getPublicMeetings(username)).find((m) => m.slug === slug);
   if (!meeting) notFound();
 
-  const availability = await getPublicAvailability(host.id);
+  const availability = await getMeetingAvailability(meeting.id);
 
   // The first paint is rendered in the host's zone, because the server cannot
   // know the guest's. The client corrects it on mount.

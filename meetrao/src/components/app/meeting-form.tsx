@@ -34,7 +34,16 @@ const WINDOWS = [
   { value: "60", label: "60 days ahead" },
 ];
 
-export function MeetingForm({ initial }: { initial: MeetingInput }) {
+/** The host's named schedules, plus the "Default" entry that means null. */
+export type ScheduleOption = { value: string; label: string };
+
+export function MeetingForm({
+  initial,
+  schedules = [],
+}: {
+  initial: MeetingInput;
+  schedules?: ScheduleOption[];
+}) {
   const router = useRouter();
   const toast = useToast();
   const [form, setForm] = useState(initial);
@@ -127,6 +136,16 @@ export function MeetingForm({ initial }: { initial: MeetingInput }) {
             />
           </div>
           <div className="flex flex-col gap-[6px]">
+            <span className="text-[12.5px] font-semibold text-ink">Availability</span>
+            <MenuSelect
+              aria-label="Availability schedule"
+              options={schedules}
+              value={form.scheduleId ?? ""}
+              onChange={(v) => set("scheduleId", v || null)}
+            />
+          </div>
+
+          <div className="flex min-w-[190px] flex-1 flex-col gap-[6px]">
             <span className="text-[12.5px] font-semibold text-ink">Booking window</span>
             <MenuSelect
               aria-label="Booking window"
