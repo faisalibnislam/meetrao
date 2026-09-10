@@ -5,7 +5,7 @@ const b = await chromium.launch({ env: clean, args: ["--no-proxy-server"] });
 const p = await b.newPage({ viewport: { width: 1440, height: 1000 } });
 await p.goto("file:///home/claude/repo/meetrao/design/landing/Main.measure.html", { waitUntil: "load" });
 await p.waitForTimeout(1500);
-const bands = [["top", 0], ["mid", 2100], ["low", 4300], ["end", 5750]];
+const bands = [["top", 0], ["foot", 6650]];
 for (const [name, y] of bands) {
   await p.evaluate((y) => window.scrollTo(0, y), y);
   await p.waitForTimeout(250);

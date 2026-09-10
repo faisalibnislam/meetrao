@@ -43,5 +43,20 @@ the FAQ accordion (`faq.tsx`, opens on "what"). Everything else is painted.
 
 Two knowing departures, both because an artboard cannot be in two states at
 once: the walkthrough renders at step 01 rather than auto-advancing through
-four, and the use-case photographs are marked placeholders rather than the real
-images from `public/use-cases/`.
+four, and the use-cases carousel rests on its first item (freelancers featured,
+the next three as strips) rather than cycling all six.
+
+Photographs are marked frames, not stock images: the real page reads
+`public/use-cases/<id>.jpg` and `public/people/*.webp` off disk, and a
+substituted image would be a picture of somebody the product never chose.
+
+## A warning, learned the hard way
+
+The first version of this canvas invented the Use cases section, both live
+tables, the walkthrough's weekend rows and the footer's bottom bar, because
+those components were not read before drawing them — `use-cases.tsx` and
+`live-tables.tsx` were skipped entirely. Everything looked plausible and none
+of it was real.
+
+If you extend this: open the component first. A rebuild that guesses is worse
+than no rebuild, because it reads as a decision somebody made.

@@ -10,6 +10,7 @@ element can be selected and restyled on the canvas.
 """
 
 import io
+import json
 
 # ── Tokens, verbatim from globals.css ────────────────────────────────────────
 GROUND, SURFACE, FILL, FILL2 = "#e7e4dc", "#ffffff", "#f4f3ee", "#eae8e1"
@@ -46,9 +47,41 @@ ICONS = {
     "clock": "M12 3.5a8.5 8.5 0 1 0 0 17 8.5 8.5 0 0 0 0-17M12 6.8V12l3.9 2.4",
     "arrow-right": "M4 12h15.4M13.4 6l6 6-6 6",
     "plus": "M12 4.6v14.8M4.6 12h14.8",
+    "lightbulb": "M9.2 18.4h5.6M9.8 21h4.4M12 3.4a6 6 0 0 0-3.6 10.8v2.2h7.2v-2.2A6 6 0 0 0 12 3.4",
+    "users": "M9.4 4.6a3.4 3.4 0 1 0 0 6.8 3.4 3.4 0 0 0 0-6.8M2.8 19.4v-1.2c0-2 3-3.7 6.6-3.7s6.6 1.7 6.6 3.7v1.2"
+             "M16.4 5.4a3 3 0 0 1 0 6M18.4 14.6c1.7.5 2.8 1.6 2.8 2.9v1.2",
+    "chart-line": "M3.6 3.6v16.8h16.8M7 16.4l3.8-4.6 3.2 2.6 4.6-6",
+    "graduation-cap": "M2.4 8.8 12 4.2l9.6 4.6-9.6 4.6zM6.6 11v5.2c0 1.7 2.4 2.8 5.4 2.8s5.4-1.1 5.4-2.8V11",
+    "address-card": "M2.6 5h18.8v14H2.6zM8.2 8.6a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4"
+                    "M4.8 16.4c0-1.4 1.6-2.4 3.4-2.4s3.4 1 3.4 2.4M14.6 9.6h4.4M14.6 13.4h4.4",
+    "chevron-left": "M15 5.6 8.4 12l6.6 6.4",
+    "chevron-right": "M9 5.6 15.6 12 9 18.4",
+    "copy": "M8.5 8.5H20V20H8.5zM15.5 8.5V4H4v11.5h4.5",
     "eye-slash": "M4.2 8.4C3 9.9 2.5 12 2.5 12S6.4 18.4 12 18.4c1.7 0 3.2-.6 4.4-1.4"
                  "M19 15.3c1.7-1.6 2.5-3.3 2.5-3.3S17.6 5.6 12 5.6c-1 0-1.9.2-2.7.5M4 4l16 16",
 }
+
+
+
+# ── The real wordmark ────────────────────────────────────────────────────────
+# public/brand/meetrao-logo{,-white}.svg with their c2pa provenance metadata
+# stripped (that block was 8KB of the 14KB file and carries no artwork). Inlined
+# rather than approximated, so the mark on the canvas is the mark that ships.
+LOGO_RATIO = 127 / 576
+
+
+def logo(height=None, width=None, white=False, fluid=False):
+    src = "logo-white.svg" if white else "logo-colour.svg"
+    svg = io.open(src, encoding="utf-8").read()
+    if fluid:
+        svg = svg.replace('width="576"', 'width="100%"', 1).replace('height="127"', 'height="auto"', 1)
+        return svg.replace("<svg ", '<svg style="display:block;width:100%;height:auto" ', 1)
+    if width is None:
+        width = round(height / LOGO_RATIO, 1)
+    if height is None:
+        height = round(width * LOGO_RATIO, 1)
+    svg = svg.replace('width="576"', f'width="{width}"', 1).replace('height="127"', f'height="{height}"', 1)
+    return svg.replace("<svg ", '<svg style="display:block" ', 1)
 
 
 def icon(name, size, color=None, weight="light", extra=""):
@@ -121,10 +154,34 @@ WALK = [("01", "Set your availability",
          "One calendar event with a Google Meet link, and your guest invited to the same event.",
          "On both calendars, with a Meet link, automatically.")]
 
-USE_CASES = [("Consulting calls", "Discovery, scoping and check-ins with clients who are not in your calendar."),
-             ("Coaching & therapy", "Recurring sessions with people who book their own slot."),
-             ("Interviews & hiring", "Candidates pick from the hours you set aside, in their own timezone."),
-             ("Office hours", "Students and teammates take the slots you leave open.")]
+# use-cases.tsx: six, each appearing either as the feature or as a strip.
+# `ground` is the tint behind a photo that has not been dropped in yet.
+USE_CASES = [
+    ("freelancers", "address-card", "Freelancers",
+     "Book discovery calls without the email thread",
+     "One link in your signature. Clients pick a time you are genuinely free, and it lands on both calendars.",
+     ACCENT_SOFT),
+    ("consultants", "lightbulb", "Consultants",
+     "Fill your week while you are in another meeting",
+     "Prospects book against your live calendar. Buffers and a minimum notice period keep your day intact.",
+     FILL2),
+    ("agencies", "users", "Agencies",
+     "Every account manager keeps their own link",
+     "Separate hours and meeting types per person, so nobody negotiates times out of a shared inbox.",
+     SLATE_SOFT),
+    ("sales-teams", "chart-line", "Sales teams",
+     "Let prospects book straight from the follow-up",
+     "The link goes in the email. The meeting arrives with a Google Meet link already attached.",
+     FILL),
+    ("coaches", "graduation-cap", "Coaches",
+     "Recurring sessions without the weekly admin",
+     "Clients rebook themselves from the same link, always in their own timezone.",
+     ACCENT_SOFT),
+    ("remote-teams", "globe", "Remote teams",
+     "Nobody does timezone maths by hand",
+     "Your hours convert to theirs automatically, and stay correct through daylight saving.",
+     FILL2),
+]
 
 FOOTER_TRUST = [("tag", "Completely free", "No subscription, no card, no trial that expires."),
                 ("eye-slash", "Your calendar stays private",
@@ -154,12 +211,17 @@ def kicker(text, tone="light"):
             f'{esc(text)}</span>')
 
 
-def section_head(kick, heading, size, maxw, tone="dark", color=None):
+def section_head(kick, heading, size, maxw, tone="dark", color=None,
+                 lh="1.04", tag="h2", balance=True):
+    """page.tsx uses a different leading per section (1.03 How it works, 1.04
+    the middle four, 1.05 Why it matters), the Use cases heading is an <h3>,
+    and the FAQ heading carries no text-balance. Passed in rather than assumed."""
+    b = "text-wrap:balance;" if balance else ""
     return (f'<div style="display:flex;flex-direction:column;gap:11px;max-width:{maxw}px">'
             f'{kicker(kick, tone)}'
-            f'<h2 style="margin:0;font-family:{SERIF};font-size:{size}px;line-height:1.03;'
-            f'font-weight:400;letter-spacing:-0.02em;text-wrap:balance;color:{color or INK}">'
-            f'{heading}</h2></div>')
+            f'<{tag} style="margin:0;font-family:{SERIF};font-size:{size}px;line-height:{lh};'
+            f'font-weight:400;letter-spacing:-0.02em;{b}color:{color or INK}">'
+            f'{heading}</{tag}></div>')
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -177,14 +239,7 @@ def nav(w, m):
                            f'text-decoration:none">{l}</a>'
                            for l in ["Product", "How it works", "Use cases", "FAQ"])
                  + "</nav>")
-    logo = (f'<span style="display:inline-flex;align-items:center;gap:7px;flex:none">'
-            f'<span style="display:inline-flex;gap:2px;align-items:flex-end">'
-            f'<span style="width:4px;height:14px;background:{ACCENT};border-radius:1px"></span>'
-            f'<span style="width:4px;height:19px;background:{ACCENT};border-radius:1px"></span>'
-            f'<span style="width:4px;height:11px;background:{ACCENT};border-radius:1px"></span>'
-            f'</span>'
-            f'<span style="font-size:17px;font-weight:700;letter-spacing:-0.02em;color:{INK}">Meetrao</span>'
-            f'</span>')
+    mark = f'<span style="display:block;flex:none">{logo(height=19)}</span>'
     right = (f'<div style="margin-left:auto;display:flex;flex:none;align-items:center;gap:12px">'
              f'<a href="#" style="display:inline-flex;min-height:38px;align-items:center;padding:0 8px;'
              f'font-size:13.5px;color:{INK2};text-decoration:none">Log in</a>'
@@ -194,9 +249,9 @@ def nav(w, m):
     return (f'<header style="position:relative;z-index:2;padding:{top}px {pad}px 0">'
             f'<div style="margin:0 auto;display:flex;max-width:1148px;align-items:center;'
             f'gap:{12 if m else 22}px;border-radius:12px;border:1px solid {LINE};background:#fff;'
-            f'padding:10px 14px 10px 18px;'
+            f'padding:{"10px 12px" if m else "10px 14px 10px 18px"};'
             f'box-shadow:0 1px 2px rgba(26,25,23,0.04),0 12px 28px -14px rgba(26,25,23,0.22)">'
-            f'{logo}{links}{right}</div></header>')
+            f'{mark}{links}{right}</div></header>')
 
 
 def hero(w, m):
@@ -213,7 +268,7 @@ def hero(w, m):
 
     facts = "".join(
         f'<div style="display:flex;align-items:flex-start;gap:10px">'
-        f'{icon(g, 12.5, INK3, extra="margin-top:1px")}'
+        f'{icon(g, 12.5, INK3, extra="margin-top:1px;width:15px")}'
         f'<span style="min-width:0;flex:1;text-align:left;font-size:12.5px;line-height:1.45;color:{INK}">'
         f'{esc(t)}</span></div>' for g, t in HERO_FACTS)
 
@@ -227,7 +282,7 @@ def hero(w, m):
         f'<div style="display:flex;min-width:0;flex-direction:column;gap:1px">'
         f'<span style="font-size:13.5px;font-weight:600;color:{INK}">Adam Voigt</span>'
         f'<span style="font-size:12px;color:{INK3}">Product consultant</span></div></div>'
-        f'<h3 style="margin:0;font-family:{SERIF};font-size:{25 if m else 31}px;line-height:1.06;'
+        f'<h3 style="margin:0;font-family:{SERIF};font-size:{24 if m else 31}px;line-height:1.06;'
         f'font-weight:400;letter-spacing:-0.012em;color:{INK}">30 Minute Consultation</h3>'
         f'<p style="margin:0;font-size:13px;line-height:1.55;text-wrap:pretty;color:{INK2}">'
         f'A quick conversation to discuss your project.</p>'
@@ -255,7 +310,7 @@ def hero(w, m):
         f'<div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px">'
         f'<span style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;color:{INK3}">Available times</span>'
         f'<span style="font-size:12.5px;color:{INK2}">{{{{dayLabel}}}}</span></div>'
-        f'<div style="display:grid;grid-template-columns:repeat({2 if m else 4},minmax(0,1fr));gap:6px">'
+        f'<div style="display:grid;grid-template-columns:repeat({3 if m else 5},minmax(0,1fr));gap:6px">'
         '<sc-for list="{{slots}}" as="s" hint-placeholder-count="8">'
         '<button type="button" onClick="{{s.pick}}" class="slot" '
         'style="background:{{s.bg}};border-color:{{s.bd}};color:{{s.fg}};font-weight:{{s.fw}}">{{s.label}}</button>'
@@ -284,7 +339,8 @@ def hero(w, m):
         f'<div style="position:relative;z-index:1;margin:0 auto;display:flex;max-width:1200px;'
         f'flex-direction:column;align-items:center;gap:19px;padding:38px {pad}px 0;text-align:center">'
         f'<h1 style="margin:0;font-family:{SERIF};font-weight:400;color:#fff;font-size:{hsize}px;'
-        f'line-height:1.04;letter-spacing:-0.024em;white-space:{hwrap}'
+        f'line-height:{"0.98" if m else "1.04"};'
+        f'letter-spacing:{"-0.03em" if m else "-0.024em"};white-space:{hwrap}'
         f'{";max-width:18ch" if m else ""}">Stop asking &ldquo;what time works for you?&rdquo;</h1>'
         f'<p style="margin:0;max-width:56ch;font-size:{15.5 if m else 18}px;line-height:1.55;'
         f'text-wrap:pretty;color:rgba(255,255,255,0.8)">Meetrao turns your availability into one booking '
@@ -318,7 +374,7 @@ def hero(w, m):
         + '<span style="height:8px;width:8px;border-radius:9999px;background:%s"></span>' % LINE_STRONG * 3
         + f'</span><span style="min-width:0;flex:1;text-align:left;font-size:11px;white-space:nowrap;'
         f'color:{INK3}">meetrao.com/adam</span></div>'
-        f'<div style="display:grid;grid-template-columns:{"minmax(0,1fr)" if m else "minmax(0,0.86fr) minmax(0,1fr)"};'
+        f'<div style="display:grid;grid-template-columns:{"minmax(0,1fr)" if m else "repeat(2,minmax(0,1fr))"};'
         f'align-items:stretch">{left_card}{right_card}</div></div></div></div></section>')
 
 
@@ -377,25 +433,40 @@ def problem(w, m):
             f'align-items:center;gap:36px;padding:68px {pad}px">{copy}{card}</div></section>')
 
 
+# walkthrough.tsx AVAIL_DAYS — five entries, Monday to Friday. There are no
+# weekend rows: a day that is not worked is simply not in the list.
+AVAIL_DAYS = [("Monday", [("9:00 AM", "12:00 PM"), ("2:00 PM", "5:00 PM")]),
+              ("Tuesday", [("9:00 AM", "5:00 PM")]),
+              ("Wednesday", [("9:00 AM", "5:00 PM")]),
+              ("Thursday", [("9:00 AM", "5:00 PM")]),
+              ("Friday", [("9:00 AM", "3:00 PM")])]
+
+
 def walkthrough(w, m):
-    """The expanded step-01 card plus the three collapsed rails, as the demo
-    rests before it auto-advances."""
+    """Step 01 expanded, the other three as rails, as the demo rests before it
+    auto-advances. One artboard cannot hold four stages at once."""
     n, title, text, outcome = WALK[0]
-    days = [("Monday", "9:00 AM – 12:00 PM · 2:00 PM – 5:00 PM", True),
-            ("Tuesday", "9:00 AM – 5:00 PM", True), ("Wednesday", "9:00 AM – 5:00 PM", True),
-            ("Thursday", "9:00 AM – 5:00 PM", True), ("Friday", "9:00 AM – 3:00 PM", True),
-            ("Saturday", "Unavailable", False), ("Sunday", "Unavailable", False)]
+
     rows = ""
-    for i, (d, hours, on) in enumerate(days):
-        rows += (f'<div style="display:flex;align-items:center;gap:12px;padding:10px 14px;'
+    for i, (day, ranges) in enumerate(AVAIL_DAYS):
+        chips = ""
+        for j, (a, b) in enumerate(ranges):
+            chips += (f'<span style="display:inline-flex;align-items:center;gap:7px">'
+                      f'<span style="display:inline-flex;height:27px;align-items:center;border-radius:6px;'
+                      f'border:1px solid {LINE_STRONG};background:{SURFACE};padding:0 9px;font-size:12px;'
+                      f'color:{INK}">{a}</span>'
+                      f'<span style="font-size:11.5px;color:{INK3}">to</span>'
+                      f'<span style="display:inline-flex;height:27px;align-items:center;border-radius:6px;'
+                      f'border:1px solid {LINE_STRONG};background:{SURFACE};padding:0 9px;font-size:12px;'
+                      f'color:{INK}">{b}</span></span>')
+        rows += (f'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:10px 13px;'
                  f'{"border-top:1px solid " + LINE_SOFT + ";" if i else ""}background:{SURFACE}">'
-                 f'<span style="height:16px;width:28px;flex:none;border-radius:9999px;'
-                 f'background:{ACCENT if on else LINE_STRONG};position:relative">'
-                 f'<span style="position:absolute;top:2px;{"right:2px" if on else "left:2px"};'
-                 f'height:12px;width:12px;border-radius:9999px;background:#fff"></span></span>'
-                 f'<span style="width:78px;flex:none;font-size:12.5px;font-weight:600;color:{INK}">{d}</span>'
-                 f'<span style="min-width:0;flex:1;font-size:12.5px;color:{INK3 if not on else INK2}">'
-                 f'{hours}</span></div>')
+                 f'<span style="display:flex;width:118px;flex:none;align-items:center;gap:9px">'
+                 f'<span style="display:inline-flex;height:16px;width:16px;flex:none;align-items:center;'
+                 f'justify-content:center;border-radius:4px;border:1px solid {ACCENT};background:{ACCENT};'
+                 f'color:#fff">{icon("check", 8, None, "solid")}</span>'
+                 f'<span style="font-size:13px;font-weight:500;color:{INK}">{day}</span></span>'
+                 f'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px">{chips}</div></div>')
 
     screen = (f'<div style="display:flex;width:100%;flex-direction:column;overflow:hidden;'
               f'border-radius:16px;border:1px solid {LINE_STRONG};background:{SURFACE};'
@@ -405,7 +476,19 @@ def walkthrough(w, m):
               f'<span style="display:flex;flex:none;gap:5px">'
               + '<span style="height:8px;width:8px;border-radius:9999px;background:%s"></span>' % LINE_STRONG * 3
               + f'</span><span style="min-width:0;flex:1;font-size:11px;white-space:nowrap;color:{INK3}">'
-              f'meetrao.com/settings/availability</span></div>{rows}</div>')
+              f'meetrao.com/settings/availability</span></div>'
+              f'<div style="display:flex;min-height:460px;flex-direction:column;justify-content:center;'
+              f'padding:22px">'
+              f'<div style="display:flex;flex-direction:column;gap:12px">'
+              f'<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px">'
+              f'<span style="font-size:15px;font-weight:600;color:{INK}">Availability</span>'
+              f'<span style="display:inline-flex;height:30px;align-items:center;gap:8px;border-radius:6px;'
+              f'border:1px solid {LINE_STRONG};background:{SURFACE};padding:0 11px;font-size:12.5px;'
+              f'color:{INK}">{icon("globe", 11, INK3)}GMT+06:00 Dhaka</span></div>'
+              f'<div style="overflow:hidden;border-radius:9px;border:1px solid {LINE}">{rows}</div>'
+              f'<span style="font-size:12.5px;line-height:1.5;color:{INK3}">'
+              f'5 days a week. Tick a day off and watch it grey out — it is live.</span>'
+              f'</div></div></div>')
 
     left = (f'<div style="display:flex;min-width:0;flex-direction:column;gap:14px">'
             f'<div style="display:flex;align-items:center;gap:12px">'
@@ -414,31 +497,47 @@ def walkthrough(w, m):
             f'<span style="height:1px;min-width:0;flex:1;background:rgba(255,255,255,0.25)"></span>'
             f'<span style="flex:none;font-size:10px;letter-spacing:0.07em;text-transform:uppercase;'
             f'color:{MINT}">Step 1 of 4</span></div>'
-            f'<h3 style="margin:0;font-family:{SERIF};font-size:{26 if m else 32}px;line-height:1.06;'
-            f'font-weight:400;letter-spacing:-0.016em;color:#fff">{title}</h3>'
-            f'<p style="margin:0;font-size:14px;line-height:1.6;text-wrap:pretty;'
-            f'color:rgba(255,255,255,0.75)">{esc(text)}</p>'
-            f'<div style="display:flex;align-items:flex-start;gap:10px;border-radius:10px;'
-            f'background:rgba(255,255,255,0.08);padding:12px 14px">'
-            f'{icon("check", 12, MINT, "solid", "margin-top:2px")}'
-            f'<span style="min-width:0;flex:1;font-size:13px;line-height:1.5;color:#fff">{esc(outcome)}</span>'
-            f'</div></div>')
+            f'<h3 style="margin:0;font-family:{SERIF};font-size:{27.3 if m else 40}px;line-height:1.02;'
+            f'font-weight:400;letter-spacing:-0.022em;color:#fff">{title}</h3>'
+            f'<p style="margin:0;max-width:34ch;font-size:14px;line-height:1.6;text-wrap:pretty;'
+            f'color:rgba(255,255,255,0.8)">{esc(text)}</p>'
+            f'<div style="display:flex;align-items:flex-start;gap:11px;border-radius:11px;'
+            f'border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.1);padding:12px 14px">'
+            f'{icon("check", 10, MINT, "solid", "margin-top:3px")}'
+            f'<span style="min-width:0;flex:1;font-size:13px;font-weight:500;line-height:1.5;color:#fff">'
+            f'{esc(outcome)}</span></div>'
+            # The countdown only exists while the rotation does.
+            f'<span style="display:block;height:3px;width:100%;overflow:hidden;border-radius:2px;'
+            f'background:{LINE}"><span style="display:block;height:100%;width:34%;border-radius:2px;'
+            f'background:{ACCENT}"></span></span></div>')
 
+    # The three inactive steps are 54px vertical rails in the SAME row as the
+    # expanded card, not a strip beneath it.
     rails = ""
-    for i, (rn, rtitle, _t, _o) in enumerate(WALK[1:]):
-        rails += (f'<button type="button" style="display:flex;min-width:0;flex:1;align-items:center;'
-                  f'gap:12px;cursor:pointer;border-radius:14px;border:1px solid {LINE};'
-                  f'background:{SURFACE};padding:16px 18px;font-family:{SANS};text-align:left">'
-                  f'<span style="flex:none;font-family:{SERIF};font-size:24px;line-height:1;'
-                  f'color:{INK3}">{rn}</span>'
-                  f'<span style="min-width:0;flex:1;font-size:13.5px;font-weight:600;color:{INK}">'
-                  f'{rtitle}</span>'
+    for rn, rtitle, _t, _o in WALK[1:]:
+        label = (f'<span style="writing-mode:vertical-rl;font-size:13px;color:{INK2}">{rtitle}</span>'
+                 if not m else
+                 f'<span style="min-width:0;flex:1;font-size:13px;color:{INK2}">{rtitle}</span>')
+        inner = (f'<span style="box-sizing:border-box;display:flex;height:100%;width:100%;'
+                 f'align-items:center;gap:12px;padding:0 16px">' if m else
+                 f'<span style="box-sizing:border-box;display:flex;height:100%;flex-direction:column;'
+                 f'align-items:center;gap:14px;padding:16px 0">')
+        rails += (f'<button type="button" style="position:relative;box-sizing:border-box;display:block;'
+                  f'cursor:pointer;overflow:hidden;border-radius:14px;border:1px solid {LINE};'
+                  f'background:{FILL};padding:0;font-family:{SANS};'
+                  f'{"height:58px;flex:none;" if m else "flex:0 0 54px;"}">'
+                  f'{inner}'
+                  f'<span style="flex:none;font-family:{SERIF};font-size:20px;line-height:1;color:{INK3}">'
+                  f'{rn}</span>{label}'
                   f'<span style="height:6px;width:6px;flex:none;border-radius:9999px;'
-                  f'background:{LINE_STRONG}"></span></button>')
+                  f'background:{LINE_STRONG}"></span></span></button>')
 
-    return (f'<div style="margin-top:26px;display:flex;flex-direction:column;gap:12px">'
-            f'<div style="position:relative;overflow:hidden;border-radius:14px;'
-            f'border:1px solid rgba(255,255,255,0.15);background:{ACCENT2};'
+    return (f'<div style="position:relative;margin-top:30px">'
+            f'<div style="position:relative;display:flex;align-items:stretch;gap:8px;'
+            f'{"flex-direction:column;" if m else "min-height:504px;"}">'
+            f'<div style="position:relative;box-sizing:border-box;min-width:0;flex:1 1 auto;'
+            f'overflow:hidden;border-radius:14px;border:1px solid rgba(255,255,255,0.15);'
+            f'background:{ACCENT2};'
             f'background-image:radial-gradient(115% 85% at 4% 0%,rgba(52,168,146,0.30) 0%,rgba(52,168,146,0) 58%),'
             f'radial-gradient(85% 75% at 100% 14%,rgba(127,216,196,0.16) 0%,rgba(127,216,196,0) 60%),'
             f'radial-gradient(95% 105% at 34% 108%,rgba(11,23,20,0.55) 0%,rgba(11,23,20,0) 56%);'
@@ -446,7 +545,7 @@ def walkthrough(w, m):
             f'<div style="display:grid;align-items:center;'
             f'grid-template-columns:{"minmax(0,1fr)" if m else "minmax(250px,0.78fr) minmax(0,1fr)"};'
             f'gap:{20 if m else 26}px;padding:{22 if m else 28}px">{left}{screen}</div></div>'
-            f'<div style="display:flex;flex-direction:{"column" if m else "row"};gap:12px">{rails}</div></div>')
+            f'{rails}</div></div>')
 
 
 def why(w, m):
@@ -532,14 +631,14 @@ def compare(w, m):
                            f'text-transform:uppercase;color:{RED}">waiting</span>' if waiting else "")
                         + '</div>')
 
-    def stats(items, value_color, label_color, bg, bd):
+    def stats(items, value_color, label_color, bg, bd, px=18):
         cells = "".join(f'<div style="display:flex;flex-direction:column;gap:1px">'
                         f'<span style="font-family:{SERIF};font-size:22px;line-height:1;'
                         f'color:{value_color}">{v}</span>'
                         f'<span style="font-size:10px;letter-spacing:0.06em;text-transform:uppercase;'
                         f'color:{label_color}">{l}</span></div>' for v, l in items)
         return (f'<div style="display:flex;flex-wrap:wrap;gap:16px;border-top:1px solid {bd};'
-                f'background:{bg};padding:13px 18px">{cells}</div>')
+                f'background:{bg};padding:13px {px}px">{cells}</div>')
 
     before_card = (f'<div style="display:flex;height:100%;flex-direction:column;overflow:hidden;'
                    f'border-radius:14px;border:1px solid {RED_LINE};background:{SURFACE}">'
@@ -555,7 +654,7 @@ def compare(w, m):
                    f'<div style="display:flex;flex:1;flex-direction:column;gap:5px;padding:16px 18px 18px">'
                    f'{before_rows}</div>'
                    + stats([("8", "Steps"), ("2", "People"), ("~2 days", "Elapsed")],
-                           RED, RED_INK, RED_SOFT, RED_LINE) + '</div>')
+                           RED, RED_INK, RED_SOFT, RED_LINE, 18) + '</div>')
 
     after_rows = ""
     for i, (nn, label, text, glyph) in enumerate(AFTER):
@@ -581,7 +680,7 @@ def compare(w, m):
                   f'<div style="display:flex;flex:1;flex-direction:column;justify-content:center;'
                   f'padding:6px 20px 12px">{after_rows}</div>'
                   + stats([("3", "Steps"), ("1", "Link"), ("~30 sec", "Elapsed")],
-                          "#fff", MINT, "rgba(255,255,255,0.05)", "rgba(255,255,255,0.15)") + '</div>')
+                          "#fff", MINT, "rgba(255,255,255,0.05)", "rgba(255,255,255,0.15)", 20) + '</div>')
 
     return (f'<section style="border-top:1px solid {LINE};background:{COMPARE_BG}">'
             f'<div style="margin:0 auto;max-width:1200px;padding:56px {pad}px">'
@@ -591,28 +690,67 @@ def compare(w, m):
               f'{before_card}{after_card}</div></div></section>')
 
 
-def live_table(title, url, head, rows, m):
-    """The two demo tables under "What you get" — a browser frame around a
-    table in the app's own Th/Td metrics."""
-    cols = f'grid-template-columns:{" ".join(head[1])}'
-    th = "".join(f'<span style="font-size:10px;font-weight:400;letter-spacing:0.07em;'
-                 f'text-transform:uppercase;white-space:nowrap;color:{INK2}">{h}</span>' for h in head[0])
+# live-tables.tsx: replicas of the Meetings and Bookings screens. Column
+# templates, rows and copy are that file's, verbatim.
+MEET_COLS = "minmax(0,2.1fr) 68px minmax(0,1.45fr) 46px 152px"
+BOOK_COLS = "minmax(0,1.5fr) minmax(0,1.05fr) 86px 162px 116px 124px"
+
+TYPES = [("30 Minute Consultation", "A quick conversation to discuss your project.", 30,
+          "30-minute-consultation", True),
+         ("Project Deep Dive", "Review scope, timeline and budget in detail.", 60,
+          "project-deep-dive", True),
+         ("Intro Call", "Fifteen minutes to see if we're a fit.", 15, "intro-call", False)]
+
+UPCOMING = [("John Smith", "john@example.com", "30 Minute Consultation", "Today", "3:00 – 3:30 PM", 30),
+            ("Amina Chowdhury", "amina@northbridge.io", "Project Deep Dive", "Tomorrow", "11:00 – 12:00 PM", 60),
+            ("Dan Whitfield", "dan@whitfield.dev", "Intro Call", "Mon 7 Sep", "9:30 – 9:45 AM", 15)]
+
+TH_STYLE = ("font-size:10px;letter-spacing:0.07em;text-transform:uppercase;"
+            "white-space:nowrap;color:" + INK2)
+
+
+def initials(name):
+    return "".join(part[0] for part in name.split()[:2]).upper()
+
+
+def table_shell(caption, head, cols, rows, m, tabs=None, note=None):
+    th = "".join(f'<span style="{TH_STYLE}">{h}</span>' for h in head)
     body = ""
     for i, cells in enumerate(rows):
-        body += (f'<div style="display:grid;{cols};gap:14px;align-items:center;padding:11px 14px;'
-                 f'{"border-top:1px solid " + LINE_SOFT + ";" if i else ""}">'
+        body += (f'<div style="display:grid;grid-template-columns:{cols};gap:14px;align-items:center;'
+                 f'padding:11px 14px;{"border-top:1px solid " + LINE_SOFT + ";" if i else ""}">'
                  + "".join(cells) + '</div>')
-    return (f'<div style="display:flex;width:100%;flex-direction:column;overflow:hidden;border-radius:16px;'
-            f'border:1px solid {LINE_STRONG};background:{SURFACE};'
-            f'box-shadow:0 2px 4px rgba(26,25,23,0.04),0 34px 64px -24px rgba(26,25,23,0.34)">'
-            f'<div style="display:flex;flex:none;align-items:center;gap:9px;border-bottom:1px solid {LINE};'
-            f'background:{FILL};padding:10px 14px">'
-            f'<span style="display:flex;flex:none;gap:5px">'
-            + '<span style="height:8px;width:8px;border-radius:9999px;background:%s"></span>' % LINE_STRONG * 3
-            + f'</span><span style="min-width:0;flex:1;font-size:11px;white-space:nowrap;color:{INK3}">'
-              f'{url}</span></div>'
-            f'<div style="display:grid;{cols};gap:14px;border-bottom:1px solid {LINE};background:{FILL};'
-            f'padding:9px 14px">{th}</div>{body}</div>')
+
+    tabbar = ""
+    if tabs:
+        chips = ""
+        for j, (label, count) in enumerate(tabs):
+            on = j == 0
+            chips += (f'<span style="margin-bottom:-1px;display:inline-flex;height:36px;align-items:center;'
+                      f'gap:7px;border-bottom:2px solid {INK if on else "transparent"};padding:0 4px;'
+                      f'font-size:13px;font-weight:600;color:{INK if on else INK2}">{label}'
+                      f'<span style="display:inline-flex;height:17px;min-width:18px;align-items:center;'
+                      f'justify-content:center;border-radius:4px;padding:0 5px;font-size:10.5px;'
+                      f'font-weight:600;background:{INK if on else FILL2};'
+                      f'color:{"#ffffff" if on else INK2}">{count}</span></span>')
+        tabbar = (f'<div style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;'
+                  f'border-bottom:1px solid {LINE};background:{FILL};padding:0 14px">{chips}</div>')
+
+    # The table scrolls sideways below its natural width rather than squashing —
+    # live-tables.tsx wraps it in .scroll-x for the same reason.
+    inner = (f'<div style="min-width:{640 if "Meeting" in head[0] else 660}px">'
+             f'<div style="display:grid;grid-template-columns:{cols};gap:14px;'
+             f'border-bottom:1px solid {LINE};background:{FILL};padding:9px 14px">{th}</div>'
+             f'{body}</div>')
+
+    return (f'<div style="display:flex;flex-direction:column;gap:8px;padding-top:24px">'
+            f'<span style="font-size:16px;font-weight:600;letter-spacing:-0.008em;color:{INK}">'
+            f'{caption}</span>'
+            f'<div style="overflow:hidden;border-radius:12px;border:1px solid {LINE};'
+            f'background:{SURFACE}">{tabbar}'
+            f'<div style="overflow-x:auto">{inner}</div></div>'
+            + (f'<span style="font-size:12.5px;line-height:1.5;color:{INK3}">{note}</span>' if note else "")
+            + '</div>')
 
 
 def product(w, m):
@@ -625,48 +763,60 @@ def product(w, m):
                   f'justify-content:center;border-radius:9px;background:{ACCENT_SOFT};color:{{{{accent}}}}">'
                   f'{icon(glyph, 14)}</span>'
                   f'<span style="font-size:14.5px;font-weight:600;letter-spacing:-0.005em;color:{INK}">'
-                  f'{title}</span>'
+                  f'{esc(title)}</span>'
                   f'<span style="font-size:13px;line-height:1.55;text-wrap:pretty;color:{INK2}">'
                   f'{esc(text)}</span></div>')
 
-    def name_cell(a, b):
-        return (f'<div style="display:flex;min-width:0;flex-direction:column;gap:2px">'
-                f'<span style="font-size:13px;font-weight:600;color:{INK}">{a}</span>'
-                f'<span style="font-size:12px;color:{INK3}">{b}</span></div>')
+    def two_line(a, b):
+        return (f'<span style="display:flex;min-width:0;flex-direction:column;gap:2px">'
+                f'<span style="font-size:13px;font-weight:600;color:{INK}">{esc(a)}</span>'
+                f'<span style="font-size:12px;line-height:1.4;color:{INK3}">{esc(b)}</span></span>')
 
-    def plain(t, size=13, color=None, weight=400):
+    def flat(t, size=13, color=None, weight=400, nowrap=True):
         return (f'<span style="font-size:{size}px;font-weight:{weight};color:{color or INK};'
-                f'white-space:nowrap">{t}</span>')
+                f'{"white-space:nowrap;" if nowrap else ""}">{esc(t)}</span>')
 
-    def pill(t, fg, bg, bd):
-        return (f'<span style="display:inline-flex;height:20px;width:fit-content;align-items:center;gap:6px;'
-                f'border-radius:5px;border:1px solid {bd};background:{bg};padding:0 8px;font-size:11.5px;'
-                f'font-weight:600;color:{fg}">{t}</span>')
+    def switch(on):
+        return (f'<span style="display:inline-flex;height:18px;width:32px;flex:none;'
+                f'border-radius:9999px;background:{ACCENT if on else LINE_STRONG};position:relative">'
+                f'<span style="position:absolute;top:2px;{"right:2px" if on else "left:2px"};'
+                f'height:14px;width:14px;border-radius:9999px;background:#fff"></span></span>')
 
-    meetings = live_table(
-        "Meetings", "meetrao.com/meetings",
-        (["Meeting", "Duration", "Link", "Status"],
-         ["minmax(0,1.6fr)", "minmax(0,0.7fr)", "minmax(0,1.3fr)", "minmax(0,0.7fr)"]),
-        [[name_cell("30 Minute Consultation", "A quick conversation to discuss your project."),
-          plain("30 min", 13, INK2), plain("meetrao.com/adam/30min", 12, INK3),
-          pill("Active", ACCENT, ACCENT_SOFT, ACCENT_LINE)],
-         [name_cell("Intro call", "First conversation, no agenda needed."),
-          plain("15 min", 13, INK2), plain("meetrao.com/adam/intro", 12, INK3),
-          pill("Active", ACCENT, ACCENT_SOFT, ACCENT_LINE)],
-         [name_cell("Project review", "Walk through the work so far."),
-          plain("60 min", 13, INK2), plain("meetrao.com/adam/review", 12, INK3),
-          pill("Paused", INK2, FILL, LINE)]], m)
+    def copy_btn():
+        return (f'<span style="display:inline-flex;height:28px;align-items:center;gap:7px;'
+                f'border-radius:6px;border:1px solid {LINE_STRONG};background:{SURFACE};padding:0 10px;'
+                f'font-size:12px;font-weight:600;color:{INK}">{icon("copy", 10, INK3)}Copy link</span>')
 
-    bookings = live_table(
-        "Bookings", "meetrao.com/bookings",
-        (["When", "Guest", "Meeting", "Status"],
-         ["minmax(0,1.1fr)", "minmax(0,1.2fr)", "minmax(0,1.2fr)", "minmax(0,0.7fr)"]),
-        [[plain("Thu 10 Sep · 10:00", 13, INK, 600), name_cell("Priya Nair", "priya@nairstudio.com"),
-          plain("30 Minute Consultation", 12.5, INK2), pill("Confirmed", ACCENT, ACCENT_SOFT, ACCENT_LINE)],
-         [plain("Thu 10 Sep · 14:30", 13, INK, 600), name_cell("Marcus Webb", "marcus@webb.co"),
-          plain("Intro call", 12.5, INK2), pill("Confirmed", ACCENT, ACCENT_SOFT, ACCENT_LINE)],
-         [plain("Fri 11 Sep · 09:00", 13, INK, 600), name_cell("Dana Okafor", "dana@okafor.io"),
-          plain("Project review", 12.5, INK2), pill("Cancelled", RED_INK, RED_SOFT, RED_LINE)]], m)
+    def avatar(name):
+        return (f'<span style="display:inline-flex;height:28px;width:28px;flex:none;align-items:center;'
+                f'justify-content:center;border-radius:7px;background:{ACCENT_SOFT};font-size:11px;'
+                f'font-weight:700;color:{ACCENT}">{initials(name)}</span>')
+
+    meetings = table_shell(
+        "Your meetings, and their links",
+        ["Meeting", "Duration", "Booking link", "Active", ""],
+        MEET_COLS,
+        [[two_line(name, desc), flat(f"{mins} min", 13, INK2),
+          flat(f"meetrao.com/adam/{slug}", 12, INK3), switch(on), copy_btn()]
+         for name, desc, mins, slug, on in TYPES],
+        m,
+        note="Toggle a meeting or copy a link — the table is live. Nothing is saved.")
+
+    bookings = table_shell(
+        "Every booking, upcoming and past",
+        ["Guest", "Meeting", "Date", "Time", "Status", ""],
+        BOOK_COLS,
+        [[f'<span style="display:flex;min-width:0;align-items:center;gap:10px">{avatar(g)}'
+          + two_line(g, e) + '</span>',
+          flat(meeting, 12.5, INK2, nowrap=False), flat(date, 12.5, INK2), flat(time, 12.5, INK),
+          f'<span style="display:inline-flex;height:20px;width:fit-content;align-items:center;gap:6px;'
+          f'border-radius:5px;border:1px solid {ACCENT_LINE};background:{ACCENT_SOFT};padding:0 8px;'
+          f'font-size:11.5px;font-weight:600;color:{ACCENT}">Confirmed</span>',
+          f'<span style="display:inline-flex;height:28px;align-items:center;gap:7px;border-radius:6px;'
+          f'border:1px solid {LINE_STRONG};background:{SURFACE};padding:0 10px;font-size:12px;'
+          f'font-weight:600;color:{INK}">{icon("video", 10, INK3)}Join</span>']
+         for g, e, meeting, date, time, mins in UPCOMING],
+        m, tabs=[("Upcoming", 3), ("Past", 2)])
 
     return (f'<section style="margin:0 auto;max-width:1200px;padding:72px {pad}px">'
             + section_head("What you get",
@@ -679,26 +829,78 @@ def product(w, m):
 
 
 def usecases(w, m):
+    """use-cases.tsx: one featured panel plus the next three as strips, a dot
+    pager and prev/next. The feature is index 0 at rest. Photographs are read
+    off disk by the real page (public/use-cases/<id>.jpg); where one is missing
+    the card is a tinted frame, which is what these are — marked as frames
+    rather than filled with a stock image that is not theirs."""
     pad = 18 if m else 26
-    cards = ""
-    for i, (title, text) in enumerate(USE_CASES):
-        cards += (f'<div style="display:flex;flex-direction:column;overflow:hidden;border-radius:14px;'
-                  f'border:1px solid {LINE};background:{SURFACE}">'
-                  f'<div style="height:150px;background:linear-gradient(135deg,{ACCENT_SOFT} 0%,'
-                  f'{FILL2} 100%);display:flex;align-items:center;justify-content:center">'
-                  f'<span style="font-size:11px;letter-spacing:0.07em;text-transform:uppercase;'
-                  f'color:{INK3}">Photograph</span></div>'
-                  f'<div style="display:flex;flex-direction:column;gap:6px;padding:16px 18px 18px">'
-                  f'<span style="font-size:14px;font-weight:600;color:{INK}">{esc(title)}</span>'
-                  f'<span style="font-size:12.5px;line-height:1.5;text-wrap:pretty;color:{INK2}">'
-                  f'{esc(text)}</span></div></div>')
+    fid, fglyph, ftag, ftitle, ftext, fground = USE_CASES[0]
 
-    aside = (f'<div style="margin-left:auto;display:flex;max-width:300px;flex:none;flex-direction:column;'
+    def photo_frame(label, ground, radius):
+        return (f'<span style="position:absolute;inset:0;z-index:1;background:{ground};'
+                f'border-radius:{radius};display:flex;align-items:center;justify-content:center">'
+                f'<span style="font-size:10px;letter-spacing:0.07em;text-transform:uppercase;'
+                f'color:{INK3}">{label}</span></span>')
+
+    scrim = ("linear-gradient(to top,rgba(11,23,20,0.92) 0%,rgba(11,23,20,0.66) 34%,"
+             "rgba(11,23,20,0.12) 68%,rgba(11,23,20,0.04) 100%)")
+    strip_scrim = ("linear-gradient(to top,rgba(11,23,20,0.9) 0%,rgba(11,23,20,0.5) 42%,"
+                   "rgba(11,23,20,0.1) 80%)")
+
+    feature = (f'<div style="position:relative;display:flex;min-width:0;flex:1 1 430px;'
+               f'flex-direction:column;overflow:hidden;border-radius:16px;'
+               f'min-height:{330 if m else 410}px;background:{fground}">'
+               f'{photo_frame(ftag + " photography", fground, "0")}'
+               f'<span style="position:absolute;inset:0;z-index:2;background:{scrim}"></span>'
+               f'<div style="position:relative;z-index:3;margin-top:auto;display:flex;flex-wrap:wrap;'
+               f'align-items:flex-end;justify-content:space-between;gap:16px;padding:24px">'
+               f'<div style="display:flex;min-width:0;flex:1;flex-direction:column;gap:9px">'
+               f'<span style="display:inline-flex;height:24px;align-self:flex-start;align-items:center;'
+               f'gap:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.3);'
+               f'background:rgba(255,255,255,0.15);padding:0 10px;font-size:10px;font-weight:500;'
+               f'letter-spacing:0.1em;text-transform:uppercase;color:#fff;backdrop-filter:blur(6px)">'
+               f'{icon(fglyph, 10, MINT)}{ftag}</span>'
+               f'<span style="font-family:{SERIF};font-size:{21 if m else 27}px;line-height:1.1;'
+               f'font-weight:400;letter-spacing:-0.014em;text-wrap:balance;color:#fff">{esc(ftitle)}</span>'
+               f'<span style="max-width:44ch;font-size:13.5px;line-height:1.55;text-wrap:pretty;'
+               f'color:rgba(255,255,255,0.85)">{esc(ftext)}</span></div>'
+               f'<a href="#" style="display:inline-flex;height:40px;flex:none;align-items:center;gap:9px;'
+               f'border-radius:8px;background:#fff;padding:0 16px;font-size:13.5px;font-weight:600;'
+               f'color:{INK};text-decoration:none">Create your free link{icon("arrow-right", 10)}</a>'
+               f'</div></div>')
+
+    strips = ""
+    for sid, sglyph, stag, _t, _x, sground in USE_CASES[1:4]:
+        strips += (f'<button type="button" style="position:relative;display:flex;min-width:0;flex:1 1 0;'
+                   f'cursor:pointer;flex-direction:column;overflow:hidden;border-radius:14px;border:0;'
+                   f'padding:0;background:{sground}">'
+                   f'{photo_frame(stag, sground, "0")}'
+                   f'<span style="position:absolute;inset:0;z-index:2;background:{strip_scrim}"></span>'
+                   f'<span style="position:relative;z-index:3;margin-top:auto;display:flex;'
+                   f'flex-direction:column;gap:7px;padding:14px 12px;text-align:left">'
+                   f'<span style="display:inline-flex;height:26px;width:26px;flex:none;align-items:center;'
+                   f'justify-content:center;border-radius:8px;background:rgba(255,255,255,0.2);'
+                   f'color:{MINT};backdrop-filter:blur(6px)">{icon(sglyph, 11)}</span>'
+                   f'<span style="font-size:13px;line-height:1.3;font-weight:600;text-wrap:balance;'
+                   f'color:#fff">{stag}</span></span></button>')
+
+    dots = "".join(f'<span style="height:8px;width:{22 if i == 0 else 8}px;border-radius:4px;'
+                   f'background:{ACCENT if i == 0 else LINE_STRONG}"></span>'
+                   for i in range(len(USE_CASES)))
+
+    arrows = "".join(f'<span style="display:inline-flex;height:40px;width:40px;cursor:pointer;'
+                     f'align-items:center;justify-content:center;border-radius:10px;'
+                     f'border:1px solid {LINE};background:{SURFACE};color:{INK2}">'
+                     f'{icon(d, 12)}</span>' for d in ["chevron-left", "chevron-right"])
+
+    aside = ('' if m else
+             f'<div style="margin-left:auto;display:flex;max-width:300px;flex:none;flex-direction:column;'
              f'gap:2px;text-align:right">'
              f'<span style="font-size:14px;line-height:1.45;font-weight:600;color:{INK}">'
              f'One link, your real availability,</span>'
              f'<span style="font-size:14px;line-height:1.45;color:{INK3}">'
-             f'and a Google Meet link on every booking</span></div>') if not m else ""
+             f'and a Google Meet link on every booking</span></div>')
 
     return (f'<section style="border-top:1px solid {LINE};border-bottom:1px solid {LINE};'
             f'background:{COMPARE_BG}">'
@@ -707,14 +909,19 @@ def usecases(w, m):
             f'<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px">'
             + section_head("Use cases",
                            "Every kind of work that starts with getting a time in the diary.",
-                           28 if m else 44, 660)
+                           28 if m else 44, 660, tag="h3")
             + aside + '</div>'
-            + f'<div style="display:grid;grid-template-columns:'
-              f'{"minmax(0,1fr)" if m else "repeat(4,minmax(0,1fr))"};gap:16px">{cards}</div>'
-              f'</div></div></section>')
+            + f'<div style="display:flex;flex-direction:column;gap:22px">'
+              f'<div style="display:flex;flex-wrap:wrap;align-items:stretch;gap:10px">'
+              f'{feature}'
+              f'<div style="display:flex;min-height:170px;min-width:0;flex:1 1 250px;gap:10px">{strips}</div>'
+              f'</div>'
+              f'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:14px">'
+              f'<div style="display:flex;flex:none;gap:6px">{dots}</div>'
+              f'<div style="margin-left:auto;display:flex;flex:none;align-items:center;gap:8px">{arrows}</div>'
+              f'</div></div></div></div></section>')
 
 
-import json
 FAQS = json.load(io.open("faqs.json", encoding="utf-8"))
 
 
@@ -758,7 +965,7 @@ def faq(w, m):
 
     return (f'<section style="border-top:1px solid {LINE};background:{FAQ_BG}">'
             f'<div style="margin:0 auto;max-width:1200px;padding:64px {pad}px">'
-            + section_head("FAQ", "Questions people actually ask.", 28 if m else 44, 620)
+            + section_head("FAQ", "Questions people actually ask.", 28 if m else 44, 620, balance=False)
             + f'<div style="margin-top:26px;display:grid;grid-template-columns:'
               f'{"minmax(0,1fr)" if m else "repeat(2,minmax(0,1fr))"};align-items:flex-start;gap:14px">'
               f'{out}</div>{cta}</div></section>')
@@ -766,15 +973,16 @@ def faq(w, m):
 
 def footer(w, m):
     pad = 18 if m else 26
+
+    # site-chrome.tsx: a SEPARATE rounded-20 card below the link columns, and a
+    # bare 14px icon rather than a tinted tile.
     trust = "".join(
-        f'<div style="display:flex;align-items:flex-start;gap:12px">'
-        f'<span style="display:inline-flex;height:30px;width:30px;flex:none;align-items:center;'
-        f'justify-content:center;border-radius:8px;background:rgba(255,255,255,0.1);color:{MINT}">'
-        f'{icon(g, 13)}</span>'
-        f'<div style="display:flex;min-width:0;flex-direction:column;gap:3px">'
+        f'<div style="display:flex;min-width:230px;flex:1;align-items:flex-start;gap:12px">'
+        f'{icon(g, 14, "rgba(255,255,255,0.85)", extra="margin-top:2px;width:18px")}'
+        f'<div style="display:flex;min-width:0;flex:1;flex-direction:column;gap:3px">'
         f'<span style="font-size:13.5px;font-weight:600;color:#fff">{esc(t)}</span>'
-        f'<span style="font-size:12.5px;line-height:1.5;color:rgba(255,255,255,0.7)">{esc(x)}</span>'
-        f'</div></div>' for g, t, x in FOOTER_TRUST)
+        f'<span style="font-size:13px;line-height:1.55;text-wrap:pretty;'
+        f'color:rgba(255,255,255,0.85)">{esc(x)}</span></div></div>' for g, t, x in FOOTER_TRUST)
 
     cols = "".join(
         f'<div style="display:flex;min-width:0;flex-direction:column;gap:14px">'
@@ -784,6 +992,12 @@ def footer(w, m):
         + "".join(f'<a href="#" style="font-size:14px;font-weight:400;'
                   f'color:rgba(255,255,255,0.85);text-decoration:none">{esc(l)}</a>' for l in links)
         + '</div></div>' for title, links in FOOTER_COLS)
+
+    # The wordmark that closes the page: w-full, h-auto, 95% opacity. It fills
+    # its container rather than the artboard — the column is 1200px capped and
+    # padded, so sizing it to the frame overflows the page sideways.
+    wordmark = (f'<div style="padding-bottom:30px;opacity:0.95">'
+                f'{logo(fluid=True, white=True)}</div>')
 
     return (f'<footer style="background:{ACCENT2};color:#fff">'
             f'<div style="margin:0 auto;max-width:1200px;padding:0 {pad}px">'
@@ -807,25 +1021,29 @@ def footer(w, m):
             f'{icon("play", 12)}See how it works</a></div></div>'
 
             f'<div style="display:grid;grid-template-columns:'
-            f'{"minmax(0,1fr)" if m else "minmax(240px,1.35fr) repeat(4,minmax(0,1fr))"};'
-            f'align-items:flex-start;column-gap:34px;row-gap:{30 if m else 44}px;border-radius:20px;'
-            f'background:{FOOTER_INNER};padding:34px 30px 36px;margin:44px 0 30px">'
-            f'<div style="display:flex;min-width:0;flex-direction:column;gap:16px">{trust}</div>'
+            f'{"minmax(0,1fr)" if m else "minmax(240px,1.35fr) repeat(3,minmax(140px,1fr))"};'
+            f'align-items:flex-start;column-gap:34px;row-gap:{30 if m else 44}px;margin:44px 0 30px">'
             f'{cols}</div>'
 
-            f'<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;'
-            f'gap:14px;border-top:1px solid rgba(255,255,255,0.15);padding:22px 0 30px">'
-            f'<span style="font-size:12.5px;color:rgba(255,255,255,0.6)">'
-            f'© 2026 Meetrao. Operated by Airly Studio.</span>'
-            f'<span style="font-size:12.5px;color:rgba(255,255,255,0.6)">support@meetrao.com</span>'
-            f'</div></div></footer>')
+            f'<div style="display:flex;flex-wrap:wrap;gap:16px;border-radius:20px;'
+            f'background:{FOOTER_INNER};padding:26px 30px;margin-bottom:30px">{trust}</div>'
+
+            f'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:22px 0 34px">'
+            f'<span style="font-size:13px;color:rgba(255,255,255,0.6)">© 2026 Meetrao · Operated by '
+            f'<a href="#" style="color:rgba(255,255,255,0.85);text-decoration:underline;'
+            f'text-decoration-color:rgba(255,255,255,0.35);text-underline-offset:2px">Airly Studio</a>'
+            f'</span>'
+            f'<div style="margin-left:auto;display:flex;flex-wrap:wrap;gap:20px">'
+            + "".join(f'<a href="#" style="font-size:13px;color:rgba(255,255,255,0.75);'
+                      f'text-decoration:none">{t}</a>' for t in ["Privacy", "Terms", "Contact"])
+            + f'</div></div>{wordmark}</div></footer>')
 
 
 def how(w, m):
     pad = 18 if m else 26
     return (f'<section style="margin:0 auto;max-width:1200px;padding:72px {pad}px 0">'
             + section_head("How it works", "One link. One booking. Zero back-and-forth.",
-                           30 if m else 50, 640)
+                           30 if m else 50, 640, lh="1.03")
             + walkthrough(w, m) + '</section>')
 
 
@@ -923,6 +1141,7 @@ class Component extends DCLogic {
     var self = this;
     var s = this.state;
     var accent = this.props.accent || '%(accent)s';
+    var ground = this.props.ground || '%(ground)s';
 
     /* demo-calendar.tsx: September 2026 starts on a Tuesday, so the 1st sits
        in column 2. Weekends and anything before the 7th are closed. */
@@ -968,7 +1187,7 @@ class Component extends DCLogic {
     var money = function (n) { return '$' + Math.round(n).toLocaleString('en-US'); };
 
     var vals = {
-      accent: accent,
+      accent: accent, ground: ground,
       cells: cells, slots: slots, dayLabel: dayLabel,
       meetings: s.meetings, minutes: s.minutes, rate: s.rate,
       meetingsDisplay: String(s.meetings),
@@ -1003,7 +1222,7 @@ class Component extends DCLogic {
   }
 }
 """ % {"accent": ACCENT, "surface": SURFACE, "line": LINE, "lineStrong": LINE_STRONG,
-       "ink": INK, "ink3": INK3, "fill": FILL}
+       "ink": INK, "ink3": INK3, "fill": FILL, "ground": GROUND}
 
 
 def page(w):
@@ -1051,6 +1270,6 @@ DESK_NOTE = ("Meetrao landing page at 1440 — the shipped page rebuilt from sou
 PHONE_NOTE = ("The same page at 390 — the widths the real media queries produce: "
               "18px gutters, single-column grids, the 44px headline.")
 
-io.open("Main.dc.html", "w", encoding="utf-8").write(document(1440, 7050, DESK_NOTE))
-io.open("Mobile.dc.html", "w", encoding="utf-8").write(document(390, 12100, PHONE_NOTE))
+io.open("Main.dc.html", "w", encoding="utf-8").write(document(1440, 7450, DESK_NOTE))
+io.open("Mobile.dc.html", "w", encoding="utf-8").write(document(390, 11750, PHONE_NOTE))
 print("wrote Main.dc.html and Mobile.dc.html")

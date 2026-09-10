@@ -1,7 +1,7 @@
 {
   "artboards": [
-    { "file": "Main.dc.html", "title": "Landing — desktop 1440", "x": 0, "y": 0, "w": 1440, "h": 7050, "print": "flow" },
-    { "file": "Mobile.dc.html", "title": "Landing — phone 390", "x": 1600, "y": 0, "w": 390, "h": 12100, "print": "flow" }
+    { "file": "Main.dc.html", "title": "Landing — desktop 1440", "x": 0, "y": 0, "w": 1440, "h": 7450, "print": "flow" },
+    { "file": "Mobile.dc.html", "title": "Landing — phone 390", "x": 1600, "y": 0, "w": 390, "h": 11750, "print": "flow" }
   ],
   "annotations": [
     {
