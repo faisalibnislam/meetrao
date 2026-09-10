@@ -61,3 +61,8 @@ export function buttonClass(
     extra,
   );
 }
+
+/* Enumerated from the records above, not re-listed, so /preview cannot show a
+   stale matrix after a variant or height is added. */
+export const BUTTON_VARIANTS = Object.keys(VARIANT) as ButtonVariant[];
+export const BUTTON_SIZES = Object.keys(SIZE).map(Number) as ButtonSize[];

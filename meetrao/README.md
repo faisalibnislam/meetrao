@@ -143,6 +143,34 @@ and a bare origin there means the allow-list rejected ours.
 `siteUrl()` falls back to Vercel's host variables, and the per-deployment one
 changes on every push — an address that can never be allow-listed.
 
+## The component gallery
+
+`/preview` renders every UI primitive in every state it ships in — the token
+table, the type scale, all 49 icons, the full button matrix, panels, controls,
+table, overlays. One request, no session.
+
+It exists because the alternative is booting an authenticated screen and hunting
+for the one component you changed. Seeing the whole vocabulary at once is what
+makes an inconsistency findable at all.
+
+Two rules keep it honest, and both are load-bearing:
+
+- **It enumerates from the source.** Icons come from `ICON_NAMES`, buttons from
+  `BUTTON_VARIANTS × BUTTON_SIZES`, colours are read live out of the cascade by
+  the swatch components. A list retyped into the page is a list that goes stale,
+  and a gallery that lies about the system is worse than no gallery. Adding an
+  icon or a button height shows up there without editing the page.
+- **It adds no colour, size or radius of its own.** Everything on it is a token
+  or a component.
+
+**Never served in production.** `previewEnabled()` in `src/lib/preview.ts` allows
+it in `next dev` and on Vercel preview deployments, and refuses whenever
+`VERCEL_ENV` is `production` — that variable is set by the platform and cannot be
+overridden in project settings, so it is the one to trust when the two disagree.
+The page also carries `robots: { index: false }`. `src/lib/preview.test.ts`
+covers the gate; production was checked by building with `VERCEL_ENV=production`
+and confirming the route answers 404.
+
 ## Receiving support mail
 
 `support@meetrao.com` is the address the contact form delivers to, and it is a

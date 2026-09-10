@@ -169,6 +169,13 @@ const G = {
 
 export type IconName = keyof typeof G;
 
+/** Every glyph, in declaration order. The gallery at /preview enumerates this
+    rather than a copied list, so a new icon shows up there for free. */
+export const ICON_NAMES = Object.keys(G) as IconName[];
+
+/** The seven glyphs drawn as fills; the rest are stroked. */
+export const FILLED_ICONS = (Object.keys(G) as IconName[]).filter((n) => "fill" in G[n]);
+
 /** Every codepoint the design files reference, mapped to a name in this set. */
 export const FA_CODEPOINTS: Record<string, IconName> = {
   f002: "search",
