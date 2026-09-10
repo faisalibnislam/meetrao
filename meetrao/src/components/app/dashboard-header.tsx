@@ -8,7 +8,13 @@ import { useNow } from "@/lib/use-client-value";
    the line beside the greeting is never stale by more than half a minute.
 
    The server's `now` is rendered first and the browser's clock takes over on
-   hydration, so the markup matches and nothing flashes. */
+   hydration, so the markup matches and nothing flashes.
+
+   Sans, not DM Mono. Mono earns its place on values you compare column-wise —
+   a booking reference, a link — and this line is neither; set in mono at 11.5px
+   with 0.04em tracking it read as a machine stamp under a serif greeting. The
+   tracking goes with it: mono's letter-spacing is wrong on a proportional
+   face. */
 export function DashboardHeader({
   firstName,
   timeZone,
@@ -40,9 +46,9 @@ export function DashboardHeader({
         {greetingFor(now, timeZone)}, {firstName}.
       </h1>
       <div className="flex flex-wrap items-center gap-[9px]">
-        <span className="font-mono text-[11.5px] tracking-[0.04em] text-ink-2">{date}</span>
+        <span className="text-[12.5px] text-ink-2">{date}</span>
         <span aria-hidden="true" className="h-[3px] w-[3px] flex-none rounded-full bg-line-strong" />
-        <span className="font-mono text-[11.5px] tracking-[0.04em] text-ink-2">{time}</span>
+        <span className="text-[12.5px] text-ink-2">{time}</span>
       </div>
     </div>
   );

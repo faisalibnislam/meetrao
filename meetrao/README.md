@@ -143,6 +143,29 @@ and a bare origin there means the allow-list rejected ours.
 `siteUrl()` falls back to Vercel's host variables, and the per-deployment one
 changes on every push — an address that can never be allow-listed.
 
+**The app renders 1.3x on desktop.** `.app-scale` in `globals.css`, on the app
+shell only — the marketing side is untouched. As built the dashboard's content
+stopped 622px down a 900px window and left ~280px of bare ground under it; at
+1.3x it ends at 894px. `zoom` rather than rewriting several hundred literal
+pixel values across forty components, because the tokens are transcribed
+verbatim from the handoff and are meant to stay that way.
+
+Three things about it are not arbitrary. The switch is **1066px, not 820px**:
+media queries do not see zoom, the app's own breakpoint is 820px, and
+820 × 1.3 = 1066, so the two rules meet exactly with no band where a scaled
+layout is asked to behave like a narrow one. The **height is divided back out**
+— `vh` is unaffected by zoom, so an unscaled `h-screen` inside a 1.3x box
+computes 130vh and the shell overflows. And the **toast is scaled separately**
+via `body:has(.app-scale)`, because it is mounted by the root layout, outside
+the shell, and would otherwise pop at 1x beside a 1.3x app.
+
+Phones and tablets are excluded deliberately: at 1.3x the dashboard grows from
+1566px to 2294px of scrolling for the same day.
+
+Measured, not assumed — zoom flips at exactly 1066/1065, the shell stays one
+screen tall with no page scroll, and fixed overlays still cover the viewport,
+so modals are unaffected.
+
 ## The component gallery
 
 `/preview` renders every UI primitive in every state it ships in — the token

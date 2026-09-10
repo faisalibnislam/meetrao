@@ -7,7 +7,14 @@ import type { BookingView } from "@/lib/data/bookings";
 import { cx } from "@/lib/cx";
 
 /* Today's rows carry a Join button; later rows stack the day over the time and
-   do not, because a meeting three days out has nothing to join yet. */
+   do not, because a meeting three days out has nothing to join yet.
+
+   The time column is 134px, not the design's 112px. formatTimeRange keeps both
+   meridiems whenever a range crosses noon or midnight, and its widest output —
+   "10:00 AM – 10:30 PM" — measures 127.4px at 13px/600 in Instrument Sans. At
+   112px roughly half of realistic bookings wrapped onto a second line, which
+   also pushed the row's own height around. 134px clears the worst case with
+   about 5% to spare. Measured in a browser, not estimated. */
 
 export function DashboardRows({
   rows,
@@ -30,11 +37,13 @@ export function DashboardRows({
             )}
           >
             {variant === "today" ? (
-              <span className="w-[112px] flex-none text-[13px] font-semibold text-ink">{row.timeRange}</span>
+              <span className="w-[134px] flex-none text-[13px] font-semibold whitespace-nowrap text-ink">
+                {row.timeRange}
+              </span>
             ) : (
-              <div className="flex w-[112px] flex-none flex-col gap-[1px]">
+              <div className="flex w-[134px] flex-none flex-col gap-[1px]">
                 <span className="text-[13px] font-semibold text-ink">{row.dayLabel}</span>
-                <span className="text-[12px] text-ink-3">{row.timeRange}</span>
+                <span className="text-[12px] whitespace-nowrap text-ink-3">{row.timeRange}</span>
               </div>
             )}
 

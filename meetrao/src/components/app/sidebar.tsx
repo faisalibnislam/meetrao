@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { Avatar } from "@/components/ui/badge";
+import { Avatar, Eyebrow } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { useToast } from "@/components/ui/toast";
 import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
 
@@ -16,11 +17,24 @@ import { cx } from "@/lib/cx";
    the layout is unstyled. Only the drawer's open state and the account menu
    need state.
 
+   Below the nav the rail carries three things the product already knows: a way
+   to create a meeting, every bookable link, and whether Google Calendar is
+   connected. Four nav rows left roughly 600px of bare #EFEDE7 above the account
+   block; these fill it with work rather than decoration. Nothing here is new
+   state — the links are the meeting types, the status is connectionStatus().
+
    Settings is NOT a nav row — it lives in the account menu. The admin console
    keeps its own Settings row, because that is a different screen; an account
    menu offering Settings as well would give an admin two identical adjacent
    rows, the second dropping them out of the console.
    ───────────────────────────────────────────────────────────────────────────── */
+
+/** One bookable link. `id` "all" is the account link that offers every type. */
+export type BookingLink = { id: string; name: string; link: string };
+
+/** Past this many rows the list stops and offers Meetings instead, so a host
+    with a dozen meeting types cannot push the account block off the bottom. */
+const LINK_CAP = 4;
 
 export type NavItem = {
   href: string;
@@ -39,6 +53,8 @@ export function Sidebar({
   email,
   isAdmin,
   avatarUrl,
+  links = [],
+  calendarConnected,
   onSignOut,
 }: {
   items: NavItem[];
@@ -46,9 +62,26 @@ export function Sidebar({
   email: string;
   isAdmin: boolean;
   avatarUrl?: string | null;
+  /** Account link first, then one row per active meeting type. */
+  links?: BookingLink[];
+  /** Omitted in the admin console, which has no calendar of its own. */
+  calendarConnected?: boolean;
   onSignOut: () => void | Promise<void>;
 }) {
   const pathname = usePathname();
+  const toast = useToast();
+  const [copied, setCopied] = useState<string | null>(null);
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  useEffect(() => () => clearTimeout(copyTimer.current), []);
+
+  async function copyLink(row: BookingLink) {
+    await navigator.clipboard?.writeText(`https://${row.link}`).catch(() => {});
+    clearTimeout(copyTimer.current);
+    setCopied(row.id);
+    toast({ tone: "ok", title: "Copied", text: row.link });
+    copyTimer.current = setTimeout(() => setCopied(null), 1800);
+  }
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [lastPath, setLastPath] = useState(pathname);
@@ -120,6 +153,16 @@ export function Sidebar({
           </span>
         ) : null}
       </div>
+
+      {/* Creating a meeting used to mean going to Meetings first. Hidden on the
+          mobile bar, where the drawer already carries navigation. */}
+      <Link
+        href="/meetings/new"
+        className="unlink mb-[12px] box-border inline-flex h-[32px] w-full items-center justify-center gap-[7px] rounded-[6px] border border-accent bg-accent px-[11px] text-[12.5px] font-semibold text-white transition-colors duration-[120ms] hover:border-accent-2 hover:bg-accent-2 hover:text-white max-[820px]:hidden"
+      >
+        <Icon name="plus" size={12} />
+        New meeting
+      </Link>
 
       <button
         type="button"
@@ -226,6 +269,82 @@ export function Sidebar({
           </button>
         </div>
       </div>
+
+      {links.length ? (
+        <div className="mt-auto flex flex-none flex-col gap-[7px] pt-[16px] pb-[12px] max-[820px]:hidden">
+          {/* The Eyebrow primitive, mono and all. The dashboard's date line and
+              trend chips moved to sans; whether every eyebrow in the product
+              follows is one decision to take once, everywhere — not by accident,
+              here. */}
+          <Eyebrow size={10.5} className="px-[4px]">
+            {links.length > 2 ? "Your links" : "Your link"}
+          </Eyebrow>
+          <div className="overflow-hidden rounded-[6px] border border-line bg-white/55">
+            {links.slice(0, LINK_CAP + 1).map((row, i) => (
+              <button
+                key={row.id}
+                type="button"
+                onClick={() => void copyLink(row)}
+                title={`Copy ${row.link}`}
+                className={cx(
+                  "flex w-full cursor-pointer items-center gap-[8px] border-0 bg-transparent px-[9px] py-[7px] text-left hover:bg-white/70",
+                  i > 0 && "border-t border-line-soft",
+                )}
+              >
+                <span className="flex min-w-0 flex-1 flex-col gap-[1px]">
+                  <span className="overflow-hidden text-[12px] font-semibold text-ellipsis whitespace-nowrap text-ink">
+                    {row.name}
+                  </span>
+                  <span className="overflow-hidden text-[10.5px] text-ellipsis whitespace-nowrap text-ink-3">
+                    {row.id === "all" ? row.link : `/${row.link.split("/").pop()}`}
+                  </span>
+                </span>
+                <Icon
+                  name={copied === row.id ? "check" : "copy"}
+                  weight={copied === row.id ? "solid" : "light"}
+                  size={10}
+                  className={cx("flex-none", copied === row.id ? "text-accent" : "text-ink-3")}
+                />
+              </button>
+            ))}
+            {links.length > LINK_CAP + 1 ? (
+              <Link
+                href="/meetings"
+                className="unlink block border-t border-line-soft px-[9px] py-[7px] text-[11px] font-medium text-ink-3 hover:bg-white/70 hover:text-ink"
+              >
+                +{links.length - LINK_CAP - 1} more in Meetings
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
+
+      {calendarConnected !== undefined ? (
+        <Link
+          href="/settings/calendar"
+          className={cx(
+            "unlink box-border flex w-full flex-none items-center gap-[8px] rounded-[6px] border px-[9px] py-[8px] mb-[12px] max-[820px]:hidden",
+            "transition-colors duration-[120ms]",
+            links.length ? "" : "mt-auto",
+            calendarConnected
+              ? "border-line bg-white/55 hover:bg-white/80"
+              : "border-amber-line bg-amber-soft hover:bg-amber-soft",
+          )}
+        >
+          <span
+            aria-hidden="true"
+            className={cx("h-[6px] w-[6px] flex-none rounded-full", calendarConnected ? "bg-accent" : "bg-amber")}
+          />
+          <span className="flex min-w-0 flex-1 flex-col gap-[1px]">
+            <span className="overflow-hidden text-[11.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
+              Google Calendar
+            </span>
+            <span className={cx("overflow-hidden text-[10.5px] text-ellipsis whitespace-nowrap", calendarConnected ? "text-ink-3" : "text-amber-ink")}>
+              {calendarConnected ? "Connected · conflicts checked" : "Not connected — connect it"}
+            </span>
+          </span>
+        </Link>
+      ) : null}
 
       <div className="relative mt-auto flex flex-none items-center gap-[9px] border-t border-line px-[4px] pt-[12px] pb-[2px] max-[820px]:hidden">
         <div className="relative w-full">

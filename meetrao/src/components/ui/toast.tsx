@@ -45,7 +45,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         <div
           role="status"
           aria-live="polite"
-          className="animate-in fixed right-[18px] bottom-[58px] z-130 flex max-w-[320px] items-start gap-[11px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px] shadow-[var(--pop)]"
+          className="app-toast animate-in fixed right-[18px] bottom-[58px] z-130 flex max-w-[320px] items-start gap-[11px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px] shadow-[var(--pop)]"
         >
           <Icon name={glyph.icon} weight="solid" size={13} className={`mt-[1px] flex-none ${glyph.className}`} />
           <div className="flex min-w-0 flex-col gap-[2px]">

@@ -200,6 +200,49 @@
   animation: mu-spin 700ms linear infinite;
 }
 
+/* ── The app's desktop scale ──────────────────────────────────────────────────
+   Every element in the signed-in app renders 30% larger on a desktop screen.
+
+   As built, the dashboard's content stopped 622px down a 900px window and left
+   ~280px of bare ground under it; at 1.3x it ends at 894px and the same content
+   fills the screen. `zoom` rather than rewriting several hundred literal pixel
+   values across forty components: the tokens are transcribed verbatim from the
+   design handoff and are meant to stay that way, and one property that scales
+   type, controls, borders and gaps together cannot drift from itself.
+
+   1066px, not 820px, is the switch. The app's own breakpoint is 820px, media
+   queries do not see zoom, and 820 x 1.3 = 1066 — so above this width the
+   zoomed layout is always at least 820px of CSS and the desktop arrangement is
+   always the one in play. Below it nothing is scaled and 820px applies
+   directly. The two rules meet exactly, with no band where a scaled layout is
+   being asked to behave like a narrow one.
+
+   Phones and tablets are deliberately excluded. At 1.3x the dashboard grows
+   from 1566px to 2294px of scrolling for the same day — 46% further for no
+   gain on a screen that was never empty.
+
+   The height override is not optional. `vh` is viewport-relative and unaffected
+   by zoom, so an unscaled `h-screen` inside a 1.3x box computes 130vh and the
+   shell overflows the window. Dividing it back out is what keeps the app
+   exactly one screen tall. It is unlayered, which is how it beats Tailwind's
+   layered `h-screen` — see the note on @layer base above. ── */
+@media (min-width: 1066px) {
+  .app-scale {
+    zoom: 1.3;
+    height: calc(100vh / 1.3);
+  }
+}
+
+/* The toast is mounted by the root layout, outside the scaled shell, because
+   the public booking page and the support form raise toasts too. Left alone it
+   would pop at 1x beside a 1.3x app. `:has()` scales it only on a page that
+   actually carries the app shell, so the marketing side is untouched. */
+@media (min-width: 1066px) {
+  body:has(.app-scale) .app-toast {
+    zoom: 1.3;
+  }
+}
+
 /* Tables scroll inside their card; the page body never scrolls sideways. */
 .scroll-x {
   overflow-x: auto;

@@ -2,7 +2,12 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 
 /* The dashboard's four tinted cards. Each carries its own colour, and the
-   colour is the card's identity — status colours never decorate elsewhere. */
+   colour is the card's identity — status colours never decorate elsewhere.
+
+   The trend chip is sans rather than DM Mono, and semibold to hold its weight
+   at a proportional face's smaller apparent size. It keeps the uppercase and
+   the wide tracking: it is a micro-label, and that is what carries the reading
+   at 11px, not the family. */
 
 export type MetricTone = "accent" | "slate" | "amber" | "plain";
 
@@ -44,7 +49,7 @@ export function MetricCard({
           <Icon name={icon} size={13} />
         </span>
         {trend ? (
-          <span className={cx("pt-[4px] font-mono text-[10px] tracking-[0.06em] uppercase", t.ink)}>{trend}</span>
+          <span className={cx("pt-[4px] text-[11px] font-semibold tracking-[0.06em] uppercase", t.ink)}>{trend}</span>
         ) : null}
       </div>
 
