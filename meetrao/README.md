@@ -324,9 +324,12 @@ deduped, so without it the profile would be fetched twice per navigation.
 **`regions: ["hnd1"]` in `vercel.json`.** The Supabase project is in
 `ap-northeast-1` (Tokyo). Vercel functions default to `iad1` (Washington), which
 put a Pacific crossing — roughly 150–180 ms — on every one of those hops. Pinning
-the functions to Tokyo is the largest single win here and needs no code. Check it
-after a deploy: `curl -sI https://www.meetrao.com/login | grep x-vercel-id` — the
-region is the prefix. To undo it, delete the `regions` key.
+the functions to Tokyo is the largest single win here and needs no code, and a
+*single* region is allowed on Hobby — only multi-region is a paid feature.
+Confirmed: every deploy since the key was added reports success. Check which
+region actually served a request with
+`curl -sI https://www.meetrao.com/login | grep x-vercel-id` — the region is the
+prefix. To undo it, delete the `regions` key.
 
 **Still open, deliberately.** The proxy calls `auth.getUser()` on every request,
 and that is the remaining fourth hop. `getClaims()` would verify the token
