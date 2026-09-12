@@ -32,12 +32,13 @@ export default async function AdminDashboard() {
   return (
     <AppScreen title="Dashboard" subtitle="Platform overview.">
       <div className="flex flex-col gap-[22px]">
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(148px,1fr))] overflow-hidden rounded-[8px] border border-line bg-surface">
-          {cells.map((cell, i) => (
-            <div
-              key={cell.label}
-              className={cx("flex flex-col gap-[4px] px-[15px] py-[13px]", i > 0 && "border-l border-line-soft")}
-            >
+        {/* 1px grid gaps showing the container through, not borders on the
+            cells: this grid rewraps to two-by-two on a phone, and a
+            border-left-on-all-but-the-first rule draws a stray line at the
+            start of the second row when it does. */}
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(148px,1fr))] gap-[1px] overflow-hidden rounded-[8px] border border-line bg-line-soft">
+          {cells.map((cell) => (
+            <div key={cell.label} className="flex flex-col gap-[4px] bg-surface px-[15px] py-[13px]">
               <span className="text-[20px] leading-[1.1] font-semibold tracking-[-0.015em] text-ink">
                 {cell.value.toLocaleString("en-US")}
               </span>

@@ -417,6 +417,51 @@ The webhook itself is created in the Resend dashboard under Webhooks, pointed at
 Forwarding is deliberately dumb — it does not parse, thread or file anything. It
 turns an API-only inbox back into ordinary email and stops there.
 
+## Analytics
+
+Two independent things, and the distinction is the whole design:
+
+**The first-party counter** is always on and needs no configuration. A client
+beacon (`components/analytics/beacon.tsx`) posts a path and, once, a referrer to
+`POST /api/analytics/collect`; the route derives the country from Vercel's edge
+headers, the device from the user-agent, and a visitor hash from
+sha256(salt · UTC date · IP · user-agent), then writes one row to `site_visits`
+with the service role. **The IP never becomes a column.** The date is inside the
+hash, so the pseudonym dies at midnight UTC and "did this person come back last
+week" is unanswerable by construction. Nothing is written to the visitor's
+device, which is why this half needs no consent. The signed-in product is not
+counted at all — see `SKIP` in beacon.tsx.
+
+`site_visits` has an admin-only SELECT policy and **no insert policy and no
+grant to anon**: a browser that could insert there could invent a country. The
+route is the only writer. Rows are deleted after 400 days by `analytics_prune()`,
+called on roughly one request in five hundred because this plan has no
+scheduler.
+
+Read back through three aggregate functions — `analytics_overview`,
+`analytics_daily`, `analytics_top` — all `security invoker`, so the RLS policy is
+the only access rule and a non-admin sees zeroes rather than an error. The screen
+is `/admin/analytics`.
+
+- `ANALYTICS_SALT` — optional. Unset, the salt is derived from
+  `SUPABASE_SERVICE_ROLE_KEY`, which is already a stable server-only secret.
+  Setting it explicitly means rotating that key no longer resets the day's
+  unique-visitor count.
+
+**Google Analytics** is off unless `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set, and
+then it still does not load until a visitor presses Accept. Not "loaded with
+consent mode denied" — not loaded: no script from googletagmanager.com is on the
+page and no request reaches Google. Measured, in a real browser: 0 requests to
+Google before Accept, 1 after, 0 after "No thanks". With the variable unset there
+is no banner either, because there is nothing to consent to.
+
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID` — optional, `G-XXXXXXXXXX`.
+
+GA4's own `page_view` fires once when the tag loads, so `send_page_view: false`
+is set and the event is fired per pathname change instead — this is a
+client-side router, and without that every page but the landing page would be
+invisible.
+
 ## Still open
 
 - **Google redirect URIs.** The credentials are verified working, but which
@@ -439,9 +484,13 @@ turns an API-only inbox back into ordinary email and stops there.
   commercially. Replacing one is a matter of overwriting the file — see
   `public/use-cases/README.md`. The featured panel would also like a 1600px
   source rather than 1024 to be crisp at 2×.
-- **Five legal decisions** are visible amber callouts on `/terms` and `/privacy`,
-  including a cookie-consent banner that does not exist and that EU/UK visitors
-  legally require.
+- **A lawyer has still not read `/terms` and `/privacy`.** Both were rewritten
+  for publication: the amber draft banner and the five open callouts are gone,
+  because each question behind them has been answered (sole proprietor in
+  Cumilla; minimum age 16; SCCs for EU/UK transfers; liability capped at the
+  greater of fees paid in twelve months or US$50; a consent banner that now
+  exists). Those are defensible answers, not reviewed ones — worth an hour of a
+  Bangladeshi lawyer's time before anyone relies on the cap.
 - **No reschedule flow.** Guests cancel and rebook. `booking-changed.html` and
   `sendRescheduled()` exist, unwired, for whenever it is built.
 - **The verification email** is sent by Supabase, not by us — see the Auth

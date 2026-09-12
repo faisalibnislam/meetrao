@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Sans, Instrument_Serif } from "next/font/google";
+import { AnalyticsBeacon } from "@/components/analytics/beacon";
+import { AnalyticsConsent } from "@/components/analytics/consent";
 import { ToastProvider } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -40,6 +42,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
         <ToastProvider>{children}</ToastProvider>
+        {/* Both are client components that render no markup of their own (the
+            consent banner only once someone has to be asked), so neither opts
+            a single page out of static rendering — which the marketing layout
+            depends on. Read process.env directly rather than through env(): a
+            NEXT_PUBLIC_ variable is inlined at build time, and calling the
+            validator here would drag the whole server schema into the browser
+            bundle. */}
+        <AnalyticsBeacon />
+        <AnalyticsConsent measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? ""} />
       </body>
     </html>
   );
