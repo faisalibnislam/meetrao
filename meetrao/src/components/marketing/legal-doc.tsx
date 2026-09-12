@@ -4,8 +4,17 @@ import { Eyebrow } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   The shell both legal documents share: a context strip, the draft notice, a
-   sticky contents rail and the prose column.
+   The shell both legal documents share: a context strip, a sticky contents rail
+   and the prose column.
+
+   DraftNotice and NeedsDecision used to live here — an amber banner across the
+   top of each document and inline callouts for the open questions. Both are
+   gone, along with the questions they held: the operator, the minimum age, the
+   transfer mechanism, the liability cap and the consent banner have all been
+   decided, and the documents are published rather than drafts. Do not
+   reintroduce a "draft for legal review" banner on a page Google's OAuth
+   verification reads — a policy that announces it is not final reads as one
+   that does not apply.
 
    The rail is `box-sizing: border-box` with a max-height budget that has to
    cover the sticky offset AND the element's own padding and border, or it hangs
@@ -33,39 +42,6 @@ export function DocContextStrip({
           <Icon name="chevron-right" size={9} />
         </Link>
       </div>
-    </div>
-  );
-}
-
-/** The whole document is a draft until a lawyer has read it, and says so. */
-export function DraftNotice({ children }: { children: ReactNode }) {
-  return (
-    <div className="border-b border-amber-line bg-amber-soft">
-      <div className="mx-auto flex max-w-[1148px] gap-[13px] px-[26px] py-[16px] max-[560px]:px-[18px]">
-        <span className="inline-flex h-[22px] w-[22px] flex-none items-center justify-center rounded-full bg-amber text-[12px] font-bold text-white">
-          !
-        </span>
-        <div className="flex flex-col gap-[3px]">
-          <span className="text-[13.5px] font-semibold text-amber-ink">Draft for legal review</span>
-          <span className="text-[12.5px] leading-[1.55] text-pretty text-amber-ink">{children}</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * An open question a lawyer or the owner has to close.
- *
- * These stay as visible callouts. Inventing legal text to fill them would look
- * finished and be worse than an honest gap.
- */
-export function NeedsDecision({ label = "Needs a decision", children }: { label?: string; children: ReactNode }) {
-  return (
-    <div className="my-[18px] rounded-[8px] border border-amber-line bg-amber-soft px-[15px] py-[13px]">
-      <span className="text-[13px] leading-[1.6] text-pretty text-amber-ink">
-        <strong className="font-semibold">{label}:</strong> {children}
-      </span>
     </div>
   );
 }
