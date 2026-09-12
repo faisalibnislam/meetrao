@@ -438,10 +438,19 @@ reading "Meetrao" and no postal address, and with an Unsubscribe link pointing
 at a settings page that requires the account the reader is in the middle of
 confirming.
 
-If Supabase is on its built-in SMTP rather than a custom one, that mail leaves
-from a shared Supabase sending domain — not meetrao.com — so none of the DKIM,
-SPF or DMARC above applies to it at all. Check Authentication → Emails → SMTP
-Settings; the sender on that screen is the one that matters.
+Supabase's SMTP is configured and correct — custom SMTP on, `smtp.resend.com`
+port 465, sender `hello@meetrao.com`. So this mail leaves from meetrao.com
+through Resend like everything else, and the DKIM, SPF and DMARC above do apply
+to it. (Written down because "Supabase must be on its shared built-in SMTP" is
+the obvious guess when its mail junks and everything else looks right, and it
+was wrong here — checking the screen beats assuming.)
+
+What is still odd about that email is the link domain. The button and the
+visible fallback URL both point at `<project>.supabase.co` with a long opaque
+token, in a message sent from meetrao.com. Sender and link domains disagreeing
+is a phishing heuristic, and this one disagrees loudly. Supabase's custom auth
+domain add-on puts that link on a meetrao.com subdomain and removes the signal;
+short of that, the raw URL does not have to be printed as visible body text.
 
 **Diagnosing a junked message.** Open it, view the original, and read
 `Authentication-Results`. `spf=pass` and `dkim=pass` there means authentication
