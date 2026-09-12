@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Logo } from "@/components/ui/logo";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { SiteAccountMenu } from "./site-account-menu";
+import { SiteAccountLive, SignedOutActions } from "./site-account-live";
 import { POSTAL_ADDRESS } from "@/lib/contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -27,10 +28,21 @@ export type NavAccount = {
 export function SiteNav({
   sectionLinks = true,
   account,
+  liveAccount,
 }: {
   sectionLinks?: boolean;
   /** Signed in, the two sign-up buttons make no sense — show the way back. */
   account?: NavAccount | null;
+  /**
+   * Resolve the session in the BROWSER instead of on the server.
+   *
+   * For the statically rendered pages — landing, Terms, Privacy — where reading
+   * a cookie on the server would turn the whole page dynamic. See
+   * site-account-live.tsx for why that trade is not worth making on the page
+   * search engines measure. Pages that already read the session (/help,
+   * /support) pass `account` instead and get the right nav with no swap.
+   */
+  liveAccount?: { onSignOut: () => void | Promise<void> };
 }) {
   return (
     <header className="pointer-events-none sticky top-0 z-60 px-[26px] pt-[20px] max-[720px]:px-0 max-[720px]:pt-0">
@@ -56,26 +68,10 @@ export function SiteNav({
               avatarUrl={account.avatarUrl}
               onSignOut={account.onSignOut}
             />
+          ) : liveAccount ? (
+            <SiteAccountLive onSignOut={liveAccount.onSignOut} />
           ) : (
-            <>
-              <Link
-                href="/login"
-                className="unlink inline-flex min-h-[38px] items-center px-[8px] text-[13.5px] text-ink-2"
-              >
-                Log in
-              </Link>
-              <Link
-                href="/signup"
-                className="unlink inline-flex h-[38px] items-center gap-[8px] rounded-[7px] bg-accent px-[15px] text-[13px] font-semibold whitespace-nowrap text-white transition-colors duration-[120ms] hover:bg-accent-2 hover:text-white max-[400px]:px-[12px]"
-              >
-                {/* On a 320px screen the full label put this button 21px past
-                    the right edge, where it could not be tapped at all. The
-                    label shortens rather than the button shrinking, so the
-                    primary action keeps its full height and weight. */}
-                <span className="max-[400px]:hidden">Get started — Free</span>
-                <span className="hidden max-[400px]:inline">Get started</span>
-              </Link>
-            </>
+            <SignedOutActions />
           )}
         </div>
       </div>
