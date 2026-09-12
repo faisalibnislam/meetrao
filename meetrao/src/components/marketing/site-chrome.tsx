@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Logo } from "@/components/ui/logo";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { SiteAccountMenu } from "./site-account-menu";
+import { POSTAL_ADDRESS } from "@/lib/contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Marketing chrome — one sticky nav and one footer, shared by the landing page
@@ -139,7 +140,6 @@ export function SiteFooter() {
       links: [
         ["Privacy Policy", "/privacy"],
         ["Terms of Service", "/terms"],
-        ["Operated by Airly Studio", "/terms"],
       ],
     },
   ];
@@ -218,15 +218,7 @@ export function SiteFooter() {
 
         <div className="flex flex-wrap items-center gap-[16px] pt-[22px] pb-[34px]">
           <span className="text-[13px] text-white/60">
-            © 2026 Meetrao · Operated by{" "}
-            <a
-              href="https://airlystudio.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/85 underline decoration-white/35 underline-offset-2 hover:text-white hover:decoration-white"
-            >
-              Airly Studio
-            </a>
+            © 2026 Meetrao · {POSTAL_ADDRESS}
           </span>
           <div className="ml-auto flex flex-wrap gap-[20px]">
             <Link href="/privacy" className="unlink text-[13px] text-white/75 hover:text-white">

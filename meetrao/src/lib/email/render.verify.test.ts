@@ -1,4 +1,5 @@
 import { describe, expect, it, vi, beforeAll } from "vitest";
+import { POSTAL_ADDRESS } from "@/lib/contact";
 
 /* Renders all six templates through the real senders, with the Resend SDK's
    network call intercepted. Catches an unfilled {{field}}, which render()
@@ -17,7 +18,7 @@ beforeAll(() => {
     GOOGLE_CLIENT_SECRET: "test-client-secret",
     RESEND_API_KEY: "re_test_00000000",
     EMAIL_FROM: "Meetrao <support@meetrao.com>",
-    EMAIL_POSTAL_ADDRESS: "301 King St, Alexandria, VA 22314",
+    EMAIL_POSTAL_ADDRESS: POSTAL_ADDRESS,
     NEXT_PUBLIC_SITE_URL: "https://meetrao.vercel.app",
   })) {
     vi.stubEnv(k, v);
@@ -91,7 +92,7 @@ describe("every transactional email renders", () => {
 
   it("prints the postal address in every footer, which anti-spam law requires", () => {
     for (const e of sent) {
-      expect(e.html, `no postal address in "${e.subject}"`).toContain("301 King St, Alexandria, VA 22314");
+      expect(e.html, `no postal address in "${e.subject}"`).toContain(POSTAL_ADDRESS);
     }
   });
 

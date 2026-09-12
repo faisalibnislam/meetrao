@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { globSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "./contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   One support address, and only one.
+   One operator, one postal address, one support inbox.
 
    The contact address was scattered across six places — the Support page, two
    sections each of Terms and Privacy, and two error messages — all carrying an
@@ -11,13 +12,14 @@ import path from "node:path";
    six is the obvious way to get this wrong, and the sixth only surfaces when
    somebody has already failed to reach us.
 
-   So the rule is checked rather than remembered: any address on a domain we
-   control has to be exactly support@meetrao.com. Fictional addresses on other
-   domains — form placeholders, the mock guests on the dashboard — are left
-   alone, which keeps the rule narrow enough not to need a growing allow-list.
-   ───────────────────────────────────────────────────────────────────────────── */
+   The same then happened to the operator's identity: a studio's name in the
+   footer, a US address on the Terms, a Bangladeshi one on the Privacy Policy,
+   and a third address again in the email footers. That is not a typo. It is the
+   first thing a Google verification reviewer compares against the OAuth consent
+   screen, and the first thing a regulator asks about.
 
-const SUPPORT = "support@meetrao.com";
+   So both rules are checked rather than remembered.
+   ───────────────────────────────────────────────────────────────────────────── */
 
 /** Domains the product owns. An address on one of these is a real address. */
 const OURS = ["meetrao.com", "airlystudio.com"];
@@ -49,7 +51,7 @@ describe("the support address", () => {
         const domain = address.slice(address.lastIndexOf("@") + 1);
 
         if (!OURS.some((d) => domain === d || domain.endsWith(`.${d}`))) continue;
-        if (address === SUPPORT) continue;
+        if (address === SUPPORT_EMAIL) continue;
 
         wrong.push(`${path.relative(SRC, file)}: ${match}`);
       }
@@ -68,7 +70,82 @@ describe("the support address", () => {
     ];
 
     for (const page of pages) {
-      expect(readFileSync(path.join(SRC, page), "utf8"), page).toContain(SUPPORT);
+      const text = readFileSync(path.join(SRC, page), "utf8");
+      // Either spelled out, or read from lib/contact — which is the point of
+      // the rule in the next block.
+      expect(text.includes(SUPPORT_EMAIL) || text.includes("SUPPORT_EMAIL"), page).toBe(true);
     }
+  });
+});
+
+/* ── the operator's identity ───────────────────────────────────────────────── */
+
+const ROOT = process.cwd();
+
+/** Everything shipped or deployed: app code, SQL, scripts, email templates. */
+function shippedFiles(): { file: string; text: string }[] {
+  const patterns = [
+    ["src", "**/*.{ts,tsx,css,html,md}"],
+    ["supabase", "**/*.{sql,html}"],
+    ["scripts", "**/*.mjs"],
+  ] as const;
+
+  return patterns
+    .flatMap(([dir, glob]) =>
+      globSync(glob, { cwd: path.join(ROOT, dir) })
+        .map((f) => path.join(dir, f))
+        // A test's fixtures are not shipped copy, and this file names the
+        // retired strings on purpose.
+        .filter((f) => !f.includes(".test.")),
+    )
+    .map((file) => ({ file, text: readFileSync(path.join(ROOT, file), "utf8") }));
+}
+
+const FILES = shippedFiles();
+
+describe("one operator, one address", () => {
+  it("reads the source at all", () => {
+    // Guards the guard: a moved directory would make every assertion below
+    // pass by finding nothing to check.
+    expect(FILES.length).toBeGreaterThan(50);
+  });
+
+  /* Every name and address Meetrao has been published under and no longer is.
+     Add to this list rather than removing from it — the point is that a retired
+     identity can never quietly come back. */
+  const RETIRED = ["Airly", "airlystudio", "Alexandria, VA", "301 King St", "22314"];
+
+  it.each(RETIRED)("has no trace of %s", (needle) => {
+    const found = FILES.filter((f) => f.text.includes(needle)).map((f) => f.file);
+    expect(found).toEqual([]);
+  });
+
+  it("defines the postal address exactly once, and imports it everywhere else", () => {
+    const literals = FILES.filter((f) => f.text.includes(POSTAL_ADDRESS)).map((f) => f.file);
+    expect(literals).toEqual([path.join("src", "lib", "contact.ts")]);
+  });
+
+  it("shows the address on both legal documents and in the footer", () => {
+    // Not by literal — by import, which is the point of the rule above.
+    for (const file of [
+      path.join("src", "app", "(marketing)", "privacy", "page.tsx"),
+      path.join("src", "app", "(marketing)", "terms", "page.tsx"),
+      path.join("src", "components", "marketing", "site-chrome.tsx"),
+    ]) {
+      const found = FILES.find((f) => f.file === file);
+      expect(found, `${file} is missing`).toBeDefined();
+      expect(found!.text, `${file} does not render the postal address`).toContain("POSTAL_ADDRESS");
+    }
+  });
+
+  it("puts the address in every email, through the environment", () => {
+    const send = FILES.find((f) => f.file === path.join("src", "lib", "email", "send.ts"));
+    expect(send, "lib/email/send.ts is missing").toBeDefined();
+    expect(send!.text).toContain("EMAIL_POSTAL_ADDRESS");
+
+    // …and that variable's default is the real address, so a deployment that
+    // never sets it still sends anti-spam-compliant mail.
+    const env = FILES.find((f) => f.file === path.join("src", "lib", "env.ts"));
+    expect(env!.text).toMatch(/EMAIL_POSTAL_ADDRESS:\s*z\.string\(\)\.default\(POSTAL_ADDRESS\)/);
   });
 });

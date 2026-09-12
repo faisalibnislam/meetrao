@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { POSTAL_ADDRESS } from "@/lib/contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Environment.
@@ -35,8 +36,13 @@ const serverSchema = z.object({
    * This is only the default. Set on Vercel, the variable wins.
    */
   EMAIL_FROM: z.string().default("Meetrao <support@meetrao.com>"),
-  /** Shown in the footer of every email; required by anti-spam law. */
-  EMAIL_POSTAL_ADDRESS: z.string().default(""),
+  /**
+   * Shown in the footer of every email; required by anti-spam law.
+   *
+   * Defaults to the real address rather than to "", so a deployment that never
+   * sets it still sends compliant mail. Set it on Vercel only to override.
+   */
+  EMAIL_POSTAL_ADDRESS: z.string().default(POSTAL_ADDRESS),
 
   /* Inbound mail. Both optional: unset, /api/resend/inbound does nothing and
      the rest of the app is unaffected. See README § "Receiving support mail". */
@@ -48,6 +54,28 @@ const serverSchema = z.object({
 
   /** Absolute origin, used for OAuth redirect URIs and links inside emails. */
   NEXT_PUBLIC_SITE_URL: z.string().url(),
+
+  /**
+   * Secret that salts the daily visitor hash. See lib/analytics/visit.ts.
+   *
+   * Optional, and the default is not a placeholder — `analyticsSalt()` falls
+   * back to the service-role key, which is already a stable server-only secret
+   * that never reaches a browser. Setting this explicitly buys one thing:
+   * rotating the service-role key then stops resetting the day's unique-visitor
+   * count. Nothing else changes.
+   */
+  ANALYTICS_SALT: z.string().default(""),
+
+  /**
+   * GA4 measurement ID ("G-XXXXXXXXXX").
+   *
+   * Unset, Google Analytics is not loaded at all — no script, no request to
+   * google-analytics.com — and the consent banner does not appear either. That
+   * is not a shortcut: the banner exists because GA writes cookies, and the
+   * first-party counter is cookie-free and needs no permission. A banner asking
+   * consent for nothing is a dark pattern in the other direction.
+   */
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().default(""),
 });
 
 export type Env = z.infer<typeof serverSchema>;

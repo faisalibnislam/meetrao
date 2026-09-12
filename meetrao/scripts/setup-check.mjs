@@ -20,8 +20,10 @@ const REQUIRED = [
 ];
 
 const OPTIONAL = [
-  ["EMAIL_FROM", 'defaults to "Meetrao <hello@meetrao.com>"'],
-  ["EMAIL_POSTAL_ADDRESS", "shown in every email footer — required by anti-spam law before launch"],
+  ["EMAIL_FROM", 'defaults to "Meetrao <support@meetrao.com>"'],
+  ["EMAIL_POSTAL_ADDRESS", "shown in every email footer; defaults to the real address, so unset is compliant"],
+  ["ANALYTICS_SALT", "salts the daily visitor hash; unset, it is derived from the service-role key"],
+  ["NEXT_PUBLIC_GA_MEASUREMENT_ID", 'Google Analytics 4 ID ("G-…"); unset, GA and its consent banner never load'],
 ];
 
 const file = resolve(process.cwd(), ".env.local");
