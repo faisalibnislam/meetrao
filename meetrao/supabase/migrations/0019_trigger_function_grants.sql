@@ -1,0 +1,60 @@
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 0019 · The four trigger functions 0003 missed
+--
+-- Nothing is broken today. This is consistency work, and it is worth saying so
+-- plainly before the SQL, because a migration that revokes EXECUTE from `anon`
+-- reads like a breach being patched and this one is not.
+--
+-- The mechanism is the one 0003 wrote down: Supabase's default privileges
+-- grant EXECUTE to `anon` and `authenticated` DIRECTLY on every function
+-- created in the `public` schema, and revoking from `public` does not touch a
+-- direct grant. So every function here starts life reachable over
+-- /rest/v1/rpc unless a migration names those two roles and takes it away.
+--
+-- 0003 did that for three functions, including one trigger function
+-- (reject_reserved_username) for exactly this reason. Four sibling trigger
+-- functions added later were missed:
+--
+--   contact_from_booking()     0012 · fills contacts from a new booking
+--   contact_from_invitee()     0012 · fills contacts from an added invitee
+--   notify_booking_created()   0014 · notifies the host of a new booking
+--   notify_booking_changed()   0014 · notifies the host of a move or cancel
+--
+-- Both migrations revoked the helpers those triggers call — upsert_contact,
+-- notify_host, local_when — and stopped there, so the helpers are locked and
+-- the triggers that call them are not.
+--
+-- Why that is harmless in practice: all four are `returns trigger`, and Postgres
+-- refuses to invoke a trigger function directly — "trigger functions can only
+-- be called as triggers" — before any of the body runs. There is no argument
+-- an /rest/v1/rpc caller can send that reaches the SECURITY DEFINER code
+-- inside. The grant is inert.
+--
+-- Why it is still worth removing: the rule this codebase actually wants to
+-- hold is "no SECURITY DEFINER function in `public` is reachable by `anon`
+-- unless it is a named guest-facing door". A rule like that can be checked, by
+-- a person reading a privilege listing or by a test. A rule with four
+-- unexplained exceptions cannot — whoever reads the next listing has to decide
+-- case by case whether each one is fine, and the first genuinely dangerous
+-- entry will look like one more of them. The cost of keeping the list clean is
+-- these four statements.
+--
+-- Revoked from `public` as well as by name: PUBLIC holds EXECUTE by Postgres
+-- default and anon/authenticated inherit it, so the direct grant and the
+-- inherited one both have to go. Triggers are unaffected either way — a
+-- trigger executes as its owner, not as the role that fired it, so revoking
+-- EXECUTE from anon does not stop a guest's booking from writing a contact
+-- row or a notification.
+--
+-- One caveat for whoever audits this next: grant state is NOT derivable from
+-- the migrations. admin_remove_account has no revoke in any file here and is
+-- nonetheless locked down in the live database — something outside these
+-- migrations took its grants away, and nothing in the repo records it. So read
+-- the live ACLs (pg_proc.proacl, or has_function_privilege) to learn what IS
+-- granted; these statements only pin what SHOULD be, from here forward.
+-- ─────────────────────────────────────────────────────────────────────────────
+
+revoke all on function public.contact_from_booking() from public, anon, authenticated;
+revoke all on function public.contact_from_invitee() from public, anon, authenticated;
+revoke all on function public.notify_booking_created() from public, anon, authenticated;
+revoke all on function public.notify_booking_changed() from public, anon, authenticated;
