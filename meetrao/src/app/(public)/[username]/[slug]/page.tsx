@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { OG_IMAGE } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { Eyebrow } from "@/components/ui/badge";
@@ -23,12 +24,37 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { username, slug } = await params;
   const host = await getPublicHost(username);
-  if (!host) return { title: "Not found" };
+  if (!host)
+    return { title: "Not found", robots: { index: false, follow: false } };
 
-  const meeting = (await getPublicMeetings(username)).find((m) => m.slug === slug);
+  const meeting = (await getPublicMeetings(username)).find(
+    (m) => m.slug === slug,
+  );
+  if (!meeting)
+    return { title: "Book a time", robots: { index: false, follow: false } };
+
+  const name = host.fullName || host.username;
+  const title = `${meeting.name} with ${name}`;
+  /* The host's own description when they wrote one, and a generated sentence
+     when they did not — an empty description leaves the search result to be
+     filled in from whatever text the crawler happens to find first, which on
+     this page is a list of times. */
+  const description =
+    meeting.description ||
+    `Book a ${meeting.durationMinutes}-minute ${meeting.name.toLowerCase()} with ${name}. ` +
+      `Live availability, no account needed, and a Google Meet link on every booking.`;
+
   return {
-    title: meeting ? `${meeting.name} with ${host.fullName || host.username}` : "Book a time",
-    description: meeting?.description || undefined,
+    title,
+    description,
+    alternates: { canonical: `/${host.username}/${meeting.slug}` },
+    openGraph: {
+      images: [OG_IMAGE],
+      type: "website",
+      title,
+      description,
+      url: `/${host.username}/${meeting.slug}`,
+    },
   };
 }
 
@@ -42,7 +68,9 @@ export default async function BookingPage({
   const host = await getPublicHost(username);
   if (!host) notFound();
 
-  const meeting = (await getPublicMeetings(username)).find((m) => m.slug === slug);
+  const meeting = (await getPublicMeetings(username)).find(
+    (m) => m.slug === slug,
+  );
   if (!meeting) notFound();
 
   const availability = await getMeetingAvailability(meeting.id);
@@ -86,14 +114,19 @@ export default async function BookingPage({
     .sort((a, b) => a - b)[0];
 
   const times = firstOpen
-    ? computeSlots({ ...shared, date: { year, month, day: firstOpen } }).map((d) => d.toISOString())
+    ? computeSlots({ ...shared, date: { year, month, day: firstOpen } }).map(
+        (d) => d.toISOString(),
+      )
     : [];
 
   // Records that the page was opened, which is what "Avg. reply time" measures.
-  const { data: pageViewId } = await supabaseAdmin().rpc("record_booking_page_view", {
-    p_host_id: host.id,
-    p_meeting_type_id: meeting.id,
-  });
+  const { data: pageViewId } = await supabaseAdmin().rpc(
+    "record_booking_page_view",
+    {
+      p_host_id: host.id,
+      p_meeting_type_id: meeting.id,
+    },
+  );
 
   return (
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">

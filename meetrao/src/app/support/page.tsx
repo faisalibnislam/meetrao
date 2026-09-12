@@ -15,6 +15,7 @@ export const metadata: Metadata = {
   title: "Support",
   description:
     "Tell us what you were trying to do and what happened instead. A person reads every message.",
+  alternates: { canonical: "/support" },
 };
 
 export default async function SupportPage() {

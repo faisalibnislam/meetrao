@@ -12,11 +12,20 @@ import { Walkthrough } from "@/components/marketing/walkthrough";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 import { useCasePhotos } from "@/lib/use-case-photos";
+import { DESCRIPTION, OG_IMAGE, faqLd, graph } from "@/lib/seo";
+import { JsonLd } from "@/components/seo/json-ld";
+import { FAQS } from "@/lib/faq";
 
+/* No `title` here, deliberately. The root layout's `title.default` already
+   leads with the category — which is what somebody who has never heard the name
+   types — and omitting the key inherits it.
+
+   `title: null` was the obvious way to write that and is wrong: it renders an
+   EMPTY <title>, on the home page, silently. Measured, not assumed. */
 export const metadata: Metadata = {
-  title: "Meetrao — one link, no back-and-forth",
-  description:
-    "Meetrao turns your availability into one booking link, so clients and teammates pick a time that works — without the back-and-forth. Free, with a Google Meet link on every booking.",
+  description: DESCRIPTION,
+  alternates: { canonical: "/" },
+  openGraph: { url: "/", images: [OG_IMAGE] },
 };
 
 const THREAD: [string, boolean][] = [
@@ -434,6 +443,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}
+      {/* Built from the same FAQS array the section below renders, so the
+          machine-readable answers and the ones a person reads cannot drift.
+          Google stopped showing FAQ rich results for most sites in 2023; this
+          is here for the retrieval systems that do read it — a model asked
+          "is Meetrao free?" gets Meetrao's own careful answer rather than a
+          paraphrase of the marketing copy. */}
+      <JsonLd json={graph(faqLd(FAQS))} />
       <section id="faq" className="border-t border-line bg-[#F4F3ED]">
         <div className="mx-auto max-w-[1200px] px-[26px] py-[64px] max-[560px]:px-[18px]">
           <Reveal>

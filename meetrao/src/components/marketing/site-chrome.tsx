@@ -124,11 +124,21 @@ export function SiteFooter() {
       ],
     },
     {
+      /* A crawler reaches a page by following a link to it. Two comparison
+         pages with nothing pointing at them are two pages that get found
+         late, if at all — and the footer is on every page of the site. */
+      title: "Compare",
+      links: [
+        ["Meetrao vs Calendly", "/vs/calendly"],
+        ["Meetrao vs Cal.com", "/vs/cal-com"],
+        ["FAQ", "/#faq"],
+      ],
+    },
+    {
       title: "Support",
       links: [
         ["Help centre", "/help"],
         ["Contact support", "/support"],
-        ["FAQ", "/#faq"],
       ],
     },
     {

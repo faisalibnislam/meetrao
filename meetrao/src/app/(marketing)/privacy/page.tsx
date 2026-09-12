@@ -13,7 +13,10 @@ import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "What Meetrao collects from your calendar, and what it deliberately leaves alone.",
+  description:
+    "What Meetrao collects from your calendar and what it deliberately leaves alone, " +
+    "including the Google API Services User Data Policy Limited Use disclosure.",
+  alternates: { canonical: "/privacy" },
 };
 
 const UPDATED = "12 September 2026";

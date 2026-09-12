@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { Logo } from "@/components/ui/logo";
 import { EmptyState } from "@/components/ui/panels";
 import { getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { OG_IMAGE } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +17,21 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { username } = await params;
   const host = await getPublicHost(username);
-  return { title: host ? `Book time with ${host.fullName || host.username}` : "Not found" };
+  if (!host) return { title: "Not found", robots: { index: false, follow: false } };
+
+  const name = host.fullName || host.username;
+  return {
+    title: `Book a meeting with ${name}`,
+    description: `Pick a time that works with ${name}. Live availability, no account needed, and a Google Meet link on every booking.`,
+    alternates: { canonical: `/${host.username}` },
+    openGraph: {
+      images: [OG_IMAGE],
+      type: "profile",
+      title: `Book a meeting with ${name}`,
+      description: `Pick a time that works with ${name}. No account needed.`,
+      url: `/${host.username}`,
+    },
+  };
 }
 
 /** The account link. One active meeting goes straight to it; several offer a choice. */

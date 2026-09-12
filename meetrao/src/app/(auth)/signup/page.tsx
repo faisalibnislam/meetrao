@@ -3,7 +3,13 @@ import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
 
-export const metadata: Metadata = { title: "Create your account" };
+export const metadata: Metadata = {
+  title: "Create your free account",
+  description:
+    "Create a free Meetrao account: connect Google Calendar, set your hours, and share one booking " +
+    "link. No credit card and no trial period.",
+  alternates: { canonical: "/signup" },
+};
 
 export default function SignupPage() {
   return (

@@ -4,7 +4,11 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
 import { Callout } from "@/components/ui/panels";
 
-export const metadata: Metadata = { title: "Log in" };
+export const metadata: Metadata = {
+  title: "Log in",
+  description: "Sign in to your Meetrao account.",
+  alternates: { canonical: "/login" },
+};
 
 export default async function LoginPage({
   searchParams,

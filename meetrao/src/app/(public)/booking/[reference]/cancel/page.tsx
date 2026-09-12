@@ -9,7 +9,15 @@ import { getBookingByReference } from "@/lib/data/guest-booking";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = { title: "Cancel this meeting" };
+/* Never indexed. This page is reached with a 32-hex-character reference and
+   shows a named guest, a named host and a time — the whole point is that only
+   the two people involved can see it. `noindex, nofollow` rather than a
+   robots.txt disallow, because a disallowed page is one a crawler never fetches
+   and therefore one whose noindex it never reads; a bare URL can still be
+   listed from a link somewhere. This directive is read. */
+const PRIVATE_PAGE = { index: false, follow: false, nocache: true } as const;
+
+export const metadata: Metadata = { title: "Cancel this meeting", robots: PRIVATE_PAGE };
 
 /* A confirmation step, not a one-click link: mail clients and link previewers
    fetch every URL in an email, so cancelling has to be a deliberate POST. */

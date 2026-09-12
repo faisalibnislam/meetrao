@@ -12,6 +12,7 @@ import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
 export const metadata: Metadata = {
   title: "Terms of Service",
   description: "The agreement between you and Meetrao, written plainly.",
+  alternates: { canonical: "/terms" },
 };
 
 const UPDATED = "12 September 2026";

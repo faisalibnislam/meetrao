@@ -465,6 +465,74 @@ is set and the event is fired per pathname change instead — this is a
 client-side router, and without that every page but the landing page would be
 invisible.
 
+## SEO, and the signed-in nav
+
+**The nav.** The landing page, Terms and Privacy show the account menu to a
+signed-in host, and they are still statically prerendered. Those two facts are
+in tension — reading a cookie on the server turns a page dynamic — so the
+session is read in the BROWSER instead
+(`components/marketing/site-account-live.tsx`). The static HTML carries "Log in"
+and "Get started", which is right for almost every visitor a search engine
+sends, and a signed-in host sees it swap to their avatar about 300ms after
+hydration, measured against a production build. /help and /support keep
+resolving the session on the server — they are dynamic anyway — so those two
+have no swap at all.
+
+A profile read that fails renders the signed-out nav rather than a nameless
+avatar chip. That is a decision, not an accident: see `accountFrom`.
+
+**What is indexable.** `robots.ts` disallows the signed-in product (a crawler
+gets a redirect to /login there, so fetching it is pure waste). The guest
+booking pages are a different problem and get a different tool: `/booking/<ref>`
+shows a named guest and a time, so it carries `noindex` in its own metadata and
+is deliberately NOT disallowed — a disallowed page is one a crawler never
+fetches and therefore one whose `noindex` it never reads.
+
+`src/app/seo-invariants.test.ts` pins both, plus the two defects found while
+writing this: every page in the app inherited a canonical pointing at the home
+page, and five pages that set their own `openGraph` shipped without an image,
+because Next replaces the parent object rather than merging into it. It also
+fails if a new route group appears under `(app)` without a matching disallow.
+
+**Structured data** lives in `lib/seo.ts` and renders on every page: an
+Organization (address from `lib/contact.ts`, so there is still one spelling of
+it), a WebSite, and a SoftwareApplication with `offers.price: "0"`. No
+`aggregateRating` and no `review` — both would produce stars in a search result
+and both would be invented. The landing page adds a FAQPage built from the same
+`FAQS` array the page renders, so the machine-readable answers cannot drift from
+the human ones.
+
+`FAQS` lives in `lib/faq.ts`, not in `faq.tsx`, and that matters: a Server
+Component importing a plain value from a `"use client"` module gets a client
+reference, not the value, which looks fine until something calls `.map` on it.
+
+**The comparison pages** (`/vs/calendly`, `/vs/cal-com`) are the highest-intent
+pages on the site. `lib/comparisons.ts` holds the content and three rules: every
+claim about another product is checkable and dated, nothing is derogatory, and
+the section on where the other tool is better comes FIRST. That last one is not
+manners — it is the only reason a reader believes the rest of the page.
+
+> **Re-check the competitor figures.** They carry `checkedOn` and it is printed
+> on the page. They were taken from third-party pricing trackers rather than
+> from Calendly's and Cal.com's own pages, which were unreachable from the
+> machine that wrote them. Verify against the linked pricing pages, and again
+> whenever the date on the page starts to look old.
+
+**The free claim** is "free, no card, no trial countdown" everywhere and never
+"free forever", because Terms §5 says paid plans may follow. Marketing copy that
+contradicts your own Terms is how a rich result gets pulled.
+
+**What is not automated, and needs a person:**
+
+- **Google Search Console.** Verify meetrao.com, submit `/sitemap.xml`, and
+  request indexing for `/`, `/vs/calendly` and `/vs/cal-com`. Verification
+  tokens are per-account, so there is deliberately no `verification` block in
+  the root metadata — add one there if you choose the meta-tag method.
+- **Host booking pages are not in the sitemap.** Each `/<username>` is
+  individually indexable and has real metadata, but listing them all would
+  publish a machine-readable roster of everybody using the product. That is a
+  decision to make with users, not for them.
+
 ## Still open
 
 - **Google redirect URIs.** The credentials are verified working, but which

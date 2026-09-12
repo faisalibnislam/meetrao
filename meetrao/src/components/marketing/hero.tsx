@@ -106,8 +106,8 @@ export function Hero() {
         </h1>
 
         <p className="m-0 max-w-[56ch] text-[clamp(15.5px,1.5vw,18px)] leading-[1.55] text-pretty text-white/80">
-          Meetrao turns your availability into one booking link, so clients and teammates pick a time that
-          works — without the back-and-forth.
+          Free meeting scheduling and appointment booking. Your availability becomes one link, so clients
+          and teammates pick a time that works — without the back-and-forth.
         </p>
 
         <div className="flex flex-wrap justify-center gap-[10px] pt-[2px]">
