@@ -133,7 +133,7 @@ const FAQS: [string, string][] = [
   ],
   [
     "What if I disconnect my calendar?",
-    "Your link keeps working, but Meetrao can no longer see conflicts — so guests may be offered times you are not free. A banner reminds you until you reconnect.",
+    "Your link keeps working, but Meetrao can no longer see conflicts — so guests may be offered times you are not free. A banner reminds you until you reconnect. Disconnecting also revokes Meetrao's access with Google, so the permission disappears from your Google account, not just from ours.",
   ],
   [
     "Can I use something other than Google Meet?",

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/data/session";
+import { disconnect } from "@/lib/google/connection";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
 
@@ -64,6 +65,11 @@ export async function setSuspended(userId: string, suspended: boolean): Promise<
 export async function removeAccount(userId: string): Promise<AdminResult> {
   const admin = await requireAdmin();
   if (userId === admin.userId) return { error: "You cannot remove your own account from here." };
+
+  // Same reason as deleteOwnAccount: the cascade would drop the token without
+  // ever telling Google, leaving Meetrao listed in the permissions of an
+  // account that no longer exists here.
+  await disconnect(userId);
 
   const { error } = await supabaseAdmin().rpc("admin_remove_account", { p_user_id: userId });
   if (error) return { error: error.message };

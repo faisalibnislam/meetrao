@@ -240,16 +240,22 @@ export default function PrivacyPage() {
           your calendar, not in our database — we keep only the booking record.
         </p>
         <p>
-          <strong>How to take it back.</strong> Disconnect at any time in Settings → Calendar. That deletes both
-          tokens from our database immediately, and we can no longer reach your calendar. You can also revoke the
-          grant from Google&rsquo;s side at{" "}
+          <strong>How to take it back.</strong> Disconnect at any time in Settings → Calendar. Two things happen,
+          in this order: we ask Google to revoke the grant, which ends it on Google&rsquo;s side and removes
+          Meetrao from your account&rsquo;s permissions, and then we delete both tokens from our database.
+          Deleting your account does the same thing before it deletes everything else. Throwing our own key away
+          is not the same as ending the grant, so we do both.
+        </p>
+        <p>
+          If Google cannot be reached at that moment, the disconnect still happens on our side and you can finish
+          it yourself at{" "}
           <a href="https://myaccount.google.com/permissions" rel="noreferrer" target="_blank">
             myaccount.google.com/permissions
           </a>
-          , which we recommend doing as well if you want no trace of the connection on either side. Events
-          Meetrao already put on your calendar stay there for you to keep or delete; disconnecting does not
-          cancel your existing bookings, but it does stop us checking for conflicts, so guests may be offered
-          times you are not actually free.
+          , which is also where you can confirm at any time that Meetrao is gone. Events Meetrao already put on
+          your calendar stay there for you to keep or delete; disconnecting does not cancel your existing
+          bookings, but it does stop us checking for conflicts, so guests may be offered times you are not
+          actually free.
         </p>
 
         <h2 id="p-limited-use">4. Google Limited Use</h2>
@@ -352,8 +358,8 @@ export default function PrivacyPage() {
           anything you want to keep first.
         </p>
         <p>
-          Google tokens are deleted the moment you disconnect the calendar, which does not require deleting your
-          account. Page-view records are deleted automatically after 400 days.
+          Google tokens are revoked with Google and then deleted the moment you disconnect the calendar, which
+          does not require deleting your account. Page-view records are deleted automatically after 400 days.
         </p>
         <p>
           Two caveats, both narrow. Encrypted backups may hold deleted data for a short window before they rotate

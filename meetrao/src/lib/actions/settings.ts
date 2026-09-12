@@ -133,6 +133,12 @@ export async function disconnectCalendar(): Promise<SettingsResult> {
 export async function deleteOwnAccount(): Promise<SettingsResult> {
   const session = await requireSession();
 
+  // Before the cascade, not after. `admin_remove_account` deletes the profile,
+  // which cascades calendar_connections away — taking the refresh token with
+  // it and leaving the Google grant alive with nothing left to revoke it with.
+  // disconnect() revokes first, then deletes; the cascade then finds nothing.
+  await disconnect(session.userId);
+
   const { error } = await supabaseAdmin().rpc("admin_remove_account", { p_user_id: session.userId });
   if (error) return { error: error.message };
 

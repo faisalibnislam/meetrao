@@ -143,6 +143,50 @@ export async function refreshAccessToken(refreshToken: string): Promise<GoogleTo
 /** The connection is dead and only a reconnect will fix it. */
 export class GoogleAuthError extends Error {}
 
+/**
+ * Tells Google to forget the grant.
+ *
+ * Deleting our copy of a token stops *us* reaching the calendar. It does not
+ * remove Meetrao from the list at myaccount.google.com/permissions, and it does
+ * not invalidate the token — anyone who obtained a copy of it before could
+ * still use it until it expired. Revoking is what actually ends the grant, and
+ * it is the difference between "we threw our key away" and "the lock is
+ * changed".
+ *
+ * Pass the refresh token when there is one. Google revokes the whole grant
+ * either way, but the refresh token is the durable half, and an access token
+ * that has already expired revokes nothing.
+ *
+ * Never throws, and never waits long. The caller is in the middle of
+ * disconnecting a calendar or deleting an account, and neither of those may
+ * fail — or hang — because Google is having a bad afternoon. The return value
+ * says what happened for the log; nothing branches on it.
+ */
+export async function revokeToken(token: string): Promise<"revoked" | "already-invalid" | "failed"> {
+  if (!token) return "already-invalid";
+
+  try {
+    const response = await fetch("https://oauth2.googleapis.com/revoke", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(REVOKE_TIMEOUT_MS),
+    });
+
+    if (response.ok) return "revoked";
+    // 400 invalid_token: already revoked, or expired. The grant is gone either
+    // way, which is the outcome we were asking for — not a failure.
+    if (response.status === 400) return "already-invalid";
+    return "failed";
+  } catch {
+    // Network error, or the timeout above firing.
+    return "failed";
+  }
+}
+
+const REVOKE_TIMEOUT_MS = 5_000;
+
 export async function fetchAccountEmail(accessToken: string): Promise<string | null> {
   try {
     const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {

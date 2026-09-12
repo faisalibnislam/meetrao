@@ -1,7 +1,7 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { GoogleAuthError, refreshAccessToken } from "./oauth";
+import { GoogleAuthError, refreshAccessToken, revokeToken } from "./oauth";
 import type { CalendarConnection } from "@/lib/types";
 
 /* Calendar connections live behind the service role: `calendar_connections`
@@ -69,7 +69,37 @@ export async function saveConnection(input: {
     );
 }
 
+/**
+ * Ends the connection: tells Google to forget the grant, then deletes our copy.
+ *
+ * That order is the whole function. Delete first and the token is gone before
+ * it can be handed back, so the grant would live on in the host's Google
+ * account with nothing left to revoke it with — which is exactly the state the
+ * Privacy Policy now promises does not happen.
+ *
+ * The revoke is best effort and cannot fail the disconnect. If Google is down,
+ * our copy still goes, the calendar is still unreachable from Meetrao, and the
+ * host can finish the job at myaccount.google.com/permissions. Refusing to
+ * disconnect because a third party is unreachable would be the worse outcome.
+ *
+ * Safe to call for a user who has no connection: it reads nothing, revokes
+ * nothing and deletes nothing.
+ */
 export async function disconnect(userId: string): Promise<void> {
+  const row = await getConnection(userId);
+
+  if (row) {
+    // The refresh token revokes the entire grant. The access token is the
+    // fallback for a row that somehow has no refresh token — it revokes the
+    // grant too, but only while it is still valid.
+    const outcome = await revokeToken(row.refresh_token || row.access_token || "");
+    if (outcome === "failed") {
+      // Logged, not thrown. The host is told the calendar is disconnected,
+      // which is true; this is the part they may need to finish by hand.
+      console.warn("google: revoke failed on disconnect; the grant may remain in the user's Google account");
+    }
+  }
+
   await supabaseAdmin().from("calendar_connections").delete().eq("user_id", userId);
 }
 

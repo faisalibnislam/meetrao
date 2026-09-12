@@ -104,8 +104,9 @@ export default function TermsPage() {
           do with it.
         </p>
         <p>
-          You can disconnect at any time from Settings, and revoke access in your Google account. Doing so stops
-          us checking for conflicts, which means guests may be offered times you are not actually free. Google
+          You can disconnect at any time from Settings. Doing so revokes the grant with Google as well as deleting
+          our copy of it, and it stops us checking for conflicts, which means guests may be offered times you are
+          not actually free. Google
           Calendar and Google Meet are Google&rsquo;s services, governed by Google&rsquo;s own terms — we cannot
           control their availability or behaviour.
         </p>
