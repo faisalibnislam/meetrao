@@ -117,7 +117,10 @@ function chrome() {
     // Absolute, and a PNG. Email clients do not render SVG — Gmail and Outlook
     // drop it entirely — and a relative path has no page to be relative to.
     logo_url: `${siteUrl()}/brand/meetrao-email-logo.png`,
-    postal_address: env().EMAIL_POSTAL_ADDRESS || "Meetrao",
+    // No `|| "Meetrao"` fallback: a footer with the company name and no
+    // address is not a compliant footer, and quietly substituting one hides
+    // the fault. env() guarantees a real value — see `optional` in env.ts.
+    postal_address: env().EMAIL_POSTAL_ADDRESS,
     preferences_url: `${siteUrl()}/settings/notifications`,
     unsubscribe_url: `${siteUrl()}/settings/notifications`,
   };

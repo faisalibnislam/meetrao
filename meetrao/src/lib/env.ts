@@ -12,6 +12,28 @@ import { POSTAL_ADDRESS } from "@/lib/contact";
    Vercel; every variable has to be set in the dashboard too.
    ───────────────────────────────────────────────────────────────────────────── */
 
+/**
+ * An optional variable whose default is a real value.
+ *
+ * `z.string().default(x)` only falls back when the variable is *undefined*. A
+ * dashboard field that exists but is blank arrives as "", which is a perfectly
+ * valid string, so the default never fires and the empty value wins. That is
+ * not hypothetical: EMAIL_FROM blank produces a message with no From address,
+ * and EMAIL_POSTAL_ADDRESS blank produces an email footer with no postal
+ * address in it — which is the one thing anti-spam law requires be there.
+ *
+ * The same trap is already documented on NEXT_PUBLIC_SITE_URL below. This makes
+ * "set but blank" mean the same thing as "not set", which is what everyone
+ * clearing a field in a dashboard intends.
+ */
+function optional(fallback: string) {
+  return z.preprocess(
+    (value) =>
+      typeof value === "string" && value.trim() === "" ? undefined : value,
+    z.string().default(fallback),
+  );
+}
+
 const serverSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(20),
@@ -35,22 +57,22 @@ const serverSchema = z.object({
    *
    * This is only the default. Set on Vercel, the variable wins.
    */
-  EMAIL_FROM: z.string().default("Meetrao <support@meetrao.com>"),
+  EMAIL_FROM: optional("Meetrao <support@meetrao.com>"),
   /**
    * Shown in the footer of every email; required by anti-spam law.
    *
    * Defaults to the real address rather than to "", so a deployment that never
    * sets it still sends compliant mail. Set it on Vercel only to override.
    */
-  EMAIL_POSTAL_ADDRESS: z.string().default(POSTAL_ADDRESS),
+  EMAIL_POSTAL_ADDRESS: optional(POSTAL_ADDRESS),
 
   /* Inbound mail. Both optional: unset, /api/resend/inbound does nothing and
      the rest of the app is unaffected. See README § "Receiving support mail". */
 
   /** Svix signing secret (`whsec_…`), shown once when the webhook is created. */
-  RESEND_WEBHOOK_SECRET: z.string().default(""),
+  RESEND_WEBHOOK_SECRET: optional(""),
   /** Real inbox that mail to support@meetrao.com is forwarded to. */
-  SUPPORT_INBOX: z.string().default(""),
+  SUPPORT_INBOX: optional(""),
 
   /** Absolute origin, used for OAuth redirect URIs and links inside emails. */
   NEXT_PUBLIC_SITE_URL: z.string().url(),
@@ -64,7 +86,7 @@ const serverSchema = z.object({
    * rotating the service-role key then stops resetting the day's unique-visitor
    * count. Nothing else changes.
    */
-  ANALYTICS_SALT: z.string().default(""),
+  ANALYTICS_SALT: optional(""),
 
   /**
    * GA4 measurement ID ("G-XXXXXXXXXX").
@@ -75,7 +97,7 @@ const serverSchema = z.object({
    * first-party counter is cookie-free and needs no permission. A banner asking
    * consent for nothing is a dark pattern in the other direction.
    */
-  NEXT_PUBLIC_GA_MEASUREMENT_ID: z.string().default(""),
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: optional(""),
 });
 
 export type Env = z.infer<typeof serverSchema>;
@@ -91,7 +113,9 @@ export function env(): Env {
 
   const parsed = serverSchema.safeParse(process.env);
   if (!parsed.success) {
-    const lines = parsed.error.issues.map((i) => `  · ${i.path.join(".")}: ${i.message}`);
+    const lines = parsed.error.issues.map(
+      (i) => `  · ${i.path.join(".")}: ${i.message}`,
+    );
     throw new Error(
       `Environment is incomplete. Set these in .env.local (and in the Vercel dashboard):\n${lines.join("\n")}`,
     );
@@ -106,7 +130,9 @@ export function publicEnv() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) {
-    throw new Error("NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.");
+    throw new Error(
+      "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.",
+    );
   }
   return { url, key };
 }

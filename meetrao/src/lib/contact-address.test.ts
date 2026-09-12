@@ -145,7 +145,13 @@ describe("one operator, one address", () => {
 
     // …and that variable's default is the real address, so a deployment that
     // never sets it still sends anti-spam-compliant mail.
+    //
+    // Matched loosely on purpose. The first version of this pinned the exact
+    // zod spelling and broke the moment the schema was hardened against blank
+    // values — a test that fails when the code gets better is testing the
+    // wrong thing. The invariant is that the default comes from the shared
+    // constant, not how it is wrapped; env.test.ts checks the behaviour.
     const env = FILES.find((f) => f.file === path.join("src", "lib", "env.ts"));
-    expect(env!.text).toMatch(/EMAIL_POSTAL_ADDRESS:\s*z\.string\(\)\.default\(POSTAL_ADDRESS\)/);
+    expect(env!.text).toMatch(/EMAIL_POSTAL_ADDRESS:.*\bPOSTAL_ADDRESS\b/);
   });
 });
