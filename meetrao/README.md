@@ -390,6 +390,50 @@ Type sizes were left alone. The 10–10.5px eyebrows are design tokens transcrib
 from the handoff, they are micro-labels rather than reading copy, and body text
 is 12.5px and up.
 
+## Email authentication, and why mail lands in junk
+
+Measured from a public resolver, not from the Resend dashboard — the dashboard
+shows what it asked for, DNS shows what is actually there:
+
+| record | state |
+| --- | --- |
+| `resend._domainkey.meetrao.com` | DKIM, complete 1024-bit key. Signs `d=meetrao.com`, so it aligns with a `From:` on the root domain. |
+| `send.meetrao.com` TXT | `v=spf1 include:amazonses.com ~all` |
+| `send.meetrao.com` MX | `feedback-smtp.us-east-1.amazonses.com` |
+| `meetrao.com` MX | `inbound-smtp.us-east-1.amazonaws.com` — receiving, unrelated to sending |
+| `_dmarc.meetrao.com` | **missing** |
+| `meetrao.com` TXT (SPF) | **missing** |
+
+Resend sends with the envelope sender on `send.meetrao.com`, which is why SPF
+lives there rather than on the root — SPF authenticates the envelope, not the
+`From:` header, and `send.meetrao.com` aligns with `meetrao.com` under relaxed
+alignment. That part is correct and does not need changing.
+
+**DMARC is the gap.** There is no record at `_dmarc.meetrao.com`, and there
+never has been. Gmail and Yahoo have expected one from senders since February
+2024; without it a young domain sits permanently closer to the junk threshold,
+and any change to the sending pattern — a new `From:` address, a jump in volume
+— is more likely to tip it over. Add, at the Vercel DNS panel:
+
+    Type   TXT
+    Name   _dmarc
+    Value  v=DMARC1; p=none; rua=mailto:<a real inbox you read>
+
+`p=none` is monitor-only and cannot itself cause a message to be rejected, so
+it is safe to add immediately. Move to `p=quarantine` once the aggregate
+reports show only legitimate senders.
+
+A root SPF record (`v=spf1 include:amazonses.com ~all` at `@`) is belt and
+braces: not required, because the envelope domain is what SPF checks, but it
+helps filters that wrongly check the header `From:` domain. Only ever publish
+**one** SPF record per name — several is a permerror, which is worse than none.
+
+**Diagnosing a junked message.** Open it, view the original, and read
+`Authentication-Results`. `spf=pass` and `dkim=pass` there means authentication
+is fine and the problem is reputation or content; a `fail` on either is a
+different and more urgent fault. Guessing from the outside is not possible —
+this table is what DNS says, not what a mailbox provider decided.
+
 ## Receiving support mail
 
 `support@meetrao.com` is the address the contact form delivers to, and it is a
