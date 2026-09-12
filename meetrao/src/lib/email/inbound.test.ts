@@ -102,9 +102,9 @@ describe("parseReceived", () => {
   it("reads a received message", () => {
     const mail = parseReceived({
       type: "email.received",
-      data: { id: "e1", from: "a@b.com", to: ["support@meetrao.com"], subject: "Help", text: "hi" },
+      data: { id: "e1", from: "a@b.com", to: ["hello@meetrao.com"], subject: "Help", text: "hi" },
     });
-    expect(mail).toMatchObject({ id: "e1", from: "a@b.com", to: ["support@meetrao.com"], subject: "Help" });
+    expect(mail).toMatchObject({ id: "e1", from: "a@b.com", to: ["hello@meetrao.com"], subject: "Help" });
   });
 
   it("ignores events that are not inbound mail", () => {
@@ -115,13 +115,13 @@ describe("parseReceived", () => {
 
   it("reads `to` however Resend shapes it", () => {
     const shapes = [
-      "support@meetrao.com",
-      ["support@meetrao.com"],
-      [{ address: "support@meetrao.com" }],
-      [{ email: "support@meetrao.com" }],
+      "hello@meetrao.com",
+      ["hello@meetrao.com"],
+      [{ address: "hello@meetrao.com" }],
+      [{ email: "hello@meetrao.com" }],
     ];
     for (const to of shapes) {
-      expect(parseReceived({ type: "email.received", data: { to } })?.to).toEqual(["support@meetrao.com"]);
+      expect(parseReceived({ type: "email.received", data: { to } })?.to).toEqual(["hello@meetrao.com"]);
     }
   });
 
@@ -139,7 +139,7 @@ describe("refuseToForward", () => {
   it("refuses meetrao.com, which would loop back into Resend", () => {
     // Receiving is enabled at the root, so every address on the domain — not
     // only support@ — comes straight back through this webhook.
-    expect(refuseToForward("support@meetrao.com")).toContain("loop");
+    expect(refuseToForward("hello@meetrao.com")).toContain("loop");
     expect(refuseToForward("anything@meetrao.com")).toContain("loop");
     expect(refuseToForward("Anything@Mail.Meetrao.com")).toContain("loop");
   });
@@ -150,7 +150,7 @@ describe("refuseToForward", () => {
 });
 
 describe("forwardHtml", () => {
-  const base = { id: "e1", from: "a@b.com", to: ["support@meetrao.com"], subject: "Help", text: "", html: "" };
+  const base = { id: "e1", from: "a@b.com", to: ["hello@meetrao.com"], subject: "Help", text: "", html: "" };
 
   it("keeps the sender's own HTML intact", () => {
     const html = forwardHtml({ ...base, html: "<p>original <b>body</b></p>" }, escape);

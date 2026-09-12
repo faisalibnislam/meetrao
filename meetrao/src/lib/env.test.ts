@@ -46,20 +46,20 @@ describe("optional variables with a real default", () => {
   it("uses the default when the variable is absent", async () => {
     const e = await envWith({});
     expect(e.EMAIL_POSTAL_ADDRESS).toBe(POSTAL_ADDRESS);
-    expect(e.EMAIL_FROM).toBe("Meetrao <support@meetrao.com>");
+    expect(e.EMAIL_FROM).toBe("Meetrao <hello@meetrao.com>");
   });
 
   /* The whole point of this file. */
   it("uses the default when the variable is set but blank", async () => {
     const e = await envWith({ EMAIL_POSTAL_ADDRESS: "", EMAIL_FROM: "" });
     expect(e.EMAIL_POSTAL_ADDRESS).toBe(POSTAL_ADDRESS);
-    expect(e.EMAIL_FROM).toBe("Meetrao <support@meetrao.com>");
+    expect(e.EMAIL_FROM).toBe("Meetrao <hello@meetrao.com>");
   });
 
   it("uses the default when the variable is only whitespace", async () => {
     const e = await envWith({ EMAIL_POSTAL_ADDRESS: "   ", EMAIL_FROM: "\t" });
     expect(e.EMAIL_POSTAL_ADDRESS).toBe(POSTAL_ADDRESS);
-    expect(e.EMAIL_FROM).toBe("Meetrao <support@meetrao.com>");
+    expect(e.EMAIL_FROM).toBe("Meetrao <hello@meetrao.com>");
   });
 
   /* Overriding must still work — a deployment that genuinely wants a different

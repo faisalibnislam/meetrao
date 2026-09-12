@@ -27,7 +27,7 @@ const OURS = ["meetrao.com", "airlystudio.com"];
 const SRC = path.join(process.cwd(), "src");
 
 /** Everything a visitor can read: screens, components and the email templates. */
-const AREAS = ["app", "components", "emails"];
+const AREAS = ["app", "components", "emails", "lib"];
 
 const ADDRESS = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
 
@@ -50,7 +50,8 @@ describe("the support address", () => {
         const address = match.toLowerCase();
         const domain = address.slice(address.lastIndexOf("@") + 1);
 
-        if (!OURS.some((d) => domain === d || domain.endsWith(`.${d}`))) continue;
+        if (!OURS.some((d) => domain === d || domain.endsWith(`.${d}`)))
+          continue;
         if (address === SUPPORT_EMAIL) continue;
 
         wrong.push(`${path.relative(SRC, file)}: ${match}`);
@@ -73,7 +74,10 @@ describe("the support address", () => {
       const text = readFileSync(path.join(SRC, page), "utf8");
       // Either spelled out, or read from lib/contact — which is the point of
       // the rule in the next block.
-      expect(text.includes(SUPPORT_EMAIL) || text.includes("SUPPORT_EMAIL"), page).toBe(true);
+      expect(
+        text.includes(SUPPORT_EMAIL) || text.includes("SUPPORT_EMAIL"),
+        page,
+      ).toBe(true);
     }
   });
 });
@@ -98,8 +102,27 @@ function shippedFiles(): { file: string; text: string }[] {
         // retired strings on purpose.
         .filter((f) => !f.includes(".test.")),
     )
-    .map((file) => ({ file, text: readFileSync(path.join(ROOT, file), "utf8") }));
+    .map((file) => ({
+      file,
+      text: readFileSync(path.join(ROOT, file), "utf8"),
+    }));
 }
+
+/**
+ * Shipped TypeScript with comments removed.
+ *
+ * A comment mentioning an address is documentation; a string literal is a
+ * second definition. Only the second is a defect, and telling them apart needs
+ * the comments gone.
+ */
+const CODE = globSync("**/*.{ts,tsx}", { cwd: SRC })
+  .filter((f) => !f.includes(".test."))
+  .map((f) => ({
+    file: path.join("src", f),
+    code: readFileSync(path.join(SRC, f), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/(^|[^:])\/\/.*$/gm, "$1"),
+  }));
 
 const FILES = shippedFiles();
 
@@ -113,16 +136,52 @@ describe("one operator, one address", () => {
   /* Every name and address Meetrao has been published under and no longer is.
      Add to this list rather than removing from it — the point is that a retired
      identity can never quietly come back. */
-  const RETIRED = ["Airly", "airlystudio", "Alexandria, VA", "301 King St", "22314"];
+  const RETIRED = [
+    "Airly",
+    "airlystudio",
+    "Alexandria, VA",
+    "301 King St",
+    "22314",
+  ];
 
   it.each(RETIRED)("has no trace of %s", (needle) => {
-    const found = FILES.filter((f) => f.text.includes(needle)).map((f) => f.file);
+    const found = FILES.filter((f) => f.text.includes(needle)).map(
+      (f) => f.file,
+    );
     expect(found).toEqual([]);
   });
 
   it("defines the postal address exactly once, and imports it everywhere else", () => {
-    const literals = FILES.filter((f) => f.text.includes(POSTAL_ADDRESS)).map((f) => f.file);
+    const literals = FILES.filter((f) => f.text.includes(POSTAL_ADDRESS)).map(
+      (f) => f.file,
+    );
     expect(literals).toEqual([path.join("src", "lib", "contact.ts")]);
+  });
+
+  /* The rule above existed for the postal address and not for the support
+     inbox, and the difference cost a commit. Four files spelled out the address
+     rather than importing it — the Support page, the support action's fallback,
+     the .ics organiser and the EMAIL_FROM default — and every one PASSED the
+     "only one address on our domains" check above, because each literal was
+     equal to the constant. Equal is not the same as single.
+
+     Scoped to code with comments stripped, which is narrower than the postal
+     rule for two honest reasons: prose legitimately names an email address
+     ("mail to hello@meetrao.com reaches Resend"), and a migration legitimately
+     names the OLD one, because an applied migration is history and 0017 has to
+     say what it is replacing. */
+  it("defines the support address exactly once in code, and imports it elsewhere", () => {
+    const literals = CODE.filter((f) => f.code.includes(SUPPORT_EMAIL)).map(
+      (f) => f.file,
+    );
+    expect(literals).toEqual([path.join("src", "lib", "contact.ts")]);
+  });
+
+  it("has no retired email address left in code", () => {
+    const found = CODE.filter((f) =>
+      f.code.includes("support@meetrao.com"),
+    ).map((f) => f.file);
+    expect(found).toEqual([]);
   });
 
   it("shows the address on both legal documents and in the footer", () => {
@@ -134,12 +193,17 @@ describe("one operator, one address", () => {
     ]) {
       const found = FILES.find((f) => f.file === file);
       expect(found, `${file} is missing`).toBeDefined();
-      expect(found!.text, `${file} does not render the postal address`).toContain("POSTAL_ADDRESS");
+      expect(
+        found!.text,
+        `${file} does not render the postal address`,
+      ).toContain("POSTAL_ADDRESS");
     }
   });
 
   it("puts the address in every email, through the environment", () => {
-    const send = FILES.find((f) => f.file === path.join("src", "lib", "email", "send.ts"));
+    const send = FILES.find(
+      (f) => f.file === path.join("src", "lib", "email", "send.ts"),
+    );
     expect(send, "lib/email/send.ts is missing").toBeDefined();
     expect(send!.text).toContain("EMAIL_POSTAL_ADDRESS");
 

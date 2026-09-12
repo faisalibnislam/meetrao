@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { POSTAL_ADDRESS } from "@/lib/contact";
+import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Environment.
@@ -50,14 +50,15 @@ const serverSchema = z.object({
   /**
    * From address for every transactional email. Must be on a verified domain.
    *
-   * support@ rather than hello@: this is the most-seen address in the product —
-   * it heads every booking confirmation — and it is the one address a visitor
-   * is shown anywhere else. Two addresses would be two, and only one of them is
-   * forwarded to an inbox someone reads.
+   * Built from SUPPORT_EMAIL so the address a booking confirmation comes FROM
+   * is the address the Support page tells people to write TO. A reply then
+   * lands where a reply should, and there is one mailbox rather than two.
    *
-   * This is only the default. Set on Vercel, the variable wins.
+   * This is only the default. Set on Vercel, the variable wins — and a value
+   * left in that dashboard disagreeing with this line is exactly how mail kept
+   * going out under a retired address for a week.
    */
-  EMAIL_FROM: optional("Meetrao <support@meetrao.com>"),
+  EMAIL_FROM: optional(`Meetrao <${SUPPORT_EMAIL}>`),
   /**
    * Shown in the footer of every email; required by anti-spam law.
    *
@@ -71,7 +72,7 @@ const serverSchema = z.object({
 
   /** Svix signing secret (`whsec_…`), shown once when the webhook is created. */
   RESEND_WEBHOOK_SECRET: optional(""),
-  /** Real inbox that mail to support@meetrao.com is forwarded to. */
+  /** Real inbox that mail to the address above is forwarded to. */
   SUPPORT_INBOX: optional(""),
 
   /** Absolute origin, used for OAuth redirect URIs and links inside emails. */

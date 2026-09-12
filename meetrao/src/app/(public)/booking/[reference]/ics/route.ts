@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBookingByReference } from "@/lib/data/guest-booking";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 import { siteUrl } from "@/lib/env";
 
 /* The fallback for a guest who does not use Google Calendar. Google invitees
@@ -8,7 +9,10 @@ import { siteUrl } from "@/lib/env";
 export const dynamic = "force-dynamic";
 
 function stamp(date: Date): string {
-  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  return date
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "");
 }
 
 /** RFC 5545 escaping, then folding at 75 octets. */
@@ -32,7 +36,10 @@ function line(name: string, value: string): string {
   return parts.join("\r\n");
 }
 
-export async function GET(_request: Request, { params }: { params: Promise<{ reference: string }> }) {
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ reference: string }> },
+) {
   const { reference } = await params;
   const booking = await getBookingByReference(reference);
 
@@ -63,12 +70,14 @@ export async function GET(_request: Request, { params }: { params: Promise<{ ref
     `DTEND:${stamp(end)}`,
     line("SUMMARY", `${booking.meetingName} — ${booking.hostName}`),
     line("DESCRIPTION", description),
-    booking.meetUrl ? line("LOCATION", booking.meetUrl) : line("LOCATION", "Google Meet"),
+    booking.meetUrl
+      ? line("LOCATION", booking.meetUrl)
+      : line("LOCATION", "Google Meet"),
     // Calendar apps show this address beside the host's name. It used to be
     // noreply@, which was honest when nothing on the domain was received; now
     // that support@ is forwarded to a real inbox, an address that reaches a
     // person is the better one to put in front of a guest.
-    line("ORGANIZER;CN=" + booking.hostName, `mailto:support@meetrao.com`),
+    line("ORGANIZER;CN=" + booking.hostName, `mailto:${SUPPORT_EMAIL}`),
     `STATUS:${cancelled ? "CANCELLED" : "CONFIRMED"}`,
     "SEQUENCE:0",
     "END:VEVENT",

@@ -21,8 +21,19 @@
  */
 export const POSTAL_ADDRESS = "44/A Judge Court Road, Cumilla 3500, Bangladesh";
 
-/** The one address a visitor is ever shown. See lib/actions/support.ts. */
-export const SUPPORT_EMAIL = "support@meetrao.com";
+/**
+ * The one address a visitor is ever shown, and the one Meetrao sends from.
+ *
+ * hello@, not support@, for the plainest possible reason: hello@ is the only
+ * mailbox that exists. An address nobody can read is worse than no address —
+ * it is a promise of a reply that cannot arrive, printed on the Support page,
+ * the Privacy Policy, the Terms and the footer of every email.
+ *
+ * Everything imports this. Four files used to spell it out instead, which is
+ * why changing it once took a commit rather than a keystroke; see the
+ * "defined exactly once" rule in contact-address.test.ts.
+ */
+export const SUPPORT_EMAIL = "hello@meetrao.com";
 
 /**
  * How Meetrao describes its operator in legal text.

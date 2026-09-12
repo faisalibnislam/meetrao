@@ -2,6 +2,7 @@
 
 import { Resend } from "resend";
 import { z } from "zod";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 import { env } from "@/lib/env";
 import { escapeHtml } from "@/lib/email/send";
 import { optionalSession } from "@/lib/data/session";
@@ -16,9 +17,10 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
  * An admin can point `platform_settings.support_email` somewhere else, and the
  * form will deliver there — but this is what the failure message offers when
  * sending did not work, so it has to be an address that is genuinely watched
- * rather than whatever the row happens to hold.
+ * rather than whatever the row happens to hold. That is lib/contact.ts, which
+ * is also what the Support page prints two clicks earlier; a fallback address
+ * that disagrees with the one on screen helps nobody.
  */
-const SUPPORT_ADDRESS = "support@meetrao.com";
 
 const TOPICS = ["account", "calendar", "booking", "billing", "other"] as const;
 
@@ -26,7 +28,10 @@ const Body = z.object({
   name: z.string().trim().max(120).optional().default(""),
   email: z.string().trim().max(200).optional().default(""),
   topic: z.enum(TOPICS),
-  message: z.string().trim().min(10, "A sentence or two is enough — we just need something to go on."),
+  message: z
+    .string()
+    .trim()
+    .min(10, "A sentence or two is enough — we just need something to go on."),
 });
 
 export type SupportResult = { error?: string; sentTo?: string };
@@ -39,11 +44,15 @@ export async function sendSupportMessage(input: {
 }): Promise<SupportResult> {
   const parsed = Body.safeParse(input);
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Check the form and try again." };
+    return {
+      error: parsed.error.issues[0]?.message ?? "Check the form and try again.",
+    };
   }
 
   const session = await optionalSession();
-  const fromName = session ? session.profile.full_name || session.profile.username : parsed.data.name;
+  const fromName = session
+    ? session.profile.full_name || session.profile.username
+    : parsed.data.name;
   const fromEmail = session ? session.profile.email : parsed.data.email;
 
   if (!fromName.trim()) return { error: "Tell us who you are." };
@@ -55,7 +64,7 @@ export async function sendSupportMessage(input: {
     .eq("id", true)
     .maybeSingle();
 
-  const to = (settings?.support_email as string | undefined) || SUPPORT_ADDRESS;
+  const to = (settings?.support_email as string | undefined) || SUPPORT_EMAIL;
 
   // Every value here was typed by the sender, so every value is escaped.
   const html = `
@@ -76,9 +85,14 @@ export async function sendSupportMessage(input: {
       html,
     });
 
-    if (error) return { error: `That did not send. Email us directly at ${SUPPORT_ADDRESS}.` };
+    if (error)
+      return {
+        error: `That did not send. Email us directly at ${SUPPORT_EMAIL}.`,
+      };
   } catch {
-    return { error: `That did not send. Email us directly at ${SUPPORT_ADDRESS}.` };
+    return {
+      error: `That did not send. Email us directly at ${SUPPORT_EMAIL}.`,
+    };
   }
 
   return { sentTo: fromEmail };

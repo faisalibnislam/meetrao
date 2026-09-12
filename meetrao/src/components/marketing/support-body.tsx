@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SupportForm } from "@/components/marketing/support-form";
 import { Eyebrow } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 
 /* The Support page's content, chrome aside.
 
@@ -31,7 +32,9 @@ export function SupportBody({
   /** Signed in, the Help centre opens alongside the app rather than replacing it. */
   helpInNewTab?: boolean;
 }) {
-  const newTab = helpInNewTab ? { target: "_blank", rel: "noopener noreferrer" } : {};
+  const newTab = helpInNewTab
+    ? { target: "_blank", rel: "noopener noreferrer" }
+    : {};
 
   return (
     <>
@@ -56,11 +59,16 @@ export function SupportBody({
               Get in touch
             </h1>
             <p className="m-0 max-w-[52ch] text-[15px] leading-[1.6] text-pretty text-ink-2">
-              Tell us what you were trying to do and what happened instead. A person reads every message.
+              Tell us what you were trying to do and what happened instead. A
+              person reads every message.
             </p>
           </div>
 
-          <SupportForm signedIn={signedIn} accountName={accountName} accountEmail={accountEmail} />
+          <SupportForm
+            signedIn={signedIn}
+            accountName={accountName}
+            accountEmail={accountEmail}
+          />
         </div>
 
         <aside className="flex w-[320px] flex-none flex-col gap-[16px] max-[880px]:w-full">
@@ -77,7 +85,11 @@ export function SupportBody({
                   {...newTab}
                   className="unlink flex items-center gap-[10px] rounded-[6px] px-[9px] py-[8px] text-[13px] text-ink-2 hover:bg-fill hover:text-ink"
                 >
-                  <Icon name="chevron-right" size={9} className="flex-none text-ink-3" />
+                  <Icon
+                    name="chevron-right"
+                    size={9}
+                    className="flex-none text-ink-3"
+                  />
                   <span className="min-w-0 flex-1">{label}</span>
                 </Link>
               ))}
@@ -88,10 +100,14 @@ export function SupportBody({
             <Eyebrow>Other ways to reach us</Eyebrow>
 
             <div className="flex gap-[11px]">
-              <Icon name="envelope" size={13} className="mt-[3px] w-[16px] flex-none text-ink-3" />
+              <Icon
+                name="envelope"
+                size={13}
+                className="mt-[3px] w-[16px] flex-none text-ink-3"
+              />
               <div className="flex min-w-0 flex-col gap-[2px]">
-                <a href="mailto:support@meetrao.com" className="text-[13.5px]">
-                  support@meetrao.com
+                <a href={`mailto:${SUPPORT_EMAIL}`} className="text-[13.5px]">
+                  {SUPPORT_EMAIL}
                 </a>
                 <span className="text-[12.5px] leading-[1.5] text-ink-3">
                   Or just reply to any Meetrao email.
@@ -100,21 +116,30 @@ export function SupportBody({
             </div>
 
             <div className="flex gap-[11px]">
-              <Icon name="clock" size={13} className="mt-[3px] w-[16px] flex-none text-ink-3" />
+              <Icon
+                name="clock"
+                size={13}
+                className="mt-[3px] w-[16px] flex-none text-ink-3"
+              />
               <div className="flex min-w-0 flex-col gap-[2px]">
-                <span className="text-[13.5px] font-semibold text-ink">Within one working day</span>
+                <span className="text-[13.5px] font-semibold text-ink">
+                  Within one working day
+                </span>
                 <span className="text-[12.5px] leading-[1.5] text-ink-3">
-                  We are a small team across Bangladesh and the US, so replies land at odd hours.
+                  We are a small team across Bangladesh and the US, so replies
+                  land at odd hours.
                 </span>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-[5px] rounded-[12px] border border-amber-line bg-amber-soft px-[18px] py-[16px]">
-            <span className="text-[13.5px] font-semibold text-amber-ink">Reporting something urgent?</span>
+            <span className="text-[13.5px] font-semibold text-amber-ink">
+              Reporting something urgent?
+            </span>
             <span className="text-[12.5px] leading-[1.55] text-pretty text-amber-ink">
-              If a booking is going wrong right now, say so in the first line and include the guest&rsquo;s email
-              so we can find it quickly.
+              If a booking is going wrong right now, say so in the first line
+              and include the guest&rsquo;s email so we can find it quickly.
             </span>
           </div>
         </aside>

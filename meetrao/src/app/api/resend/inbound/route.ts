@@ -4,7 +4,7 @@ import { escapeHtml } from "@/lib/email/send";
 import { forwardHtml, forwardSubject, parseReceived, refuseToForward, verifyWebhook } from "@/lib/email/inbound";
 
 /**
- * Where mail to support@meetrao.com ends up.
+ * Where mail to hello@meetrao.com ends up.
  *
  * Resend's inbound product delivers by webhook, not by mailbox: without this
  * route a message sits in Resend's store and nobody is told it arrived. This

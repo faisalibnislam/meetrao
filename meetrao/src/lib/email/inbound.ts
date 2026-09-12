@@ -4,7 +4,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
    Inbound mail.
 
    Receiving on meetrao.com is enabled and the MX record is verified, so mail to
-   support@meetrao.com reaches Resend. Resend inbound is not a mailbox, though —
+   hello@meetrao.com reaches Resend. Resend inbound is not a mailbox, though —
    there is no IMAP, no webmail, and nothing that puts a message in front of a
    person. A received message exists only in Resend's store until a webhook does
    something with it.
