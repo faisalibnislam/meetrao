@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AppScreen } from "@/components/app/app-screen";
+import { BookingLinkPanel } from "@/components/admin/booking-link";
 import { RemoveAccountPanel, SuspendButton } from "@/components/admin/user-actions";
 import { Avatar, Badge, Eyebrow } from "@/components/ui/badge";
 import { Card, SectionHeading } from "@/components/ui/panels";
 import { getUserDetail } from "@/lib/data/admin";
-import { bookingLink } from "@/lib/username";
 import { cx } from "@/lib/cx";
 
 export const metadata: Metadata = { title: "User" };
@@ -16,9 +16,12 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   if (!detail) notFound();
 
   const { user, meetings, bookings } = detail;
+  const first = user.name.split(" ")[0] || user.name;
 
+  // The booking link is not in here any more: it is the one field on this page
+  // that can be edited, and a read-only copy beside an editable one is the
+  // kind of thing that goes stale and gets believed.
   const fields = [
-    { label: "Username", value: bookingLink(user.username) },
     { label: "Timezone", value: user.timezone },
     { label: "Joined", value: user.joined },
     { label: "Meetings", value: String(user.meetings) },
@@ -38,6 +41,10 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
           <Badge tone={user.suspended ? "bad" : "ok"}>{user.suspended ? "Suspended" : "Active"}</Badge>
           <SuspendButton userId={user.id} name={user.name} suspended={user.suspended} />
         </div>
+
+        {/* Keyed on the link: a change remounts the panel, which is how its
+            typed value, status and alternatives are reset after a save. */}
+        <BookingLinkPanel key={user.username} userId={user.id} name={first} username={user.username} />
 
         <RemoveAccountPanel userId={user.id} name={user.name} />
 

@@ -197,6 +197,45 @@ statement and the moment stays recoverable.
 Google, so a "guest declined" notification would never fire. It is left unbuilt
 rather than added as a kind that never appears.
 
+**An admin can change or retire a booking link.** `meetrao.com/<username>` is the
+one part of an account that is public, unique product-wide and claimed
+first-come-first-served, so it is the one part an operator eventually has to
+intervene in — a squatted trademark, an impersonation, a host locked out of
+their own name. Before `0018_admin_booking_link.sql` the only lever was removing
+the account, which is not a proportionate answer to a bad URL.
+
+Three things about it are deliberate:
+
+*`profiles.username` is NOT NULL, so there is no "no link" state.* Removing a
+link necessarily means replacing it. `admin_release_username` holds the old name
+back in `reserved_usernames` and parks the host on a placeholder seeded from
+`'host'` — never from the email address, because the replacement is public and
+an email address is not.
+
+*Retiring is not optional on a release.* Without it the host claims the name
+straight back from Settings → Profile and the intervention achieved nothing. On
+a plain rename it is a checkbox, defaulted on, because the admin might simply be
+helping with a typo.
+
+*A rename is not a deactivation.* Neither function touches `is_suspended`.
+Turning a booking page off already has a switch, and merging the two would make
+every rename a silent suspension.
+
+Both functions are `security definer` and granted to `service_role` only —
+`requireAdmin()` in `src/lib/actions/admin.ts` is the gate. That matters more
+than it looks: Supabase grants EXECUTE on every function in `public` to `anon`
+and `authenticated` *directly*, and revoking from `PUBLIC` does not touch a
+direct grant, which is the whole reason `0003_rpc_grants.sql` exists.
+`src/lib/admin-booking-link.test.ts` pins the revoke, the grant, and the fact
+that both live in the same migration as the definitions — `create or replace`
+resets a function's privileges to the defaults, so a later migration that edits
+the body and leaves the grants behind quietly re-opens it.
+
+The admin's field runs the same `usernameStatus()` as the host's own, which is
+the only thing enforcing the reserved-word list, the 30-character cap and the
+no-double-hyphen rule; the database constraint is looser on all three. An admin
+path that skipped it could save a name the host could never edit back.
+
 ## Supabase Auth settings that the app cannot enforce
 
 **Confirm email must be ON.** Authentication → Providers → Email → *Confirm
