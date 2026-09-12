@@ -428,6 +428,21 @@ braces: not required, because the envelope domain is what SPF checks, but it
 helps filters that wrongly check the header `From:` domain. Only ever publish
 **one** SPF record per name — several is a permerror, which is worse than none.
 
+**Supabase's own emails are a separate system.** The signup confirmation is
+rendered from `src/emails/supabase/confirm-signup.html` **pasted by hand into
+the Supabase dashboard**, and sent by whatever SMTP Supabase is configured
+with. It never reads `EMAIL_FROM` or `EMAIL_POSTAL_ADDRESS`, never goes through
+`lib/email/send.ts`, and changing anything in this repo does nothing to it until
+somebody pastes the template again. That is how it went out with a footer
+reading "Meetrao" and no postal address, and with an Unsubscribe link pointing
+at a settings page that requires the account the reader is in the middle of
+confirming.
+
+If Supabase is on its built-in SMTP rather than a custom one, that mail leaves
+from a shared Supabase sending domain — not meetrao.com — so none of the DKIM,
+SPF or DMARC above applies to it at all. Check Authentication → Emails → SMTP
+Settings; the sender on that screen is the one that matters.
+
 **Diagnosing a junked message.** Open it, view the original, and read
 `Authentication-Results`. `spf=pass` and `dkim=pass` there means authentication
 is fine and the problem is reputation or content; a `fail` on either is a
