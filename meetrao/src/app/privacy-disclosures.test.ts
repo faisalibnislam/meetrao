@@ -1,0 +1,89 @@
+import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The two disclosures Google's OAuth verification checks for by name.
+
+   Both facts were already in this policy before the review — section 7 lists
+   every processor, section 11 describes TLS, encryption at rest and the
+   row-level security on the token table. The verification response still said
+   the policy "does not state with whom you share, transfer, or disclose Google
+   user data" and "does not specify any data protection mechanisms for
+   sensitive data".
+
+   That is not a contradiction, and the lesson is worth keeping: a reviewer
+   works a checklist against the phrase "Google user data", and a disclosure
+   written about "your data" in general does not answer it. The same facts had
+   to be restated inside the Google section, in the reviewer's own vocabulary.
+
+   Which makes this duplication load-bearing. It looks redundant, a future
+   tidy-up would remove it, and removing it costs another verification round
+   trip measured in weeks.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+const PAGE = readFileSync(
+  path.join(process.cwd(), "src", "app", "(marketing)", "privacy", "page.tsx"),
+  "utf8",
+);
+
+describe("the Google user data disclosures", () => {
+  it("reads the policy at all", () => {
+    // Guards the guard: a renamed file passes everything below by finding
+    // nothing to check.
+    expect(PAGE.length).toBeGreaterThan(5000);
+    expect(PAGE).toContain("Google Limited Use");
+  });
+
+  it.each([
+    ["p-google-share", "who receives Google user data"],
+    ["p-google-protect", "how Google user data is protected"],
+  ])("keeps the %s section", (id, what) => {
+    expect(PAGE, `the section on ${what} is gone`).toContain(`id="${id}"`);
+  });
+
+  it("is reachable from the contents rail, not only by scrolling", () => {
+    for (const id of ["p-google-share", "p-google-protect"]) {
+      expect(PAGE).toMatch(new RegExp(`\\{ id: "${id}", label:`));
+    }
+  });
+
+  /* The checklist phrase itself. Without it, a reviewer scanning for "Google
+     user data" finds a policy that talks only about "your data". */
+  it("uses the phrase a reviewer searches for, more than once", () => {
+    const times = PAGE.split(/Google user data/gi).length - 1;
+    expect(times, "the policy barely says 'Google user data'").toBeGreaterThanOrEqual(6);
+  });
+
+  it("names every recipient, and says what each one gets", () => {
+    const block = PAGE.slice(PAGE.indexOf("GOOGLE_DATA_RECIPIENTS"), PAGE.indexOf("const PROCESSORS"));
+    for (const name of ["Supabase", "Vercel", "Resend", "Google"]) {
+      expect(block, `${name} is not named as a recipient`).toContain(name);
+    }
+    // A name with no explanation beside it is not a disclosure.
+    const entries = block.match(/\[\s*\n\s*"[^"]+",\s*\n\s*"[^"]+"/g) ?? [];
+    expect(entries.length).toBeGreaterThanOrEqual(4);
+  });
+
+  /* Analytics must never appear on the recipient list. It is on the general
+     processor list, receives no Google user data, and saying otherwise would
+     be both false and a Limited Use problem. */
+  it("never lists an analytics provider as receiving Google user data", () => {
+    const block = PAGE.slice(PAGE.indexOf("GOOGLE_DATA_RECIPIENTS"), PAGE.indexOf("const PROCESSORS"));
+    expect(block.toLowerCase()).not.toContain("analytics");
+  });
+
+  it("states the negative as well as the positive", () => {
+    // "Who we share it with" is only half a disclosure without "and nobody
+    // else, and never for these purposes".
+    for (const phrase of ["Nobody else", "advertisers", "not sold", "machine-learning models"]) {
+      expect(PAGE, `the sharing section does not rule out ${phrase}`).toContain(phrase);
+    }
+  });
+
+  it("lists concrete protection mechanisms, not adjectives", () => {
+    for (const mechanism of ["Encrypted in transit", "Encrypted at rest", "row-level security", "two-factor"]) {
+      expect(PAGE, `${mechanism} is no longer stated`).toContain(mechanism);
+    }
+  });
+});

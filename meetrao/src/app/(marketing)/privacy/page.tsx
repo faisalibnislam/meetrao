@@ -25,6 +25,11 @@ const TOC: TocEntry[] = [
   { id: "p-who", label: "1. Who we are" },
   { id: "p-collect", label: "2. What we collect" },
   { id: "p-google", label: "3. Google user data" },
+  /* Sub-entries, indented in the rail. A verification reviewer should be able
+     to reach either disclosure in one click from the top of the page rather
+     than by scrolling section 3. */
+  { id: "p-google-share", label: "— Who we share it with" },
+  { id: "p-google-protect", label: "— How we protect it" },
   { id: "p-limited-use", label: "4. Google Limited Use" },
   { id: "p-not", label: "5. What we don't do" },
   { id: "p-why", label: "6. Why we use it" },
@@ -81,6 +86,33 @@ const PURPOSES: [string, string][] = [
   ["Guest name, email and note", "Confirming the booking, inviting them to the event, and telling you who is coming."],
   ["Notification preferences", "Sending only the messages you asked for."],
   ["Page views", "Knowing which pages are read and whether the site works on real phones."],
+];
+
+/**
+ * Which providers receive Google user data specifically, and what each one gets.
+ *
+ * Deliberately separate from PROCESSORS below. That list answers "who helps run
+ * Meetrao"; this one answers the narrower question Google's verification review
+ * asks — with whom is GOOGLE USER DATA shared — and the answers differ. Google
+ * Analytics is on the first list and must never be on this one.
+ */
+const GOOGLE_DATA_RECIPIENTS: [string, string][] = [
+  [
+    "Supabase (database, Tokyo)",
+    "Stores the Google refresh and access tokens, the connected account's email address, and the calendar identifier. Also stores the booking records that produce calendar events. The only provider that holds Google user data at rest.",
+  ],
+  [
+    "Vercel (hosting, functions in Tokyo)",
+    "Processes it in memory while a request is being served — for example while creating an event. Stores none of it.",
+  ],
+  [
+    "Resend (email, United States)",
+    "Receives what appears in a confirmation email: the meeting name, the time, the guest's name and email address, and the Google Meet link. Never receives your tokens, and never the contents of your calendar.",
+  ],
+  [
+    "Google",
+    "The source, and the destination. Events Meetrao creates are written back to your own Google Calendar, and Google notifies your guest.",
+  ],
 ];
 
 const PROCESSORS: [string, string, string][] = [
@@ -261,6 +293,83 @@ export default function PrivacyPage() {
           actually free.
         </p>
 
+        {/* ── the two disclosures Google's reviewer checks for by name ──────
+            Both facts were already in this policy — §7 lists the processors,
+            §11 describes the protections — and the verification review still
+            came back saying the policy "does not state with whom you share
+            Google user data" and "does not specify any data protection
+            mechanisms for sensitive data".
+
+            That is not a contradiction. A reviewer works a checklist against
+            the phrase "Google user data", and a disclosure written about "your
+            data" in general does not answer it. So the same facts are restated
+            here, in the section about Google user data, in the reviewer's own
+            words. Duplication is the point; do not "tidy" these away. */}
+
+        <h3 id="p-google-share">Who we share Google user data with</h3>
+        <p>
+          Only the providers below, and only for the purpose named. Each is bound by contract to use it solely
+          to provide that service to us, and none may use it for their own purposes.
+        </p>
+        <div className="mb-[16px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
+          {GOOGLE_DATA_RECIPIENTS.map(([name, receives]) => (
+            <div key={name} className="flex flex-col gap-[4px] bg-surface px-[15px] py-[12px]">
+              <span className="text-[13px] font-semibold text-ink">{name}</span>
+              <span className="text-[12.5px] leading-[1.55] text-ink-2">{receives}</span>
+            </div>
+          ))}
+        </div>
+        <p>
+          <strong>Nobody else.</strong> Google user data is not sold, rented or traded. It is not shared with
+          advertisers, ad networks, data brokers or analytics providers — Google Analytics receives none of it.
+          It is not used to develop, improve or train generalised or general-purpose artificial intelligence or
+          machine-learning models, by us or by any provider above. The only disclosures outside this list are
+          where the law compels us, or where it is strictly necessary to protect the service or someone&rsquo;s
+          safety; if Meetrao is ever sold or merged we will tell you before your data transfers.
+        </p>
+
+        <h3 id="p-google-protect">How we protect Google user data</h3>
+        <p>
+          Calendar access is a sensitive scope, and these are the specific mechanisms that protect the data it
+          gives us:
+        </p>
+        <ul>
+          <li>
+            <strong>Encrypted in transit.</strong> Every connection — browser to Meetrao, Meetrao to Google,
+            Meetrao to its database — uses TLS. The site is served over HTTPS only.
+          </li>
+          <li>
+            <strong>Encrypted at rest.</strong> Our database provider encrypts stored data at rest with AES-256.
+          </li>
+          <li>
+            <strong>Tokens are unreachable from any browser.</strong> Google refresh and access tokens live in a
+            table with row-level security enabled and <em>no policy granting access to anyone</em>. No signed-in
+            session, and no request carrying the public key that ships to browsers, can read a row. Only
+            server-side code holding a secret key — one that is never sent to a browser — can, and that key is
+            stored as an encrypted environment variable at our host.
+          </li>
+          <li>
+            <strong>The least data we can hold.</strong> Busy and free intervals are fetched when a booking page
+            is opened and are never written to our database. Event titles, guests, descriptions, locations and
+            attachments are never requested at all, so there is nothing of that kind to protect.
+          </li>
+          <li>
+            <strong>Revoked, then deleted.</strong> Disconnecting calls Google&rsquo;s revocation endpoint first
+            and deletes both tokens afterwards, so the grant ends on Google&rsquo;s side rather than merely
+            becoming unusable on ours. Deleting your account does the same before deleting everything else.
+            There is no grace-period copy and no backup that outlives it.
+          </li>
+          <li>
+            <strong>Human access.</strong> Production data can be reached only by the one person who operates
+            Meetrao, using individually authenticated accounts with two-factor authentication, and only to fix a
+            fault. No human reads your Google user data otherwise.
+          </li>
+          <li>
+            <strong>If something goes wrong.</strong> We will notify affected users and the relevant regulator
+            as quickly as the law requires.
+          </li>
+        </ul>
+
         <h2 id="p-limited-use">4. Google Limited Use</h2>
         <p>
           Meetrao&rsquo;s use and transfer of information received from Google APIs to any other app will adhere
@@ -327,7 +436,8 @@ export default function PrivacyPage() {
         </div>
         <p>
           Google Analytics is the one item on that list that does not run unless you allow it, and it is the only
-          one that receives anything about you before you have an account.
+          one that receives anything about you before you have an account. It receives no Google user data at
+          all — <a href="#p-google-share">who receives that, and what each one gets</a>, is set out in section 3.
         </p>
         <p>
           The people you meet with also see things: your guest sees your name, title, photo, meeting details and
@@ -406,6 +516,10 @@ export default function PrivacyPage() {
         <p>
           Access to production data is limited to the one person who operates Meetrao, and is used to fix faults,
           not to read your bookings.
+        </p>
+        <p>
+          The mechanisms protecting Google user data in particular — a sensitive scope — are listed in full under{" "}
+          <a href="#p-google-protect">how we protect Google user data</a>.
         </p>
         <p>
           No system is perfectly secure. If a breach affects your data, we will tell you and the relevant
