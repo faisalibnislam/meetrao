@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Sans, Instrument_Serif } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { AnalyticsBeacon } from "@/components/analytics/beacon";
 import { AnalyticsConsent } from "@/components/analytics/consent";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -131,6 +132,8 @@ export default function RootLayout({
         <JsonLd
           json={graph(organizationLd(), webSiteLd(), softwareApplicationLd())}
         />
+
+        <SpeedInsights />
       </body>
     </html>
   );
