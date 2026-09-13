@@ -1,7 +1,17 @@
 import { Resend } from "resend";
 import { env } from "@/lib/env";
 import { escapeHtml } from "@/lib/email/send";
-import { forwardHtml, forwardSubject, parseReceived, refuseToForward, verifyWebhook } from "@/lib/email/inbound";
+import {
+  asAttachments,
+  chooseAttachments,
+  forwardHtml,
+  forwardSubject,
+  parseReceived,
+  refuseToForward,
+  skippedNote,
+  verifyWebhook,
+  type ReceivedAttachment,
+} from "@/lib/email/inbound";
 
 /**
  * Where mail to hello@meetrao.com ends up.
@@ -63,15 +73,75 @@ export async function POST(request: Request) {
     return Response.json({ ignored: refusal });
   }
 
+  const resend = new Resend(e.RESEND_API_KEY);
+
+  /* The webhook is an envelope, not a message: `email.received` carries no
+     `text`, no `html` and no attachment bytes — only metadata. Everything a
+     person actually wants to read has to be fetched. Skipping this step is why
+     every forward for a week said "this message arrived with no readable body".
+
+     Failing here must not lose the mail. A forward with an envelope and no body
+     is poor; no forward at all is worse, and the sender is not told either
+     way. So this narrows what gets sent rather than aborting. */
+  let attachments: ReceivedAttachment[] = mail.attachments;
   try {
-    const { error } = await new Resend(e.RESEND_API_KEY).emails.send(
+    // data_uri, so inline images arrive embedded in the HTML rather than as
+    // broken `cid:` references. chooseAttachments() then drops them from the
+    // attachment list, which would otherwise show every signature logo twice.
+    const { data: full } = await resend.emails.receiving.get(mail.id, { html_format: "data_uri" });
+    if (full) {
+      mail.html = full.html ?? "";
+      mail.text = full.text ?? "";
+      // Same fields as the webhook's list, plus the sizes the budget needs.
+      attachments = asAttachments(full.attachments);
+    }
+  } catch (cause) {
+    console.error(
+      `[inbound] could not read the body of ${mail.id}: ${cause instanceof Error ? cause.message : "unknown"}`,
+    );
+  }
+
+  /* Each file is passed to the send as a signed URL rather than downloaded and
+     re-uploaded: Resend fetches it itself, so a 12 MB PDF never occupies this
+     function's memory and never crosses the wire twice. The URLs are short-
+     lived, which is fine — the send happens seconds later. */
+  const { send, skipped } = chooseAttachments(attachments);
+  const files: { filename: string; path: string; contentType: string }[] = [];
+  const unresolved: ReceivedAttachment[] = [];
+
+  for (const attachment of send) {
+    try {
+      const { data } = await resend.emails.receiving.attachments.get({
+        emailId: mail.id,
+        id: attachment.id,
+      });
+      if (data?.download_url) {
+        files.push({
+          filename: attachment.filename,
+          path: data.download_url,
+          contentType: attachment.contentType,
+        });
+      } else {
+        unresolved.push(attachment);
+      }
+    } catch (cause) {
+      console.error(
+        `[inbound] could not resolve ${attachment.filename}: ${cause instanceof Error ? cause.message : "unknown"}`,
+      );
+      unresolved.push(attachment);
+    }
+  }
+
+  try {
+    const { error } = await resend.emails.send(
       {
         from: e.EMAIL_FROM,
         to: destination,
         // Reply goes to whoever wrote in, not to the app's own address.
         replyTo: mail.from || undefined,
         subject: forwardSubject(mail),
-        html: forwardHtml(mail, escapeHtml),
+        html: forwardHtml(mail, escapeHtml, skippedNote([...skipped, ...unresolved], escapeHtml)),
+        attachments: files.length > 0 ? files : undefined,
         headers: { "X-Meetrao-Forwarded": "1" },
       },
       // A retried delivery forwards the same message once, not twice.

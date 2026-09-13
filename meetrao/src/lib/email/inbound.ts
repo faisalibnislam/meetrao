@@ -76,13 +76,44 @@ export function verifyWebhook(args: {
    and a message that arrives in an unexpected shape must still reach a person —
    a support address that silently drops mail is worse than no support address. */
 
+export type ReceivedAttachment = {
+  id: string;
+  filename: string;
+  contentType: string;
+  /** Set when the file is referenced from the body as `cid:…`. */
+  contentId: string | null;
+  /** An image embedded in the message rather than clipped to it. */
+  inline: boolean;
+  /** Bytes, or 0 when unknown — the webhook payload does not carry sizes. */
+  size: number;
+};
+
 export type ReceivedEmail = {
   id: string;
   from: string;
   to: string[];
   subject: string;
+  /**
+   * The body — and it does NOT come from the webhook.
+   *
+   * `email.received` carries the envelope only: sender, recipients, subject,
+   * message id and attachment metadata. There is no `text` and no `html` in
+   * it, which is confirmed three ways — two live payloads captured from this
+   * endpoint, and Resend's own `ReceivedEmailEventData` type, which declares
+   * neither field.
+   *
+   * These therefore parse as "" from any real delivery, and the route fills
+   * them from `emails.receiving.get()` before forwarding. Reading them here
+   * anyway costs nothing and means a future payload that does carry a body is
+   * used rather than ignored.
+   *
+   * This was not a theory. Every support email forwarded before this was
+   * written arrived as an envelope with "This message arrived with no readable
+   * body" where the message should have been.
+   */
   text: string;
   html: string;
+  attachments: ReceivedAttachment[];
 };
 
 function asString(value: unknown): string {
@@ -102,6 +133,32 @@ function asAddresses(value: unknown): string[] {
       return "";
     })
     .filter(Boolean);
+}
+
+/**
+ * Attachment metadata, from either shape Resend describes it in.
+ *
+ * The webhook's `ReceivedEmailAttachment` and the GET endpoint's
+ * `InboundAttachment` agree on every field this needs except `size`, which
+ * only the second one has. Reading both through one function is what lets the
+ * route upgrade the webhook's list to the sized one without a second parser.
+ */
+export function asAttachments(value: unknown): ReceivedAttachment[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .filter((entry): entry is Record<string, unknown> => Boolean(entry) && typeof entry === "object")
+    .map((entry) => ({
+      id: asString(entry.id),
+      // A nameless attachment is legal and does happen. Give it something a
+      // person can click rather than letting the mail client invent one.
+      filename: asString(entry.filename) || "attachment",
+      contentType: asString(entry.content_type) || "application/octet-stream",
+      contentId: asString(entry.content_id) || null,
+      inline: asString(entry.content_disposition).toLowerCase() === "inline",
+      size: typeof entry.size === "number" && entry.size > 0 ? entry.size : 0,
+    }))
+    .filter((a) => a.id);
 }
 
 /**
@@ -125,7 +182,70 @@ export function parseReceived(payload: unknown): ReceivedEmail | null {
     subject: asString(data.subject),
     text: asString(data.text),
     html: asString(data.html),
+    attachments: asAttachments(data.attachments),
   };
+}
+
+/* ── attachments ────────────────────────────────────────────────────────────
+   Re-sending someone else's files has two limits worth respecting. Resend
+   caps a message at 40 MB, and a webhook that tries to move 40 MB is a webhook
+   that times out and gets retried — three times, moving it again each time. */
+
+/** Total bytes we will re-send. Well under Resend's 40 MB ceiling, on purpose. */
+export const ATTACHMENT_BUDGET = 15 * 1024 * 1024;
+
+/**
+ * Which files travel with the forward, and which are only named in it.
+ *
+ * Inline images are excluded rather than budgeted: the body is fetched with
+ * `html_format: "data_uri"`, so they are already embedded in the HTML, and
+ * attaching them again would show every logo in a signature twice.
+ *
+ * Ordering is the message's own. Taking the first files that fit is arbitrary,
+ * but every alternative is too — and the ones that do not fit are named in the
+ * body, so nothing disappears silently.
+ */
+export function chooseAttachments(
+  list: ReceivedAttachment[],
+  budget = ATTACHMENT_BUDGET,
+): { send: ReceivedAttachment[]; skipped: ReceivedAttachment[] } {
+  const send: ReceivedAttachment[] = [];
+  const skipped: ReceivedAttachment[] = [];
+  let total = 0;
+
+  for (const attachment of list) {
+    if (attachment.inline) continue;
+
+    // size 0 means "unknown", not "empty" — the webhook omits sizes. An
+    // unknown file still counts against the budget once it is fetched, so it
+    // is admitted only while there is room left for a whole one.
+    const cost = attachment.size || 0;
+    if (total + cost > budget && send.length > 0) {
+      skipped.push(attachment);
+      continue;
+    }
+    if (cost > budget) {
+      skipped.push(attachment);
+      continue;
+    }
+
+    send.push(attachment);
+    total += cost;
+  }
+
+  return { send, skipped };
+}
+
+/** Names the files that were too large to travel, so nothing vanishes quietly. */
+export function skippedNote(skipped: ReceivedAttachment[], escape: (value: string) => string): string {
+  if (skipped.length === 0) return "";
+
+  const names = skipped.map((a) => escape(a.filename)).join(", ");
+  return (
+    `<p style="margin:0 0 14px;padding:9px 11px;border:1px solid #E0DDD4;border-radius:6px;` +
+    `font-size:12.5px;color:#6B6862">Too large to forward: ${names}. ` +
+    `Open the message in Resend under Emails → Receiving to download.</p>`
+  );
 }
 
 /* ── forwarding ─────────────────────────────────────────────────────────────
@@ -163,7 +283,12 @@ export function forwardSubject(mail: ReceivedEmail): string {
  * `escape` is passed in rather than imported so this module stays free of
  * `server-only` and can be exercised directly by the test suite.
  */
-export function forwardHtml(mail: ReceivedEmail, escape: (value: string) => string): string {
+export function forwardHtml(
+  mail: ReceivedEmail,
+  escape: (value: string) => string,
+  /** Rendered above the body — currently the "too large to forward" note. */
+  notice = "",
+): string {
   const envelope = [
     ["From", mail.from || "(unknown sender)"],
     ["To", mail.to.join(", ") || "(unknown recipient)"],
@@ -188,6 +313,6 @@ export function forwardHtml(mail: ReceivedEmail, escape: (value: string) => stri
   return `<div style="font-family:Arial,sans-serif;font-size:14px;line-height:1.6;color:#1A1917">
   <table style="border-collapse:collapse;font-size:12.5px;margin:0 0 14px"><tbody>${envelope}</tbody></table>
   <hr style="border:0;border-top:1px solid #E0DDD4;margin:0 0 16px">
-  ${body}
+  ${notice}${body}
 </div>`;
 }

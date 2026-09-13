@@ -509,9 +509,10 @@ Receiving; nothing tells a person it arrived. Without the piece below, mail to
 hello@meetrao.com is *received* and never *read*.
 
 `POST /api/resend/inbound` closes that gap: it verifies Resend's Svix signature,
-and forwards the message to a real inbox with `Reply-To` set to whoever wrote
-in, so replying answers them directly rather than the app. Two variables switch
-it on, both optional — unset, the route no-ops and nothing else changes:
+fetches the message, and forwards it to a real inbox with `Reply-To` set to
+whoever wrote in, so replying answers them directly rather than the app. Two
+variables switch it on, both optional — unset, the route no-ops and nothing
+else changes:
 
 - `RESEND_WEBHOOK_SECRET` — the `whsec_…` signing secret, shown once when the
   webhook is created. Unset, nothing is processed at all: an unverified webhook
@@ -523,6 +524,40 @@ it on, both optional — unset, the route no-ops and nothing else changes:
 
 The webhook itself is created in the Resend dashboard under Webhooks, pointed at
 `<origin>/api/resend/inbound` and subscribed to `email.received`.
+
+**The webhook is an envelope, not a message.** `email.received` carries the
+sender, the recipients, the subject, the message id and attachment *metadata* —
+and no body. There is no `text` and no `html` anywhere in the payload, which is
+confirmed three ways: two live deliveries captured from this endpoint, and
+Resend's own `ReceivedEmailEventData` type, which declares neither field.
+
+That was not obvious, and it shipped broken. The route built its forward
+straight from the webhook, so `mail.text` and `mail.html` were always `""`, and
+every forwarded support email arrived reading *"This message arrived with no
+readable body."* — envelope only, for a week, with nobody the wiser because the
+forward itself looked like it worked. Attachments went the same way: the payload
+names them but does not carry them, and the send never asked for them.
+
+So the route now makes two more calls before forwarding:
+
+- `emails.receiving.get(id, { html_format: "data_uri" })` for the real body.
+  `data_uri` embeds inline images in the HTML rather than leaving broken `cid:`
+  references, which is also why `chooseAttachments()` drops inline parts from
+  the attachment list — attaching them again shows every signature logo twice.
+- `emails.receiving.attachments.get()` per file, for a signed `download_url`
+  that is handed to the send as `attachments[].path`. Resend fetches the file
+  itself, so a 12 MB PDF never occupies this function's memory and never crosses
+  the wire twice.
+
+Attachments are budgeted at 15 MB total, well under Resend's 40 MB ceiling: a
+webhook that tries to move 40 MB is a webhook that times out and gets retried,
+moving it again each time. Anything over budget is *named* in the forwarded
+body rather than dropped in silence.
+
+Neither extra call may lose the mail. Both are wrapped so a failure narrows what
+gets sent — envelope without body, or body without files — rather than aborting
+the forward, on the same principle as the rest of the module: a support address
+that silently drops mail is worse than no support address.
 
 Forwarding is deliberately dumb — it does not parse, thread or file anything. It
 turns an API-only inbox back into ordinary email and stops there.
