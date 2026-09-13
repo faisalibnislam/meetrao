@@ -56,6 +56,7 @@ export function SiteNav({
             <NavLink href="/#product">Product</NavLink>
             <NavLink href="/#how">How it works</NavLink>
             <NavLink href="/#usecases">Use cases</NavLink>
+            <NavLink href="/pricing">Pricing</NavLink>
             <NavLink href="/#faq">FAQ</NavLink>
           </nav>
         ) : null}
@@ -227,6 +228,9 @@ export function SiteFooter() {
             © 2026 Meetrao · {POSTAL_ADDRESS}
           </span>
           <div className="ml-auto flex flex-wrap gap-[20px]">
+            <Link href="/pricing" className="unlink text-[13px] text-white/75 hover:text-white">
+              Pricing
+            </Link>
             <Link href="/privacy" className="unlink text-[13px] text-white/75 hover:text-white">
               Privacy
             </Link>

@@ -188,6 +188,7 @@ const RENDERED: { path: string; file: string; title: string }[] = [
   })),
   ...(
     [
+      ["/pricing", "(marketing)/pricing/page.tsx"],
       ["/help", "help/page.tsx"],
       ["/support", "support/page.tsx"],
       ["/privacy", "(marketing)/privacy/page.tsx"],
@@ -268,6 +269,7 @@ describe("page descriptions", () => {
     ...COMPARISONS.map((c) => ({ path: `/vs/${c.slug}`, description: c.description })),
     ...(
       [
+        ["/pricing", "(marketing)/pricing/page.tsx"],
         ["/help", "help/page.tsx"],
         ["/support", "support/page.tsx"],
         ["/privacy", "(marketing)/privacy/page.tsx"],

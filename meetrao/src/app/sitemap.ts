@@ -18,6 +18,7 @@ import { absoluteUrl } from "@/lib/seo";
 
 const PAGES: [path: string, priority: number, changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]][] = [
   ["/", 1.0, "weekly"],
+  ["/pricing", 0.9, "monthly"],
   ["/vs/calendly", 0.9, "monthly"],
   ["/vs/cal-com", 0.9, "monthly"],
   ["/help", 0.7, "monthly"],

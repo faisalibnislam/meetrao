@@ -623,6 +623,24 @@ have no swap at all.
 A profile read that fails renders the signed-out nav rather than a nameless
 avatar chip. That is a decision, not an accident: see `accountFrom`.
 
+**/pricing exists because "is it actually free" is a query.** The page has one
+tier and no plan grid — three columns of ticks where two are empty is a layout
+that exists to make an upsell legible, and inventing one for a product with no
+upsell would be theatre. The section order is the argument, the same as on the
+comparison pages: the number, then everything included, then **what it cannot
+do**, and only then the invitation to sign up. Somebody who needs Outlook should
+learn that in ten seconds rather than after connecting a calendar.
+
+`lib/pricing-claims.test.ts` guards the claim rather than the layout. It fails
+on "free forever" and four variants anywhere in shipped copy — with comments
+stripped first, because three files explain at length why Meetrao does not say
+it, and the first version of the test failed on all three. It also fails if the
+page stops linking to `/terms#t-price`, if that anchor disappears from the
+Terms, if the limits section moves below the call to action, or if a limit stops
+reading as one. That last rule came from mutating the test: renaming "No
+rescheduling yet" to "Rescheduling" passed a substring check while inverting the
+meaning, so a limits section could quietly gain a feature.
+
 **Titles put the category first and the brand last.** "Meetrao" is a word
 nobody is searching for yet, so spending the front of a 60-character title on it
 buys nothing; "free meeting scheduling app" is what somebody types who would
