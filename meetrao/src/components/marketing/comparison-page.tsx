@@ -68,7 +68,8 @@ export function ComparisonPage({ data }: { data: Comparison }) {
               Side by side
             </h2>
             <p className="mt-[10px] mb-[22px] max-w-[640px] text-[14px] leading-[1.6] text-ink-2">
-              {data.competitor} figures are as published in {data.checkedOn}. Prices change —{" "}
+              {data.competitor} figures were last reviewed in {data.checkedOn}. Prices change without
+              notice —{" "}
               <a href={data.competitorUrl} rel="nofollow noreferrer" target="_blank">
                 check {data.competitor}&rsquo;s own pricing page
               </a>{" "}

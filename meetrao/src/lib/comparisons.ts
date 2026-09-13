@@ -70,7 +70,7 @@ export const CALENDLY: Comparison = {
     "Meetrao is narrower on purpose. If what you need is a booking link that respects your real calendar and puts a Google Meet link on both sides, it does that and does not charge for it. If you need more than that, this page says so.",
   ],
   rows: [
-    { feature: "Price", meetrao: "Free", them: "Free tier; paid plans published from $10/seat/month", edge: "meetrao" },
+    { feature: "Price", meetrao: "Free", them: "Free tier; paid plans from $10/seat/month billed annually, $12 monthly", edge: "meetrao" },
     { feature: "Meeting types on the free plan", meetrao: "Unlimited", them: "One", edge: "meetrao" },
     { feature: "Calendars connected", meetrao: "One (Google)", them: "One on free; more on paid", edge: "even" },
     { feature: "Guests need an account", meetrao: "No", them: "No", edge: "even" },
@@ -136,7 +136,7 @@ export const CAL_COM: Comparison = {
     "How Meetrao and Cal.com compare for meeting scheduling: what each does, where Cal.com is the " +
     "stronger product, and which one to pick.",
   summary: [
-    "Cal.com is the most capable free scheduler most people can name. Its individual plan is genuinely generous — unlimited event types, several calendar connections, workflows — and on a feature count it beats Meetrao comfortably.",
+    "Cal.com is the most capable free scheduler most people can name. Its individual plan is genuinely generous — unlimited event types and unlimited calendar connections — and on a feature count it beats Meetrao comfortably.",
     "So this page is not going to claim Meetrao does more. It does less, deliberately: one calendar provider, one meeting location, one weekly schedule, and a single screen for each of them. Cal.com's power comes with the surface area that power needs.",
     "Pick Meetrao if the shortest path from “I need a booking link” to having one matters more to you than what the tool could do later. Pick Cal.com if you want room to grow into it.",
   ],
@@ -144,7 +144,7 @@ export const CAL_COM: Comparison = {
     { feature: "Price for one person", meetrao: "Free", them: "Free", edge: "even" },
     { feature: "Price for a team", meetrao: "No team features", them: "Paid, per user", edge: "them" },
     { feature: "Meeting types", meetrao: "Unlimited", them: "Unlimited", edge: "even" },
-    { feature: "Calendars connected", meetrao: "One (Google)", them: "Several, multiple providers", edge: "them" },
+    { feature: "Calendars connected", meetrao: "One (Google)", them: "Unlimited, multiple providers", edge: "them" },
     { feature: "Video providers", meetrao: "Google Meet only", them: "Cal Video, Meet, Zoom and others", edge: "them" },
     { feature: "Guests need an account", meetrao: "No", them: "No", edge: "even" },
     { feature: "Timezone conversion for guests", meetrao: "Yes", them: "Yes", edge: "even" },
