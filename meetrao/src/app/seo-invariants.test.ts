@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { globSync, readFileSync } from "node:fs";
 import path from "node:path";
-import { DESCRIPTION } from "@/lib/seo";
+import { COMPARISONS } from "@/lib/comparisons";
+import { DESCRIPTION, TITLE, TITLE_TEMPLATE } from "@/lib/seo";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The SEO rules that fail silently.
@@ -151,5 +152,169 @@ describe("the public pages declare their own canonical", () => {
 
   it.each(PUBLIC)("%s", (file) => {
     expect(read(file), `${file} has no canonical`).toMatch(/alternates:\s*\{\s*canonical/);
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Titles, descriptions and the sitemap.
+
+   All three fail the same way: invisibly, in somebody else's search results,
+   weeks later. A title two characters too long is cut mid-word; a description
+   at 170 characters ends in an ellipsis; a page added without a sitemap entry
+   is simply never crawled. None of it shows up locally, and none of it throws.
+
+   The measurements are Google's display limits, not preferences: roughly 60
+   characters for a title and 155 for a description before the snippet is
+   truncated.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+const BRAND = "Meetrao";
+
+/**
+ * Every page a stranger can reach, and the title Next actually renders for it.
+ *
+ * `template` pages get " · Meetrao" appended, because `title.template` in the
+ * root layout applies to child segments. `absolute` pages do not — which is
+ * both /vs pages and the home page's own default. Getting that backwards is
+ * how a brand ends up in a title twice, so the two kinds are separated here
+ * rather than assumed.
+ */
+const RENDERED: { path: string; file: string; title: string }[] = [
+  { path: "/", file: "(marketing)/page.tsx", title: TITLE },
+  ...COMPARISONS.map((c) => ({
+    path: `/vs/${c.slug}`,
+    file: `(marketing)/vs/${c.slug}/page.tsx`,
+    title: c.title,
+  })),
+  ...(
+    [
+      ["/help", "help/page.tsx"],
+      ["/support", "support/page.tsx"],
+      ["/privacy", "(marketing)/privacy/page.tsx"],
+      ["/terms", "(marketing)/terms/page.tsx"],
+      ["/signup", "(auth)/signup/page.tsx"],
+      ["/login", "(auth)/login/page.tsx"],
+    ] as const
+  ).map(([path, file]) => ({
+    path,
+    file,
+    title: TITLE_TEMPLATE.replace("%s", literal(read(file), "title")),
+  })),
+];
+
+/** The value of a metadata string field, including `"a" + "b"` continuations. */
+function literal(source: string, field: string): string {
+  const at = source.indexOf(`${field}:`);
+  if (at < 0) return "";
+  const tail = source.slice(at + field.length + 1);
+  const parts: string[] = [];
+  const scan = /^[\s+]*"((?:[^"\\]|\\.)*)"/;
+
+  let rest = tail;
+  for (let hit = scan.exec(rest); hit; hit = scan.exec(rest)) {
+    parts.push(hit[1].replace(/\\"/g, '"'));
+    rest = rest.slice(hit[0].length);
+    if (!/^\s*\+/.test(rest)) break;
+  }
+  return parts.join("");
+}
+
+describe("page titles", () => {
+  it("covers every public page, so a new one cannot slip past", () => {
+    // The filesystem decides the list, not this file. A page added under a
+    // public route with its own canonical has to appear above.
+    const canonical = pages("**/page.tsx")
+      .filter((p) => /alternates:\s*\{\s*canonical/.test(p.text))
+      // Host booking pages are canonical but generated per user, not authored.
+      .filter((p) => !p.file.includes("[username]"))
+      .map((p) => p.file)
+      .sort();
+
+    expect(RENDERED.map((r) => r.file).sort()).toEqual(canonical);
+  });
+
+  it.each(RENDERED)("$path fits in a search result", ({ title }) => {
+    expect(title.length, `"${title}" is ${title.length} characters`).toBeLessThanOrEqual(60);
+    expect(title.length).toBeGreaterThan(12);
+  });
+
+  /* The defect this exists for: a page setting `title: "Help Centre — how
+     Meetrao scheduling works"` renders as "… how Meetrao scheduling works ·
+     Meetrao". Reads as a mistake, and wastes the scarcest line on the page. */
+  it.each(RENDERED)("$path names the brand exactly once", ({ title }) => {
+    const times = title.split(BRAND).length - 1;
+    expect(times, `"${title}"`).toBe(1);
+  });
+
+  it("gives every page a different title", () => {
+    const all = RENDERED.map((r) => r.title);
+    expect(new Set(all).size, `duplicates in ${all.join(" | ")}`).toBe(all.length);
+  });
+
+  /* The home page has one line to say what the product is to somebody who has
+     never heard of it. It spends it on the category and the price, not on the
+     name — the name goes last, and earns its place only once people search it. */
+  it("leads the home page with the category, not the brand", () => {
+    expect(TITLE.toLowerCase()).toContain("free");
+    expect(TITLE.toLowerCase()).toContain("scheduling");
+    expect(TITLE.toLowerCase()).toContain("booking");
+    expect(TITLE.indexOf(BRAND)).toBeGreaterThan(TITLE.length / 2);
+  });
+});
+
+describe("page descriptions", () => {
+  const DESCRIBED: { path: string; description: string }[] = [
+    { path: "/", description: DESCRIPTION },
+    ...COMPARISONS.map((c) => ({ path: `/vs/${c.slug}`, description: c.description })),
+    ...(
+      [
+        ["/help", "help/page.tsx"],
+        ["/support", "support/page.tsx"],
+        ["/privacy", "(marketing)/privacy/page.tsx"],
+        ["/terms", "(marketing)/terms/page.tsx"],
+        ["/signup", "(auth)/signup/page.tsx"],
+      ] as const
+    ).map(([path, file]) => ({ path, description: literal(read(file), "description") })),
+  ];
+
+  it("reads them at all", () => {
+    // Guards the guard: a parser that returns "" for everything would pass the
+    // upper bound on every page and fail nothing.
+    for (const { path, description } of DESCRIBED) {
+      expect(description.length, `${path} has no description`).toBeGreaterThan(40);
+    }
+  });
+
+  it.each(DESCRIBED)("$path survives the snippet cut", ({ description }) => {
+    expect(description.length, `${description.length} chars: ${description}`).toBeLessThanOrEqual(155);
+  });
+
+  it.each(DESCRIBED)("$path says enough to be worth showing", ({ description }) => {
+    expect(description.length).toBeGreaterThan(80);
+  });
+});
+
+describe("the sitemap", () => {
+  const source = readFileSync(path.join(APP, "sitemap.ts"), "utf8");
+
+  /* Excluded on purpose, each for its own reason — not by oversight, which is
+     what the assertion below would otherwise let through. */
+  const EXCLUDED: Record<string, string> = {
+    "/login": "a sign-in form has nothing to rank for, and a crawler bounces off it",
+  };
+
+  it("lists every public page that is not deliberately excluded", () => {
+    const listed = [...source.matchAll(/\["(\/[a-z0-9/-]*)"/g)].map((m) => m[1]);
+    const expected = RENDERED.map((r) => r.path).filter((p) => !(p in EXCLUDED));
+
+    expect(listed.sort()).toEqual(expected.sort());
+  });
+
+  /* Host booking pages are public and individually indexable and still must not
+     be here: a sitemap enumerating them is a machine-readable roster of
+     everybody who uses the product. */
+  it("never enumerates the hosts", () => {
+    expect(source).not.toContain("[username]");
+    expect(source).not.toMatch(/from "@\/lib\/(data|supabase)/);
   });
 });

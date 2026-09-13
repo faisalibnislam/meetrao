@@ -623,12 +623,45 @@ have no swap at all.
 A profile read that fails renders the signed-out nav rather than a nameless
 avatar chip. That is a decision, not an accident: see `accountFrom`.
 
+**Titles put the category first and the brand last.** "Meetrao" is a word
+nobody is searching for yet, so spending the front of a 60-character title on it
+buys nothing; "free meeting scheduling app" is what somebody types who would
+want this. The home page therefore reads *Free Meeting Scheduling App &
+Appointment Booking · Meetrao*, and the order flips only once people search the
+name. Both /vs pages lead with the query rather than the comparison — *Free
+Calendly Alternative — Meetrao vs Calendly* — for the same reason.
+
+Two mechanics decide the shape of these, and both are easy to get backwards:
+
+- `title.template` in the root layout applies to **child** segments and never to
+  `title.default`. So `TITLE` already ending in "· Meetrao" is correct, not a
+  duplication — Next's own docs say so, and it was checked against the build
+  output rather than believed.
+- A page that spells the brand in its own title gets it twice. *"Help Centre —
+  how Meetrao scheduling works"* rendered as *"… how Meetrao scheduling works ·
+  Meetrao"*, which reads as a mistake and wastes the scarcest line on the page.
+
+`seo-invariants.test.ts` computes the *rendered* title for every public page and
+fails on any that runs past 60 characters, names the brand twice, or duplicates
+another page's. Descriptions are held between 80 and 155 characters — 155 is
+roughly where a snippet is cut, and both /vs descriptions were over it. The same
+file checks the sitemap lists every public page: `/login` is excluded by name
+with a reason, so a page missing by oversight cannot pass as a page missing on
+purpose.
+
 **What is indexable.** `robots.ts` disallows the signed-in product (a crawler
 gets a redirect to /login there, so fetching it is pure waste). The guest
 booking pages are a different problem and get a different tool: `/booking/<ref>`
 shows a named guest and a time, so it carries `noindex` in its own metadata and
 is deliberately NOT disallowed — a disallowed page is one a crawler never
 fetches and therefore one whose `noindex` it never reads.
+
+The sitemap lists Meetrao's own pages and deliberately not the hosts'. Every
+`/<username>` page is public and individually indexable, but a sitemap
+enumerating them is a machine-readable roster of everybody who uses the product
+— each username is already public on its own, and publishing the complete set is
+a different thing. A test fails if the sitemap ever starts reading from the
+database.
 
 `src/app/seo-invariants.test.ts` pins both, plus the two defects found while
 writing this: every page in the app inherited a canonical pointing at the home

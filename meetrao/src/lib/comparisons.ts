@@ -60,10 +60,10 @@ export const CALENDLY: Comparison = {
   competitor: "Calendly",
   competitorUrl: "https://calendly.com/pricing",
   checkedOn: CHECKED,
-  title: "Meetrao vs Calendly: a free Calendly alternative",
+  title: "Free Calendly Alternative — Meetrao vs Calendly",
   description:
-    "An honest comparison of Meetrao and Calendly for appointment booking and meeting scheduling: " +
-    "what each does, what Calendly's free plan limits, and which one to pick.",
+    "How Meetrao and Calendly compare for appointment booking: what each does, where Calendly's " +
+    "free plan stops, and which one to pick.",
   summary: [
     "Calendly is the tool most people mean when they say “send me your link”. It is mature, it has a free plan, and for teams that need payments, routing or round-robin it does things Meetrao does not.",
     "The difference that sends people looking is the free plan's shape. Calendly's free tier is limited to one active event type and one connected calendar — enough for a single repeated meeting, and the point at which most people either upgrade or go looking. Meetrao has no such line: every feature on this site is available on the free account, because there is no paid account to upsell you to.",
@@ -131,10 +131,10 @@ export const CAL_COM: Comparison = {
   competitor: "Cal.com",
   competitorUrl: "https://cal.com/pricing",
   checkedOn: CHECKED,
-  title: "Meetrao vs Cal.com: a simpler free scheduler",
+  title: "Free Cal.com Alternative — Meetrao vs Cal.com",
   description:
-    "An honest comparison of Meetrao and Cal.com for meeting scheduling and appointment booking: " +
-    "what each does, where Cal.com is the stronger product, and which one to pick.",
+    "How Meetrao and Cal.com compare for meeting scheduling: what each does, where Cal.com is the " +
+    "stronger product, and which one to pick.",
   summary: [
     "Cal.com is the most capable free scheduler most people can name. Its individual plan is genuinely generous — unlimited event types, several calendar connections, workflows — and on a feature count it beats Meetrao comfortably.",
     "So this page is not going to claim Meetrao does more. It does less, deliberately: one calendar provider, one meeting location, one weekly schedule, and a single screen for each of them. Cal.com's power comes with the surface area that power needs.",

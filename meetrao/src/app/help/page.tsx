@@ -8,10 +8,10 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 
 export const metadata: Metadata = {
-  title: "Help Centre — how Meetrao scheduling works",
+  title: "Help Centre — how scheduling works",
   description:
-    "Every part of Meetrao explained in the order you meet it: connecting Google Calendar, " +
-    "setting your hours, sharing your link, and what guests see.",
+    "How Meetrao works, in the order you meet it: connect Google Calendar, set your hours, " +
+    "share your link, and see exactly what a guest sees when they book.",
   alternates: { canonical: "/help" },
 };
 

@@ -5,16 +5,7 @@ import { AnalyticsConsent } from "@/components/analytics/consent";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ToastProvider } from "@/components/ui/toast";
 import { siteUrl } from "@/lib/env";
-import {
-  DESCRIPTION,
-  KEYWORDS,
-  OG_IMAGE,
-  SITE_NAME,
-  graph,
-  organizationLd,
-  softwareApplicationLd,
-  webSiteLd,
-} from "@/lib/seo";
+import { DESCRIPTION, KEYWORDS, OG_IMAGE, SITE_NAME, TITLE, TITLE_TEMPLATE, graph, organizationLd, softwareApplicationLd, webSiteLd } from "@/lib/seo";
 import "./globals.css";
 
 /* Two families, strictly divided by role.
@@ -43,15 +34,18 @@ const serif = Instrument_Serif({
    links — resolves against localhost in development and against nothing in
    production, and a canonical pointing at localhost is worse than none.
 
-   The default title leads with the category rather than the brand. "Meetrao" is
-   a word nobody is searching for yet; "free meeting scheduler" is what somebody
-   types who would want it. When the name is known, this order flips.
+   The default title leads with the category rather than the brand — see the
+   note on TITLE in lib/seo.ts for why.
    ───────────────────────────────────────────────────────────────────────────── */
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl()),
   title: {
-    default: "Meetrao — free meeting scheduler and appointment booking",
-    template: "%s · Meetrao",
+    // The template applies to CHILD segments only, never to this default — so
+    // `TITLE` already ending in the brand is correct, not a duplication. Next's
+    // own docs: "title.template applies to child route segments and not the
+    // segment it's defined in."
+    default: TITLE,
+    template: TITLE_TEMPLATE,
   },
   description: DESCRIPTION,
   applicationName: SITE_NAME,
@@ -67,7 +61,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: SITE_NAME,
-    title: "Meetrao — free meeting scheduler and appointment booking",
+    title: TITLE,
     description: DESCRIPTION,
     url: "/",
     locale: "en",
@@ -75,7 +69,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Meetrao — free meeting scheduler and appointment booking",
+    title: TITLE,
     description: DESCRIPTION,
     images: ["/og.png"],
   },

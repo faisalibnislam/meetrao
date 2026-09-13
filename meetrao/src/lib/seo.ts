@@ -23,15 +23,45 @@ export const SITE_NAME = "Meetrao";
 export const TAGLINE = "Free appointment booking and meeting scheduling";
 
 /**
+ * The suffix every page title carries, and the whole title of the home page.
+ *
+ * Two rules decide the shape of these, and they pull against each other.
+ *
+ * A title is cut at roughly 60 characters, so there is room for about three
+ * ideas. And "Meetrao" is not one of the three: nobody is searching for a word
+ * they have never heard, so the brand goes last, after the category. That is
+ * the opposite of the advice you would give a known name, and it inverts again
+ * the moment anyone searches for this one by name.
+ *
+ * The home page therefore spends its whole title on the two categories people
+ * actually type — "meeting scheduling app" and "appointment booking" — plus the
+ * one word that separates this from the field, which is "free". Everything else
+ * about the product has 155 characters of description to live in.
+ *
+ * `TITLE` is absolute: the template is not applied to it. Applied, it would
+ * read "… · Meetrao · Meetrao", which is how a brand ends up in a title twice
+ * and is checked in seo-invariants.test.ts rather than remembered.
+ */
+export const TITLE = "Free Meeting Scheduling App & Appointment Booking · Meetrao";
+export const TITLE_TEMPLATE = "%s · Meetrao";
+
+/**
  * The snippet.
  *
  * Kept under 155 characters because that is roughly where a search result is
  * cut, and a description that ends mid-clause reads as carelessness on the one
  * line a stranger sees. The longer version of this pitch lives on the page.
+ *
+ * It closes on the three denials rather than opening with them. "No card, no
+ * trial, no locked features" is the claim a reader of this category has learned
+ * to distrust, so it lands better after the sentence that says what the thing
+ * actually does — and each of the three is separately true, which is the only
+ * reason to write it at all. Terms §5 keeps the promise honest: free today,
+ * paid plans possible later, existing accounts told first.
  */
 export const DESCRIPTION =
-  "Free meeting scheduler and appointment booking. Share one link, guests pick a time you are " +
-  "free, and every booking gets a Google Meet link. No card needed.";
+  "Free meeting scheduling app. Share one link, guests pick a time you're free, every booking " +
+  "gets a Google Meet link. No card, no trial, no locked features.";
 
 /**
  * The social card, spelled out on every page that declares its own openGraph.
@@ -56,9 +86,10 @@ export const OG_IMAGE = {
  * direction.
  */
 export const KEYWORDS = [
-  "appointment booking",
+  "free meeting scheduling app",
+  "free appointment booking",
   "meeting scheduler",
-  "scheduling app",
+  "appointment scheduling software",
   "booking link",
   "free Calendly alternative",
   "Cal.com alternative",
@@ -87,6 +118,7 @@ export function organizationLd(): Json {
     "@id": absoluteUrl("/#organization"),
     name: SITE_NAME,
     url: absoluteUrl("/"),
+    description: `${TAGLINE}, operated by one person.`,
     logo: absoluteUrl("/brand/meetrao-email-logo.png"),
     email: SUPPORT_EMAIL,
     address: {
@@ -123,6 +155,12 @@ export function softwareApplicationLd(): Json {
     operatingSystem: "Web browser",
     url: absoluteUrl("/"),
     description: DESCRIPTION,
+    /* The machine-readable half of the pitch. An assistant asked for a free
+       scheduling tool can filter on this; "free" in a description is prose it
+       has to believe. Same claim as the Offer below, same expiry: true today,
+       and Terms §5 governs what happens if that changes. */
+    isAccessibleForFree: true,
+    softwareHelp: { "@type": "CreativeWork", url: absoluteUrl("/help") },
     publisher: { "@id": absoluteUrl("/#organization") },
     offers: {
       "@type": "Offer",
@@ -156,6 +194,7 @@ export function webSiteLd(): Json {
     name: SITE_NAME,
     url: absoluteUrl("/"),
     description: DESCRIPTION,
+    isAccessibleForFree: true,
     publisher: { "@id": absoluteUrl("/#organization") },
     inLanguage: "en",
   };

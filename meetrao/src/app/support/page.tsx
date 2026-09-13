@@ -12,9 +12,10 @@ import { optionalSession } from "@/lib/data/session";
    would have meant two pages to keep in step, and the body is identical. */
 
 export const metadata: Metadata = {
-  title: "Support",
+  title: "Contact Support",
   description:
-    "Tell us what you were trying to do and what happened instead. A person reads every message.",
+    "Something not working, or a question about your booking link? Tell us what you tried and " +
+    "what happened instead. A person reads every message.",
   alternates: { canonical: "/support" },
 };
 
