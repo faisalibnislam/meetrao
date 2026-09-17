@@ -1,212 +1,128 @@
-"use client";
+import { Fragment } from "react";
 
-import Link from "next/link";
-import { useState } from "react";
-import { Icon, type IconName } from "@/components/ui/icon";
-import { ImageFrame } from "./image-frame";
-import { cx } from "@/lib/cx";
+/* ─────────────────────────────────────────────────────────────────────────────
+   Use cases — concept 2e, "Marquee with faces".
 
-/* Six use cases: one featured panel plus the next three as strips. Each appears
-   either as the feature or as a strip, never both — so one photograph per use
-   case covers both roles and is cropped to fit.
+   A full-bleed dark band: one heading, a marquee of six named faces that never
+   stops, and three notes underneath. It replaced a carousel — a featured panel,
+   three strips, six dots and two arrows, all driven by an index in component
+   state — and the thing worth noticing is what went with it.
 
-   Photographs are read off disk by the page, not listed here: drop
-   `public/use-cases/<id>.jpg` and that card stops being a frame. See
-   src/lib/use-case-photos.ts. */
+   There is no client state here at all. No `useState`, no handlers, no
+   `"use client"`. The motion is one CSS animation on a static list, which means
+   this section ships no JavaScript and renders complete in the server's HTML.
 
-type UseCase = {
-  id: string;
-  glyph: IconName;
-  tag: string;
-  title: string;
-  text: string;
-  ground: string;
-};
+   ── the loop ──
+   The six items are rendered TWICE and the track translates by exactly -50%.
+   At the end of the animation the second copy sits precisely where the first
+   began, so the seam never lands on screen. That is also why the duplicate is
+   `aria-hidden`: it is the same six words again, and a screen reader that reads
+   them twice is reading a rendering trick out loud.
 
-const USE: UseCase[] = [
-  {
-    id: "freelancers",
-    glyph: "address-card",
-    tag: "Freelancers",
-    title: "Book discovery calls without the email thread",
-    text: "One link in your signature. Clients pick a time you are genuinely free, and it lands on both calendars.",
-    ground: "bg-accent-soft",
-  },
-  {
-    id: "consultants",
-    glyph: "lightbulb",
-    tag: "Consultants",
-    title: "Fill your week while you are in another meeting",
-    text: "Prospects book against your live calendar. Buffers and a minimum notice period keep your day intact.",
-    ground: "bg-fill-2",
-  },
-  {
-    id: "agencies",
-    glyph: "users",
-    tag: "Agencies",
-    title: "Every account manager keeps their own link",
-    text: "Separate hours and meeting types per person, so nobody negotiates times out of a shared inbox.",
-    ground: "bg-slate-soft",
-  },
-  {
-    id: "sales-teams",
-    glyph: "chart-line",
-    tag: "Sales teams",
-    title: "Let prospects book straight from the follow-up",
-    text: "The link goes in the email. The meeting arrives with a Google Meet link already attached.",
-    ground: "bg-fill",
-  },
-  {
-    id: "coaches",
-    glyph: "graduation-cap",
-    tag: "Coaches",
-    title: "Recurring sessions without the weekly admin",
-    text: "Clients rebook themselves from the same link, always in their own timezone.",
-    ground: "bg-accent-soft",
-  },
-  {
-    id: "remote-teams",
-    glyph: "globe",
-    tag: "Remote teams",
-    title: "Nobody does timezone maths by hand",
-    text: "Your hours convert to theirs automatically, and stay correct through daylight saving.",
-    ground: "bg-fill-2",
-  },
+   ── reduced motion ──
+   A 26-second infinite translate is the only continuous motion on this page, so
+   it is the one thing that most needs to stop. It does, and without a rule of
+   its own: `globals.css` already ends every animation at 0.001ms under
+   `prefers-reduced-motion: reduce`, globally. A second guard here would be a
+   duplicate that can rot out of step with the first — `use-cases.test.ts`
+   asserts the global one still covers this band instead.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/** id is the photo filename (`public/use-cases/uc-<id>.webp`); name is the label. */
+const CASES: readonly (readonly [id: string, name: string])[] = [
+  ["freelancers", "Freelancers"],
+  ["consultants", "Consultants"],
+  ["agencies", "Agencies"],
+  ["sales-teams", "Sales teams"],
+  ["coaches", "Coaches"],
+  ["remote-teams", "Remote teams"],
 ];
 
-export function UseCases({ photos = {} }: { photos?: Record<string, string> }) {
-  const [index, setIndex] = useState(0);
-  const feature = USE[index];
-  const strips = [1, 2, 3].map((offset) => USE[(index + offset) % USE.length]);
+/** What the carousel's right-aligned kicker used to say, split three ways. */
+const NOTES: readonly (readonly [string, string])[] = [
+  ["One link", "Clients pick a time you are genuinely free, and it lands on both calendars."],
+  ["Your real hours", "Buffers and a minimum notice period keep your day intact."],
+  ["Meet attached", "Every booking arrives with a Google Meet link already on it."],
+];
 
+export function UseCases() {
   return (
-    <div className="flex flex-col gap-[22px]">
-      <div className="flex flex-wrap items-stretch gap-[10px]">
-        <div
-          className={cx(
-            "animate-in relative flex min-w-0 flex-[1_1_430px] flex-col overflow-hidden rounded-[16px]",
-            "min-h-[clamp(330px,38vw,410px)]",
-            feature.ground,
-          )}
-        >
-          <ImageFrame
-            label={`${feature.tag} photography`}
-            src={photos[feature.id]}
-            sizes="(max-width: 860px) 100vw, 680px"
-            className="absolute inset-0 z-1 h-full w-full"
-            rounded="rounded-none"
-            ground="bg-transparent"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 z-2"
-            style={{
-              background:
-                "linear-gradient(to top,rgba(11,23,20,0.92) 0%,rgba(11,23,20,0.66) 34%,rgba(11,23,20,0.12) 68%,rgba(11,23,20,0.04) 100%)",
-            }}
-          />
-          <div className="relative z-3 mt-auto flex flex-wrap items-end justify-between gap-[16px] p-[24px]">
-            <div className="flex min-w-0 flex-1 flex-col gap-[9px]">
-              <span className="inline-flex h-[24px] self-start items-center gap-[8px] rounded-[6px] border border-white/30 bg-white/15 px-[10px] text-[10px] font-medium tracking-[0.1em] text-white uppercase backdrop-blur-[6px]">
-                <Icon name={feature.glyph} size={10} className="text-[#7FD8C4]" />
-                {feature.tag}
-              </span>
-              <span className="font-serif text-[clamp(21px,2.3vw,27px)] leading-[1.1] font-normal tracking-[-0.014em] text-balance text-white">
-                {feature.title}
-              </span>
-              <span className="max-w-[44ch] text-[13.5px] leading-[1.55] text-pretty text-white/85">
-                {feature.text}
-              </span>
-            </div>
-            <Link
-              href="/signup"
-              className="unlink inline-flex h-[40px] flex-none items-center gap-[9px] rounded-[8px] bg-white px-[16px] text-[13.5px] font-semibold text-ink transition-opacity duration-[120ms] hover:text-ink hover:opacity-90"
-            >
-              Create your free link
-              <Icon name="arrow-right" size={10} />
-            </Link>
-          </div>
-        </div>
-
-        <div className="flex min-h-[170px] min-w-0 flex-[1_1_250px] gap-[10px]">
-          {strips.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              aria-label={`Feature the ${item.tag} use case`}
-              onClick={() => setIndex(USE.indexOf(item))}
-              className={cx(
-                "relative flex min-w-0 flex-[1_1_0] cursor-pointer flex-col overflow-hidden rounded-[14px] border-0 p-0",
-                "transition-transform duration-[220ms] ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-[3px]",
-                item.ground,
-              )}
-            >
-              <ImageFrame
-                label={item.tag}
-                src={photos[item.id]}
-                sizes="(max-width: 860px) 50vw, 420px"
-                className="absolute inset-0 z-1 h-full w-full"
-                rounded="rounded-none"
-                ground="bg-transparent"
-              />
-              <span
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 z-2"
-                style={{
-                  background:
-                    "linear-gradient(to top,rgba(11,23,20,0.9) 0%,rgba(11,23,20,0.5) 42%,rgba(11,23,20,0.1) 80%)",
-                }}
-              />
-              <span className="relative z-3 mt-auto flex flex-col gap-[7px] px-[12px] py-[14px] text-left">
-                <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[8px] bg-white/20 text-[#7FD8C4] backdrop-blur-[6px]">
-                  <Icon name={item.glyph} size={11} />
-                </span>
-                <span className="text-[13px] leading-[1.3] font-semibold text-balance text-white">{item.tag}</span>
-              </span>
-            </button>
-          ))}
-        </div>
+    <div className="overflow-hidden bg-accent-2 pt-[52px] pb-[56px] text-white">
+      <div className="mx-auto max-w-[1200px] px-[26px] pb-[34px] max-[560px]:px-[18px]">
+        <h2 className="m-0 max-w-[22ch] font-serif text-[clamp(26px,3.2vw,42px)] leading-[1.05] font-normal tracking-[-0.02em] text-balance text-white">
+          Every kind of work that starts with getting a time in the diary.
+        </h2>
       </div>
 
-      <div className="flex flex-wrap items-center gap-[14px]">
-        <div className="flex flex-none gap-[6px]">
-          {USE.map((item, i) => (
-            <button
-              key={item.id}
-              type="button"
-              aria-label={`Feature the ${item.tag} use case`}
-              aria-current={i === index}
-              onClick={() => setIndex(i)}
-              className={cx(
-                // tap-keep: an 8px dot is the design, so it keeps its paint
-                // and takes a 44px hit area from a pseudo-element instead.
-                // See globals.css § Touch targets.
-                "relative tap-keep h-[8px] cursor-pointer rounded-[4px] border-0 p-0",
-                "transition-[width,background-color] duration-[220ms] ease-[cubic-bezier(.22,1,.36,1)]",
-                i === index ? "w-[22px] bg-accent" : "w-[8px] bg-line-strong",
-              )}
-            />
-          ))}
-        </div>
+      {/* Full-bleed: the track is deliberately outside the centred column. */}
+      <div className="marquee-track">
+        <MarqueeRun />
+        <MarqueeRun duplicate />
+      </div>
 
-        <div className="ml-auto flex flex-none items-center gap-[8px]">
-          <ArrowButton dir="prev" onClick={() => setIndex((i) => (i - 1 + USE.length) % USE.length)} />
-          <ArrowButton dir="next" onClick={() => setIndex((i) => (i + 1) % USE.length)} />
-        </div>
+      <div className="mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(230px,1fr))] gap-[26px] px-[26px] pt-[40px] max-[560px]:px-[18px]">
+        {NOTES.map(([eyebrow, line]) => (
+          <div key={eyebrow} className="flex flex-col gap-[8px]">
+            {/* The handoff specifies DM Mono here. This product removed
+                monospace on purpose and `no-monospace.test.ts` enforces it, so
+                the eyebrow keeps every other property — 10.5px, 0.12em, upper,
+                #7FD8C4 — in the sans it inherits. */}
+            <span className="text-[10.5px] tracking-[0.12em] text-[#7FD8C4] uppercase">{eyebrow}</span>
+            <span className="text-[14px] leading-[1.6] text-pretty text-white/86">{line}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
 }
 
-function ArrowButton({ dir, onClick }: { dir: "prev" | "next"; onClick: () => void }) {
+/**
+ * One pass of the six. Rendered twice by the track above.
+ *
+ * `duplicate` hides the copy from assistive technology and is the only
+ * difference between the two — one array mapped twice, never twelve records.
+ */
+function MarqueeRun({ duplicate = false }: { duplicate?: boolean }) {
   return (
-    <button
-      type="button"
-      aria-label={dir === "prev" ? "Previous use case" : "Next use case"}
-      onClick={onClick}
-      className="tap-square inline-flex h-[40px] w-[40px] cursor-pointer items-center justify-center rounded-[10px] border border-line bg-surface text-ink-2 transition-[background-color,border-color,color] duration-[140ms] hover:border-line-strong hover:bg-fill-2 hover:text-ink"
+    <div
+      aria-hidden={duplicate || undefined}
+      className="flex flex-none items-center gap-[30px] pr-[30px] max-[640px]:gap-[20px] max-[640px]:pr-[20px]"
     >
-      <Icon name={dir === "prev" ? "chevron-left" : "chevron-right"} size={12} />
-    </button>
+      {CASES.map(([id, name]) => (
+        /* Item then dot, every time — including after the last one. That
+           trailing dot is what separates "Remote teams" from the "Freelancers"
+           of the next copy, so the joint reads as another gap rather than as
+           the place the loop restarts. */
+        <Fragment key={id}>
+          <div className="flex flex-none items-center gap-[16px]">
+            <div className="h-[72px] w-[120px] flex-none overflow-hidden rounded-[999px] border border-white/28 bg-white/10 max-[640px]:h-[52px] max-[640px]:w-[84px]">
+              {/* A plain <img>, not next/image: these are pre-cut at 240×142,
+                  exactly 2× the pill, so the optimiser would re-encode an
+                  already-correct 10KB file for nothing. alt="" because the name
+                  sits beside it as real text — the photo is decorative. */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- the
+                  optimiser has nothing to do here: 240×142 is exactly 2× the
+                  pill, already WebP, already ~10KB. */}
+              <img
+                src={`/use-cases/uc-${id}.webp`}
+                alt=""
+                width={240}
+                height={142}
+                loading="lazy"
+                decoding="async"
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <span className="font-serif text-[54px] leading-none whitespace-nowrap text-white max-[640px]:text-[clamp(34px,9vw,54px)]">
+              {name}
+            </span>
+          </div>
+          <span
+            aria-hidden="true"
+            className="h-[9px] w-[9px] flex-none rounded-full bg-[#7FD8C4] max-[640px]:h-[7px] max-[640px]:w-[7px]"
+          />
+        </Fragment>
+      ))}
+    </div>
   );
 }

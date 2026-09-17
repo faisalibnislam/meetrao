@@ -11,7 +11,6 @@ import { UseCases } from "@/components/marketing/use-cases";
 import { Walkthrough } from "@/components/marketing/walkthrough";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
-import { useCasePhotos } from "@/lib/use-case-photos";
 import { DESCRIPTION, OG_IMAGE, faqLd, graph } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { FAQS } from "@/lib/faq";
@@ -95,7 +94,6 @@ const BENEFITS: [IconName, string, string][] = [
 export default function LandingPage() {
   // Read off disk at build time: a photo dropped into public/use-cases/ shows up
   // on the next deploy, with no code change.
-  const photos = useCasePhotos();
 
   return (
     <>
@@ -414,32 +412,14 @@ export default function LandingPage() {
         </Reveal>
       </section>
 
-      {/* ── Use cases ───────────────────────────────────────────────────── */}
-      <section id="usecases" className="border-t border-b border-line bg-[#E7E3DC]">
-        <div className="mx-auto max-w-[1200px] px-[26px] py-[64px] max-[560px]:px-[18px]">
-          <Reveal>
-            <div className="flex flex-col gap-[22px]">
-              <div className="flex flex-wrap items-end justify-between gap-[20px]">
-                <div className="flex min-w-0 max-w-[660px] flex-col gap-[11px]">
-                  <Kicker tone="dark">Use cases</Kicker>
-                  <h3 className="m-0 font-serif text-[clamp(28px,3.6vw,44px)] leading-[1.04] font-normal tracking-[-0.02em] text-balance text-ink">
-                    Every kind of work that starts with getting a time in the diary.
-                  </h3>
-                </div>
-                <div className="ml-auto flex max-w-[300px] flex-none flex-col gap-[2px] text-right">
-                  <span className="text-[14px] leading-[1.45] font-semibold text-ink">
-                    One link, your real availability,
-                  </span>
-                  <span className="text-[14px] leading-[1.45] text-ink-3">
-                    and a Google Meet link on every booking
-                  </span>
-                </div>
-              </div>
-
-              <UseCases photos={photos} />
-            </div>
-          </Reveal>
-        </div>
+      {/* ── Use cases ─────────────────────────────────────────────────────
+          Full-bleed and dark: the band paints its own ground and runs the
+          marquee edge to edge, so it takes no centred column here. The heading
+          and the three notes carry their own 1200px column inside it. */}
+      <section id="usecases">
+        <Reveal>
+          <UseCases />
+        </Reveal>
       </section>
 
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}

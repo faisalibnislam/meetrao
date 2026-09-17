@@ -1,42 +1,43 @@
 # Use-case photography
 
-The six photographs from the design's assets bundle, where they were named
-`aud-<id>.webp`. The filename is the wiring — there is no list to edit, so
-replacing one is a matter of overwriting the file:
+Six photographs for the marquee on the landing page (concept 2e). The filename
+is the wiring — `src/components/marketing/use-cases.tsx` builds the path from
+the case id — so replacing one is a matter of overwriting the file.
 
-| File | Card |
+| File | Pill |
 | --- | --- |
-| `freelancers.webp` | Book discovery calls without the email thread |
-| `consultants.webp` | Fill your week while you are in another meeting |
-| `agencies.webp` | Every account manager keeps their own link |
-| `sales-teams.webp` | Let prospects book straight from the follow-up |
-| `coaches.webp` | Recurring sessions without the weekly admin |
-| `remote-teams.webp` | Nobody does timezone maths by hand |
+| `uc-freelancers.webp` | Freelancers |
+| `uc-consultants.webp` | Consultants |
+| `uc-agencies.webp` | Agencies |
+| `uc-sales-teams.webp` | Sales teams |
+| `uc-coaches.webp` | Coaches |
+| `uc-remote-teams.webp` | Remote teams |
 
-`.jpg`, `.jpeg`, `.png`, `.webp` and `.avif` all work. Any card with no file
-here keeps its labelled placeholder frame, so a partial set is fine.
+All six must exist. There is no placeholder any more: the marquee has no
+frames to fall back to, so a missing file is a broken image in a band that
+scrolls past every visitor. `use-cases.test.ts` fails if one is absent.
 
-## What the crops need
+## What the crop needs
 
-Each photo appears twice, and never at the same shape:
+**240 × 142, WebP.** That is exactly 2× the 120 × 72 pill, so the set is
+retina-correct as delivered and is referenced with a plain `<img>` rather than
+through Next's optimiser — there is nothing left to optimise.
 
-- **Featured** — roughly 640 × 380, landscape.
-- **Strip** — roughly 220 × 300, portrait, when that use case is not the
-  featured one.
+Keep the 5:3 ratio on any replacement. `object-fit: cover` on a portrait crop
+will cut heads off in a pill this wide and short. The pill is a rounded
+rectangle at `border-radius: 999px`, so the extreme left and right of the frame
+are clipped by the curve: keep the subject centred and leave room at both ends.
 
-Both use `object-fit: cover` from the centre, so the subject has to survive a
-landscape crop *and* a tall narrow one. Keep it centred and leave room around
-it.
+Each file is referenced **twice** — the marquee renders the six items twice so
+the loop is seamless — but it is one file per case, requested once and cached.
 
-The current set is 1024 × 1024. That is enough for the strips and slightly
-short for the featured panel, which is about 660px wide and would want 1320
-to be crisp at 2×. A replacement at **1600 square** would remove the last of
-the softness; the difference is small and only visible on a retina screen.
+## Outstanding
 
-The bottom of every card carries a dark gradient with white text over it, so
-detail in the lower third will be covered. Busy, high-contrast bottoms fight
-the caption; open or shadowed ones read best.
+**Model releases.** These are identifiable faces in a marketing band, which
+needs more than a stock licence. It blocks the page going public, not the
+build. Confirm before launch.
 
-Committing large photographs to git is fine at this scale — six files. If the
-set grows, move them to a CDN and pass absolute URLs instead, adding the host
-to `images.remotePatterns` in `next.config.ts`.
+The previous set (`freelancers.webp` and five siblings, 1024 × 1024, ~100KB
+each) was cut for the old carousel's two crops — landscape feature and portrait
+strip — and went with it. They are in git history if a future design wants a
+large square again.

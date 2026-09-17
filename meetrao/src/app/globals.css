@@ -185,6 +185,28 @@
   }
 }
 
+/* The use-cases marquee. The track holds the six items TWICE, so translating
+   it by exactly -50% lands the second copy where the first began and the seam
+   never appears. Changing one without the other breaks the illusion.
+
+   No reduced-motion rule of its own: the global block further down already
+   ends every animation at 0.001ms, this one included. */
+@keyframes mrc-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: mrc-marquee 26s linear infinite;
+  will-change: transform;
+}
+
 @keyframes mu-spin {
   to {
     transform: rotate(360deg);
