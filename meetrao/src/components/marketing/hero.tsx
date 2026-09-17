@@ -14,7 +14,6 @@ import { DemoMonthGrid, DemoSlot, demoDayLabel } from "./demo-calendar";
 const PROOF = [
   "Completely free",
   "No double bookings",
-  "On both calendars",
   "Every timezone converted",
   "Guests never sign up",
 ];
@@ -122,7 +121,7 @@ export function Hero() {
             href="#how"
             className="unlink inline-flex h-[50px] items-center justify-center gap-[10px] rounded-[8px] border border-white/35 bg-white/5 px-[21px] text-[15px] font-semibold text-white transition-colors duration-[120ms] hover:bg-white/15 hover:text-white"
           >
-            <Icon name="play" size={12} />
+            <Icon name="arrow-down" size={12} />
             See how it works
           </a>
         </div>

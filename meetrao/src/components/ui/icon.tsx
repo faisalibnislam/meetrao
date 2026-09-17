@@ -74,6 +74,10 @@ const G = {
       "M10.8 6.2h2.4v2.4h-2.4zM10.9 10.2h2.2v7.4h-2.2z",
   },
   /* f061 */ "arrow-right": { stroke: "M4 12h15.4M13.4 6l6 6-6 6" },
+  /* arrow-right turned a quarter turn — same shaft length, same head, same
+     weight, so the two read as one family where they sit side by side under
+     the hero headline. */
+  /* f063 */ "arrow-down": { stroke: "M12 4v15.4M6 13.4l6 6 6-6" },
   /* f06a */ "circle-exclamation": {
     fill:
       "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18" +
@@ -198,6 +202,7 @@ export const FA_CODEPOINTS: Record<string, IconName> = {
   f059: "circle-question",
   f05a: "circle-info",
   f061: "arrow-right",
+  f063: "arrow-down",
   f06a: "circle-exclamation",
   f06e: "eye",
   f070: "eye-slash",
