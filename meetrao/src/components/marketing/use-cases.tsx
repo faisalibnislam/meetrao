@@ -1,4 +1,5 @@
 import { Fragment } from "react";
+import { Kicker } from "./site-chrome";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Use cases — concept 2e, "Marquee with faces".
@@ -48,7 +49,11 @@ const NOTES: readonly (readonly [string, string])[] = [
 export function UseCases() {
   return (
     <div className="overflow-hidden bg-accent-2 pt-[52px] pb-[56px] text-white">
-      <div className="mx-auto max-w-[1200px] px-[26px] pb-[34px] max-[560px]:px-[18px]">
+      <div className="mx-auto flex max-w-[1200px] flex-col gap-[13px] px-[26px] pb-[34px] max-[560px]:px-[18px]">
+        {/* Default tone, which is the teal — the same #7FD8C4 as the marquee
+            dots and the eyebrows below, and what "The problem" band already
+            uses over a white heading on this ground. */}
+        <Kicker>Use cases</Kicker>
         <h2 className="m-0 max-w-[22ch] font-serif text-[clamp(26px,3.2vw,42px)] leading-[1.05] font-normal tracking-[-0.02em] text-balance text-white">
           Every kind of work that starts with getting a time in the diary.
         </h2>
