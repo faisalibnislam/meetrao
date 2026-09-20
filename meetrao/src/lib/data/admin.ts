@@ -2,6 +2,9 @@ import "server-only";
 
 import { formatDayLabel, formatShortDate, formatTimeRange } from "@/lib/booking/time";
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { timezoneLabel } from "@/lib/timezones";
 import type { Booking, MeetingType, Profile } from "@/lib/types";
 
@@ -12,6 +15,11 @@ import type { Booking, MeetingType, Profile } from "@/lib/types";
 export type AdminMetrics = { users: number; bookings: number; upcoming: number; meetings: number };
 
 export async function adminMetrics(): Promise<AdminMetrics> {
+  if (convexServes("admin")) {
+    const convex = await convexServer();
+    return await convex.query(api.admin.metrics, {});
+  }
+
   const supabase = await supabaseServer();
   const now = new Date().toISOString();
 
@@ -37,6 +45,12 @@ export async function adminMetrics(): Promise<AdminMetrics> {
 export type ActivityRow = { id: string; kind: string; summary: string; when: string };
 
 export async function recentActivity(limit = 8): Promise<ActivityRow[]> {
+  if (convexServes("admin")) {
+    const convex = await convexServer();
+    const rows = await convex.query(api.admin.listActivity, { limit });
+    return rows.map((r) => ({ id: r.id, kind: r.kind, summary: r.summary, when: relative(new Date(r.created_at)) }));
+  }
+
   const supabase = await supabaseServer();
   const { data } = await supabase
     .from("admin_activity")
@@ -76,19 +90,31 @@ export type AdminUserRow = {
 };
 
 export async function listUsers(query: string): Promise<AdminUserRow[]> {
-  const supabase = await supabaseServer();
-  const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+  let profiles: Profile[];
+  let meetingCount: Map<string, number>;
+  let bookingCount: Map<string, number>;
 
-  const profiles = (data ?? []) as Profile[];
-  const ids = profiles.map((p) => p.id);
+  if (convexServes("admin")) {
+    const convex = await convexServer();
+    const rows = await convex.query(api.admin.usersWithCounts, {});
+    profiles = rows as unknown as Profile[];
+    meetingCount = new Map(rows.map((r) => [r.id, r.meetings]));
+    bookingCount = new Map(rows.map((r) => [r.id, r.bookings]));
+  } else {
+    const supabase = await supabaseServer();
+    const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
 
-  const [{ data: meetingRows }, { data: bookingRows }] = await Promise.all([
-    supabase.from("meeting_types").select("user_id").in("user_id", ids.length ? ids : ["-"]),
-    supabase.from("bookings").select("host_id").in("host_id", ids.length ? ids : ["-"]),
-  ]);
+    profiles = (data ?? []) as Profile[];
+    const ids = profiles.map((p) => p.id);
 
-  const meetingCount = tally((meetingRows ?? []).map((r) => r.user_id as string));
-  const bookingCount = tally((bookingRows ?? []).map((r) => r.host_id as string));
+    const [{ data: meetingRows }, { data: bookingRows }] = await Promise.all([
+      supabase.from("meeting_types").select("user_id").in("user_id", ids.length ? ids : ["-"]),
+      supabase.from("bookings").select("host_id").in("host_id", ids.length ? ids : ["-"]),
+    ]);
+
+    meetingCount = tally((meetingRows ?? []).map((r) => r.user_id as string));
+    bookingCount = tally((bookingRows ?? []).map((r) => r.host_id as string));
+  }
 
   const q = query.trim().toLowerCase();
 
@@ -120,6 +146,17 @@ export type AdminUserDetail = {
 };
 
 export async function getUserDetail(id: string): Promise<AdminUserDetail | null> {
+  if (convexServes("admin")) {
+    const convex = await convexServer();
+    const detail = await convex.query(api.admin.userDetail, { userId: id });
+    if (!detail) return null;
+    return buildUserDetail(
+      detail.profile as unknown as Profile,
+      detail.meetings as unknown as MeetingType[],
+      detail.recentBookings as unknown as Booking[],
+    );
+  }
+
   const supabase = await supabaseServer();
 
   const { data: row } = await supabase.from("profiles").select("*").eq("id", id).maybeSingle();
@@ -133,6 +170,11 @@ export async function getUserDetail(id: string): Promise<AdminUserDetail | null>
 
   const meetings = (meetingRows ?? []) as MeetingType[];
   const bookings = (bookingRows ?? []) as Booking[];
+  return buildUserDetail(profile, meetings, bookings);
+}
+
+/** Shared by both backends so the two cannot present the same user differently. */
+function buildUserDetail(profile: Profile, meetings: MeetingType[], bookings: Booking[]): AdminUserDetail {
   const perMeeting = tally(bookings.map((b) => b.meeting_type_id ?? "-"));
   const now = new Date();
 
@@ -186,29 +228,38 @@ export type AdminBookingRow = {
   upcoming: boolean;
 };
 
+type AdminHost = Pick<Profile, "id" | "full_name" | "username" | "email" | "timezone">;
+
 export async function listAdminBookings(query: string, filter: "all" | "upcoming" | "past") {
-  const supabase = await supabaseServer();
+  let bookings: Booking[];
+  let hosts: Map<string, AdminHost>;
 
-  const { data } = await supabase
-    .from("bookings")
-    .select("*")
-    .order("starts_at", { ascending: false })
-    .limit(200);
+  if (convexServes("admin")) {
+    const convex = await convexServer();
+    const rows = await convex.query(api.admin.bookingsWithHosts, { limit: 200 });
+    bookings = rows as unknown as Booking[];
+    hosts = new Map(
+      rows.filter((r) => r.host !== null).map((r) => [r.host!.id, r.host as AdminHost]),
+    );
+  } else {
+    const supabase = await supabaseServer();
 
-  const bookings = (data ?? []) as Booking[];
-  const hostIds = [...new Set(bookings.map((b) => b.host_id))];
+    const { data } = await supabase
+      .from("bookings")
+      .select("*")
+      .order("starts_at", { ascending: false })
+      .limit(200);
 
-  const { data: hostRows } = await supabase
-    .from("profiles")
-    .select("id, full_name, username, email, timezone")
-    .in("id", hostIds.length ? hostIds : ["-"]);
+    bookings = (data ?? []) as Booking[];
+    const hostIds = [...new Set(bookings.map((b) => b.host_id))];
 
-  const hosts = new Map(
-    ((hostRows ?? []) as Pick<Profile, "id" | "full_name" | "username" | "email" | "timezone">[]).map((h) => [
-      h.id,
-      h,
-    ]),
-  );
+    const { data: hostRows } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, email, timezone")
+      .in("id", hostIds.length ? hostIds : ["-"]);
+
+    hosts = new Map(((hostRows ?? []) as AdminHost[]).map((h) => [h.id, h]));
+  }
 
   const now = Date.now();
   const q = query.trim().toLowerCase();
@@ -244,19 +295,30 @@ export async function listAdminBookings(query: string, filter: "all" | "upcoming
 }
 
 export async function getAdminBooking(id: string): Promise<AdminBookingRow | null> {
-  const supabase = await supabaseServer();
+  let booking: Booking;
+  let host: AdminHost | null;
 
-  const { data } = await supabase.from("bookings").select("*").eq("id", id).maybeSingle();
-  if (!data) return null;
-  const booking = data as Booking;
+  if (convexServes("admin")) {
+    const convex = await convexServer();
+    const row = await convex.query(api.admin.bookingWithHost, { id });
+    if (!row) return null;
+    booking = row as unknown as Booking;
+    host = (row.host ?? null) as AdminHost | null;
+  } else {
+    const supabase = await supabaseServer();
 
-  const { data: hostRow } = await supabase
-    .from("profiles")
-    .select("id, full_name, username, email, timezone")
-    .eq("id", booking.host_id)
-    .maybeSingle();
+    const { data } = await supabase.from("bookings").select("*").eq("id", id).maybeSingle();
+    if (!data) return null;
+    booking = data as Booking;
 
-  const host = hostRow as Pick<Profile, "id" | "full_name" | "username" | "email" | "timezone"> | null;
+    const { data: hostRow } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, email, timezone")
+      .eq("id", booking.host_id)
+      .maybeSingle();
+
+    host = (hostRow ?? null) as AdminHost | null;
+  }
   const zone = host?.timezone ?? "UTC";
   const start = new Date(booking.starts_at);
 

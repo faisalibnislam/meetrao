@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { isSlotBookable } from "@/lib/booking/slots";
@@ -6,6 +8,10 @@ import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } fro
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
 import { CalendarError, createBookingEvent } from "@/lib/google/calendar";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexAnonymous } from "@/lib/convex/server";
+import { convexMessage } from "@/lib/convex/error";
+import { api } from "@/convex/_generated/api";
 import { timezoneLabel } from "@/lib/timezones";
 import type { Profile } from "@/lib/types";
 
@@ -74,24 +80,8 @@ export async function POST(request: NextRequest) {
   }
 
   const admin = supabaseAdmin();
-  const { data, error } = await admin.rpc("create_booking", {
-    p_username: input.username,
-    p_slug: input.slug,
-    p_starts_at: start.toISOString(),
-    p_guest_name: input.guestName,
-    p_guest_email: input.guestEmail,
-    p_guest_note: input.guestNote ?? "",
-    p_guest_timezone: guestTimezone,
-    p_page_view_id: input.pageViewId ?? null,
-  });
 
-  if (error) {
-    // MR409 is the function's own "this slot is gone" signal.
-    const status = error.code === "MR409" ? 409 : error.code === "MR404" ? 404 : 500;
-    return NextResponse.json({ error: status === 409 ? "slot-taken" : error.message }, { status });
-  }
-
-  const row = (Array.isArray(data) ? data[0] : data) as {
+  type CreatedRow = {
     reference: string;
     id: string;
     starts_at: string;
@@ -99,6 +89,63 @@ export async function POST(request: NextRequest) {
     meeting_name: string;
     duration: number;
   };
+  let row: CreatedRow;
+
+  if (convexServes("publicBooking")) {
+    try {
+      // The rate limiter cannot see the caller's address from inside Convex, so
+      // the coarse key is derived here, where the request is. Hashed rather
+      // than stored raw: a rate-limit row should not become an IP log.
+      const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+      const callerKey = forwarded
+        ? createHash("sha256").update(`${forwarded}:${input.username}`).digest("hex").slice(0, 32)
+        : undefined;
+
+      row = (await convexAnonymous().mutation(api.publicBooking.createBooking, {
+        username: input.username,
+        slug: input.slug,
+        startsAt: start.getTime(),
+        guestName: input.guestName,
+        guestEmail: input.guestEmail,
+        guestNote: input.guestNote ?? "",
+        guestTimezone,
+        pageViewId: input.pageViewId ?? null,
+        callerKey,
+      })) as CreatedRow;
+    } catch (cause) {
+      // These are create_booking's own refusals, carried across as messages.
+      const message = convexMessage(cause, "That booking could not be made.");
+      if (/slot taken|outside availability|minimum notice|booking window/i.test(message)) {
+        return NextResponse.json({ error: "slot-taken" }, { status: 409 });
+      }
+      if (/unknown host|unknown meeting/i.test(message)) {
+        return NextResponse.json({ error: message }, { status: 404 });
+      }
+      if (/too many|try again shortly/i.test(message)) {
+        return NextResponse.json({ error: message }, { status: 429 });
+      }
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+  } else {
+    const { data, error } = await admin.rpc("create_booking", {
+      p_username: input.username,
+      p_slug: input.slug,
+      p_starts_at: start.toISOString(),
+      p_guest_name: input.guestName,
+      p_guest_email: input.guestEmail,
+      p_guest_note: input.guestNote ?? "",
+      p_guest_timezone: guestTimezone,
+      p_page_view_id: input.pageViewId ?? null,
+    });
+
+    if (error) {
+      // MR409 is the function's own "this slot is gone" signal.
+      const status = error.code === "MR409" ? 409 : error.code === "MR404" ? 404 : 500;
+      return NextResponse.json({ error: status === 409 ? "slot-taken" : error.message }, { status });
+    }
+
+    row = (Array.isArray(data) ? data[0] : data) as CreatedRow;
+  }
 
   const end = new Date(row.ends_at);
 
@@ -122,10 +169,18 @@ export async function POST(request: NextRequest) {
     });
 
     meetUrl = event.meetUrl;
-    await admin
-      .from("bookings")
-      .update({ google_event_id: event.eventId, meet_url: event.meetUrl })
-      .eq("id", row.id);
+    if (convexServes("publicBooking")) {
+      await convexAnonymous().mutation(api.bookings.attachGoogleEventByReference, {
+        reference: row.reference,
+        googleEventId: event.eventId,
+        meetUrl: event.meetUrl,
+      });
+    } else {
+      await admin
+        .from("bookings")
+        .update({ google_event_id: event.eventId, meet_url: event.meetUrl })
+        .eq("id", row.id);
+    }
   } catch (cause) {
     calendarWarning = cause instanceof CalendarError ? cause.kind : "api-unavailable";
   }

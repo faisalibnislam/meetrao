@@ -1,6 +1,9 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { supportedTimezone } from "@/lib/timezones";
 
 /**
@@ -28,6 +31,14 @@ export async function applyDetectedTimezone(userId: string, detected: string | n
   if (timezone === "UTC") return; // nothing learned — that is already the default
 
   try {
+    if (convexServes("session")) {
+      // The guard moved into the mutation: it writes only when timezone_auto
+      // is already true, so the rule holds whoever calls it.
+      const convex = await convexServer();
+      await convex.mutation(api.profiles.applyDetectedTimezone, { detected: timezone });
+      return;
+    }
+
     const { error } = await supabaseAdmin()
       .from("profiles")
       .update({ timezone, timezone_auto: true })

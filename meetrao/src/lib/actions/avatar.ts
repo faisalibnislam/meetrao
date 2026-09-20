@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { convexMessage } from "@/lib/convex/error";
+import { api } from "@/convex/_generated/api";
 
 export type AvatarResult = { url?: string | null; error?: string };
 
@@ -21,6 +25,45 @@ const BUCKET = "avatars";
  * Old objects are deleted rather than left. A host who re-crops four times
  * should not leave four files behind, and the bucket is public.
  */
+/**
+ * Records a freshly uploaded avatar.
+ *
+ * On Convex the argument is an opaque storage id rather than a path, and that
+ * is the point: the client never chooses where the bytes land, so there is no
+ * path to forge and no equivalent of the `avatars_insert_own` policy to check.
+ * The Supabase branch keeps that check, because there a path DOES arrive from
+ * a client and this code runs with the service role.
+ */
+export async function saveAvatarFromStorageId(storageId: string): Promise<AvatarResult> {
+  try {
+    const convex = await convexServer();
+    const url = await convex.mutation(api.avatars.save, { storageId: storageId as never });
+    revalidatePath("/settings", "layout");
+    revalidatePath("/dashboard", "layout");
+    return { url };
+  } catch (cause) {
+    return { error: convexMessage(cause, "That photo could not be saved.") };
+  }
+}
+
+/**
+ * The one-time URL the browser posts the image to — or `legacy`, meaning this
+ * deployment still uploads straight to the Supabase bucket.
+ *
+ * The BACKEND decides, not the browser. `convexServes` is server-only, and
+ * duplicating the flag into a NEXT_PUBLIC variable would create a second
+ * source of truth that can disagree with the first.
+ */
+export async function avatarUploadUrl(): Promise<{ url?: string; legacy?: true; error?: string }> {
+  if (!convexServes("session")) return { legacy: true };
+  try {
+    const convex = await convexServer();
+    return { url: await convex.mutation(api.avatars.generateUploadUrl, {}) };
+  } catch (cause) {
+    return { error: convexMessage(cause, "Could not start the upload.") };
+  }
+}
+
 export async function saveAvatar(path: string): Promise<AvatarResult> {
   const session = await requireSession();
 
@@ -47,6 +90,17 @@ export async function saveAvatar(path: string): Promise<AvatarResult> {
 /** Back to initials, and the stored file goes with it. */
 export async function clearAvatar(): Promise<AvatarResult> {
   const session = await requireSession();
+
+  if (convexServes("session")) {
+    try {
+      await (await convexServer()).mutation(api.avatars.clear, {});
+    } catch (cause) {
+      return { error: convexMessage(cause, "That photo could not be removed.") };
+    }
+    revalidatePath("/settings", "layout");
+    revalidatePath("/dashboard", "layout");
+    return { url: null };
+  }
 
   const supabase = await supabaseServer();
   const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", session.userId);

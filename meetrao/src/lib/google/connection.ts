@@ -1,8 +1,35 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { GoogleAuthError, refreshAccessToken, revokeToken } from "./oauth";
 import type { CalendarConnection } from "@/lib/types";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   THIS MODULE STAYS ON SUPABASE, ON PURPOSE.
+
+   Everything else has moved to Convex. This has not, because it reads Google
+   refresh tokens, and the app's server code has no privileged channel into
+   Convex: an internalQuery cannot be reached from Next.js, and the only ways
+   to change that are both worse than the problem —
+
+     · ship a Convex admin key into the app, which hands every caller of any
+       route the keys to the whole deployment; or
+     · expose a public function that returns tokens, which is the disclosure
+       the policy-free `calendar_connections` table existed to prevent.
+
+   The right end state is to move the Google calls themselves into Convex
+   actions, so tokens are read and used without ever leaving. Until then this
+   stays where the service role already protects it — Supabase is alive anyway
+   for auth. The rows ARE mirrored into Convex and the internal functions in
+   convex/calendarConnections.ts are ready for that move.
+
+   The one thing that must stay in step: deleting a connection has to happen on
+   BOTH sides, or a stale mirror outlives the real row. See disconnect() below.
+   ───────────────────────────────────────────────────────────────────────────── */
+
 
 /* Calendar connections live behind the service role: `calendar_connections`
    deliberately has no RLS policy, so OAuth tokens are unreachable from any
@@ -101,6 +128,8 @@ export async function disconnect(userId: string): Promise<void> {
   }
 
   await supabaseAdmin().from("calendar_connections").delete().eq("user_id", userId);
+  // And the mirror, so a revoked grant cannot look connected on the other side.
+  await dropConvexMirror(userId);
 }
 
 export async function markNeedsReconnect(userId: string, message: string): Promise<void> {
@@ -148,5 +177,25 @@ export async function accessTokenFor(userId: string): Promise<{ token: string; c
     const message = cause instanceof GoogleAuthError ? cause.message : "Google Calendar could not be reached.";
     await markNeedsReconnect(userId, message);
     return null;
+  }
+}
+
+/**
+ * Removes the Convex mirror of a connection.
+ *
+ * Best effort and deliberately quiet: Supabase is authoritative here, and a
+ * failed mirror delete must not make a successful disconnect look broken to
+ * the host. It is logged so a drift has a trail.
+ */
+async function dropConvexMirror(userId: string): Promise<void> {
+  if (!convexServes("session")) return;
+  try {
+    const convex = await convexServer();
+    await convex.mutation(api.calendarConnections.disconnectOwn, {});
+  } catch (cause) {
+    console.error("convex calendar mirror delete failed", {
+      userId,
+      error: cause instanceof Error ? cause.message : String(cause),
+    });
   }
 }

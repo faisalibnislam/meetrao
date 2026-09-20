@@ -4,7 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Avatar } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { clearAvatar, saveAvatar } from "@/lib/actions/avatar";
+import { clearAvatar, saveAvatar, saveAvatarFromStorageId, avatarUploadUrl } from "@/lib/actions/avatar";
 import { supabaseBrowser } from "@/lib/supabase/client";
 import { AvatarCropper } from "./avatar-cropper";
 
@@ -49,6 +49,42 @@ export function AvatarUpload({
 
   function upload(blob: Blob) {
     startSave(async () => {
+      // Timestamped, so a replaced photo is never served from a stale cache at
+      // the same URL. The old object is deleted server-side once this is saved.
+      /* Convex: ask for a one-time upload URL, post the bytes, hand back the
+         storage id. The client never names a path, so there is nothing to
+         forge — which is what replaces the old storage policy. */
+      // The server decides which storage this deployment uses.
+      const ticket = await avatarUploadUrl();
+      if (ticket.error) {
+        toast({ tone: "bad", title: "Upload failed", text: ticket.error });
+        return;
+      }
+
+      if (ticket.url) {
+        const posted = await fetch(ticket.url, {
+          method: "POST",
+          headers: { "Content-Type": "image/webp" },
+          body: blob,
+        });
+        if (!posted.ok) {
+          toast({ tone: "bad", title: "Upload failed", text: "The image could not be stored." });
+          return;
+        }
+
+        const { storageId } = (await posted.json()) as { storageId: string };
+        const saved = await saveAvatarFromStorageId(storageId);
+        if (saved.error) {
+          toast({ tone: "bad", title: "Could not save", text: saved.error });
+          return;
+        }
+
+        setUrl(saved.url ?? null);
+        setFile(null);
+        toast({ tone: "ok", title: "Photo updated", text: "Guests will see it on your booking page." });
+        return;
+      }
+
       // Timestamped, so a replaced photo is never served from a stale cache at
       // the same URL. The old object is deleted server-side once this is saved.
       const path = `${userId}/avatar-${Date.now()}.webp`;

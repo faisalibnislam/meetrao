@@ -2,6 +2,9 @@ import "server-only";
 
 import { formatDayLabel, formatTimeRange, isSameDay } from "@/lib/booking/time";
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import type { Booking } from "@/lib/types";
 
 /* Bookings, shaped for the screens. Labels are formatted here, in the host's
@@ -100,8 +103,19 @@ export async function listBookings(
   timeZone: string,
   { history = true }: { history?: boolean } = {},
 ): Promise<BookingView[]> {
-  const supabase = await supabaseServer();
   const now = new Date();
+
+  if (convexServes("bookings")) {
+    const convex = await convexServer();
+    const { rows, invitees } = await convex.query(api.bookings.listForScreen, { history, pastLimit: PAST_LIMIT });
+    const views = (rows as unknown as Booking[]).map((row) => toView(row, timeZone, now));
+    for (const view of views) {
+      for (const i of invitees[view.id] ?? []) view.invitees.push({ name: i.name, email: i.email });
+    }
+    return views;
+  }
+
+  const supabase = await supabaseServer();
 
   // A booking is "past" once it has *ended*, so the boundary is ends_at.
   const boundary = now.toISOString();
@@ -153,6 +167,12 @@ export async function listBookings(
 }
 
 export async function getBooking(hostId: string, bookingId: string, timeZone: string) {
+  if (convexServes("bookings")) {
+    const convex = await convexServer();
+    const row = await convex.query(api.bookings.getForHost, { id: bookingId });
+    return row ? toView(row as unknown as Booking, timeZone, new Date()) : null;
+  }
+
   const supabase = await supabaseServer();
   const { data } = await supabase
     .from("bookings")

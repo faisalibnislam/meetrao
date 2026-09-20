@@ -3,10 +3,17 @@ import "server-only";
 import type { AvailabilityRule, Interval, SlotRules } from "@/lib/booking/slots";
 import { busyPeriods } from "@/lib/google/calendar";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexAnonymous } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   The public booking page runs with no session at all, so every read goes
-   through the SECURITY DEFINER functions in the schema — never a table.
+   The public booking page runs with no session at all.
+
+   On Supabase that meant every read went through a SECURITY DEFINER function
+   rather than a table. On Convex it means an ANONYMOUS client against the
+   public functions in convex/publicBooking.ts — the same principle, that the
+   guest path gets named doors and never general table access.
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type PublicHost = {
@@ -27,11 +34,16 @@ export type PublicMeeting = {
   rules: SlotRules;
 };
 
-export async function getPublicHost(username: string): Promise<PublicHost | null> {
-  const { data } = await supabaseAdmin().rpc("get_public_host", { p_username: username });
-  const row = Array.isArray(data) ? data[0] : data;
-  if (!row) return null;
+type HostRow = {
+  id: string;
+  username: string;
+  full_name: string;
+  job_title: string;
+  timezone: string;
+  avatar_url: string | null;
+};
 
+function toHost(row: HostRow): PublicHost {
   return {
     id: row.id,
     username: row.username,
@@ -40,6 +52,19 @@ export async function getPublicHost(username: string): Promise<PublicHost | null
     timezone: row.timezone,
     avatarUrl: row.avatar_url ?? null,
   };
+}
+
+export async function getPublicHost(username: string): Promise<PublicHost | null> {
+  if (convexServes("publicBooking")) {
+    const row = await convexAnonymous().query(api.publicBooking.getHost, { username });
+    // get_public_host returned nothing for a suspended host; the Convex query
+    // reports the flag instead, so the filter lives here.
+    return !row || row.is_suspended ? null : toHost(row);
+  }
+
+  const { data } = await supabaseAdmin().rpc("get_public_host", { p_username: username });
+  const row = (Array.isArray(data) ? data[0] : data) as HostRow | null;
+  return row ? toHost(row) : null;
 }
 
 type MeetingRow = {
@@ -53,10 +78,8 @@ type MeetingRow = {
   booking_window_days: number;
 };
 
-export async function getPublicMeetings(username: string): Promise<PublicMeeting[]> {
-  const { data } = await supabaseAdmin().rpc("get_public_meeting_types", { p_username: username });
-
-  return ((data ?? []) as MeetingRow[]).map((row) => ({
+function toMeeting(row: MeetingRow): PublicMeeting {
+  return {
     id: row.id,
     name: row.name,
     description: row.description,
@@ -68,7 +91,24 @@ export async function getPublicMeetings(username: string): Promise<PublicMeeting
       minimumNoticeMinutes: row.minimum_notice_minutes,
       bookingWindowDays: row.booking_window_days,
     },
-  }));
+  };
+}
+
+export async function getPublicMeetings(username: string): Promise<PublicMeeting[]> {
+  if (convexServes("publicBooking")) {
+    // getMeetingTypes is the listing shape and omits the booking rules, which
+    // only matter once a meeting is chosen; getMeetingAvailability carries them.
+    const list = await convexAnonymous().query(api.publicBooking.getMeetingTypes, { username });
+    const full = await Promise.all(
+      list.map((m) => convexAnonymous().query(api.publicBooking.getMeetingAvailability, { username, slug: m.slug })),
+    );
+    return full
+      .filter((r): r is NonNullable<typeof r> => r !== null)
+      .map((r) => toMeeting(r.meeting as MeetingRow));
+  }
+
+  const { data } = await supabaseAdmin().rpc("get_public_meeting_types", { p_username: username });
+  return ((data ?? []) as MeetingRow[]).map(toMeeting);
 }
 
 /**
@@ -76,14 +116,18 @@ export async function getPublicMeetings(username: string): Promise<PublicMeeting
  *
  * Not the host's — a host can have several named schedules and each meeting
  * points at one, so asking by host would offer every window the host has ever
- * opened. `get_meeting_availability` resolves the meeting's own schedule, or
- * the host's default when it has none. Only the hours come back: a schedule's
- * name is the host's private note to themselves.
+ * opened. The meeting's own schedule is resolved, or the host's default when it
+ * has none. Only the hours come back: a schedule's name is the host's private
+ * note to themselves.
  */
 export async function getMeetingAvailability(meetingId: string): Promise<AvailabilityRule[]> {
-  const { data } = await supabaseAdmin().rpc("get_meeting_availability", { p_meeting_id: meetingId });
+  const rows = convexServes("publicBooking")
+    ? await convexAnonymous().query(api.publicBooking.availabilityForMeeting, { meetingId })
+    : (
+        (await supabaseAdmin().rpc("get_meeting_availability", { p_meeting_id: meetingId })).data ?? []
+      ) as { weekday: number; start_minute: number; end_minute: number }[];
 
-  return ((data ?? []) as { weekday: number; start_minute: number; end_minute: number }[]).map((r) => ({
+  return rows.map((r) => ({
     weekday: r.weekday,
     startMinute: r.start_minute,
     endMinute: r.end_minute,
@@ -101,13 +145,23 @@ export type BusyResult = { busy: Interval[]; calendarChecked: boolean };
  * host's whole calendar was consulted.
  */
 export async function getBusy(hostId: string, from: Date, to: Date): Promise<BusyResult> {
-  const { data } = await supabaseAdmin().rpc("get_busy_intervals", {
-    p_user_id: hostId,
-    p_from: from.toISOString(),
-    p_to: to.toISOString(),
-  });
+  const rows = convexServes("publicBooking")
+    ? await convexAnonymous().query(api.publicBooking.busyForHost, {
+        hostId,
+        from: from.getTime(),
+        to: to.getTime(),
+      })
+    : (
+        (
+          await supabaseAdmin().rpc("get_busy_intervals", {
+            p_user_id: hostId,
+            p_from: from.toISOString(),
+            p_to: to.toISOString(),
+          })
+        ).data ?? []
+      ) as { starts_at: string; ends_at: string }[];
 
-  const own: Interval[] = ((data ?? []) as { starts_at: string; ends_at: string }[]).map((r) => ({
+  const own: Interval[] = rows.map((r) => ({
     start: new Date(r.starts_at),
     end: new Date(r.ends_at),
   }));

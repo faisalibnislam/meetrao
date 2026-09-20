@@ -1,0 +1,97 @@
+/* eslint-disable */
+/**
+ * Generated `api` utility.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
+
+import type * as admin from "../admin.js";
+import type * as analytics from "../analytics.js";
+import type * as availability from "../availability.js";
+import type * as avatars from "../avatars.js";
+import type * as bookings from "../bookings.js";
+import type * as calendarConnections from "../calendarConnections.js";
+import type * as contacts from "../contacts.js";
+import type * as crons from "../crons.js";
+import type * as lib_auth from "../lib/auth.js";
+import type * as lib_effects from "../lib/effects.js";
+import type * as lib_errors from "../lib/errors.js";
+import type * as lib_ids from "../lib/ids.js";
+import type * as lib_rateLimit from "../lib/rateLimit.js";
+import type * as lib_serialize from "../lib/serialize.js";
+import type * as lib_zoned from "../lib/zoned.js";
+import type * as lib_zones from "../lib/zones.js";
+import type * as maintenance from "../maintenance.js";
+import type * as meetingTypes from "../meetingTypes.js";
+import type * as notifications from "../notifications.js";
+import type * as platformSettings from "../platformSettings.js";
+import type * as profiles from "../profiles.js";
+import type * as publicBooking from "../publicBooking.js";
+import type * as testCleanup from "../testCleanup.js";
+import type * as verify from "../verify.js";
+import type * as whoami from "../whoami.js";
+
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
+declare const fullApi: ApiFromModules<{
+  admin: typeof admin;
+  analytics: typeof analytics;
+  availability: typeof availability;
+  avatars: typeof avatars;
+  bookings: typeof bookings;
+  calendarConnections: typeof calendarConnections;
+  contacts: typeof contacts;
+  crons: typeof crons;
+  "lib/auth": typeof lib_auth;
+  "lib/effects": typeof lib_effects;
+  "lib/errors": typeof lib_errors;
+  "lib/ids": typeof lib_ids;
+  "lib/rateLimit": typeof lib_rateLimit;
+  "lib/serialize": typeof lib_serialize;
+  "lib/zoned": typeof lib_zoned;
+  "lib/zones": typeof lib_zones;
+  maintenance: typeof maintenance;
+  meetingTypes: typeof meetingTypes;
+  notifications: typeof notifications;
+  platformSettings: typeof platformSettings;
+  profiles: typeof profiles;
+  publicBooking: typeof publicBooking;
+  testCleanup: typeof testCleanup;
+  verify: typeof verify;
+  whoami: typeof whoami;
+}>;
+
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "public">
+>;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
+export declare const internal: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "internal">
+>;
+
+export declare const components: {};

@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "meetrao-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "meetrao", "run", "dev"],
+      "port": 3000
+    }
+  ]
+}

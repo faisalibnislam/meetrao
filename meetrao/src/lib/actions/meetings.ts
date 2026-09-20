@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { convexMessage } from "@/lib/convex/error";
+import { api } from "@/convex/_generated/api";
 import { slugify } from "@/lib/username";
 
 export type MeetingResult = { error?: string; id?: string };
@@ -40,7 +44,6 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
   if (problem) return { error: problem };
 
   const session = await requireSession();
-  const supabase = await supabaseServer();
 
   const payload = {
     name: input.name.trim(),
@@ -52,6 +55,27 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
     booking_window_days: input.window,
     is_active: input.active,
   };
+
+  if (convexServes("meetings")) {
+    try {
+      const convex = await convexServer();
+      if (input.id) {
+        await convex.mutation(api.meetingTypes.update, { id: input.id, ...payload });
+        revalidatePath("/meetings");
+        return { id: input.id };
+      }
+      const created = await convex.mutation(api.meetingTypes.create, {
+        ...payload,
+        slug: await uniqueSlug(session.userId, payload.name),
+      });
+      revalidatePath("/meetings");
+      return { id: created.id };
+    } catch (cause) {
+      return { error: convexMessage(cause, "That meeting could not be saved.") };
+    }
+  }
+
+  const supabase = await supabaseServer();
 
   if (input.id) {
     const { error } = await supabase
@@ -80,6 +104,19 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
 /** The switch in the table. Toggling is its own action so it needs no form. */
 export async function setMeetingActive(id: string, active: boolean): Promise<MeetingResult> {
   const session = await requireSession();
+
+  if (convexServes("meetings")) {
+    try {
+      const convex = await convexServer();
+      await convex.mutation(api.meetingTypes.update, { id, is_active: active });
+      revalidatePath("/meetings");
+      revalidatePath("/dashboard");
+      return { id };
+    } catch (cause) {
+      return { error: convexMessage(cause, "That meeting could not be updated.") };
+    }
+  }
+
   const supabase = await supabaseServer();
 
   const { error } = await supabase
@@ -96,8 +133,17 @@ export async function setMeetingActive(id: string, active: boolean): Promise<Mee
 }
 
 async function uniqueSlug(userId: string, name: string): Promise<string> {
-  const supabase = await supabaseServer();
   const base = slugify(name);
+
+  if (convexServes("meetings")) {
+    const convex = await convexServer();
+    const mine = await convex.query(api.meetingTypes.listOwn, {});
+    const taken = new Set(mine.map((m) => m.slug));
+    if (!taken.has(base)) return base;
+    for (let n = 2; ; n++) if (!taken.has(`${base}-${n}`)) return `${base}-${n}`;
+  }
+
+  const supabase = await supabaseServer();
 
   const { data } = await supabase.from("meeting_types").select("slug").eq("user_id", userId);
   const taken = new Set((data ?? []).map((r) => r.slug as string));

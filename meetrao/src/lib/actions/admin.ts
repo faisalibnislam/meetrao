@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/data/session";
 import { disconnect } from "@/lib/google/connection";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { convexMessage } from "@/lib/convex/error";
+import { api } from "@/convex/_generated/api";
 import { supabaseServer } from "@/lib/supabase/server";
 import { sanitizeUsername, usernameIdeas, usernameStatus } from "@/lib/username";
 
@@ -27,6 +31,21 @@ async function recordAdminActivity(entry: {
   kind: string;
   summary: string;
 }): Promise<void> {
+  if (convexServes("admin")) {
+    // Written by the mutation that caused it on the Convex side; the explicit
+    // rows the admin console adds go through the same log helper.
+    try {
+      await (await convexServer()).mutation(api.admin.recordActivity, {
+        kind: entry.kind,
+        summary: entry.summary,
+      });
+      return;
+    } catch (cause) {
+      console.error("convex admin activity failed", cause);
+      return;
+    }
+  }
+
   const { error } = await supabaseAdmin().from("admin_activity").insert(entry);
   if (error) console.error("admin_activity insert failed", { kind: entry.kind, error: error.message });
 }
@@ -42,6 +61,17 @@ export async function setSuspended(userId: string, suspended: boolean): Promise<
   // writable by `authenticated`, because that column plus the
   // `profiles_update_own` policy let a suspended user clear their own
   // suspension with one PostgREST call.
+  if (convexServes("admin")) {
+    try {
+      await (await convexServer()).mutation(api.admin.setSuspended, { userId, suspended });
+    } catch (cause) {
+      return { error: convexMessage(cause, "That account could not be updated.") };
+    }
+    revalidatePath("/admin/users");
+    revalidatePath(`/admin/users/${userId}`);
+    return {};
+  }
+
   const { error } = await supabaseAdmin().from("profiles").update({ is_suspended: suspended }).eq("id", userId);
   if (error) return { error: error.message };
 
@@ -71,6 +101,20 @@ export async function removeAccount(userId: string): Promise<AdminResult> {
   // ever telling Google, leaving Meetrao listed in the permissions of an
   // account that no longer exists here.
   await disconnect(userId);
+
+  if (convexServes("admin")) {
+    try {
+      const convex = await convexServer();
+      await convex.mutation(api.admin.removeAccountAsAdmin, { userId });
+      // Convex holds the product data; Supabase still holds the identity.
+      const { error: authError } = await supabaseAdmin().auth.admin.deleteUser(userId);
+      if (authError) return { error: authError.message };
+    } catch (cause) {
+      return { error: convexMessage(cause, "That account could not be removed.") };
+    }
+    revalidatePath("/admin/users");
+    return {};
+  }
 
   const { error } = await supabaseAdmin().rpc("admin_remove_account", { p_user_id: userId });
   if (error) return { error: error.message };
@@ -125,6 +169,26 @@ export async function checkBookingLink(userId: string, raw: string): Promise<Lin
   // A malformed name is the browser's job to catch; it never reaches here.
   if (usernameStatus(value) !== "checking") return { state: "taken", ideas: [] };
 
+  if (convexServes("admin")) {
+    const convex = await convexServer();
+    const state = await convex.query(api.admin.bookingLinkState, { userId, username: value });
+
+    if (state.heldByTarget) return { state: "ok" };
+    if (state.retired) return { state: "retired" };
+    if (state.free) return { state: "ok" };
+
+    // Only offer alternatives that are themselves free — an idea that is also
+    // taken is worse than no idea.
+    const ideas: string[] = [];
+    for (const candidate of usernameIdeas(value, state.targetName)) {
+      if (await convex.query(api.admin.bookingLinkAvailable, { username: candidate, forUser: userId })) {
+        ideas.push(candidate);
+      }
+      if (ideas.length >= 3) break;
+    }
+    return { state: "taken", ideas };
+  }
+
   const db = supabaseAdmin();
 
   const [{ data: holder }, { data: retired }] = await Promise.all([
@@ -136,8 +200,6 @@ export async function checkBookingLink(userId: string, raw: string): Promise<Lin
   if (retired) return { state: "retired" };
   if (!holder) return { state: "ok" };
 
-  // Only offer alternatives that are themselves free — an idea that is also
-  // taken is worse than no idea.
   const { data: target } = await db.from("profiles").select("full_name").eq("id", userId).maybeSingle();
   const ideas: string[] = [];
   for (const candidate of usernameIdeas(value, target?.full_name ?? "")) {
@@ -179,16 +241,32 @@ export async function setBookingLink(input: {
   // which the database does not know about.
   if (usernameStatus(username) !== "checking") return { error: "That is not a valid booking link." };
 
-  const { data, error } = await supabaseAdmin()
-    .rpc("admin_set_username", {
-      p_user_id: input.userId,
-      p_username: username,
-      p_retire_old: input.retireOld,
-      p_force: input.force ?? false,
-    })
-    .maybeSingle<{ old_username: string; new_username: string }>();
+  let data: { old_username: string; new_username: string } | null;
 
-  if (error) return { error: linkError(error.message) };
+  if (convexServes("admin")) {
+    try {
+      data = await (await convexServer()).mutation(api.admin.setBookingLink, {
+        userId: input.userId,
+        username,
+        retireOld: input.retireOld,
+        force: input.force ?? false,
+      });
+    } catch (cause) {
+      return { error: linkError(convexMessage(cause, "That link could not be set.")) };
+    }
+  } else {
+    const result = await supabaseAdmin()
+      .rpc("admin_set_username", {
+        p_user_id: input.userId,
+        p_username: username,
+        p_retire_old: input.retireOld,
+        p_force: input.force ?? false,
+      })
+      .maybeSingle<{ old_username: string; new_username: string }>();
+
+    if (result.error) return { error: linkError(result.error.message) };
+    data = result.data;
+  }
   if (!data) return { error: "That account no longer exists." };
   if (data.old_username === data.new_username) return {};
 
@@ -220,11 +298,22 @@ export async function setBookingLink(input: {
 export async function releaseBookingLink(userId: string): Promise<AdminResult & { username?: string }> {
   const admin = await requireAdmin();
 
-  const { data, error } = await supabaseAdmin()
-    .rpc("admin_release_username", { p_user_id: userId })
-    .maybeSingle<{ old_username: string; new_username: string }>();
+  let data: { old_username: string; new_username: string } | null;
 
-  if (error) return { error: linkError(error.message) };
+  if (convexServes("admin")) {
+    try {
+      data = await (await convexServer()).mutation(api.admin.releaseBookingLink, { userId });
+    } catch (cause) {
+      return { error: linkError(convexMessage(cause, "That link could not be retired.")) };
+    }
+  } else {
+    const result = await supabaseAdmin()
+      .rpc("admin_release_username", { p_user_id: userId })
+      .maybeSingle<{ old_username: string; new_username: string }>();
+
+    if (result.error) return { error: linkError(result.error.message) };
+    data = result.data;
+  }
   if (!data) return { error: "That account no longer exists." };
 
   await recordAdminActivity({
@@ -249,6 +338,19 @@ export async function savePlatformSettings(input: {
   if (!input.appName.trim()) return { error: "The app needs a name." };
   if (!input.supportEmail.includes("@")) return { error: "Enter a support address people can reach." };
 
+  if (convexServes("admin")) {
+    try {
+      await (await convexServer()).mutation(api.platformSettings.update, {
+        app_name: input.appName.trim(),
+        support_email: input.supportEmail.trim(),
+      });
+    } catch (cause) {
+      return { error: convexMessage(cause, "Those settings could not be saved.") };
+    }
+    revalidatePath("/admin/settings");
+    return {};
+  }
+
   const supabase = await supabaseServer();
   const { error } = await supabase
     .from("platform_settings")
@@ -263,6 +365,17 @@ export async function savePlatformSettings(input: {
 
 export async function saveAdminAccount(input: { fullName: string }): Promise<AdminResult> {
   const admin = await requireAdmin();
+
+  if (convexServes("session")) {
+    try {
+      await (await convexServer()).mutation(api.profiles.updateOwn, { full_name: input.fullName.trim() });
+    } catch (cause) {
+      return { error: convexMessage(cause, "That name could not be saved.") };
+    }
+    revalidatePath("/admin/settings");
+    return {};
+  }
+
   const supabase = await supabaseServer();
 
   const { error } = await supabase

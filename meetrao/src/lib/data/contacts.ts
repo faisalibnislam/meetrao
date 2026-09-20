@@ -1,6 +1,9 @@
 import "server-only";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import type { Contact } from "@/lib/types";
 
 export type ContactView = {
@@ -28,19 +31,41 @@ export type ContactView = {
  * time passing, which nothing writes at all. Computing it on read cannot go
  * stale, and a host's booking list is small.
  */
-export async function listContacts(userId: string, timeZone: string): Promise<ContactView[]> {
-  const supabase = await supabaseServer();
+type BookingRow = { id: string; guest_email: string; starts_at: string; status: string };
+type InviteeRow = { email: string; booking_id: string };
 
+async function sources(userId: string): Promise<{ contactRows: Contact[]; bookingRows: BookingRow[]; inviteeRows: InviteeRow[] }> {
+  if (convexServes("contacts")) {
+    const convex = await convexServer();
+    const r = await convex.query(api.contacts.listForScreen, {});
+    return {
+      contactRows: r.contacts as Contact[],
+      bookingRows: r.bookings as BookingRow[],
+      inviteeRows: r.invitees as InviteeRow[],
+    };
+  }
+
+  const supabase = await supabaseServer();
   const [{ data: contactRows }, { data: bookingRows }, { data: inviteeRows }] = await Promise.all([
-    supabase.from("contacts").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
-    supabase
-      .from("bookings")
-      .select("id, guest_email, starts_at, status")
-      .eq("host_id", userId),
+    // .order("id") is the tie-break: these rows can share created_at to the
+    // millisecond, and without it the screen's order is up to the storage
+    // engine. See the note in convex/contacts.ts.
+    supabase.from("contacts").select("*").eq("user_id", userId).order("created_at", { ascending: false }).order("id"),
+    supabase.from("bookings").select("id, guest_email, starts_at, status").eq("host_id", userId),
+    // Unfiltered on purpose: RLS scopes this to the caller's own bookings.
     supabase.from("booking_invitees").select("email, booking_id"),
   ]);
+  return {
+    contactRows: (contactRows ?? []) as Contact[],
+    bookingRows: (bookingRows ?? []) as BookingRow[],
+    inviteeRows: (inviteeRows ?? []) as InviteeRow[],
+  };
+}
 
-  const bookings = (bookingRows ?? []) as { id: string; guest_email: string; starts_at: string; status: string }[];
+export async function listContacts(userId: string, timeZone: string): Promise<ContactView[]> {
+  const { contactRows, bookingRows, inviteeRows } = await sources(userId);
+
+  const bookings = bookingRows;
   const confirmed = bookings.filter((b) => b.status === "confirmed");
 
   // A booking reaches a contact two ways: they are the guest of record, or they
@@ -57,7 +82,7 @@ export async function listContacts(userId: string, timeZone: string): Promise<Co
   };
 
   for (const b of confirmed) add(b.guest_email, b.starts_at);
-  for (const i of (inviteeRows ?? []) as { email: string; booking_id: string }[]) {
+  for (const i of inviteeRows) {
     const b = byBooking.get(i.booking_id);
     if (b && b.guest_email.toLowerCase() !== i.email.toLowerCase()) add(i.email, b.starts_at);
   }
@@ -70,7 +95,7 @@ export async function listContacts(userId: string, timeZone: string): Promise<Co
   });
   const now = Date.now();
 
-  return ((contactRows ?? []) as Contact[]).map((c) => {
+  return contactRows.map((c) => {
     const times = (byEmail.get(c.email.toLowerCase()) ?? []).map((t) => new Date(t)).sort((a, b) => +a - +b);
     const past = times.filter((t) => +t <= now);
     const future = times.filter((t) => +t > now);

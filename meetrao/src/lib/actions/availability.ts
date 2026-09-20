@@ -3,6 +3,19 @@
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
+import { convexMessage } from "@/lib/convex/error";
+
+/** Convex throws; these actions return `{ error }` so the form can show it. */
+async function viaConvex<T>(work: (c: Awaited<ReturnType<typeof convexServer>>) => Promise<T>): Promise<{ value?: T; error?: string }> {
+  try {
+    return { value: await work(await convexServer()) };
+  } catch (e) {
+    return { error: convexMessage(e) };
+  }
+}
 import { TIMEZONES } from "@/lib/timezones";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -73,6 +86,20 @@ export async function saveAvailability(input: {
   const problem = valid(input.rules);
   if (problem) return { error: problem };
 
+  if (convexServes("availability")) {
+    const r = await viaConvex((c) =>
+      c.mutation(api.availability.saveWeek, {
+        scheduleId: input.scheduleId,
+        timezone: input.timezone,
+        rules: input.rules,
+      }),
+    );
+    if (r.error) return { error: r.error };
+    revalidatePath("/availability");
+    revalidatePath("/dashboard");
+    return {};
+  }
+
   const supabase = await supabaseServer();
 
   // RLS already scopes this to the session, but the read also proves the
@@ -116,6 +143,15 @@ export async function createSchedule(input: { name: string; copyFrom?: string })
   const name = cleanName(input.name);
   if (!name) return { error: "Give the schedule a name." };
 
+  if (convexServes("availability")) {
+    const r = await viaConvex((c) =>
+      c.mutation(api.availability.createSchedule, { name, makeDefault: false, copyFrom: input.copyFrom }),
+    );
+    if (r.error) return { error: r.error };
+    revalidatePath("/availability");
+    return { id: r.value!.id };
+  }
+
   const supabase = await supabaseServer();
 
   const { data: created, error } = await supabase
@@ -152,6 +188,14 @@ export async function renameSchedule(input: { id: string; name: string }): Promi
   const name = cleanName(input.name);
   if (!name) return { error: "Give the schedule a name." };
 
+  if (convexServes("availability")) {
+    const r = await viaConvex((c) => c.mutation(api.availability.renameSchedule, { scheduleId: input.id, name }));
+    if (r.error) return { error: r.error };
+    revalidatePath("/availability");
+    revalidatePath("/meetings");
+    return {};
+  }
+
   const supabase = await supabaseServer();
   const { error } = await supabase
     .from("availability_schedules")
@@ -178,6 +222,15 @@ export async function renameSchedule(input: { id: string; name: string }): Promi
  */
 export async function deleteSchedule(input: { id: string }): Promise<SaveResult> {
   const session = await requireSession();
+
+  if (convexServes("availability")) {
+    const r = await viaConvex((c) => c.mutation(api.availability.deleteSchedule, { scheduleId: input.id }));
+    if (r.error) return { error: r.error };
+    revalidatePath("/availability");
+    revalidatePath("/meetings");
+    return {};
+  }
+
   const supabase = await supabaseServer();
 
   const { data: all } = await supabase
@@ -210,6 +263,15 @@ export async function deleteSchedule(input: { id: string }): Promise<SaveResult>
  */
 export async function setDefaultSchedule(input: { id: string }): Promise<SaveResult> {
   const session = await requireSession();
+
+  if (convexServes("availability")) {
+    const r = await viaConvex((c) => c.mutation(api.availability.setDefaultSchedule, { scheduleId: input.id }));
+    if (r.error) return { error: r.error };
+    revalidatePath("/availability");
+    revalidatePath("/meetings");
+    return {};
+  }
+
   const supabase = await supabaseServer();
 
   const { error: clearError } = await supabase

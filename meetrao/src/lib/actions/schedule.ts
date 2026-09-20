@@ -8,6 +8,10 @@ import { zonedInstant } from "@/lib/booking/slots";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { convexMessage } from "@/lib/convex/error";
+import { api } from "@/convex/_generated/api";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The other direction: the host picks the time and invites people.
@@ -90,12 +94,16 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
   let meetingTypeId: string | null = null;
 
   if (input.meetingTypeId) {
-    const { data: type } = await admin
-      .from("meeting_types")
-      .select("id, name, duration_minutes")
-      .eq("id", input.meetingTypeId)
-      .eq("user_id", userId)
-      .maybeSingle();
+    const type = convexServes("bookings")
+      ? await (await convexServer()).query(api.meetingTypes.getOwn, { id: input.meetingTypeId })
+      : (
+          await admin
+            .from("meeting_types")
+            .select("id, name, duration_minutes")
+            .eq("id", input.meetingTypeId)
+            .eq("user_id", userId)
+            .maybeSingle()
+        ).data;
     if (!type) return { error: "That meeting type is gone. Pick another." };
     name = type.name;
     duration = type.duration_minutes;
@@ -117,34 +125,61 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
 
   const guest = invitees[0];
 
-  const { data: created, error } = await admin
-    .from("bookings")
-    .insert({
-      host_id: userId,
-      meeting_type_id: meetingTypeId,
-      meeting_name: name,
-      duration_minutes: duration,
-      guest_name: guest.name || guest.email,
-      guest_email: guest.email,
-      guest_note: input.note.trim(),
-      guest_timezone: profile.timezone,
-      starts_at: start.toISOString(),
-      ends_at: end.toISOString(),
-      host_created: true,
-    })
-    .select("id, reference")
-    .single();
+  let created: { id: string; reference: string };
 
-  if (error) {
-    // 23P01 is the exclusion constraint: something else already owns this slot.
-    const clash = error.code === "23P01" || error.message.includes("bookings_no_overlap");
-    return { error: clash ? "You already have a meeting then." : error.message };
-  }
+  if (convexServes("bookings")) {
+    try {
+      const convex = await convexServer();
+      // One mutation writes the booking AND its invitees, so a clash cannot
+      // leave a booking with half its guests attached.
+      const row = await convex.mutation(api.bookings.createAsHost, {
+        meetingTypeId,
+        meetingName: name,
+        durationMinutes: duration,
+        guestName: guest.name || guest.email,
+        guestEmail: guest.email,
+        guestNote: input.note.trim(),
+        startsAt: start.getTime(),
+        bufferMinutes: 0,
+        invitees: invitees.slice(1).map((i) => ({ name: i.name, email: i.email })),
+      });
+      created = { id: row.id, reference: row.reference };
+    } catch (cause) {
+      const message = convexMessage(cause, "That meeting could not be scheduled.");
+      // "slot taken" is this path's equivalent of the exclusion constraint.
+      return { error: /slot taken/i.test(message) ? "You already have a meeting then." : message };
+    }
+  } else {
+    const { data: row, error } = await admin
+      .from("bookings")
+      .insert({
+        host_id: userId,
+        meeting_type_id: meetingTypeId,
+        meeting_name: name,
+        duration_minutes: duration,
+        guest_name: guest.name || guest.email,
+        guest_email: guest.email,
+        guest_note: input.note.trim(),
+        guest_timezone: profile.timezone,
+        starts_at: start.toISOString(),
+        ends_at: end.toISOString(),
+        host_created: true,
+      })
+      .select("id, reference")
+      .single();
 
-  if (invitees.length > 1) {
-    await admin
-      .from("booking_invitees")
-      .insert(invitees.map((i) => ({ booking_id: created.id, name: i.name, email: i.email })));
+    if (error) {
+      // 23P01 is the exclusion constraint: something else already owns this slot.
+      const clash = error.code === "23P01" || error.message.includes("bookings_no_overlap");
+      return { error: clash ? "You already have a meeting then." : error.message };
+    }
+    created = row as { id: string; reference: string };
+
+    if (invitees.length > 1) {
+      await admin
+        .from("booking_invitees")
+        .insert(invitees.map((i) => ({ booking_id: created.id, name: i.name, email: i.email })));
+    }
   }
 
   /* The calendar write comes after the booking exists. If Google refuses, the
@@ -164,10 +199,18 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
       attendees: invitees.map((i) => ({ email: i.email, name: i.name })),
     });
     meetUrl = event.meetUrl ?? "";
-    await admin
-      .from("bookings")
-      .update({ google_event_id: event.eventId, meet_url: event.meetUrl })
-      .eq("id", created.id);
+    if (convexServes("bookings")) {
+      await (await convexServer()).mutation(api.bookings.attachGoogleEventByReference, {
+        reference: created.reference,
+        googleEventId: event.eventId,
+        meetUrl: event.meetUrl,
+      });
+    } else {
+      await admin
+        .from("bookings")
+        .update({ google_event_id: event.eventId, meet_url: event.meetUrl })
+        .eq("id", created.id);
+    }
   } catch (cause) {
     calendarWarning = cause instanceof CalendarError ? cause.kind : "api-unavailable";
   }
