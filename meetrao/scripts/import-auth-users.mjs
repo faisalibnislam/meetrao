@@ -20,14 +20,35 @@ import { dirname, resolve as resolvePath } from "node:path";
 
 /* Run from anywhere. `npx convex run` below needs the project directory (it
    looks for convex.json and .env.local there), and the obvious mistake is to
-   invoke this from the repo root, where the app is a subdirectory. */
+   invoke this from the repo root, where the app is a subdirectory.
+
+   The caller's cwd is captured BEFORE the chdir, because a relative env-file
+   path is relative to where the person typed the command, not to wherever
+   this file happens to live. */
+const callerCwd = process.cwd();
 process.chdir(resolvePath(dirname(fileURLToPath(import.meta.url)), ".."));
 
 const envArg = process.argv[2];
 const prod = process.argv.includes("--prod");
-const envPath = envArg ? resolvePath(process.env.INIT_CWD ?? ".", envArg) : null;
+const envPath = envArg ? resolvePath(callerCwd, envArg) : null;
 
-if (!envPath || !existsSync(envPath)) {
+if (envPath && !existsSync(envPath)) {
+  console.error(`No such file: ${envPath}
+
+Create it first — it is a file you write, not one this repo ships:
+
+  echo 'POSTGRES_URL=postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres' > ${envArg}
+
+The connection string is in Supabase → Project Settings → Database →
+Connection string (URI). It cannot come from \`vercel env pull\`: Vercel marks
+it sensitive and returns [SENSITIVE] instead of the value, which is correct
+of it.
+
+Nothing in this script prints a password or a password hash.`);
+  process.exit(1);
+}
+
+if (!envPath) {
   console.error(`Usage: node scripts/import-auth-users.mjs <env-file-with-POSTGRES_URL> [--prod]
 
   <env-file> is a file you create, containing one line:
