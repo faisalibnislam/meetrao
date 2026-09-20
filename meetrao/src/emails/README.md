@@ -12,7 +12,6 @@ untouched.
 
 | File | Trigger | To | Honours prefs? |
 | --- | --- | --- | --- |
-| `verify-email.html` | Email sign-up | New signup | No — transactional (NOT WIRED, see below) |
 | `welcome.html` | Email confirmed, or Google sign-up | Host | See note below |
 | `booking-new-host.html` | Guest confirms a slot | Host | Yes — "New booking" |
 | `booking-new-guest.html` | Same event | Guest | No — transactional |
@@ -21,21 +20,34 @@ untouched.
 
 ## Who sends what
 
-**Four of the five wired templates go out through Resend from
+**The five templates in this directory go out through Resend from
 `src/lib/email/send.ts`**, which renders them, escapes every merge value and
 applies the preference rules below.
 
-**The verification and reset emails do not.** Convex Auth owns those two flows
-and sends them itself, via the `Resend` providers configured in
-`convex/auth.ts`. With no `sendVerificationRequest` supplied, that is Auth.js's
-own generic template — so those two messages are currently unbranded and carry
-no postal address. `verify-email.html` is the design for the first of them and
-is **not wired to anything**; see "Still open".
+**The two auth emails — confirm your email, and reset your password — live in
+`convex/lib/emails.ts` instead.** Convex Auth owns both flows and sends them
+from inside a Convex action, and Convex functions cannot read from disk, so
+`send.ts` cannot reach them. They are wired through `sendVerificationRequest`
+on the two `Resend` providers in `convex/auth.ts`; without that override
+Auth.js sends its own template, which is how both went out unbranded and with
+no postal address between the auth cutover and the fix.
 
-Note also that Convex Auth verifies with a **code**, not a link, which the
-`/reset` page reads from `?email=&code=`. `verify-email.html` is written around
-`{{verify_url}}` and will need that link built for it, or the copy changed to
-present a code.
+`verify-email.html` used to sit here as the design for the first of them, and
+has been deleted rather than left beside the Convex copy — two copies of one
+template is exactly the trap the old Supabase version fell into. The design
+travelled into `convex/lib/emails.ts` unchanged apart from the footer; see
+below.
+
+Both are **transactional and carry no unsubscribe**. The handoff's footer has
+one, pointing at `/settings/notifications` — an account the recipient is in the
+middle of confirming or recovering. An unsubscribe that cannot work is worse
+than none, and nobody may opt out of the email that lets them into their own
+account. The postal address stays, because that is the part the law asks for.
+
+Convex Auth verifies with a **code**, not a link. The emails carry it in the
+URL: `/verify?email=&code=` (spent by `components/auth/verify-link.tsx`) and
+`/reset?email=&code=` (read by the reset form). `src/lib/email/convex-templates.test.ts`
+covers both.
 
 ## Rules that are enforced in code
 
@@ -51,14 +63,11 @@ present a code.
 
 ## Still open
 
-- **The verification and reset emails are unbranded.** They are Auth.js
-  defaults, sent by Convex Auth. Fixing it means passing
-  `sendVerificationRequest` to the two `Resend(...)` providers in
-  `convex/auth.ts` and rendering the template there — Convex functions cannot
-  import from `src/`, so the HTML has to be copied into `convex/` or read from
-  storage. Until then these are the only two messages the product sends that do
-  not look like the product, and the only two with no postal address in the
-  footer. **This is the largest outstanding item on this list.**
+- **`EMAIL_POSTAL_ADDRESS` has to be set in two places.** `src/lib/env.ts`
+  defaults it for the five templates here; the two in `convex/` read it from
+  the Convex deployment's own environment and **throw if it is unset**, rather
+  than sending a footer with no address in it. `npx convex env set
+  EMAIL_POSTAL_ADDRESS "…"` on every deployment.
 - **`booking-changed.html` has no trigger.** There is no reschedule flow — guests
   cancel and rebook. `sendRescheduled()` exists and is unwired, so building
   reschedule later is a matter of calling it.

@@ -1,16 +1,13 @@
 #!/usr/bin/env node
 /**
- * Password reset, as far as a script can honestly take it.
+ * Password reset, end to end, through the mail that is actually sent.
  *
- * WHAT THIS CANNOT DO, and why that is correct: the emailed code is stored as
- * a sha256 hash, so nothing but the inbox holds the plaintext. A script cannot
- * complete a reset, and a script that could would mean the codes were
- * recoverable from the database — which is the thing we want to be untrue.
- *
- * So this covers the half that is mechanisable: a reset is issued, it has an
- * expiry, the account cannot be signed into meanwhile, and a code that is not
- * the emailed one is refused. Completing a real reset is a manual check
- * against a real mailbox.
+ * The emailed code is stored sha256-hashed, so the database cannot tell you
+ * what went out. Resend can: it keeps the rendered body of every message, so
+ * this reads the code the recipient would have read and finishes the reset.
+ * That is the whole point of the check — "a code was issued" proves very
+ * little, and the reset is the only way back in for anyone who forgets a
+ * password.
  *
  * Uses Resend's sink address, so no inbox is touched, and removes the account
  * it creates.
@@ -20,6 +17,7 @@ import { readFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
+import { codeFromEmail, latestEmailTo } from "./lib/inbox.mjs";
 
 process.chdir(resolve(dirname(fileURLToPath(import.meta.url)), ".."));
 
@@ -39,10 +37,11 @@ let bad = 0;
 const check = (l, ok, d) => { console.log(`  ${ok ? "PASS" : "FAIL"}  ${l}${d ? ` — ${d}` : ""}`); if (!ok) bad++; };
 
 /* Resend refuses example.com outright ("please use our testing email address
-   instead"), and the reset flow really does send, so the throwaway account
-   uses Resend's own sink. Mail to it is accepted and discarded. */
+   instead"), and these flows really do send, so the throwaway account uses
+   Resend's own sink. Mail to it is accepted and discarded. */
 const EMAIL = `delivered+reset-check-${Date.now()}@resend.dev`;
 const PASSWORD = "a-perfectly-ordinary-password-42";
+const NEW_PASSWORD = "a-brand-new-password-9812";
 const c = new ConvexHttpClient(env.NEXT_PUBLIC_CONVEX_URL);
 
 await c.action("auth:signIn", {
@@ -50,41 +49,66 @@ await c.action("auth:signIn", {
   params: { email: EMAIL, password: PASSWORD, name: "Reset Check", flow: "signUp" },
 });
 
-/* The verification gate, asserted the way it actually behaves.
- *
- * Convex Auth REFUSES BY RETURN, not by throwing: an unverified account gets
- * `{ tokens: null }` rather than an error. An earlier version of this script
- * wrapped the call in try/catch and reported a failure, because nothing threw
- * — which reads exactly like "unverified accounts can sign in" and is not.
- * Check the return value, not the absence of an exception. */
-const signedIn = await c.action("auth:signIn", {
+/* Convex Auth REFUSES BY RETURN, not by throwing: an unverified account gets
+   `{ tokens: null }` rather than an error. An earlier version of this script
+   wrapped the call in try/catch and reported a failure because nothing threw —
+   which reads exactly like "unverified accounts can sign in" and is not. Check
+   the return value, not the absence of an exception. */
+const beforeVerify = await c.action("auth:signIn", {
   provider: "password",
   params: { email: EMAIL, password: PASSWORD, flow: "signIn" },
 });
-check("an unverified account gets no session", signedIn?.tokens == null, JSON.stringify(signedIn));
+check("an unverified account gets no session", beforeVerify?.tokens == null, JSON.stringify(beforeVerify));
 
+// ── the verification email ──────────────────────────────────────────────────
+const verifyMail = await latestEmailTo(EMAIL, env.RESEND_API_KEY);
+check("a verification email was sent", verifyMail != null, verifyMail?.subject);
+check("it is ours, not Auth.js's default", verifyMail?.subject === "Confirm your email", verifyMail?.subject);
+check("it carries the postal address anti-spam law requires", (verifyMail?.html ?? "").includes("Cumilla"));
+/* The footer used to offer one, pointing at /settings/notifications — an
+   account the recipient has not activated yet. An unsubscribe that cannot work
+   is worse than none, and this message is transactional anyway. */
+check("it does not offer a dead unsubscribe link", !/unsubscribe/i.test(verifyMail?.html ?? ""));
+
+const verifyCode = codeFromEmail(verifyMail);
+check("the link carries a code", verifyCode != null);
+
+const verified = await c.action("auth:signIn", {
+  provider: "password",
+  params: { email: EMAIL, code: verifyCode, flow: "email-verification" },
+});
+check("the emailed code verifies the account and signs it in", Boolean(verified?.tokens?.token));
+
+// ── the reset email ─────────────────────────────────────────────────────────
 await c.action("auth:signIn", { provider: "password", params: { email: EMAIL, flow: "reset" } });
-const issued = run("authImport:latestVerificationCode", { email: EMAIL });
-check("requesting a reset issues a code", issued?.code != null);
-check(
-  "the code expires, and not in a month",
-  issued != null && issued.expires > Date.now() && issued.expires < Date.now() + 25 * 3600_000,
-  issued ? `expires in ${Math.round((issued.expires - Date.now()) / 60000)} min` : "none",
-);
+const resetMail = await latestEmailTo(EMAIL, env.RESEND_API_KEY);
+check("a reset email was sent", resetMail?.subject === "Reset your Meetrao password", resetMail?.subject);
+check("it points at /reset, which reads email and code", /\/reset\?email=/.test(resetMail?.html ?? ""));
 
-/* The stored value is a hash. Presenting it is presenting the wrong code, and
-   the flow has to refuse it — which is simultaneously the proof that the codes
-   are not recoverable from the database. */
-let acceptedHash = false;
+const resetCode = codeFromEmail(resetMail);
+check("the reset link carries its own code", resetCode != null && resetCode !== verifyCode);
+
+const reset = await c.action("auth:signIn", {
+  provider: "password",
+  params: { email: EMAIL, code: resetCode, newPassword: NEW_PASSWORD, flow: "reset-verification" },
+});
+check("the emailed code completes the reset", Boolean(reset?.tokens?.token));
+
+const after = await c.action("auth:signIn", {
+  provider: "password",
+  params: { email: EMAIL, password: NEW_PASSWORD, flow: "signIn" },
+});
+check("the NEW password signs in", Boolean(after?.tokens?.token));
+
+let reused = false;
 try {
   await c.action("auth:signIn", {
     provider: "password",
-    params: { email: EMAIL, code: issued.code, newPassword: "another-one-entirely-77", flow: "reset-verification" },
+    params: { email: EMAIL, code: resetCode, newPassword: "another-one-entirely-77", flow: "reset-verification" },
   });
-  acceptedHash = true;
+  reused = true;
 } catch { /* expected */ }
-check("the STORED code is not the emailed one, and is refused", !acceptedHash);
+check("the reset code cannot be reused", !reused);
 
-console.log("  SKIP  completing a reset — needs a real inbox, by design");
 console.log("cleanup:", JSON.stringify(run("authImport:purgeNewUser", { email: EMAIL })));
 process.exit(bad ? 1 : 0);

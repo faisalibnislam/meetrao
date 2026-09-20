@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { VerifyActions } from "@/components/auth/verify-actions";
+import { VerifyLink } from "@/components/auth/verify-link";
 import { Eyebrow } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Logo } from "@/components/ui/logo";
@@ -17,9 +18,15 @@ export const metadata: Metadata = { title: "Confirm your email" };
 export default async function VerifyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string; expired?: string; unverified?: string }>;
+  searchParams: Promise<{ email?: string; code?: string; expired?: string; unverified?: string }>;
 }) {
-  const { email, expired, unverified } = await searchParams;
+  const { email, code, unverified } = await searchParams;
+  let { expired } = await searchParams;
+
+  /* Arriving from the emailed link. The code is spent in the browser, because
+     Convex Auth writes the session cookie there — see VerifyLink. */
+  const fromLink = Boolean(email && code);
+  if (fromLink) expired = undefined; // VerifyLink says so itself, and better
 
   const convex = await convexServer();
   const who = await convex.query(api.whoami.emailVerified, {});
@@ -48,6 +55,8 @@ export default async function VerifyPage({
               it to activate your account — you can&rsquo;t use Meetrao until you do.
             </p>
           </div>
+
+          {fromLink ? <VerifyLink email={email!} code={code!} /> : null}
 
           {expired ? (
             <Callout tone="red" title="That link has expired">

@@ -3,6 +3,7 @@ import Resend from "@auth/core/providers/resend";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth } from "@convex-dev/auth/server";
 import { passwordCrypto } from "./authCrypto";
+import { sendResetEmail, sendVerifyEmail } from "./lib/emails";
 import type { DataModel } from "./_generated/dataModel";
 import { createProfileForNewUser } from "./profiles";
 
@@ -47,10 +48,30 @@ const passwordProvider = Password<DataModel>({
     if (password.length < 8) throw new Error("Use at least 8 characters.");
   },
 
-  // Verification and reset both go through Resend, which already sends every
-  // other transactional email this product produces.
-  verify: Resend({ apiKey: process.env.AUTH_RESEND_KEY, from: process.env.EMAIL_FROM }),
-  reset: Resend({ apiKey: process.env.AUTH_RESEND_KEY, from: process.env.EMAIL_FROM }),
+  /* Verification and reset both go through Resend, which already sends every
+     other transactional email this product produces.
+
+     `sendVerificationRequest` is overridden on BOTH, and that override is the
+     whole point: without it Auth.js sends its own default template, so the
+     only two messages in the product that are not Meetrao-branded — and the
+     only two with no postal address in the footer — were the two that arrive
+     before anyone has an account. See convex/lib/emails.ts.
+
+     `token` is the plaintext code. The stored copy is sha256-hashed, so this
+     callback is the only place it is ever legible; it must not be logged and
+     must not be returned. */
+  verify: Resend({
+    apiKey: process.env.AUTH_RESEND_KEY,
+    from: process.env.EMAIL_FROM,
+    sendVerificationRequest: async ({ identifier, token, expires }) =>
+      await sendVerifyEmail(identifier, token, expires),
+  }),
+  reset: Resend({
+    apiKey: process.env.AUTH_RESEND_KEY,
+    from: process.env.EMAIL_FROM,
+    sendVerificationRequest: async ({ identifier, token, expires }) =>
+      await sendResetEmail(identifier, token, expires),
+  }),
 });
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({

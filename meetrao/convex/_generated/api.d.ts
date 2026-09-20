@@ -23,6 +23,7 @@ import type * as google from "../google.js";
 import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_effects from "../lib/effects.js";
+import type * as lib_emails from "../lib/emails.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_googleApi from "../lib/googleApi.js";
 import type * as lib_ids from "../lib/ids.js";
@@ -62,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "lib/auth": typeof lib_auth;
   "lib/effects": typeof lib_effects;
+  "lib/emails": typeof lib_emails;
   "lib/errors": typeof lib_errors;
   "lib/googleApi": typeof lib_googleApi;
   "lib/ids": typeof lib_ids;
