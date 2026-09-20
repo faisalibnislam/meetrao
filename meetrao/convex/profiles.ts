@@ -7,6 +7,7 @@ import { uuid } from "./lib/ids";
 import { purgeAccount } from "./admin";
 import { supportedZoneOrNull } from "./lib/zones";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 /* profiles — and the auth trigger that used to create them.
 
@@ -266,3 +267,74 @@ export const deleteOwnAccount = mutation({
     return await purgeAccount(ctx, { userId: me.id, actorId: me.id });
   },
 });
+
+/**
+ * Creates the profile for a user Convex Auth has just made.
+ *
+ * The body of `handle_new_user`, moved: generate a username from the display
+ * name or the address, set `is_admin` from `bootstrap_admins`, and write the
+ * activity line. Called from `convex/auth.ts`'s `afterUserCreatedOrUpdated`,
+ * which fires on every path that can produce a user.
+ *
+ * `supabase_id` is set to the Convex user id for accounts created HERE rather
+ * than migrated, so `profiles.id` is a stable string either way and
+ * `currentUserId` resolves both without a special case.
+ */
+export async function createProfileForNewUser(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+): Promise<void> {
+  const user = await ctx.db.get(userId);
+  if (!user) return;
+
+  const email = (user.email ?? "").trim().toLowerCase();
+  const displayName = (user.name ?? "").trim();
+
+  const existing = await ctx.db
+    .query("profiles")
+    .withIndex("by_uuid", (q) => q.eq("id", userId as unknown as string))
+    .unique();
+  if (existing) return;
+
+  const bootstrap = email
+    ? await ctx.db.query("bootstrap_admins").withIndex("by_email", (q) => q.eq("email", email)).first()
+    : null;
+
+  const username = await generateUsername(ctx, displayName || email);
+  const now = Date.now();
+
+  await ctx.db.patch(userId, { supabase_id: userId as unknown as string });
+
+  await ctx.db.insert("profiles", {
+    id: userId as unknown as string,
+    username,
+    username_lower: username.toLowerCase(),
+    full_name: displayName,
+    job_title: "",
+    email,
+    timezone: "UTC",
+    timezone_auto: true,
+    avatar_url: null,
+    is_admin: bootstrap !== null,
+    is_suspended: false,
+    default_duration_minutes: 30,
+    default_notice_minutes: 60,
+    notify_new_booking: true,
+    notify_booking_changed: true,
+    notify_booking_cancelled: true,
+    notify_daily_agenda: false,
+    notify_product_news: false,
+    onboarding_completed_at: null,
+    welcomed_at: null,
+    created_at: now,
+    updated_at: now,
+  });
+
+  await ctx.db.insert("admin_activity", {
+    id: uuid(),
+    actor_id: userId as unknown as string,
+    kind: "user_created",
+    summary: `${displayName || email || "A user"} created an account`,
+    created_at: now,
+  });
+}

@@ -33,7 +33,7 @@ Done, on **dev only** — production still runs entirely on Supabase Auth:
 | 1. Install and configure Convex Auth | done — `convex/auth.ts`, Password + Google, Resend wired for verification and reset |
 | 2. Run beside Supabase | done — `convex/auth.config.ts` accepts **both** issuers |
 | 3. Keep `profiles.id` stable | done — `users.supabase_id`, resolved only in `convex/lib/auth.ts:currentUserId` |
-| 4. Import the users | done for identities and Google links; **password hashes still to come** (see below) |
+| 4. Import the users | identities and Google links done; **password hashes SKIPPED by decision** — the three password accounts reset instead |
 | 5. Swap the app's auth surface | **done — sign-in verified end to end on dev** |
 | 6. Confirmation email to Resend | wired in step 1, unexercised |
 | 7. Cut over, then delete | not started |
@@ -107,13 +107,45 @@ Without them every sign-in returns an opaque `Server Error`. Set them with
 so passing it as an argument makes the CLI read it as a flag, and the failure
 message echoes the whole private key.
 
+### Password hashes: skipped, deliberately
+
+The bcrypt machinery works and is proven, but it is not being used for this
+migration. These four accounts are test data, so carrying their passwords over
+was not worth the handling of a database password. The three password accounts
+use the reset flow after the cutover; the two Google accounts are unaffected.
+
+`convex/authCrypto.ts` and `scripts/import-auth-users.mjs` stay. They cost
+nothing idle and they are the difference between a quiet migration and a
+forced reset the day there are real users.
+
+### handle_new_user, replaced properly
+
+Convex Auth's `afterUserCreatedOrUpdated` callback creates the profile,
+generates the username and sets the admin flag — the body of the Postgres
+trigger, in a hook that every path producing a user runs. Doing it in the app
+after `signIn` was rejected: that is one more thing each new entry point must
+remember, and forgetting it yields an account that authenticates and then
+lands on "no profile" forever.
+
+Verified by `scripts/signup-flow-check.mjs`: a brand-new sign-up creates the
+user AND the profile, generates a username from the name, starts un-onboarded,
+and correctly withholds the session until the email is verified.
+
+### What cannot be verified without an inbox
+
+Completing email verification and completing a password reset. The emailed
+code is stored as a **sha256 hash**, so nothing but the mailbox holds the
+plaintext — correct design, not a gap. Verified up to the send: requesting a
+reset issues a code with a 24-hour expiry and hands it to Resend, and Resend's
+delivery is already proven by every other email this product sends.
+
 ### The step that still needs a person
 
-The password hashes are not imported yet. `scripts/import-auth-users.mjs`
-does it in one command, but it needs a Postgres connection string, and Vercel
-correctly refuses to hand `POSTGRES_URL` to `env pull` because it is marked
-sensitive. Put the connection string (Supabase → Project Settings → Database)
-in a local file and run:
+Only if you later decide to carry passwords over after all — for real users,
+not these. `scripts/import-auth-users.mjs` does it in one command, but it needs
+a Postgres connection string, and Vercel correctly refuses to hand
+`POSTGRES_URL` to `env pull` because it is marked sensitive. Put the connection
+string (Supabase → Project Settings → Database) in a local file and run:
 
 ```bash
 node scripts/import-auth-users.mjs path/to/env-file        # dev

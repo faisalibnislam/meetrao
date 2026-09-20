@@ -4,6 +4,7 @@ import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth } from "@convex-dev/auth/server";
 import { passwordCrypto } from "./authCrypto";
 import type { DataModel } from "./_generated/dataModel";
+import { createProfileForNewUser } from "./profiles";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Convex Auth.
@@ -53,6 +54,22 @@ const passwordProvider = Password<DataModel>({
 });
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
+  /* THE REPLACEMENT FOR `handle_new_user`.
+     Postgres created a profile, generated a username and set the admin flag on
+     every insert into auth.users, without anyone asking. Convex Auth has no
+     triggers either, but it does have this hook — which is the same guarantee
+     in the same place: every path that can produce a user runs it, so a
+     sign-up cannot end with an account that has no profile.
+
+     Deliberately not done in the app after signIn: that would be one more
+     thing every new entry point has to remember, and forgetting it produces an
+     account that can authenticate and then lands on "no profile" forever. */
+  callbacks: {
+    async afterUserCreatedOrUpdated(ctx, { userId, existingUserId }) {
+      if (existingUserId) return; // an existing account signing in again
+      await createProfileForNewUser(ctx, userId);
+    },
+  },
   providers: [
     passwordProvider,
     // The SAME OAuth client the calendar integration uses, so a host is not

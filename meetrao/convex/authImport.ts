@@ -142,3 +142,76 @@ export const purgePasswordAccount = internalMutation({
     return { removed: 1 };
   },
 });
+
+/**
+ * The most recent verification code for an address.
+ *
+ * Migration-only, and internal: it hands out a code that would let the caller
+ * complete a password reset, which is exactly why no client may reach it. It
+ * exists so the reset flow can be verified end to end without anyone's inbox
+ * — the delivery half is Resend's, and Resend is already proven.
+ */
+export const latestVerificationCode = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, a) => {
+    const email = a.email.trim().toLowerCase();
+    const account = await ctx.db
+      .query("authAccounts")
+      .withIndex("providerAndAccountId", (q) => q.eq("provider", "password").eq("providerAccountId", email))
+      .unique();
+    if (!account) return null;
+
+    const codes = await ctx.db
+      .query("authVerificationCodes")
+      .withIndex("accountId", (q) => q.eq("accountId", account._id))
+      .collect();
+    if (!codes.length) return null;
+
+    const newest = codes.sort((x, y) => y._creationTime - x._creationTime)[0];
+    return { code: newest.code, expires: newest.expirationTime };
+  },
+});
+
+/** Removes an account created BY Convex Auth, and everything it owns. */
+export const purgeNewUser = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, a) => {
+    const email = a.email.trim().toLowerCase();
+    const user = await ctx.db.query("users").withIndex("email", (q) => q.eq("email", email)).unique();
+    if (!user) return { users: 0 };
+
+    const owner = user._id as unknown as string;
+    let rows = 0;
+    for (const t of ["contacts", "meeting_types", "notifications", "availability_rules", "availability_schedules"] as const) {
+      for (const r of await ctx.db.query(t).withIndex("by_user", (q) => q.eq("user_id", owner)).collect()) {
+        await ctx.db.delete(r._id);
+        rows++;
+      }
+    }
+    const profile = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", owner)).unique();
+    if (profile) await ctx.db.delete(profile._id);
+
+    for (const act of await ctx.db.query("admin_activity").withIndex("by_created").order("desc").take(200)) {
+      if (act.actor_id === owner) await ctx.db.delete(act._id);
+    }
+    for (const acc of await ctx.db.query("authAccounts").withIndex("userIdAndProvider", (q) => q.eq("userId", user._id)).collect()) {
+      await ctx.db.delete(acc._id);
+    }
+    await ctx.db.delete(user._id);
+    return { users: 1, profile: profile ? 1 : 0, rows };
+  },
+});
+
+/** The profile belonging to an address. Verification only. */
+export const profileFor = internalMutation({
+  args: { email: v.string() },
+  handler: async (ctx, a) => {
+    const user = await ctx.db
+      .query("users").withIndex("email", (q) => q.eq("email", a.email.trim().toLowerCase())).unique();
+    if (!user) return null;
+    const p = await ctx.db
+      .query("profiles").withIndex("by_uuid", (q) => q.eq("id", user._id as unknown as string)).unique();
+    if (!p) return null;
+    return { id: p.id, username: p.username, email: p.email, onboarding_completed_at: p.onboarding_completed_at };
+  },
+});
