@@ -1,8 +1,6 @@
 import "server-only";
 
 import { formatDayLabel, formatTimeRange, isSameDay } from "@/lib/booking/time";
-import { supabaseServer } from "@/lib/supabase/server";
-import { convexServes } from "@/lib/backend";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Booking } from "@/lib/types";
@@ -105,81 +103,18 @@ export async function listBookings(
 ): Promise<BookingView[]> {
   const now = new Date();
 
-  if (convexServes("bookings")) {
-    const convex = await convexServer();
-    const { rows, invitees } = await convex.query(api.bookings.listForScreen, { history, pastLimit: PAST_LIMIT });
-    const views = (rows as unknown as Booking[]).map((row) => toView(row, timeZone, now));
-    for (const view of views) {
-      for (const i of invitees[view.id] ?? []) view.invitees.push({ name: i.name, email: i.email });
-    }
-    return views;
+  const convex = await convexServer();
+  const { rows, invitees } = await convex.query(api.bookings.listForScreen, { history, pastLimit: PAST_LIMIT });
+  const views = (rows as unknown as Booking[]).map((row) => toView(row, timeZone, now));
+  for (const view of views) {
+    for (const i of invitees[view.id] ?? []) view.invitees.push({ name: i.name, email: i.email });
   }
-
-  const supabase = await supabaseServer();
-
-  // A booking is "past" once it has *ended*, so the boundary is ends_at.
-  const boundary = now.toISOString();
-
-  // Two bounded reads in parallel rather than one unbounded one. Upcoming is
-  // naturally small — it is a calendar, not an archive — so only the history
-  // needs a cap, taken newest-first and then flipped back into the ascending
-  // order every caller expects.
-  const [upcoming, past] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select("*")
-      .eq("host_id", hostId)
-      .gte("ends_at", boundary)
-      .order("starts_at", { ascending: true }),
-    history
-      ? supabase
-          .from("bookings")
-          .select("*")
-          .eq("host_id", hostId)
-          .lt("ends_at", boundary)
-          .order("starts_at", { ascending: false })
-          .limit(PAST_LIMIT)
-      : Promise.resolve({ data: [] as unknown[] }),
-  ]);
-
-  const rows = [
-    ...(((past.data ?? []) as Booking[]).slice().reverse()),
-    ...((upcoming.data ?? []) as Booking[]),
-  ];
-  const views = rows.map((row) => toView(row, timeZone, now));
-
-  // One query for every invitee rather than one per booking. Only bookings the
-  // host scheduled have any, so this is usually a very short list.
-  const hostCreated = rows.filter((r) => (r as { host_created?: boolean }).host_created).map((r) => r.id);
-  if (hostCreated.length) {
-    const { data: invitees } = await supabase
-      .from("booking_invitees")
-      .select("booking_id, name, email")
-      .in("booking_id", hostCreated);
-
-    for (const row of (invitees ?? []) as { booking_id: string; name: string; email: string }[]) {
-      const view = views.find((v) => v.id === row.booking_id);
-      if (view) view.invitees.push({ name: row.name, email: row.email });
-    }
-  }
-
   return views;
 }
 
 export async function getBooking(hostId: string, bookingId: string, timeZone: string) {
-  if (convexServes("bookings")) {
-    const convex = await convexServer();
-    const row = await convex.query(api.bookings.getForHost, { id: bookingId });
-    return row ? toView(row as unknown as Booking, timeZone, new Date()) : null;
-  }
-
-  const supabase = await supabaseServer();
-  const { data } = await supabase
-    .from("bookings")
-    .select("*")
-    .eq("host_id", hostId)
-    .eq("id", bookingId)
-    .maybeSingle();
-
-  return data ? toView(data as Booking, timeZone, new Date()) : null;
+  void hostId; // the query is scoped by the caller's own identity
+  const convex = await convexServer();
+  const row = await convex.query(api.bookings.getForHost, { id: bookingId });
+  return row ? toView(row as unknown as Booking, timeZone, new Date()) : null;
 }

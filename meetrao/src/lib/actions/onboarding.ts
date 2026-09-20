@@ -2,25 +2,16 @@
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
-import { supabaseServer } from "@/lib/supabase/server";
-import { convexServes } from "@/lib/backend";
 import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 import { sanitizeUsername, slugify, usernameIdeas, usernameStatus } from "@/lib/username";
 
-/** username_available, on whichever backend owns profiles. */
+/** Whether a booking link is free, ignoring the caller's own current one. */
 async function isFree(username: string, forUser: string | null): Promise<boolean> {
-  if (convexServes("session")) {
-    const convex = await convexServer();
-    return await convex.query(api.profiles.usernameAvailable, { username, forUser });
-  }
-  const supabase = await supabaseServer();
-  const { data } = await supabase.rpc("username_available", {
-    p_username: username,
-    p_for_user: forUser,
-  });
-  return data === true;
+  const convex = await convexServer();
+  return await convex.query(api.profiles.usernameAvailable, { username, forUser });
+
 }
 
 
@@ -63,26 +54,17 @@ export async function claimUsername(raw: string): Promise<SaveResult> {
   if (usernameStatus(value) !== "checking") return { error: "Pick a name that follows the rules above." };
 
   const session = await requireSession();
-  const supabase = await supabaseServer();
 
   const free = await isFree(value, session.userId);
   if (free !== true) return { error: "That booking link was taken a moment ago. Pick another." };
-
-  if (convexServes("session")) {
-    try {
-      await (await convexServer()).mutation(api.profiles.setUsername, { username: value });
-    } catch (cause) {
-      return { error: convexMessage(cause, "That booking link could not be claimed.") };
-    }
-    revalidatePath("/onboarding");
-    return {};
+  try {
+    await (await convexServer()).mutation(api.profiles.setUsername, { username: value });
+  } catch (cause) {
+    return { error: convexMessage(cause, "That booking link could not be claimed.") };
   }
-
-  const { error } = await supabase.from("profiles").update({ username: value }).eq("id", session.userId);
-  if (error) return { error: "That booking link was taken a moment ago. Pick another." };
-
-  revalidatePath("/onboarding/1");
+  revalidatePath("/onboarding");
   return {};
+
 }
 
 export async function saveFirstMeeting(input: {
@@ -101,63 +83,32 @@ export async function saveFirstMeeting(input: {
     duration_minutes: input.duration,
     minimum_notice_minutes: session.profile.default_notice_minutes,
   };
-
-  if (convexServes("meetings")) {
-    try {
-      const convex = await convexServer();
-      const mine = await convex.query(api.meetingTypes.listOwn, {});
-      // Re-running step 3 edits the first meeting rather than piling up duplicates.
-      if (mine.length) {
-        await convex.mutation(api.meetingTypes.update, { id: mine[0].id, ...payload });
-      } else {
-        await convex.mutation(api.meetingTypes.create, {
-          ...payload,
-          slug: await uniqueSlug(session.userId, name),
-        });
-      }
-    } catch (cause) {
-      return { error: convexMessage(cause, "That meeting could not be saved.") };
-    }
-    revalidatePath("/onboarding/3");
-    return {};
-  }
-
-  const supabase = await supabaseServer();
-
-  const { data: existing } = await supabase
-    .from("meeting_types")
-    .select("id")
-    .eq("user_id", session.userId)
-    .order("created_at")
-    .limit(1);
-
-  // Re-running step 3 edits the first meeting rather than piling up duplicates.
-  const { error } = existing?.length
-    ? await supabase.from("meeting_types").update(payload).eq("id", existing[0].id)
-    : await supabase.from("meeting_types").insert({
+  try {
+    const convex = await convexServer();
+    const mine = await convex.query(api.meetingTypes.listOwn, {});
+    // Re-running step 3 edits the first meeting rather than piling up duplicates.
+    if (mine.length) {
+      await convex.mutation(api.meetingTypes.update, { id: mine[0].id, ...payload });
+    } else {
+      await convex.mutation(api.meetingTypes.create, {
         ...payload,
-        user_id: session.userId,
         slug: await uniqueSlug(session.userId, name),
       });
-
-  if (error) return { error: error.message };
-
+    }
+  } catch (cause) {
+    return { error: convexMessage(cause, "That meeting could not be saved.") };
+  }
   revalidatePath("/onboarding/3");
   return {};
+
 }
 
 async function uniqueSlug(userId: string, name: string): Promise<string> {
+  void userId; // the listing is scoped by the caller's own identity
   const base = slugify(name);
 
-  let taken: Set<string>;
-  if (convexServes("meetings")) {
-    const convex = await convexServer();
-    taken = new Set((await convex.query(api.meetingTypes.listOwn, {})).map((m) => m.slug));
-  } else {
-    const supabase = await supabaseServer();
-    const { data } = await supabase.from("meeting_types").select("slug").eq("user_id", userId);
-    taken = new Set((data ?? []).map((r) => r.slug as string));
-  }
+  const convex = await convexServer();
+  const taken = new Set((await convex.query(api.meetingTypes.listOwn, {})).map((m) => m.slug));
 
   if (!taken.has(base)) return base;
   for (let n = 2; n < 200; n++) {
@@ -171,27 +122,14 @@ async function uniqueSlug(userId: string, name: string): Promise<string> {
 export async function completeOnboarding(): Promise<SaveResult> {
   const session = await requireSession();
   if (session.profile.onboarding_completed_at) return {};
-
-  if (convexServes("session")) {
-    try {
-      await (await convexServer()).mutation(api.profiles.updateOwn, {
-        onboarding_completed_at: new Date().toISOString(),
-      });
-    } catch (cause) {
-      return { error: convexMessage(cause, "Onboarding could not be completed.") };
-    }
-    revalidatePath("/dashboard");
-    return {};
+  try {
+    await (await convexServer()).mutation(api.profiles.updateOwn, {
+      onboarding_completed_at: new Date().toISOString(),
+    });
+  } catch (cause) {
+    return { error: convexMessage(cause, "Onboarding could not be completed.") };
   }
-
-  const supabase = await supabaseServer();
-  const { error } = await supabase
-    .from("profiles")
-    .update({ onboarding_completed_at: new Date().toISOString() })
-    .eq("id", session.userId);
-
-  if (error) return { error: error.message };
-
   revalidatePath("/dashboard");
   return {};
+
 }

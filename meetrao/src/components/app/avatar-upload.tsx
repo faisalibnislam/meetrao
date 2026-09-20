@@ -4,8 +4,7 @@ import { useRef, useState, useTransition } from "react";
 import { Avatar } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
-import { clearAvatar, saveAvatar, saveAvatarFromStorageId, avatarUploadUrl } from "@/lib/actions/avatar";
-import { supabaseBrowser } from "@/lib/supabase/client";
+import { saveAvatarFromStorageId, avatarUploadUrl, clearAvatar } from "@/lib/actions/avatar";
 import { AvatarCropper } from "./avatar-cropper";
 
 /* The photo is uploaded from the browser, against the host's own session, so
@@ -13,7 +12,6 @@ import { AvatarCropper } from "./avatar-cropper";
    role. The path starts with their user id, which is exactly what
    `avatars_insert_own` checks. */
 
-const BUCKET = "avatars";
 
 /** The bucket rejects anything larger, and it is a 512px square in the end. */
 const MAX_BYTES = 2 * 1024 * 1024;
@@ -54,14 +52,12 @@ export function AvatarUpload({
       /* Convex: ask for a one-time upload URL, post the bytes, hand back the
          storage id. The client never names a path, so there is nothing to
          forge — which is what replaces the old storage policy. */
-      // The server decides which storage this deployment uses.
       const ticket = await avatarUploadUrl();
-      if (ticket.error) {
-        toast({ tone: "bad", title: "Upload failed", text: ticket.error });
+      if (!ticket.url) {
+        toast({ tone: "bad", title: "Upload failed", text: ticket.error ?? "Could not start the upload." });
         return;
       }
 
-      if (ticket.url) {
         const posted = await fetch(ticket.url, {
           method: "POST",
           headers: { "Content-Type": "image/webp" },
@@ -83,30 +79,6 @@ export function AvatarUpload({
         setFile(null);
         toast({ tone: "ok", title: "Photo updated", text: "Guests will see it on your booking page." });
         return;
-      }
-
-      // Timestamped, so a replaced photo is never served from a stale cache at
-      // the same URL. The old object is deleted server-side once this is saved.
-      const path = `${userId}/avatar-${Date.now()}.webp`;
-
-      const { error } = await supabaseBrowser()
-        .storage.from(BUCKET)
-        .upload(path, blob, { contentType: "image/webp", upsert: true });
-
-      if (error) {
-        toast({ tone: "bad", title: "Upload failed", text: error.message });
-        return;
-      }
-
-      const result = await saveAvatar(path);
-      if (result.error) {
-        toast({ tone: "bad", title: "Could not save", text: result.error });
-        return;
-      }
-
-      setUrl(result.url ?? null);
-      setFile(null);
-      toast({ tone: "ok", title: "Photo updated", text: "Guests will see it on your booking page." });
     });
   }
 

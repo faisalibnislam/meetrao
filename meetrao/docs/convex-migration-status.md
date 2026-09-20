@@ -182,6 +182,24 @@ in Postgres. Re-run `scripts/export-supabase.mjs` and re-import immediately
 before switching any domain that takes writes — `--replace` makes that safe to
 repeat.
 
+## A gap found while stripping Supabase, 2026-09-20
+
+**Seventeen pages and components query Supabase directly**, bypassing
+`src/lib/data/*` entirely — the dashboard, the meetings list, the app shell's
+notification badge, the onboarding steps, the admin settings page, the public
+booking page and others. They were never routed through `convexServes`, so
+**no domain flag ever covered them**.
+
+That means those screens have been reading Postgres in production throughout,
+including after each domain was reported "cut over". The parity harness did
+not catch it because it compares the data-layer FUNCTIONS against Convex; it
+never rendered a page. A green harness and a green screen were not the same
+claim, and the difference went unnoticed.
+
+Nothing was lost: Supabase still holds the same rows, so those screens have
+been correct, just served from the wrong place. The work to fix it is real
+though — these are queries to port, not imports to delete.
+
 ## What deleting Supabase would actually take
 
 Not reachable by setting variables. Two hard blockers, and one consequence
