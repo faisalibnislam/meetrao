@@ -214,15 +214,41 @@ Ordered. The first item is the one that breaks things.
    Safe to do before deploying: the code currently in production does not read
    it.
 
-2. **Deploy the code**, then redeploy Vercel. Same ordering rule as every
-   cutover above: a Vercel environment change does not reach a deployment that
-   already exists.
+2. **Deploy Convex to production, BEFORE merging.**
 
-3. **Remove the dead variables.** `SUPABASE_URL` on the production Convex
+   ```
+   npx convex deploy          # with a production deploy key
+   ```
+
+   Vercel's build is `next build` and nothing else — **it does not deploy
+   Convex**. Merging therefore ships the Next.js app against whatever function
+   versions production already has, and these two are not compatible in that
+   direction:
+
+   - `whoami.identity` gained `emailVerified`, and `src/lib/data/session.ts`
+     now gates on it. Against an older deployment the field is `undefined`,
+     which is falsy, so **every signed-in user is redirected to `/verify`** —
+     a full lockout, and one that looks like an auth bug rather than a
+     deploy-ordering mistake.
+   - The two auth emails are rendered by functions that do not exist there yet.
+
+   Deploying Convex first is safe in the other direction: the app currently in
+   production does not read `emailVerified` and does not send those emails, and
+   the Supabase issuer being dropped from `auth.config.ts` costs nothing
+   because Convex Auth has issued every session since the cutover.
+
+3. **Merge.** Vercel deploys the app. If a Vercel environment variable changes
+   as part of this, redeploy after it — same rule as every cutover above: an
+   env change does not reach a deployment that already exists.
+
+4. **Remove the dead variables.** `SUPABASE_URL` on the production Convex
    deployment (already removed from dev), and `CONVEX_BACKENDS` on Vercel —
-   nothing reads either. Harmless to leave, confusing to find later.
+   nothing reads either. Harmless to leave, confusing to find later. The
+   repository also still has the **Supabase GitHub integration** attached —
+   it is what posts the "Supabase Preview" check, and it is a dashboard
+   setting rather than anything in this repo, which has no `.github/` at all.
 
-4. **Confirm what the privacy policy claims.** It now names Convex as the
+5. **Confirm what the privacy policy claims.** It now names Convex as the
    subprocessor and says data is stored **in the United States**. That region
    was not verified against the Convex dashboard — check it, because it is a
    statement about international transfer in a published legal document.
