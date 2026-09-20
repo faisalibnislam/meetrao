@@ -15,11 +15,30 @@
 import pg from "pg";
 import { readFileSync, existsSync } from "node:fs";
 import { execFileSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
+import { dirname, resolve as resolvePath } from "node:path";
 
-const envPath = process.argv[2];
+/* Run from anywhere. `npx convex run` below needs the project directory (it
+   looks for convex.json and .env.local there), and the obvious mistake is to
+   invoke this from the repo root, where the app is a subdirectory. */
+process.chdir(resolvePath(dirname(fileURLToPath(import.meta.url)), ".."));
+
+const envArg = process.argv[2];
 const prod = process.argv.includes("--prod");
+const envPath = envArg ? resolvePath(process.env.INIT_CWD ?? ".", envArg) : null;
+
 if (!envPath || !existsSync(envPath)) {
-  console.error("Usage: node scripts/import-auth-users.mjs <env-file-with-POSTGRES_URL> [--prod]");
+  console.error(`Usage: node scripts/import-auth-users.mjs <env-file-with-POSTGRES_URL> [--prod]
+
+  <env-file> is a file you create, containing one line:
+
+    POSTGRES_URL=postgresql://postgres:<password>@db.<ref>.supabase.co:5432/postgres
+
+  Get it from Supabase → Project Settings → Database → Connection string (URI).
+  It cannot come from \`vercel env pull\`: Vercel marks it sensitive and returns
+  [SENSITIVE] instead of the value, which is correct of it.
+
+  Nothing in this script prints a password or a password hash.`);
   process.exit(1);
 }
 
