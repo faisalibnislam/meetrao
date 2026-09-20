@@ -47,3 +47,13 @@ export const purgeByReferences = internalMutation({
     return { bookings, invitees, notifications, contacts, activity, limits };
   },
 });
+
+/** Removes site_visits a verification script inserted, by visitor_hash. */
+export const purgeVisits = internalMutation({
+  args: { visitorHash: v.string() },
+  handler: async (ctx, a) => {
+    const rows = await ctx.db.query("site_visits").withIndex("by_hash", (q) => q.eq("visitor_hash", a.visitorHash)).collect();
+    for (const r of rows) await ctx.db.delete(r._id);
+    return rows.length;
+  },
+});
