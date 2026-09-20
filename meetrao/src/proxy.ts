@@ -25,12 +25,18 @@ const PRIVATE_PREFIXES = ["/dashboard", "/bookings", "/meetings", "/availability
 const AUTH_PAGES = ["/login", "/signup", "/forgot"];
 
 /**
- * The one route whose `?code=` is NOT an auth code.
+ * The ONLY route where a `?code=` belongs to Convex Auth.
  *
- * Google Calendar consent returns here with its own single-use code, to be
- * exchanged for calendar tokens. It has nothing to do with signing in.
+ * Google sign-in is the single OAuth flow in this app: Convex redeems the
+ * provider's code on its own domain and sends the browser here with an auth
+ * code for the middleware to exchange. `strandedAuthCode` below forwards a
+ * code that lands on `/` to this same route before the middleware runs, so
+ * this one entry covers both.
+ *
+ * Everything else carrying a `?code=` redeems it ITSELF and must be left
+ * alone — see the note where this is used.
  */
-const CALENDAR_CALLBACK = "/api/google/callback";
+const AUTH_CODE_ROUTE = "/auth/callback";
 
 /**
  * An OAuth code that landed on the site root instead of `/auth/callback`.
@@ -87,21 +93,31 @@ async function convexProxyOnce() {
       return undefined;
     },
     {
-      /* WITHOUT THIS, CONNECTING A CALENDAR SIGNS YOU OUT.
-         
-         Convex Auth claims EVERY `?code=` it sees — the option defaults to
-         undefined, which means "handle all of them". Google Calendar consent
-         returns to CALENDAR_CALLBACK carrying its own code, so the middleware
-         would try to redeem a calendar code as a sign-in code, fail, and —
-         this is the damaging part — CLEAR THE AUTH COOKIES on the way past
-         (see the package's server/request.js). The browser then reached the
-         callback with no session, and the route handler, correctly, sent it
-         to /login.
+      /* AN ALLOW-LIST, NOT A DENY-LIST, and that distinction is the whole
+         lesson here.
 
-         It also ate the code before the route handler could read it, which is
-         why connecting a calendar had been impossible since the auth cutover
-         rather than merely annoying. Both symptoms, one line. */
-      shouldHandleCode: (request) => request.nextUrl.pathname !== CALENDAR_CALLBACK,
+         Convex Auth claims EVERY `?code=` it sees — the option defaults to
+         undefined, which means "handle all of them". When redemption fails it
+         deletes the parameter AND CLEARS THE AUTH COOKIES on the way past (see
+         the package's server/request.js). So any route that carries a code of
+         its own loses it before the page can read it, and signs the visitor
+         out for good measure.
+
+         Three routes in this app carry a code that is not an auth code, and
+         each one redeems it itself:
+
+           /api/google/callback   Google Calendar consent, exchanged in Convex
+           /verify                the emailed confirmation code
+           /reset                 the emailed password-reset code
+
+         The first version of this named only the calendar callback and let
+         everything else through. That fixed connecting a calendar and left
+         sign-up and password reset broken in exactly the same way — a real
+         person's confirmation link arrived correct, lost its code here, and
+         landed on a page telling them they had not confirmed. Naming what may
+         be claimed is the only version that does not need extending every
+         time a route starts carrying a code. */
+      shouldHandleCode: (request) => request.nextUrl.pathname === AUTH_CODE_ROUTE,
     },
   ) as unknown as (request: NextRequest, event: NextFetchEvent) => Promise<unknown>;
   return convexProxy;
