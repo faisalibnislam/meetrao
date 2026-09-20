@@ -5,8 +5,6 @@ import { AnalyticsBeacon } from "@/components/analytics/beacon";
 import { AnalyticsConsent } from "@/components/analytics/consent";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ToastProvider } from "@/components/ui/toast";
-import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
-import { ConvexClientProvider } from "@/lib/convex/provider";
 import { siteUrl } from "@/lib/env";
 import {
   DESCRIPTION,
@@ -115,41 +113,38 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  /* Convex Auth needs BOTH halves: the server provider reads the cookie and
-     hands the state down, and the client provider inside makes
-     `useAuthActions` available to the forms. The client one alone throws —
-     `useAuth()` comes back undefined with nothing above it to supply state. */
+  /* NO CONVEX AUTH PROVIDER HERE, deliberately. It is an async Server
+     Component that reads the session cookie, so everything beneath it renders
+     dynamically — at the root that was all six marketing pages, including the
+     landing page. It lives in src/app/(auth)/layout.tsx instead, which is the
+     only subtree with components that need it. */
   return (
-    <ConvexAuthNextjsServerProvider>
-      <html lang="en" className={`${sans.variable} ${serif.variable}`}>
-        <body>
-          <ConvexClientProvider>
-            <ToastProvider>{children}</ToastProvider>
-          </ConvexClientProvider>
-          {/* Both are client components that render no markup of their own (the
+    <html lang="en" className={`${sans.variable} ${serif.variable}`}>
+      <body>
+        <ToastProvider>{children}</ToastProvider>
+        {/* Both are client components that render no markup of their own (the
             consent banner only once someone has to be asked), so neither opts
             a single page out of static rendering — which the marketing layout
             depends on. Read process.env directly rather than through env(): a
             NEXT_PUBLIC_ variable is inlined at build time, and calling the
             validator here would drag the whole server schema into the browser
             bundle. */}
-          <AnalyticsBeacon />
-          <AnalyticsConsent
-            measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? ""}
-          />
+        <AnalyticsBeacon />
+        <AnalyticsConsent
+          measurementId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? ""}
+        />
 
-          {/* Who runs this, what it is, and what it costs — on every page rather
+        {/* Who runs this, what it is, and what it costs — on every page rather
             than only the home page, because the page an agent lands on is
             whichever one answered the question it was asked. One @graph so the
             nodes can reference each other by @id instead of each restating the
             publisher. */}
-          <JsonLd
-            json={graph(organizationLd(), webSiteLd(), softwareApplicationLd())}
-          />
+        <JsonLd
+          json={graph(organizationLd(), webSiteLd(), softwareApplicationLd())}
+        />
 
-          <SpeedInsights />
-        </body>
-      </html>
-    </ConvexAuthNextjsServerProvider>
+        <SpeedInsights />
+      </body>
+    </html>
   );
 }
