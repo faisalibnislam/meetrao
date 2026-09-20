@@ -34,7 +34,7 @@ Done, on **dev only** — production still runs entirely on Supabase Auth:
 | 2. Run beside Supabase | done — `convex/auth.config.ts` accepts **both** issuers |
 | 3. Keep `profiles.id` stable | done — `users.supabase_id`, resolved only in `convex/lib/auth.ts:currentUserId` |
 | 4. Import the users | done for identities and Google links; **password hashes still to come** (see below) |
-| 5. Swap the app's auth surface | not started |
+| 5. Swap the app's auth surface | **partly done — see below** |
 | 6. Confirmation email to Resend | wired in step 1, unexercised |
 | 7. Cut over, then delete | not started |
 
@@ -42,6 +42,43 @@ Done, on **dev only** — production still runs entirely on Supabase Auth:
 bcrypt hash, the token authenticates, `currentUserId` resolves it to the
 Supabase UUID, the migrated profile is found, and owner-scoped reads return
 that host's own rows — 4 contacts and 2 schedules, matching Postgres.
+
+### Step 5: what is done, and the wall it hit
+
+Done and verified with `auth` switched on locally — every route behaves
+exactly as before, and the server logs are clean:
+
+- `src/lib/convex/server.ts` takes the token from Convex Auth instead of
+  Supabase when the domain is on;
+- `src/lib/data/session.ts` resolves identity and profile from one
+  authenticated call;
+- `src/proxy.ts` runs Convex Auth's middleware for the redirects;
+- `src/lib/convex/provider.tsx` wraps the app in the right provider, decided
+  on the **server** and passed down, so the browser cannot disagree with the
+  backend about who issues sessions;
+- `auth` is excluded from the `all` wildcard and has to be typed out —
+  `src/lib/backend.test.ts` is the rule.
+
+**The wall: sign-in cannot be a server action.** `@convex-dev/auth/nextjs/server`
+exports `convexAuthNextjsToken`, `isAuthenticatedNextjs`,
+`convexAuthNextjsMiddleware`, `nextjsMiddlewareRedirect` and the provider —
+and **no `signIn`**. Calling `api.auth.signIn` from a server action does
+authenticate and does return tokens, but nothing stores them: the cookie the
+middleware reads is written client-side by `useAuthActions()`. The result is a
+sign-in that succeeds and leaves the person on the login page, which is worse
+than one that fails.
+
+Server-action branches for sign-in, sign-up, reset and sign-out were written,
+proved non-viable, and **removed** rather than left looking plausible.
+
+**So the remaining work in step 5 is the forms, not the actions.**
+`login`, `signup`, `forgot` and `reset` become client components calling
+`useAuthActions().signIn(...)`, with the server actions kept only for the
+Supabase path until the cutover. Two properties must survive that port, and
+both are easy to lose in a client component:
+
+- one message for "no such account" and "wrong password";
+- reset that never reveals whether an address is registered.
 
 ### Two things that bit, recorded so they do not bite twice
 

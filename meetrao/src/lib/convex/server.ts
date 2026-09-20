@@ -2,6 +2,7 @@ import "server-only";
 
 import { ConvexHttpClient } from "convex/browser";
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Convex, from the server.
@@ -25,9 +26,27 @@ function url(): string {
   return value;
 }
 
-/** Authenticated as the signed-in user, or anonymous when signed out. */
+/**
+ * Authenticated as the signed-in user, or anonymous when signed out.
+ *
+ * Which issuer signs that token is the `auth` domain's decision. Convex
+ * accepts both at once, so this is the only place in the server code that has
+ * to know which one is in play.
+ */
 export async function convexServer(): Promise<ConvexHttpClient> {
   const client = new ConvexHttpClient(url());
+
+  if (convexServes("auth")) {
+    /* Imported here rather than at the top of the file on purpose. The module
+       pulls in Next's middleware machinery, which is not resolvable outside a
+       Next build — a static import breaks every unit test that touches a
+       server module, whether or not Convex Auth is switched on. */
+    const { convexAuthNextjsToken } = await import("@convex-dev/auth/nextjs/server");
+    const token = await convexAuthNextjsToken();
+    if (token) client.setAuth(token);
+    return client;
+  }
+
   const supabase = await supabaseServer();
   const {
     data: { session },

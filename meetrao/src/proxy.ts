@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
+import { convexServes } from "@/lib/backend";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Proxy (Middleware, renamed in Next.js 16).
@@ -49,9 +50,58 @@ function strandedAuthCode(request: NextRequest): URL | null {
   return to;
 }
 
-export async function proxy(request: NextRequest) {
+/**
+ * The Convex Auth half.
+ *
+ * Same job as the Supabase path below — refresh the session and make the
+ * obvious redirects early — but Convex Auth owns the cookie, so the refresh is
+ * its middleware's concern rather than ours.
+ *
+ * ONE DELIBERATE DIFFERENCE. The Supabase path reads `email_confirmed_at` and
+ * sends an unverified user to `/verify`. Convex Auth does not put verification
+ * state in the token, so this proxy cannot see it, and guessing would either
+ * let unverified users through or trap verified ones. The gate therefore lives
+ * entirely in `src/lib/data/session.ts`, which reads the profile anyway — and
+ * that was always the real boundary; the proxy check was a convenience. The
+ * cost is one extra redirect for an unverified user, on a path they take once.
+ */
+/* Built on first use, not at module load. The import pulls in Next's
+   middleware machinery, which is not resolvable outside a Next build, so a
+   static one breaks the unit tests that import this file. */
+let convexProxy: ((request: NextRequest, event: NextFetchEvent) => Promise<unknown>) | null = null;
+
+async function convexProxyOnce() {
+  if (convexProxy) return convexProxy;
+  const { convexAuthNextjsMiddleware, nextjsMiddlewareRedirect } = await import(
+    "@convex-dev/auth/nextjs/server"
+  );
+  convexProxy = convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
+    const path = request.nextUrl.pathname;
+    const isPrivate = PRIVATE_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
+    const authed = await convexAuth.isAuthenticated();
+
+    if (!authed && isPrivate) {
+      const to = request.nextUrl.clone();
+      to.pathname = "/login";
+      to.searchParams.set("next", path);
+      return NextResponse.redirect(to);
+    }
+    if (authed && AUTH_PAGES.includes(path)) return nextjsMiddlewareRedirect(request, "/dashboard");
+    return undefined;
+  }) as unknown as (request: NextRequest, event: NextFetchEvent) => Promise<unknown>;
+  return convexProxy;
+}
+
+/* `event` is optional so the existing tests can call proxy(request) alone;
+   Next always supplies it in production, and only the Convex path needs it. */
+export async function proxy(request: NextRequest, event?: NextFetchEvent): Promise<NextResponse> {
   const stranded = strandedAuthCode(request);
   if (stranded) return NextResponse.redirect(stranded);
+
+  if (convexServes("auth")) {
+    const handled = await (await convexProxyOnce())(request, event as NextFetchEvent);
+    return (handled as NextResponse | undefined) ?? NextResponse.next({ request });
+  }
 
   let response = NextResponse.next({ request });
 

@@ -3,6 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { ConvexReactClient } from "convex/react";
 import { ConvexProviderWithAuth } from "convex/react";
+import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 /* The browser half of the same bridge. Convex asks for a token whenever it
@@ -38,7 +39,26 @@ function client() {
   return cached;
 }
 
-export function ConvexClientProvider({ children }: { children: React.ReactNode }) {
+/**
+ * Which provider wraps the app is the `auth` domain's decision, and it is made
+ * on the SERVER — `convexAuth` is passed down rather than read from a
+ * NEXT_PUBLIC variable, so the browser cannot disagree with the backend about
+ * who issues the session.
+ *
+ * Under Convex Auth the token and its refresh belong to
+ * ConvexAuthNextjsProvider; under Supabase they belong to @supabase/ssr and
+ * `useSupabaseAuth` above hands them over.
+ */
+export function ConvexClientProvider({
+  children,
+  convexAuth,
+}: {
+  children: React.ReactNode;
+  convexAuth: boolean;
+}) {
+  if (convexAuth) {
+    return <ConvexAuthNextjsProvider client={client()}>{children}</ConvexAuthNextjsProvider>;
+  }
   return (
     <ConvexProviderWithAuth client={client()} useAuth={useSupabaseAuth}>
       {children}
