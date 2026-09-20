@@ -1,10 +1,11 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { fetchAction } from "convex/nextjs";
 import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { api } from "@/convex/_generated/api";
+import { clearedAuthCookies } from "@/lib/auth/cookies";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Signing out.
@@ -31,19 +32,29 @@ import { api } from "@/convex/_generated/api";
  * cookie is the worse of the two failures.
  */
 export async function signOut() {
+  /* Convex FIRST. Clearing the cookies only makes this browser forget; the
+     refresh token stays valid until the session is ended server-side, and
+     anything still holding it would keep working. */
   try {
     const token = await convexAuthNextjsToken();
     if (token) await fetchAction(api.auth.signOut, {}, { token });
-  } catch {
-    /* ignored, deliberately — the cookies below are what this screen needs */
+  } catch (cause) {
+    /* Not fatal — a person who clicked "Log out" must end up logged out of
+       this browser whatever the network did, and the cookies below do that.
+       But it is logged, because a silent failure here leaves a live session
+       behind and nothing on screen would ever say so. */
+    console.error("sign-out: convex session was not revoked", {
+      error: cause instanceof Error ? cause.message : String(cause),
+    });
   }
 
+  /* Then the cookies — re-set with their full attributes, not deleted. See
+     src/lib/auth/cookies.ts for why `.delete()` and a missing `secure` both
+     fail, silently and only in production. */
   const store = await cookies();
-  // Off localhost the package prefixes both names with `__Host-`, so both
-  // spellings are cleared rather than guessing which environment this is.
-  for (const name of ["__convexAuthJWT", "__convexAuthRefreshToken"]) {
-    store.delete(name);
-    store.delete(`__Host-${name}`);
+  const host = (await headers()).get("host");
+  for (const { name, value, options } of clearedAuthCookies(host)) {
+    store.set(name, value, options);
   }
 
   redirect("/login");
