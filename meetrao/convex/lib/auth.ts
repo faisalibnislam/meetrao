@@ -28,35 +28,34 @@ export function AuthError(message: string, code: string): never {
 }
 
 /**
- * The caller's identity as a Supabase UUID — which is also `profiles.id`.
+ * The caller's identity as `profiles.id`.
  *
- * THE ONE PLACE identity is resolved, and deliberately so. Two issuers are
- * live during the auth migration:
+ * THE ONE PLACE identity is resolved, and deliberately so. Convex Auth's
+ * subject is "<userId>|<sessionId>", which is not what any row is keyed by, so
+ * something has to do the translation and it had better be one thing.
  *
- *   · Supabase, whose `sub` IS the UUID, so it passes straight through;
- *   · Convex Auth, whose subject is its own user id, and whose `users` row
- *     carries `supabase_id` — set during the import for exactly this.
+ * `users.supabase_id` is the map. The name is now a misnomer — it was the
+ * Supabase UUID during the migration, and for accounts created since it is
+ * simply the Convex user id written back to itself (see
+ * profiles.createProfileForNewUser). It is kept under that name because
+ * renaming an indexed field every profile and every foreign key depends on is
+ * a data migration, not a tidy-up. What it MEANS is stable: the value that
+ * `profiles.id` and every user-keyed row use.
  *
- * Because every authorization path already goes through here, nothing else in
- * the codebase learns that identity changed shape, and `profiles.id` and its
- * foreign keys stay UUIDs on both sides of the cutover.
+ * Because every authorization path goes through here, nothing else in the
+ * codebase has to know any of that.
  */
 export async function currentUserId(ctx: QueryCtx | MutationCtx): Promise<string | null> {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) return null;
 
-  // A Supabase token: issuer ends in /auth/v1 and the subject is the UUID.
-  if (identity.issuer.includes("/auth/v1")) return identity.subject;
-
-  // A Convex Auth token: subject is "<userId>|<sessionId>".
   const userId = identity.subject.split("|")[0];
   const user = await ctx.db.get(userId as Id<"users">).catch(() => null);
   const mapped = (user as { supabase_id?: string } | null)?.supabase_id;
   if (mapped) return mapped;
 
-  // No mapping: an account created on Convex Auth after the cutover, whose
-  // profile is keyed by the Convex user id instead. Both shapes are UUID-ish
-  // strings to everything downstream.
+  // No mapping row yet — a sign-up mid-flight, before the profile callback has
+  // written it back. The Convex user id is the right answer either way.
   return userId;
 }
 

@@ -1,16 +1,14 @@
 import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { ResetForm } from "@/components/auth/reset-form";
-import { convexServes } from "@/lib/backend";
 
 export const metadata: Metadata = { title: "Set a new password" };
 
 /* Reached from the emailed reset link.
  *
- * On Supabase that link goes through /auth/confirm, which exchanges it for a
- * session, so the form needs nothing but a new password. Convex Auth emails a
- * CODE instead and creates no session, so the address and the code ride in the
- * query string and are handed to the form. */
+ * Convex Auth emails a CODE and creates no session, so the address and the
+ * code ride in the query string and are handed to the form — there is nothing
+ * signed in here to say who is asking. */
 export default async function ResetPage({
   searchParams,
 }: {
@@ -20,7 +18,7 @@ export default async function ResetPage({
 
   return (
     <AuthCard title="Set a new password" blurb="Choose something you have not used here before.">
-      <ResetForm convexAuth={convexServes("auth")} email={email ?? ""} code={code ?? ""} />
+      <ResetForm email={email ?? ""} code={code ?? ""} />
     </AuthCard>
   );
 }

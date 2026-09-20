@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accountFrom } from "./site-account-live";
+import { accountFrom } from "@/lib/nav-account";
 import type { Profile } from "@/lib/types";
 
 /* ─────────────────────────────────────────────────────────────────────────────

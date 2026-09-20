@@ -3,9 +3,20 @@
 Updated 2026-09-20. Companion to `docs/convex-migration.md` (the plan) and
 `docs/decisions/auth-provider.md` (the auth call).
 
-**Supabase is still the system of record. Nothing has been removed, and the
-running app still reads and writes Postgres.** What exists now is a complete,
-deployed, data-loaded Convex backend running beside it.
+**Supabase is gone from the codebase.** Nothing imports `@supabase/*`, the
+packages are out of `package.json`, and the per-domain `CONVEX_BACKENDS` flag
+has been deleted along with them — with no second backend to fall back to, a
+switch whose off position does not work is not a switch. Convex is the
+database, the auth provider, file storage, the cron host, and where the Google
+Calendar tokens live and are used.
+
+The history below is kept as the record of how that happened, including the
+things that went wrong. Read the sections in order; the earlier ones describe
+states the project is no longer in.
+
+**Not yet deployed.** Everything above is true of this branch, not of
+production — see *Before deploying this branch*, which has a step that will
+break sign-up if it is skipped.
 
 ## Done
 
@@ -181,6 +192,89 @@ live backend, so whatever lands between the export and the cutover exists only
 in Postgres. Re-run `scripts/export-supabase.mjs` and re-import immediately
 before switching any domain that takes writes — `--replace` makes that safe to
 repeat.
+
+## Before deploying this branch
+
+Ordered. The first item is the one that breaks things.
+
+1. **Set `EMAIL_POSTAL_ADDRESS` on the production Convex deployment, first.**
+
+   ```
+   npx convex env set EMAIL_POSTAL_ADDRESS "…" --prod
+   ```
+
+   The verification and password-reset emails are rendered inside Convex now
+   (`convex/lib/emails.ts`), and they **throw** when it is unset rather than
+   send a footer with no postal address in it. That is deliberate — a footer
+   with the company name and no address is not a compliant footer, and quietly
+   substituting one is how the old Supabase template went out wrong for weeks —
+   but it means deploying this code to a deployment without the variable breaks
+   sign-up and password reset outright.
+
+   Safe to do before deploying: the code currently in production does not read
+   it.
+
+2. **Deploy Convex to production, BEFORE merging.**
+
+   ```
+   npx convex deploy          # with a production deploy key
+   ```
+
+   Vercel's build is `next build` and nothing else — **it does not deploy
+   Convex**. Merging therefore ships the Next.js app against whatever function
+   versions production already has, and these two are not compatible in that
+   direction:
+
+   - `whoami.identity` gained `emailVerified`, and `src/lib/data/session.ts`
+     now gates on it. Against an older deployment the field is `undefined`,
+     which is falsy, so **every signed-in user is redirected to `/verify`** —
+     a full lockout, and one that looks like an auth bug rather than a
+     deploy-ordering mistake.
+   - The two auth emails are rendered by functions that do not exist there yet.
+
+   Deploying Convex first is safe in the other direction: the app currently in
+   production does not read `emailVerified` and does not send those emails, and
+   the Supabase issuer being dropped from `auth.config.ts` costs nothing
+   because Convex Auth has issued every session since the cutover.
+
+3. **Merge.** Vercel deploys the app. If a Vercel environment variable changes
+   as part of this, redeploy after it — same rule as every cutover above: an
+   env change does not reach a deployment that already exists.
+
+4. **Remove the dead variables.** `SUPABASE_URL` on the production Convex
+   deployment (already removed from dev), and `CONVEX_BACKENDS` on Vercel —
+   nothing reads either. Harmless to leave, confusing to find later. The
+   repository also still has the **Supabase GitHub integration** attached —
+   it is what posts the "Supabase Preview" check, and it is a dashboard
+   setting rather than anything in this repo, which has no `.github/` at all.
+
+5. **Confirm what the privacy policy claims.** It now names Convex as the
+   subprocessor and says data is stored **in the United States**. That region
+   was not verified against the Convex dashboard — check it, because it is a
+   statement about international transfer in a published legal document.
+
+Still outstanding, unchanged by this branch: every Google Calendar grant is
+dead and needs reconnecting, and the OAuth consent screen's publishing status
+should be checked first — if it is still **Testing**, new refresh tokens expire
+after 7 days.
+
+## A gap found while stripping Supabase, 2026-09-20
+
+**Seventeen pages and components query Supabase directly**, bypassing
+`src/lib/data/*` entirely — the dashboard, the meetings list, the app shell's
+notification badge, the onboarding steps, the admin settings page, the public
+booking page and others. They were never routed through `convexServes`, so
+**no domain flag ever covered them**.
+
+That means those screens have been reading Postgres in production throughout,
+including after each domain was reported "cut over". The parity harness did
+not catch it because it compares the data-layer FUNCTIONS against Convex; it
+never rendered a page. A green harness and a green screen were not the same
+claim, and the difference went unnoticed.
+
+Nothing was lost: Supabase still holds the same rows, so those screens have
+been correct, just served from the wrong place. The work to fix it is real
+though — these are queries to port, not imports to delete.
 
 ## What deleting Supabase would actually take
 

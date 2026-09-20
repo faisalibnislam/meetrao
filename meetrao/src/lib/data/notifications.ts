@@ -1,7 +1,5 @@
 import "server-only";
 
-import { supabaseServer } from "@/lib/supabase/server";
-import { convexServes } from "@/lib/backend";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
@@ -69,35 +67,15 @@ function toView(rows: Row[]): NotificationView[] {
 }
 
 export async function listNotifications(userId: string): Promise<NotificationView[]> {
-  if (convexServes("notifications")) {
-    const convex = await convexServer();
-    const rows = await convex.query(api.notifications.listOwn, { limit: PAGE });
-    return toView(rows as Row[]);
-  }
-
-  const supabase = await supabaseServer();
-  const { data } = await supabase
-    .from("notifications")
-    .select("id, kind, title, body, booking_id, read_at, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(PAGE);
-
-  return toView((data ?? []) as Row[]);
+  void userId; // the query is scoped by the caller's own identity
+  const convex = await convexServer();
+  const rows = await convex.query(api.notifications.listOwn, { limit: PAGE });
+  return toView(rows as Row[]);
 }
 
 /** Just the badge. A count query, not a fetch-and-filter of the whole list. */
 export async function unreadNotifications(userId: string): Promise<number> {
-  if (convexServes("notifications")) {
-    const convex = await convexServer();
-    return await convex.query(api.notifications.unreadCount, {});
-  }
-
-  const supabase = await supabaseServer();
-  const { count } = await supabase
-    .from("notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .is("read_at", null);
-  return count ?? 0;
+  void userId;
+  const convex = await convexServer();
+  return await convex.query(api.notifications.unreadCount, {});
 }

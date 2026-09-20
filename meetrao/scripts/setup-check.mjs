@@ -10,9 +10,8 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 
 const REQUIRED = [
-  ["NEXT_PUBLIC_SUPABASE_URL", "Supabase → Project Settings → API → Project URL"],
-  ["NEXT_PUBLIC_SUPABASE_ANON_KEY", "Supabase → Project Settings → API → anon / publishable key"],
-  ["SUPABASE_SERVICE_ROLE_KEY", "Supabase → Project Settings → API → service_role (server only)"],
+  ["NEXT_PUBLIC_CONVEX_URL", "Convex dashboard → Settings → Deployment URL (npx convex dev writes it)"],
+  ["CONVEX_DEPLOYMENT", "written by npx convex dev; names which deployment this checkout talks to"],
   ["GOOGLE_CLIENT_ID", "Google Cloud → Credentials → OAuth 2.0 Client ID (Web application)"],
   ["GOOGLE_CLIENT_SECRET", "Google Cloud → Credentials → the same client's secret"],
   ["RESEND_API_KEY", "Resend → API Keys"],
@@ -22,7 +21,7 @@ const REQUIRED = [
 const OPTIONAL = [
   ["EMAIL_FROM", 'defaults to "Meetrao <hello@meetrao.com>"'],
   ["EMAIL_POSTAL_ADDRESS", "shown in every email footer; defaults to the real address, so unset is compliant"],
-  ["ANALYTICS_SALT", "salts the daily visitor hash; unset, it is derived from the service-role key"],
+  ["ANALYTICS_SALT", "salts the daily visitor hash; set it on the CONVEX deployment, not here"],
   ["NEXT_PUBLIC_GA_MEASUREMENT_ID", 'Google Analytics 4 ID ("G-…"); unset, GA and its consent banner never load'],
 ];
 
@@ -59,4 +58,10 @@ console.log("\nEnvironment complete.");
 console.log(
   "Reminder: until Resend's DKIM record verifies, Resend delivers only to the\n" +
     "account owner's own address — which is indistinguishable from working code.",
+);
+console.log(
+  "\nSome secrets live on the CONVEX deployment rather than here, because the\n" +
+    "code that uses them runs there: GOOGLE_CLIENT_ID/SECRET, AUTH_RESEND_KEY,\n" +
+    "JWT_PRIVATE_KEY, JWKS, SITE_URL, ANALYTICS_INGEST_SECRET. List them with\n" +
+    "`npx convex env list` — this script cannot see them.",
 );

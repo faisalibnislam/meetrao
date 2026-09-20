@@ -101,14 +101,17 @@ describe("the admin's field obeys the host's own rules", () => {
     expect(usernameStatus("a".repeat(31))).toBe("long");
   });
 
-  /* `checkUsername` in the onboarding actions passes the CALLER's id to
-     username_available. Used here it would be wrong in both directions: it
-     reports the target's own current name as taken, and reports the admin's
-     own name as free — offering to move a host onto a link that is not
-     available at all. */
+  /* `checkUsername` in the onboarding actions passes the CALLER's id when
+     asking whether a name is free. Used here it would be wrong in both
+     directions: it reports the target's own current name as taken, and
+     reports the admin's own name as free — offering to move a host onto a
+     link that is not available at all.
+
+     The parameter changed name with the backend (`p_for_user` → `forUser`);
+     the property it guards did not. */
   it("checks availability against the account being edited, not the admin", () => {
     expect(ACTION).not.toContain("actions/onboarding");
-    expect(ACTION).toMatch(/p_for_user: userId/);
+    expect(ACTION).toMatch(/forUser: userId/);
   });
 });
 

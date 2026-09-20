@@ -1,11 +1,8 @@
 import { cookies } from "next/headers";
-import { convexServes } from "@/lib/backend";
+import { NextResponse, type NextRequest } from "next/server";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
-import { NextResponse, type NextRequest } from "next/server";
-import { saveConnection } from "@/lib/google/connection";
-import { exchangeCode, fetchAccountEmail, hasCalendarWrite , redirectUri} from "@/lib/google/oauth";
-import { supabaseServer } from "@/lib/supabase/server";
+import { redirectUri } from "@/lib/google/oauth";
 
 /**
  * Where Google returns after the calendar consent screen.
@@ -33,43 +30,19 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   if (!code) return back("denied");
 
-  const supabase = await supabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return NextResponse.redirect(new URL("/login", origin));
+  const convex = await convexServer();
+  const who = await convex.query(api.whoami.identity, {});
+  if (!who.authenticated) return NextResponse.redirect(new URL("/login", origin));
 
-  if (convexServes("google")) {
-    /* The code is exchanged INSIDE Convex, so the refresh token is created and
-       stored without ever passing through this process. The code is
-       single-use, arrives via our own registered redirect URI, and the caller
-       is signed in — so the tokens can only attach to their own account. */
-    const c = await convexServer();
-    const r = await c.action(api.google.completeConnect, { code, redirectUri: redirectUri() });
-    if (!r.ok) return back(r.reason === "missing-scope" ? "scope" : "failed");
-    return back();
-  }
+  /* The code is exchanged INSIDE Convex, so the refresh token is created and
+     stored without ever passing through this process. The code is single-use,
+     arrives via our own registered redirect URI, and the caller is signed in —
+     so the tokens can only attach to their own account.
 
-  try {
-    const tokens = await exchangeCode(code);
-
-    // Google lets a user tick only some of the boxes. Without the write scope
-    // the guest cannot be invited, which is the whole point of connecting.
-    if (!hasCalendarWrite(tokens.scopes)) return back("scope");
-
-    const accountEmail = await fetchAccountEmail(tokens.accessToken);
-
-    await saveConnection({
-      userId: user.id,
-      accessToken: tokens.accessToken,
-      refreshToken: tokens.refreshToken,
-      expiresAt: tokens.expiresAt,
-      scopes: tokens.scopes,
-      accountEmail,
-    });
-
-    return back();
-  } catch {
-    return back("failed");
-  }
+     `missing-scope` is its own answer because Google lets a user tick only
+     some of the boxes, and without the write scope the guest cannot be
+     invited, which is the whole point of connecting. */
+  const r = await convex.action(api.google.completeConnect, { code, redirectUri: redirectUri() });
+  if (!r.ok) return back(r.reason === "missing-scope" ? "scope" : "failed");
+  return back();
 }

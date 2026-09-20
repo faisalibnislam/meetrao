@@ -1,35 +1,32 @@
 import "server-only";
 
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 /**
  * Seeds the design's default week the first time onboarding step 4 is opened,
  * so the host edits a sensible schedule rather than an empty one.
  *
- * Runs through the service role deliberately. `seed_default_availability` is
- * SECURITY DEFINER and takes the user id as an argument, so granting EXECUTE to
- * `authenticated` would let any signed-in user seed any other user's
- * availability. It is granted to service_role only — which meant the previous
- * caller, using the host's own session, was rejected by PostgREST every time.
- * The result was ignored, so step 4 silently showed an empty week instead of
- * the seeded one.
+ * Idempotent: the mutation returns early when the host already has a schedule,
+ * so calling this on every visit to step 4 is safe.
  *
- * The SQL is itself a no-op when rules already exist, so calling this on every
- * visit to step 4 is safe and idempotent.
+ * Scoped to the caller's own account, which is a quiet improvement on what it
+ * replaced. `seed_default_availability` was SECURITY DEFINER and took the user
+ * id as an argument, so it could only be granted to the service role — and the
+ * previous caller used the host's own session, was rejected by PostgREST every
+ * time, ignored the result, and silently showed an empty week. There is no
+ * user id to pass here, so that class of mistake cannot recur.
  *
  * Returns whether the seed ran cleanly. Never throws: an empty week is a poor
  * step 4, but it is not a reason to fail the page.
  */
 export async function ensureDefaultAvailability(userId: string): Promise<boolean> {
   try {
-    const { error } = await supabaseAdmin().rpc("seed_default_availability", { p_user_id: userId });
-    if (error) {
-      console.error("seed_default_availability failed", { userId, error: error.message });
-      return false;
-    }
+    const convex = await convexServer();
+    await convex.mutation(api.availability.seed, {});
     return true;
   } catch (cause) {
-    console.error("seed_default_availability threw", {
+    console.error("seeding default availability failed", {
       userId,
       error: cause instanceof Error ? cause.message : String(cause),
     });

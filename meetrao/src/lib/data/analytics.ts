@@ -1,7 +1,5 @@
 import "server-only";
 
-import { supabaseServer } from "@/lib/supabase/server";
-import { convexServes } from "@/lib/backend";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
@@ -65,43 +63,19 @@ type Raw = {
 };
 
 async function raw(range: Range): Promise<Raw> {
-  if (convexServes("analytics")) {
-    const convex = await convexServer();
-    const days = { days: range };
-    const [head, daily, countries, pages, referrers, devices, browsers, systems] = await Promise.all([
-      convex.query(api.analytics.overview, days),
-      convex.query(api.analytics.daily, days),
-      convex.query(api.analytics.top, { dimension: "country", ...days, limit: 8 }),
-      convex.query(api.analytics.top, { dimension: "path", ...days, limit: 8 }),
-      convex.query(api.analytics.top, { dimension: "referrer", ...days, limit: 6 }),
-      convex.query(api.analytics.top, { dimension: "device", ...days, limit: 4 }),
-      convex.query(api.analytics.top, { dimension: "browser", ...days, limit: 6 }),
-      convex.query(api.analytics.top, { dimension: "os", ...days, limit: 6 }),
-    ]);
-    return { head, daily, countries, pages, referrers, devices, browsers, systems };
-  }
-
-  const supabase = await supabaseServer();
-  const days = { p_days: range };
-  const [overview, daily, countries, pages, referrers, devices, browsers, systems] = await Promise.all([
-    supabase.rpc("analytics_overview", days),
-    supabase.rpc("analytics_daily", days),
-    supabase.rpc("analytics_top", { p_dimension: "country", ...days, p_limit: 8 }),
-    supabase.rpc("analytics_top", { p_dimension: "path", ...days, p_limit: 8 }),
-    supabase.rpc("analytics_top", { p_dimension: "referrer", ...days, p_limit: 6 }),
-    supabase.rpc("analytics_top", { p_dimension: "device", ...days, p_limit: 4 }),
-    supabase.rpc("analytics_top", { p_dimension: "browser", ...days, p_limit: 6 }),
-    supabase.rpc("analytics_top", { p_dimension: "os", ...days, p_limit: 6 }),
+  const convex = await convexServer();
+  const days = { days: range };
+  const [head, daily, countries, pages, referrers, devices, browsers, systems] = await Promise.all([
+    convex.query(api.analytics.overview, days),
+    convex.query(api.analytics.daily, days),
+    convex.query(api.analytics.top, { dimension: "country", ...days, limit: 8 }),
+    convex.query(api.analytics.top, { dimension: "path", ...days, limit: 8 }),
+    convex.query(api.analytics.top, { dimension: "referrer", ...days, limit: 6 }),
+    convex.query(api.analytics.top, { dimension: "device", ...days, limit: 4 }),
+    convex.query(api.analytics.top, { dimension: "browser", ...days, limit: 6 }),
+    convex.query(api.analytics.top, { dimension: "os", ...days, limit: 6 }),
   ]);
-
-  /* analytics_overview returns one row; PostgREST hands back an array for a
-     set-returning function even when it is always a single row. */
-  return {
-    head: (Array.isArray(overview.data) ? overview.data[0] : overview.data) as Head | null,
-    daily: (daily.data ?? []) as { day: string; visits: number; visitors: number }[],
-    countries: countries.data, pages: pages.data, referrers: referrers.data,
-    devices: devices.data, browsers: browsers.data, systems: systems.data,
-  };
+  return { head, daily, countries, pages, referrers, devices, browsers, systems };
 }
 
 export async function siteAnalytics(range: Range): Promise<SiteAnalytics> {

@@ -35,14 +35,13 @@ function optional(fallback: string) {
 }
 
 const serverSchema = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(20),
-  /** Server only. Reaches past RLS — never expose it to the browser. */
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(20),
+  /** The deployment every query, mutation and action goes to. */
+  NEXT_PUBLIC_CONVEX_URL: z.string().url(),
 
-  /* Calendar access is ours to handle. Sign-in with Google is Supabase Auth's,
-     and its callback lives in the Supabase dashboard — two separate concerns
-     that share one Google Cloud project. */
+  /* Calendar access is ours to handle. Sign-in with Google is Convex Auth's,
+     and its callback is on the Convex deployment's own origin — two separate
+     concerns that share one Google Cloud project, and one OAuth client that
+     must list BOTH redirect URIs. */
   GOOGLE_CLIENT_ID: z.string().min(10),
   GOOGLE_CLIENT_SECRET: z.string().min(10),
 
@@ -126,28 +125,16 @@ export function env(): Env {
   return cached;
 }
 
-/** The browser only ever needs these two. */
-export function publicEnv() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) {
-    throw new Error(
-      "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY must be set.",
-    );
-  }
-  return { url, key };
-}
-
 /**
  * The origin this deployment is reachable at. Every OAuth redirect URI and
  * every link inside an email is built from it, so it has to be an address that
  * actually serves this app — and one that can be registered ahead of time in
- * Supabase's redirect allow-list and Google's authorised URIs.
+ * Google's authorised redirect URIs.
  *
  * `VERCEL_URL` is the per-deployment host (meetrao-a1b2c3-….vercel.app). It
- * changes on every push, so it can never be allow-listed, and Supabase silently
- * falls back to its own Site URL when a redirect is not on the list. That is
- * how sign-in ended up on a domain with no deployment behind it.
+ * changes on every push, so it can never be allow-listed, and an unrecognised
+ * redirect URI fails as redirect_uri_mismatch rather than as anything
+ * readable.
  * `VERCEL_PROJECT_PRODUCTION_URL` is the stable production host, so it is
  * preferred; the per-deployment host is a last resort before localhost.
  *

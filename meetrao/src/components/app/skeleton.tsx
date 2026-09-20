@@ -6,7 +6,7 @@ import { cx } from "@/lib/cx";
    Every app route is dynamic, and Next skips prefetching dynamic routes that
    have no loading boundary — so before these existed a tab click did nothing
    visible at all until the whole server response landed. Measured against a
-   stand-in Supabase at 100ms a hop: 445ms of a completely unchanged screen.
+   stand-in backend at 100ms a hop: 445ms of a completely unchanged screen.
    With a boundary, the first paint lands in single-digit milliseconds.
 
    Two rules these follow, both about not making the cure worse than the disease:

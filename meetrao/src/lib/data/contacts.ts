@@ -1,7 +1,5 @@
 import "server-only";
 
-import { supabaseServer } from "@/lib/supabase/server";
-import { convexServes } from "@/lib/backend";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Contact } from "@/lib/types";
@@ -34,31 +32,16 @@ export type ContactView = {
 type BookingRow = { id: string; guest_email: string; starts_at: string; status: string };
 type InviteeRow = { email: string; booking_id: string };
 
-async function sources(userId: string): Promise<{ contactRows: Contact[]; bookingRows: BookingRow[]; inviteeRows: InviteeRow[] }> {
-  if (convexServes("contacts")) {
-    const convex = await convexServer();
-    const r = await convex.query(api.contacts.listForScreen, {});
-    return {
-      contactRows: r.contacts as Contact[],
-      bookingRows: r.bookings as BookingRow[],
-      inviteeRows: r.invitees as InviteeRow[],
-    };
-  }
-
-  const supabase = await supabaseServer();
-  const [{ data: contactRows }, { data: bookingRows }, { data: inviteeRows }] = await Promise.all([
-    // .order("id") is the tie-break: these rows can share created_at to the
-    // millisecond, and without it the screen's order is up to the storage
-    // engine. See the note in convex/contacts.ts.
-    supabase.from("contacts").select("*").eq("user_id", userId).order("created_at", { ascending: false }).order("id"),
-    supabase.from("bookings").select("id, guest_email, starts_at, status").eq("host_id", userId),
-    // Unfiltered on purpose: RLS scopes this to the caller's own bookings.
-    supabase.from("booking_invitees").select("email, booking_id"),
-  ]);
+async function sources(
+  userId: string,
+): Promise<{ contactRows: Contact[]; bookingRows: BookingRow[]; inviteeRows: InviteeRow[] }> {
+  void userId; // every read below is scoped by the caller's own identity
+  const convex = await convexServer();
+  const r = await convex.query(api.contacts.listForScreen, {});
   return {
-    contactRows: (contactRows ?? []) as Contact[],
-    bookingRows: (bookingRows ?? []) as BookingRow[],
-    inviteeRows: (inviteeRows ?? []) as InviteeRow[],
+    contactRows: r.contacts as Contact[],
+    bookingRows: r.bookings as BookingRow[],
+    inviteeRows: r.invitees as InviteeRow[],
   };
 }
 

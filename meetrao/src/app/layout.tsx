@@ -5,11 +5,19 @@ import { AnalyticsBeacon } from "@/components/analytics/beacon";
 import { AnalyticsConsent } from "@/components/analytics/consent";
 import { JsonLd } from "@/components/seo/json-ld";
 import { ToastProvider } from "@/components/ui/toast";
-import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
-import { ConvexClientProvider } from "@/lib/convex/provider";
-import { convexServes } from "@/lib/backend";
 import { siteUrl } from "@/lib/env";
-import { DESCRIPTION, KEYWORDS, OG_IMAGE, SITE_NAME, TITLE, TITLE_TEMPLATE, graph, organizationLd, softwareApplicationLd, webSiteLd } from "@/lib/seo";
+import {
+  DESCRIPTION,
+  KEYWORDS,
+  OG_IMAGE,
+  SITE_NAME,
+  TITLE,
+  TITLE_TEMPLATE,
+  graph,
+  organizationLd,
+  softwareApplicationLd,
+  webSiteLd,
+} from "@/lib/seo";
 import "./globals.css";
 
 /* Two families, strictly divided by role.
@@ -105,17 +113,15 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const convexAuth = convexServes("auth");
-  const tree = (
+  /* NO CONVEX AUTH PROVIDER HERE, deliberately. It is an async Server
+     Component that reads the session cookie, so everything beneath it renders
+     dynamically — at the root that was all six marketing pages, including the
+     landing page. It lives in src/app/(auth)/layout.tsx instead, which is the
+     only subtree with components that need it. */
+  return (
     <html lang="en" className={`${sans.variable} ${serif.variable}`}>
       <body>
-        {/* Renders nothing of its own while Convex Auth is off — see the
-            note in lib/convex/provider.tsx. The decision is made here, on the
-            server, so the browser cannot disagree with the backend about who
-            issues sessions. */}
-        <ConvexClientProvider convexAuth={convexAuth}>
-          <ToastProvider>{children}</ToastProvider>
-        </ConvexClientProvider>
+        <ToastProvider>{children}</ToastProvider>
         {/* Both are client components that render no markup of their own (the
             consent banner only once someone has to be asked), so neither opts
             a single page out of static rendering — which the marketing layout
@@ -141,13 +147,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-
-  /* Convex Auth needs BOTH halves: the server provider reads the cookie and
-     hands the state down, and the client provider makes `useAuthActions`
-     available to the forms. The client one alone throws — `useAuth()` comes
-     back undefined with nothing above it to supply the state.
-
-     Wrapped only when the domain is on, so the Supabase path renders exactly
-     the tree it always did. */
-  return convexAuth ? <ConvexAuthNextjsServerProvider>{tree}</ConvexAuthNextjsServerProvider> : tree;
 }

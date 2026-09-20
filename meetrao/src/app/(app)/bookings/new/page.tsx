@@ -3,21 +3,16 @@ import { AppScreen } from "@/components/app/app-screen";
 import { ScheduleForm } from "@/components/app/schedule-form";
 import { timeOptions } from "@/lib/booking/time";
 import { requireOnboardedSession } from "@/lib/data/session";
-import { supabaseServer } from "@/lib/supabase/server";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { timezoneLabel } from "@/lib/timezones";
 
 export const metadata: Metadata = { title: "Invite to Meet" };
 
 export default async function NewBookingPage() {
   const { profile } = await requireOnboardedSession();
-  const supabase = await supabaseServer();
-
-  const { data } = await supabase
-    .from("meeting_types")
-    .select("id, name, duration_minutes")
-    .eq("user_id", profile.id)
-    .eq("is_active", true)
-    .order("created_at");
+  const convex = await convexServer();
+  const data = await convex.query(api.meetingTypes.listOwn, { activeOnly: true });
 
   // "One-off" first, because a host reaching for this screen usually has
   // something in mind that is not one of their published types.

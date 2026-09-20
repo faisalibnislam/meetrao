@@ -6,7 +6,8 @@ import { SUPPORT_EMAIL } from "@/lib/contact";
 import { env } from "@/lib/env";
 import { escapeHtml } from "@/lib/email/send";
 import { optionalSession } from "@/lib/data/session";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexAnonymous } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 /* The contact form. Signed in, the identity comes from the account rather than
    from two fields the sender could get wrong. */
@@ -58,11 +59,8 @@ export async function sendSupportMessage(input: {
   if (!fromName.trim()) return { error: "Tell us who you are." };
   if (!fromEmail.includes("@")) return { error: "We need somewhere to reply." };
 
-  const { data: settings } = await supabaseAdmin()
-    .from("platform_settings")
-    .select("support_email")
-    .eq("id", true)
-    .maybeSingle();
+  // Read anonymously: the support form is reachable while signed out.
+  const settings = await convexAnonymous().query(api.platformSettings.get, {});
 
   const to = (settings?.support_email as string | undefined) || SUPPORT_EMAIL;
 

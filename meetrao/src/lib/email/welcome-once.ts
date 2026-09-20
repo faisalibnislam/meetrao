@@ -1,6 +1,7 @@
 import "server-only";
 
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { sendWelcome } from "./send";
 
 /**
@@ -23,16 +24,12 @@ import { sendWelcome } from "./send";
  * Never throws. Nothing here is worth blocking a sign-in for.
  */
 export async function sendWelcomeOnce(userId: string): Promise<void> {
+  void userId; // the claim is scoped by the caller's own identity
   try {
-    const { data } = await supabaseAdmin()
-      .from("profiles")
-      .update({ welcomed_at: new Date().toISOString() })
-      .eq("id", userId)
-      .is("welcomed_at", null)
-      .select("id, username, full_name, email")
-      .maybeSingle();
+    const convex = await convexServer();
+    const data = await convex.mutation(api.profiles.claimWelcome, {});
 
-    // No row: already welcomed, or the profile trigger has not run yet.
+    // Null: already welcomed, or the profile does not exist yet.
     if (!data?.email) return;
 
     await sendWelcome(data as Parameters<typeof sendWelcome>[0]);

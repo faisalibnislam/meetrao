@@ -51,11 +51,11 @@ const SHORT_VERSION = [
   "Delete your account and it goes immediately. There is no grace-period copy.",
 ];
 
-/* Every scope in CALENDAR_SCOPES (lib/google/oauth.ts), plus the three Supabase
-   requests for Sign in with Google. Named in full because Google's verification
-   review compares this table against the consent screen — a policy that says
-   "calendar access" where the grant says calendar.events is the single most
-   common reason a review comes back. */
+/* Every scope in CALENDAR_SCOPES (lib/google/oauth.ts), plus the three Convex
+   Auth requests for Sign in with Google. Named in full because Google's
+   verification review compares this table against the consent screen — a policy
+   that says "calendar access" where the grant says calendar.events is the
+   single most common reason a review comes back. */
 const SCOPES: [string, string, string][] = [
   [
     "calendar.freebusy",
@@ -98,8 +98,8 @@ const PURPOSES: [string, string][] = [
  */
 const GOOGLE_DATA_RECIPIENTS: [string, string][] = [
   [
-    "Supabase (database, Tokyo)",
-    "Stores the Google refresh and access tokens, the connected account's email address, and the calendar identifier. Also stores the booking records that produce calendar events. The only provider that holds Google user data at rest.",
+    "Convex (database and authentication)",
+    "Stores the Google refresh and access tokens, the connected account's email address, and the calendar identifier. Also stores the booking records that produce calendar events, and runs the code that calls Google — the tokens are used where they are stored and are never returned to the website. The only provider that holds Google user data at rest.",
   ],
   [
     "Vercel (hosting, functions in Tokyo)",
@@ -117,7 +117,7 @@ const GOOGLE_DATA_RECIPIENTS: [string, string][] = [
 
 const PROCESSORS: [string, string, string][] = [
   ["Vercel", "Hosting and content delivery", "United States"],
-  ["Supabase", "Database, authentication and file storage", "Asia Pacific (Tokyo)"],
+  ["Convex", "Database, authentication and file storage", "United States"],
   ["Google", "Calendar, Meet, Sign in with Google, and Google Analytics", "United States"],
   ["Resend", "Transactional email delivery", "United States"],
 ];
@@ -342,11 +342,11 @@ export default function PrivacyPage() {
             <strong>Encrypted at rest.</strong> Our database provider encrypts stored data at rest with AES-256.
           </li>
           <li>
-            <strong>Tokens are unreachable from any browser.</strong> Google refresh and access tokens live in a
-            table with row-level security enabled and <em>no policy granting access to anyone</em>. No signed-in
-            session, and no request carrying the public key that ships to browsers, can read a row. Only
-            server-side code holding a secret key — one that is never sent to a browser — can, and that key is
-            stored as an encrypted environment variable at our host.
+            <strong>Tokens are unreachable from any browser, and from our own website.</strong> Google refresh
+            and access tokens are readable only by <em>internal</em> database functions, which no client can
+            call at all — not a signed-in session, not our website, not a request carrying any key we publish.
+            Nothing anywhere returns a token. The code that talks to Google runs inside the database alongside
+            the tokens, so the credential is used where it is stored and never travels.
           </li>
           <li>
             <strong>The least data we can hold.</strong> Busy and free intervals are fetched when a booking page
@@ -451,10 +451,10 @@ export default function PrivacyPage() {
 
         <h2 id="p-where">8. Where it is stored</h2>
         <p>
-          Meetrao is operated from Bangladesh. Your account data and bookings are stored in Supabase&rsquo;s
-          Asia&nbsp;Pacific (Tokyo) region. The website is served by Vercel&rsquo;s global network, and email,
-          calendar and analytics are handled by providers in the United States. Your data will therefore be
-          transferred and stored outside your own country.
+          Meetrao is operated from Bangladesh. Your account data and bookings are stored by Convex in the
+          United States. The website is served by Vercel&rsquo;s global network, and email, calendar and
+          analytics are handled by providers in the United States. Your data will therefore be transferred and
+          stored outside your own country.
         </p>
         <p>
           Where we move personal data out of the EU or UK, we rely on the European Commission&rsquo;s Standard
@@ -508,10 +508,12 @@ export default function PrivacyPage() {
         <h2 id="p-security">11. Security</h2>
         <p>
           Traffic is encrypted in transit with TLS, and our database provider encrypts its storage at rest.
-          Passwords are hashed and never stored readably. Google tokens live in a table that no browser session
-          can read: it has row-level security enabled and no policy granting access, so it is reachable only by
-          the server, with a key that is never sent to a browser. Email addresses have to be confirmed before an
-          account works, which keeps someone from signing up as you.
+          Passwords are hashed and never stored readably. Google tokens are readable only by
+          internal database functions that no client can call, and nothing returns one — the code that uses them runs
+          inside the database beside them. Every request is authorised against the signed-in account before it
+          reads a single row, so one person&rsquo;s bookings are not reachable from another&rsquo;s session.
+          Email addresses have to be confirmed before an account works, which keeps someone from signing up as
+          you.
         </p>
         <p>
           Access to production data is limited to the one person who operates Meetrao, and is used to fix faults,

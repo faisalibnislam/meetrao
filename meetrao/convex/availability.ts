@@ -271,3 +271,39 @@ export const saveWeek = mutation({
     return a.rules.length;
   },
 });
+
+/**
+ * Everything the availability screen needs, in one round trip: the host's
+ * schedules, EVERY rule across them, and which meeting points at which
+ * schedule.
+ *
+ * `listRules` answers for one schedule; this screen draws them all side by
+ * side, so asking per schedule would be a query per row.
+ */
+export const screen = query({
+  args: {},
+  handler: async (ctx) => {
+    const me = await requireProfile(ctx);
+
+    const schedules = await ctx.db
+      .query("availability_schedules").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
+    schedules.sort((a, b) => Number(b.is_default) - Number(a.is_default) || a.created_at - b.created_at);
+
+    const rules = await ctx.db
+      .query("availability_rules").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
+
+    const meetings = await ctx.db
+      .query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
+    meetings.sort((a, b) => a.created_at - b.created_at);
+
+    return {
+      schedules: schedules.map((s) => ({
+        id: s.id, name: s.name, is_default: s.is_default, created_at: new Date(s.created_at).toISOString(),
+      })),
+      rules: rules.map((r) => ({
+        schedule_id: r.schedule_id, weekday: r.weekday, start_minute: r.start_minute, end_minute: r.end_minute,
+      })),
+      meetings: meetings.map((m) => ({ name: m.name, schedule_id: m.schedule_id })),
+    };
+  },
+});

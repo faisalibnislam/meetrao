@@ -1,16 +1,21 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
-import { convexServes } from "@/lib/backend";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Proxy (Middleware, renamed in Next.js 16).
 
-   Two jobs: refresh the Supabase session cookie on every request, and make the
-   obvious redirects immediately rather than after a render.
+   Two jobs: keep the Convex Auth session cookie fresh, and make the obvious
+   redirects immediately rather than after a render.
 
    This is an optimistic check, not the boundary. Every authenticated layout,
    server action and route handler re-checks the session and the verification
    gate for itself — a proxy-only gate is a convenience.
+
+   ONE THING IT DELIBERATELY DOES NOT DO: the verification gate. Convex Auth
+   does not put verification state in the token, so this file cannot see it,
+   and guessing would either let unverified users through or trap verified
+   ones. That gate lives entirely in src/lib/data/session.ts, which reads the
+   profile anyway — and that was always the real boundary. The cost is one
+   extra redirect for an unverified user, on a path they take once.
    ───────────────────────────────────────────────────────────────────────────── */
 
 /** Signed-in-only areas. Everything else is public or handles its own gate. */
@@ -22,16 +27,14 @@ const AUTH_PAGES = ["/login", "/signup", "/forgot"];
 /**
  * An OAuth code that landed on the site root instead of `/auth/callback`.
  *
- * Supabase only honours a `redirectTo` that matches its redirect allow-list.
- * When it does not match, Supabase does not fail — it quietly substitutes the
- * project's Site URL, which is a bare origin with no path. The browser then
- * arrives at `/` carrying `?code=…`, the landing page renders, the code is
- * never exchanged, and sign-in appears to do nothing at all.
+ * A provider that cannot match its configured redirect may fall back to the
+ * bare site origin with no path. The browser then arrives at `/` carrying
+ * `?code=…`, the landing page renders, the code is never exchanged, and
+ * sign-in appears to do nothing at all.
  *
- * The real fix is the allow-list, and it is written up in README.md. This
- * forwards the code to the route that knows what to do with it, so a
- * misconfigured allow-list degrades to a working sign-in rather than a silent
- * dead end.
+ * The real fix is always the provider's allow-list. This forwards the code to
+ * the route that knows what to do with it, so a misconfigured one degrades to
+ * a working sign-in rather than a silent dead end.
  *
  * Deliberately narrow: only the site root, and only when nothing else claims
  * the parameter. `/api/google/callback` carries its own `code` for Calendar
@@ -50,21 +53,6 @@ function strandedAuthCode(request: NextRequest): URL | null {
   return to;
 }
 
-/**
- * The Convex Auth half.
- *
- * Same job as the Supabase path below — refresh the session and make the
- * obvious redirects early — but Convex Auth owns the cookie, so the refresh is
- * its middleware's concern rather than ours.
- *
- * ONE DELIBERATE DIFFERENCE. The Supabase path reads `email_confirmed_at` and
- * sends an unverified user to `/verify`. Convex Auth does not put verification
- * state in the token, so this proxy cannot see it, and guessing would either
- * let unverified users through or trap verified ones. The gate therefore lives
- * entirely in `src/lib/data/session.ts`, which reads the profile anyway — and
- * that was always the real boundary; the proxy check was a convenience. The
- * cost is one extra redirect for an unverified user, on a path they take once.
- */
 /* Built on first use, not at module load. The import pulls in Next's
    middleware machinery, which is not resolvable outside a Next build, so a
    static one breaks the unit tests that import this file. */
@@ -93,77 +81,13 @@ async function convexProxyOnce() {
 }
 
 /* `event` is optional so the existing tests can call proxy(request) alone;
-   Next always supplies it in production, and only the Convex path needs it. */
+   Next always supplies it in production, and the Convex middleware needs it. */
 export async function proxy(request: NextRequest, event?: NextFetchEvent): Promise<NextResponse> {
   const stranded = strandedAuthCode(request);
   if (stranded) return NextResponse.redirect(stranded);
 
-  if (convexServes("auth")) {
-    const handled = await (await convexProxyOnce())(request, event as NextFetchEvent);
-    return (handled as NextResponse | undefined) ?? NextResponse.next({ request });
-  }
-
-  let response = NextResponse.next({ request });
-
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return response;
-
-  const supabase = createServerClient(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
-      },
-      setAll(list) {
-        for (const { name, value } of list) request.cookies.set(name, value);
-        response = NextResponse.next({ request });
-        for (const { name, value, options } of list) response.cookies.set(name, value, options);
-      },
-    },
-  });
-
-  // getUser(), not getSession(): this revalidates the token with Supabase
-  // rather than trusting a cookie the browser could have written.
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
-  const isPrivate = PRIVATE_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
-
-  if (!user && isPrivate) {
-    const to = request.nextUrl.clone();
-    to.pathname = "/login";
-    to.searchParams.set("next", path);
-    return NextResponse.redirect(to);
-  }
-
-  if (user) {
-    // Google sign-up arrives verified and skips the gate. An email sign-up
-    // that has not confirmed cannot reach any product screen.
-    const verified = Boolean(user.email_confirmed_at ?? user.confirmed_at);
-
-    if (!verified && isPrivate) {
-      const to = request.nextUrl.clone();
-      to.pathname = "/verify";
-      return NextResponse.redirect(to);
-    }
-
-    if (AUTH_PAGES.includes(path)) {
-      const to = request.nextUrl.clone();
-      to.pathname = verified ? "/dashboard" : "/verify";
-      to.search = "";
-      return NextResponse.redirect(to);
-    }
-
-    if (path === "/verify" && verified) {
-      const to = request.nextUrl.clone();
-      to.pathname = "/onboarding/1";
-      return NextResponse.redirect(to);
-    }
-  }
-
-  return response;
+  const handled = await (await convexProxyOnce())(request, event as NextFetchEvent);
+  return (handled as NextResponse | undefined) ?? NextResponse.next({ request });
 }
 
 export const config = {

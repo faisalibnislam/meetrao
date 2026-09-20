@@ -1,39 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Field, Help, Input } from "@/components/ui/controls";
 import { Callout } from "@/components/ui/panels";
-import { updatePassword, type AuthResult } from "@/lib/actions/auth";
 
 /**
  * Setting a new password after a reset.
  *
- * The two backends hand the person here differently, and it shows in the
- * markup:
- *
- *   · Supabase emails a link that signs them in, so the form only needs a new
- *     password — the session says who they are.
- *   · Convex Auth emails a CODE and no session, so the code and the address
- *     have to travel with the new password. The reset link carries both in
- *     the query string; the fields below are the fallback for someone who
- *     typed the address by hand or lost the link's parameters.
+ * Convex Auth emails a CODE and no session, so the code and the address have
+ * to travel with the new password — there is nothing signed in to say who is
+ * asking. The reset link carries both in the query string; the fields below
+ * are the fallback for someone who typed the address by hand or lost the
+ * link's parameters.
  */
-/* Two components for the same reason as auth-form.tsx: `useAuthActions` may
-   only be called where the provider is mounted, and hooks cannot be
-   conditional. */
-export function ResetForm(props: { convexAuth?: boolean; email?: string; code?: string }) {
-  return props.convexAuth ? <ConvexResetForm {...props} /> : <SupabaseResetForm />;
-}
-
-function SupabaseResetForm() {
-  const [state, formAction, pending] = useActionState<AuthResult, FormData>(updatePassword, {});
-  return <Fields action={formAction} busy={pending} error={state.error} showLinkFields={false} />;
-}
-
-function ConvexResetForm({
+export function ResetForm({
   email: emailFromLink = "",
   code: codeFromLink = "",
 }: {
@@ -83,7 +66,6 @@ function ConvexResetForm({
   );
 }
 
-/** The markup, shared so the two paths cannot drift visually. */
 function Fields({
   action,
   busy,

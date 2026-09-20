@@ -57,7 +57,7 @@ describe("the Google user data disclosures", () => {
 
   it("names every recipient, and says what each one gets", () => {
     const block = PAGE.slice(PAGE.indexOf("GOOGLE_DATA_RECIPIENTS"), PAGE.indexOf("const PROCESSORS"));
-    for (const name of ["Supabase", "Vercel", "Resend", "Google"]) {
+    for (const name of ["Convex", "Vercel", "Resend", "Google"]) {
       expect(block, `${name} is not named as a recipient`).toContain(name);
     }
     // A name with no explanation beside it is not a disclosure.
@@ -82,7 +82,12 @@ describe("the Google user data disclosures", () => {
   });
 
   it("lists concrete protection mechanisms, not adjectives", () => {
-    for (const mechanism of ["Encrypted in transit", "Encrypted at rest", "row-level security", "two-factor"]) {
+    /* "row-level security" was here until the move off Postgres. The claim it
+       stood for — a token no browser session can read — is now made by
+       function-level authorization instead, so the phrase to pin is the one
+       that is still true. Pinning the old one would have kept a false
+       sentence in a legal document green. */
+    for (const mechanism of ["Encrypted in transit", "Encrypted at rest", "internal database functions", "two-factor"]) {
       expect(PAGE, `${mechanism} is no longer stated`).toContain(mechanism);
     }
   });

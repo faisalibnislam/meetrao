@@ -11,7 +11,8 @@ import {
   getPublicHost,
   getPublicMeetings,
 } from "@/lib/data/public-booking";
-import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexAnonymous } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 export const dynamic = "force-dynamic";
 
@@ -120,13 +121,10 @@ export default async function BookingPage({
     : [];
 
   // Records that the page was opened, which is what "Avg. reply time" measures.
-  const { data: pageViewId } = await supabaseAdmin().rpc(
-    "record_booking_page_view",
-    {
-      p_host_id: host.id,
-      p_meeting_type_id: meeting.id,
-    },
-  );
+  const pageViewId = await convexAnonymous().mutation(api.publicBooking.recordPageView, {
+    hostId: host.id,
+    meetingTypeId: meeting.id,
+  });
 
   return (
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">

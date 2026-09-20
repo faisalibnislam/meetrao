@@ -294,3 +294,52 @@ export const cancelByReference = mutation({
     return { booking: bookingOut(after), was_open: true };
   },
 });
+
+/**
+ * Just enough of the host to address a cancellation email.
+ *
+ * Scoped by the booking's reference — the guest's own credential — and it
+ * returns ONLY the fields the mail template needs. The host's email is in
+ * that list because the mail is addressed to them; nothing else about the
+ * account comes back.
+ */
+export const hostForCancellationMail = query({
+  args: { reference: v.string() },
+  handler: async (ctx, a) => {
+    const b = await ctx.db
+      .query("bookings").withIndex("by_reference", (q) => q.eq("reference", a.reference.trim())).unique();
+    if (!b || b.status !== "cancelled") return null;
+    const p = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", b.host_id)).unique();
+    if (!p) return null;
+    return {
+      full_name: p.full_name,
+      username: p.username,
+      email: p.email,
+      timezone: p.timezone,
+      notify_booking_cancelled: p.notify_booking_cancelled,
+    };
+  },
+});
+
+/**
+ * Just enough of the host to address a new-booking email.
+ *
+ * Same shape and same reasoning as `hostForCancellationMail`: scoped by the
+ * booking's reference, and only the fields the template needs.
+ */
+export const hostForBookingMail = query({
+  args: { reference: v.string() },
+  handler: async (ctx, a) => {
+    const b = await ctx.db
+      .query("bookings").withIndex("by_reference", (q) => q.eq("reference", a.reference.trim())).unique();
+    if (!b) return null;
+    const p = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", b.host_id)).unique();
+    if (!p) return null;
+    return {
+      full_name: p.full_name,
+      username: p.username,
+      email: p.email,
+      notify_new_booking: p.notify_new_booking,
+    };
+  },
+});

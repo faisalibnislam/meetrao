@@ -2,11 +2,13 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { VerifyActions } from "@/components/auth/verify-actions";
+import { VerifyLink } from "@/components/auth/verify-link";
 import { Eyebrow } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Logo } from "@/components/ui/logo";
 import { Callout } from "@/components/ui/panels";
-import { supabaseServer } from "@/lib/supabase/server";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 export const metadata: Metadata = { title: "Confirm your email" };
 
@@ -16,18 +18,23 @@ export const metadata: Metadata = { title: "Confirm your email" };
 export default async function VerifyPage({
   searchParams,
 }: {
-  searchParams: Promise<{ email?: string; expired?: string; unverified?: string }>;
+  searchParams: Promise<{ email?: string; code?: string; expired?: string; unverified?: string }>;
 }) {
-  const { email, expired, unverified } = await searchParams;
+  const { email, code, unverified } = await searchParams;
+  let { expired } = await searchParams;
 
-  const supabase = await supabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  /* Arriving from the emailed link. The code is spent in the browser, because
+     Convex Auth writes the session cookie there — see VerifyLink. */
+  const fromLink = Boolean(email && code);
+  if (fromLink) expired = undefined; // VerifyLink says so itself, and better
 
-  if (user && (user.email_confirmed_at ?? user.confirmed_at)) redirect("/onboarding/1");
+  const convex = await convexServer();
+  const who = await convex.query(api.whoami.emailVerified, {});
 
-  const pending = user?.email ?? email ?? "your email address";
+  // Already confirmed: there is nothing to wait for on this screen.
+  if (who.authenticated && who.verified) redirect("/onboarding/1");
+
+  const pending = who.email ?? email ?? "your email address";
 
   return (
     <div className="box-border flex min-h-screen items-start justify-center p-[20px]">
@@ -49,6 +56,8 @@ export default async function VerifyPage({
             </p>
           </div>
 
+          {fromLink ? <VerifyLink email={email!} code={code!} /> : null}
+
           {expired ? (
             <Callout tone="red" title="That link has expired">
               Links last 24 hours. Send yourself a new one below.
@@ -67,7 +76,7 @@ export default async function VerifyPage({
             </span>
           </div>
 
-          <VerifyActions signedIn={Boolean(user)} />
+          <VerifyActions signedIn={who.authenticated} />
         </div>
 
         <span className="pl-[2px] text-[12.5px] text-ink-3">

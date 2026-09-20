@@ -2,8 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
-import { supabaseServer } from "@/lib/supabase/server";
-import { convexServes } from "@/lib/backend";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { convexMessage } from "@/lib/convex/error";
@@ -86,52 +84,14 @@ export async function saveAvailability(input: {
   const problem = valid(input.rules);
   if (problem) return { error: problem };
 
-  if (convexServes("availability")) {
-    const r = await viaConvex((c) =>
-      c.mutation(api.availability.saveWeek, {
-        scheduleId: input.scheduleId,
-        timezone: input.timezone,
-        rules: input.rules,
-      }),
-    );
-    if (r.error) return { error: r.error };
-    revalidatePath("/availability");
-    revalidatePath("/dashboard");
-    return {};
-  }
-
-  const supabase = await supabaseServer();
-
-  // RLS already scopes this to the session, but the read also proves the
-  // schedule exists before anything is deleted.
-  const { data: schedule } = await supabase
-    .from("availability_schedules")
-    .select("id")
-    .eq("id", input.scheduleId)
-    .eq("user_id", session.userId)
-    .maybeSingle();
-  if (!schedule) return { error: "That schedule is gone. Reload the page." };
-
-  const { error: tzError } = await supabase
-    .from("profiles")
-    // Chosen, not detected — registration must never overwrite it.
-    .update({ timezone: input.timezone, timezone_auto: false })
-    .eq("id", session.userId);
-  if (tzError) return { error: tzError.message };
-
-  const { error: clearError } = await supabase
-    .from("availability_rules")
-    .delete()
-    .eq("schedule_id", input.scheduleId);
-  if (clearError) return { error: clearError.message };
-
-  if (input.rules.length) {
-    const { error } = await supabase
-      .from("availability_rules")
-      .insert(input.rules.map((r) => ({ ...r, user_id: session.userId, schedule_id: input.scheduleId })));
-    if (error) return { error: error.message };
-  }
-
+  const r = await viaConvex((c) =>
+    c.mutation(api.availability.saveWeek, {
+      scheduleId: input.scheduleId,
+      timezone: input.timezone,
+      rules: input.rules,
+    }),
+  );
+  if (r.error) return { error: r.error };
   revalidatePath("/availability");
   revalidatePath("/dashboard");
   return {};
@@ -143,44 +103,12 @@ export async function createSchedule(input: { name: string; copyFrom?: string })
   const name = cleanName(input.name);
   if (!name) return { error: "Give the schedule a name." };
 
-  if (convexServes("availability")) {
-    const r = await viaConvex((c) =>
-      c.mutation(api.availability.createSchedule, { name, makeDefault: false, copyFrom: input.copyFrom }),
-    );
-    if (r.error) return { error: r.error };
-    revalidatePath("/availability");
-    return { id: r.value!.id };
-  }
-
-  const supabase = await supabaseServer();
-
-  const { data: created, error } = await supabase
-    .from("availability_schedules")
-    .insert({ user_id: session.userId, name, is_default: false })
-    .select("id")
-    .single();
-
-  if (error) {
-    return { error: nameTaken(error.message) ? "You already have a schedule with that name." : error.message };
-  }
-
-  // Copy the source schedule's hours when duplicating; otherwise seed the
-  // ordinary working week. Either way the schedule is never born empty.
-  const source = input.copyFrom
-    ? (await supabase
-        .from("availability_rules")
-        .select("weekday, start_minute, end_minute")
-        .eq("schedule_id", input.copyFrom)).data ?? []
-    : [1, 2, 3, 4, 5].map((weekday) => ({ weekday, start_minute: 540, end_minute: 1020 }));
-
-  if (source.length) {
-    await supabase
-      .from("availability_rules")
-      .insert(source.map((r) => ({ ...r, user_id: session.userId, schedule_id: created.id })));
-  }
-
+  const r = await viaConvex((c) =>
+    c.mutation(api.availability.createSchedule, { name, makeDefault: false, copyFrom: input.copyFrom }),
+  );
+  if (r.error) return { error: r.error };
   revalidatePath("/availability");
-  return { id: created.id };
+  return { id: r.value!.id };
 }
 
 export async function renameSchedule(input: { id: string; name: string }): Promise<SaveResult> {
@@ -188,25 +116,8 @@ export async function renameSchedule(input: { id: string; name: string }): Promi
   const name = cleanName(input.name);
   if (!name) return { error: "Give the schedule a name." };
 
-  if (convexServes("availability")) {
-    const r = await viaConvex((c) => c.mutation(api.availability.renameSchedule, { scheduleId: input.id, name }));
-    if (r.error) return { error: r.error };
-    revalidatePath("/availability");
-    revalidatePath("/meetings");
-    return {};
-  }
-
-  const supabase = await supabaseServer();
-  const { error } = await supabase
-    .from("availability_schedules")
-    .update({ name })
-    .eq("id", input.id)
-    .eq("user_id", session.userId);
-
-  if (error) {
-    return { error: nameTaken(error.message) ? "You already have a schedule with that name." : error.message };
-  }
-
+  const r = await viaConvex((c) => c.mutation(api.availability.renameSchedule, { scheduleId: input.id, name }));
+  if (r.error) return { error: r.error };
   revalidatePath("/availability");
   revalidatePath("/meetings");
   return {};
@@ -223,34 +134,8 @@ export async function renameSchedule(input: { id: string; name: string }): Promi
 export async function deleteSchedule(input: { id: string }): Promise<SaveResult> {
   const session = await requireSession();
 
-  if (convexServes("availability")) {
-    const r = await viaConvex((c) => c.mutation(api.availability.deleteSchedule, { scheduleId: input.id }));
-    if (r.error) return { error: r.error };
-    revalidatePath("/availability");
-    revalidatePath("/meetings");
-    return {};
-  }
-
-  const supabase = await supabaseServer();
-
-  const { data: all } = await supabase
-    .from("availability_schedules")
-    .select("id, is_default")
-    .eq("user_id", session.userId);
-
-  const schedules = all ?? [];
-  const target = schedules.find((s) => s.id === input.id);
-  if (!target) return { error: "That schedule is already gone." };
-  if (schedules.length <= 1) return { error: "This is your only schedule — keep at least one." };
-  if (target.is_default) return { error: "Make another schedule the default first." };
-
-  const { error } = await supabase
-    .from("availability_schedules")
-    .delete()
-    .eq("id", input.id)
-    .eq("user_id", session.userId);
-  if (error) return { error: error.message };
-
+  const r = await viaConvex((c) => c.mutation(api.availability.deleteSchedule, { scheduleId: input.id }));
+  if (r.error) return { error: r.error };
   revalidatePath("/availability");
   revalidatePath("/meetings");
   return {};
@@ -264,30 +149,8 @@ export async function deleteSchedule(input: { id: string }): Promise<SaveResult>
 export async function setDefaultSchedule(input: { id: string }): Promise<SaveResult> {
   const session = await requireSession();
 
-  if (convexServes("availability")) {
-    const r = await viaConvex((c) => c.mutation(api.availability.setDefaultSchedule, { scheduleId: input.id }));
-    if (r.error) return { error: r.error };
-    revalidatePath("/availability");
-    revalidatePath("/meetings");
-    return {};
-  }
-
-  const supabase = await supabaseServer();
-
-  const { error: clearError } = await supabase
-    .from("availability_schedules")
-    .update({ is_default: false })
-    .eq("user_id", session.userId)
-    .eq("is_default", true);
-  if (clearError) return { error: clearError.message };
-
-  const { error } = await supabase
-    .from("availability_schedules")
-    .update({ is_default: true })
-    .eq("id", input.id)
-    .eq("user_id", session.userId);
-  if (error) return { error: error.message };
-
+  const r = await viaConvex((c) => c.mutation(api.availability.setDefaultSchedule, { scheduleId: input.id }));
+  if (r.error) return { error: r.error };
   revalidatePath("/availability");
   revalidatePath("/meetings");
   return {};

@@ -38,17 +38,24 @@ vi.mock("@/components/ui/toast", async (orig) => ({
   useToast: () => () => {},
 }));
 
-// Minimal query builder. The client itself must NOT be thenable, or `await
-// supabaseServer()` unwraps it instead of returning it.
-vi.mock("@/lib/supabase/server", () => {
-  const rows: unknown[] = [];
-  const query: Record<string, unknown> = {};
-  for (const m of ["select", "eq", "order", "limit"]) {
-    query[m] = () => query;
-  }
-  query.maybeSingle = async () => ({ data: null, error: null });
-  query.then = (resolve: (v: unknown) => unknown) => resolve({ data: rows, error: null });
-  return { supabaseServer: async () => ({ from: () => query }) };
+/* A stand-in Convex client. These tests render the steps, not the data, so
+   every query answers with the empty shape its caller expects — a new host
+   with nothing entered yet, which is the state step 1 through 5 are written
+   for. The client must NOT be thenable, or `await convexServer()` unwraps it
+   instead of returning it. */
+vi.mock("@/lib/convex/server", () => {
+  /* One answer that satisfies every caller. A Convex function reference is an
+     object that cannot be stringified, so the stub cannot dispatch on WHICH
+     query was asked — it returns an empty array carrying the named fields the
+     screen destructures. Every step then sees a new host with nothing entered
+     yet, which is the state they are written for. */
+  const answer = Object.assign([] as unknown[], { schedules: [], rules: [], meetings: [] });
+  const client = {
+    query: async () => answer,
+    mutation: async () => null,
+    action: async () => null,
+  };
+  return { convexServer: async () => client, convexAnonymous: () => client };
 });
 
 async function render(step: string): Promise<string> {

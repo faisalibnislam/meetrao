@@ -324,3 +324,17 @@ export const attachGoogleEvent = internalMutation({
     return bookingOut((await ctx.db.get(b._id))!);
   },
 });
+
+/** The Bookings badge: confirmed meetings still ahead. */
+export const upcomingCount = query({
+  args: {},
+  handler: async (ctx) => {
+    const me = await requireProfile(ctx);
+    const now = Date.now();
+    const rows = await ctx.db
+      .query("bookings")
+      .withIndex("by_host_starts", (q) => q.eq("host_id", me.id).gte("starts_at", now))
+      .collect();
+    return rows.filter((b) => b.status === "confirmed").length;
+  },
+});

@@ -1,9 +1,12 @@
 import { describe, expect, it, vi, beforeAll } from "vitest";
 import { POSTAL_ADDRESS } from "@/lib/contact";
 
-/* Renders all six templates through the real senders, with the Resend SDK's
-   network call intercepted. Catches an unfilled {{field}}, which render()
-   throws on — the difference between an email and no email. */
+/* Renders every template in src/emails through the real senders, with the
+   Resend SDK's network call intercepted. Catches an unfilled {{field}}, which
+   render() throws on — the difference between an email and no email.
+
+   The two emails Convex Auth sends are NOT here; they live in
+   convex/lib/emails.ts and are covered by convex-templates.test.ts. */
 
 const sent: { to: string; subject: string; html: string; headers?: unknown }[] = [];
 
@@ -11,9 +14,7 @@ beforeAll(() => {
   // Dummies, deliberately. The point is to render the templates, not to reach
   // Resend — the SDK's fetch is intercepted below and never leaves the process.
   for (const [k, v] of Object.entries({
-    NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key-000000",
-    SUPABASE_SERVICE_ROLE_KEY: "test-service-key-0000",
+    NEXT_PUBLIC_CONVEX_URL: "https://example-deployment.convex.cloud",
     GOOGLE_CLIENT_ID: "test-client-id",
     GOOGLE_CLIENT_SECRET: "test-client-secret",
     RESEND_API_KEY: "re_test_00000000",
@@ -65,7 +66,7 @@ const cancellation = { ...mail, cancelledByName: "Amina Chowdhury", cancelledAtL
 const moved = { ...mail, oldStartLong: "Tuesday, 15 September 2026 at 09:00", changedByName: "Faisal Islam" };
 
 describe("every transactional email renders", () => {
-  it("renders all six with no unfilled fields", async () => {
+  it("renders every one with no unfilled fields", async () => {
     const m = await import("./send");
     const results = [
       ["welcome", await m.sendWelcome(profile)],

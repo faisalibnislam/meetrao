@@ -1,10 +1,8 @@
 import "server-only";
 
 import type { Interval } from "@/lib/booking/slots";
-import { convexServes } from "@/lib/backend";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
-import { accessTokenFor, markNeedsReconnect } from "./connection";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Google Calendar.
@@ -17,6 +15,10 @@ import { accessTokenFor, markNeedsReconnect } from "./connection";
 
    Every failure path is handled and named, because a silent calendar-write
    failure on a live booking is the worst outcome in the product.
+
+   The HTTP calls themselves live in convex/google.ts, next to the tokens. What
+   is left here is the vocabulary the UI speaks — the failure kinds and their
+   copy — plus three thin calls.
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type CalendarFailure =
@@ -64,176 +66,20 @@ export const FAILURE_COPY: Record<CalendarFailure, { title: string; text: string
   },
 };
 
-const API = "https://www.googleapis.com/calendar/v3";
-
-async function call<T>(token: string, path: string, init: RequestInit = {}): Promise<T> {
-  let response: Response;
-  try {
-    response = await fetch(`${API}${path}`, {
-      ...init,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-        ...init.headers,
-      },
-      cache: "no-store",
-    });
-  } catch {
-    throw new CalendarError("api-unavailable", "Could not reach Google Calendar.");
-  }
-
-  if (response.status === 401) throw new CalendarError("token-expired", "Google rejected the access token.");
-  if (response.status === 403) {
-    const body = await response.text();
-    throw new CalendarError(
-      body.includes("rateLimitExceeded") || body.includes("userRateLimitExceeded")
-        ? "rate-limited"
-        : "scope-insufficient",
-      "Google refused the request.",
-    );
-  }
-  if (response.status === 404 || response.status === 410) {
-    throw new CalendarError("already-deleted", "That event no longer exists.");
-  }
-  if (!response.ok) throw new CalendarError("api-unavailable", `Google Calendar returned ${response.status}.`);
-
-  if (response.status === 204) return undefined as T;
-  return (await response.json()) as T;
-}
-
-/**
- * The host's busy periods. A host with no connection returns an empty list and
- * the caller decides what that means — it must never be read as "free".
- */
 export async function busyPeriods(userId: string, from: Date, to: Date): Promise<Interval[]> {
-  if (convexServes("google")) {
-    // The guest path has no session, so this goes through the anonymous client.
-    // The action clamps the window and never returns a token.
-    const r = await convexAnonymous().action(api.google.busyForHost, {
-      hostId: userId,
-      from: from.getTime(),
-      to: to.getTime(),
-    });
-    if (!r.checked) throw new CalendarError("api-unavailable", "Google Calendar could not be reached.");
-    return r.busy.map((b) => ({ start: new Date(b.start), end: new Date(b.end) }));
-  }
-
-  const auth = await accessTokenFor(userId);
-  if (!auth) return [];
-
-  try {
-    const json = await call<{ calendars?: Record<string, { busy?: { start: string; end: string }[] }> }>(
-      auth.token,
-      "/freeBusy",
-      {
-        method: "POST",
-        body: JSON.stringify({
-          timeMin: from.toISOString(),
-          timeMax: to.toISOString(),
-          items: [{ id: auth.calendarId }],
-        }),
-      },
-    );
-
-    const slots = json.calendars?.[auth.calendarId]?.busy ?? [];
-    return slots.map((b) => ({ start: new Date(b.start), end: new Date(b.end) }));
-  } catch (cause) {
-    if (cause instanceof CalendarError && cause.kind === "token-expired") {
-      await markNeedsReconnect(userId, cause.message);
-    }
-    // Offering a slot the host cannot make is worse than offering none, but so
-    // is refusing every booking because Google blinked. The caller pairs this
-    // with the bookings table, which is authoritative for Meetrao's own slots.
-    throw cause;
-  }
+  // The guest path has no session, so this goes through the anonymous client.
+  // The action clamps the window and never returns a token.
+  const r = await convexAnonymous().action(api.google.busyForHost, {
+    hostId: userId,
+    from: from.getTime(),
+    to: to.getTime(),
+  });
+  if (!r.checked) throw new CalendarError("api-unavailable", "Google Calendar could not be reached.");
+  return r.busy.map((b) => ({ start: new Date(b.start), end: new Date(b.end) }));
 }
 
-export type CreatedEvent = { eventId: string; meetUrl: string | null; htmlLink: string | null };
-
-export async function createBookingEvent(input: {
-  userId: string;
-  summary: string;
-  description: string;
-  start: Date;
-  end: Date;
-  timeZone: string;
-  /** Everyone invited. The first is the guest of record on the booking row. */
-  attendees: { email: string; name?: string }[];
-}): Promise<CreatedEvent> {
-  const auth = await accessTokenFor(input.userId);
-  if (!auth) throw new CalendarError("not-connected", "No Google Calendar connection.");
-
-  const json = await call<{
-    id: string;
-    hangoutLink?: string;
-    htmlLink?: string;
-    conferenceData?: { entryPoints?: { entryPointType?: string; uri?: string }[] };
-  }>(
-    auth.token,
-    `/calendars/${encodeURIComponent(auth.calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`,
-    {
-      method: "POST",
-      body: JSON.stringify({
-        summary: input.summary,
-        description: input.description,
-        start: { dateTime: input.start.toISOString(), timeZone: input.timeZone },
-        end: { dateTime: input.end.toISOString(), timeZone: input.timeZone },
-        // Invitees are attendees, which is how the event reaches their
-        // calendars. Everyone on an invitation sees everyone else's address —
-        // inherent to a Google invitation, and disclosed in the privacy policy.
-        // It matters more now that a host can invite several people at once.
-        attendees: input.attendees.map((a) => ({ email: a.email, displayName: a.name || undefined })),
-        guestsCanModify: false,
-        conferenceData: {
-          createRequest: {
-            requestId: crypto.randomUUID(),
-            conferenceSolutionKey: { type: "hangoutsMeet" },
-          },
-        },
-      }),
-    },
-  );
-
-  const entry = json.conferenceData?.entryPoints?.find((p) => p.entryPointType === "video")?.uri;
-  return { eventId: json.id, meetUrl: json.hangoutLink ?? entry ?? null, htmlLink: json.htmlLink ?? null };
-}
-
-export async function deleteBookingEvent(userId: string, eventId: string): Promise<void> {
-  const auth = await accessTokenFor(userId);
-  if (!auth) throw new CalendarError("not-connected", "No Google Calendar connection.");
-
-  await call<void>(
-    auth.token,
-    `/calendars/${encodeURIComponent(auth.calendarId)}/events/${encodeURIComponent(eventId)}?sendUpdates=all`,
-    { method: "DELETE" },
-  );
-}
-
-/** The guest's RSVP as Google has it. Nothing in the UI surfaces it yet. */
-export async function readGuestRsvp(
-  userId: string,
-  eventId: string,
-  guestEmail: string,
-): Promise<string | null> {
-  const auth = await accessTokenFor(userId);
-  if (!auth) return null;
-
-  try {
-    const json = await call<{ attendees?: { email?: string; responseStatus?: string }[] }>(
-      auth.token,
-      `/calendars/${encodeURIComponent(auth.calendarId)}/events/${encodeURIComponent(eventId)}`,
-    );
-    const match = json.attendees?.find((a) => a.email?.toLowerCase() === guestEmail.toLowerCase());
-    return match?.responseStatus ?? null;
-  } catch {
-    return null;
-  }
-}
-
-
-/* ── The Convex path ────────────────────────────────────────────────────────
-   Keyed by the booking's reference rather than a user id and an event id,
-   because on Convex the action reads the booking, the host and the tokens for
+/* Both are keyed by the booking's REFERENCE rather than a user id and an event
+   id, because the action reads the booking, the host and the tokens for
    itself — nothing has to be handed to it, and no token comes back. */
 
 export async function createEventForBooking(
