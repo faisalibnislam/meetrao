@@ -76,20 +76,23 @@ describe("proxy · an OAuth code stranded on the site root", () => {
 });
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Connecting a calendar must not sign you out.
+   Which `?code=` belongs to Convex Auth, and which do not.
 
-   Convex Auth claims EVERY `?code=` unless told otherwise — the option
-   defaults to undefined, which means "handle all of them". Google Calendar
-   consent returns to /api/google/callback with its own code, and the
-   middleware would try to redeem it as a sign-in code, fail, and CLEAR THE
-   AUTH COOKIES on the way past.
+   The middleware claims EVERY code unless told otherwise, and when redemption
+   fails it deletes the parameter and CLEARS THE AUTH COOKIES. So a route
+   carrying a code of its own loses it before the page can read it, and the
+   visitor is signed out as well.
 
-   That shipped. Connecting a calendar logged the host out and landed them on
-   /login, and the code was eaten before the route handler could read it — so
-   the calendar never connected either. One missing line, both symptoms, and
-   neither of them looks like a middleware problem from the outside.
+   This shipped twice. First it broke connecting a calendar. The fix named the
+   calendar callback and let everything else through — which left sign-up and
+   password reset broken in the identical way, and a real confirmation link
+   arrived correct, lost its code here, and landed on a page telling the person
+   they had not confirmed.
+
+   Hence an ALLOW-LIST. A deny-list has to be extended every time a route
+   starts carrying a code, and nothing fails until someone reports it.
    ───────────────────────────────────────────────────────────────────────────── */
-describe("proxy · the calendar callback's code is not an auth code", () => {
+describe("proxy · only the OAuth callback's code belongs to the auth middleware", () => {
   const ask = (url: string) => options.shouldHandleCode!(new NextRequest(new Request(url)));
 
   it("tells the auth middleware which codes are its own", async () => {
@@ -97,21 +100,30 @@ describe("proxy · the calendar callback's code is not an auth code", () => {
     expect(options.shouldHandleCode, "shouldHandleCode was not passed at all").toBeTypeOf("function");
   });
 
-  it("refuses the calendar callback", async () => {
+  /* Google sign-in is the only OAuth flow here: Convex redeems the provider's
+     code on its own domain and sends the browser here to be signed in. */
+  it("claims the code on the OAuth callback", async () => {
     await get("https://meetrao.com/dashboard");
-    expect(await ask("https://meetrao.com/api/google/callback?code=google-code&state=x")).toBe(false);
+    expect(await ask("https://meetrao.com/auth/callback?code=auth-code")).toBe(true);
   });
 
-  /* The guard has to be narrow. Convex Auth's OWN Google sign-in comes back
-     with a code, and blanket-disabling this would break signing in instead. */
-  it("still claims codes on every other path", async () => {
+  /* Each of these redeems its own code, and each was broken by the middleware
+     taking it first. */
+  it.each([
+    ["/api/google/callback", "Google Calendar consent, exchanged inside Convex"],
+    ["/verify", "the emailed confirmation code"],
+    ["/reset", "the emailed password-reset code"],
+  ])("leaves %s alone — %s", async (path) => {
     await get("https://meetrao.com/dashboard");
-    for (const url of [
-      "https://meetrao.com/?code=auth-code",
-      "https://meetrao.com/auth/callback?code=auth-code",
-      "https://meetrao.com/login?code=auth-code",
-    ]) {
-      expect(await ask(url), `${url} should still be handled`).toBe(true);
+    expect(await ask(`https://meetrao.com${path}?email=a%40b.com&code=its-own-code`)).toBe(false);
+  });
+
+  /* The default is "claim it", so anything unlisted must come back false or
+     the allow-list is not actually being applied. */
+  it("claims nothing else by default", async () => {
+    await get("https://meetrao.com/dashboard");
+    for (const path of ["/", "/login", "/signup", "/dashboard", "/settings/calendar"]) {
+      expect(await ask(`https://meetrao.com${path}?code=x`), `${path} should not be claimed`).toBe(false);
     }
   });
 });
