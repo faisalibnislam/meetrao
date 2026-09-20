@@ -98,9 +98,27 @@ host resolves on the guest path, a real Supabase token authenticates and maps
 to a migrated profile, an anonymous caller is refused, and avatars serve from
 `avid-dotterel-109`.
 
-**It is not serving anyone.** Vercel has no Convex variables, so production
-still runs entirely on Supabase. Convex production is a loaded, verified
-standby.
+### Cutover log
+
+**2026-09-20 — `analytics` switched on in production.** `CONVEX_BACKENDS=analytics`.
+Everything else still reads and writes Supabase.
+
+Sequencing mattered and nearly bit: `main` already had the analytics *read*
+path on Convex, but the collect route's *write* path was not merged yet.
+Flipping the flag first would have frozen the admin screen at its backfilled
+count while real visits kept landing in Postgres. Code merged first, then the
+flag, then a redeploy — a Vercel env change does not reach a deployment that
+already exists.
+
+Verified after the switch: a real beacon to `meetrao.com/api/analytics/collect`
+landed in Convex (85 → 86) while Postgres stayed put; the admin reads return
+real figures at 7/30/90 days; an anonymous caller is refused.
+
+Two rows had landed in Postgres between the pre-cutover sync and the switch.
+Reconciled by diffing on `(visited_at, visitor_hash, path)` and appending only
+the missing ones — 88 rows now, nothing only-in-Postgres, no duplicates.
+`convex/verify.ts:visitKeys` is the query that makes that diff possible, and
+the same shape works for any table switched later.
 
 ### Before flipping the switch
 
