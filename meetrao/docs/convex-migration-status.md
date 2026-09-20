@@ -114,6 +114,17 @@ Verified after the switch: a real beacon to `meetrao.com/api/analytics/collect`
 landed in Convex (85 → 86) while Postgres stayed put; the admin reads return
 real figures at 7/30/90 days; an anonymous caller is refused.
 
+**2026-09-20 — `google` switched on.**
+`CONVEX_BACKENDS=analytics,notifications,contacts,schedules,google`. Google
+Calendar tokens are now read, refreshed and used entirely inside Convex;
+`calendar_connections` was re-synced first. Verified after the switch: the
+booking page renders, `/api/slots` returns the host's real weekday
+availability, and `calendarChecked` is `false` — which is correct, because
+every Google grant is currently dead. **Enabling this did not fix Calendar and
+was never going to**; what it fixed is where the tokens live, so that when
+hosts do reconnect, the new tokens land in Convex rather than in a project
+that is due to be deleted.
+
 **2026-09-20 — `notifications`, `contacts`, `schedules` switched on.**
 `CONVEX_BACKENDS=analytics,notifications,contacts,schedules`. All tables except
 `site_visits` were re-synced first; `site_visits` was deliberately excluded,
@@ -141,7 +152,9 @@ repeat.
 Not reachable by setting variables. Two hard blockers, and one consequence
 people forget:
 
-1. **Supabase Auth is the identity provider.** Convex validates Supabase-issued
+1. **Supabase Auth is the identity provider.** *(Plan revised 2026-09-20 to
+   **Convex Auth** rather than Clerk — the deciding constraint is no additional
+   service. See `docs/decisions/auth-migration-runbook.md`.)* Convex validates Supabase-issued
    ES256 tokens; `sub` is `profiles.id`. Delete the project and nobody can sign
    in — every session, the `/verify` gate and password reset go with it. This is
    the Phase 4 work deferred on purpose, and `docs/decisions/auth-provider.md`
