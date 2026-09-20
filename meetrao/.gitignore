@@ -53,4 +53,4 @@ design/**/*.png
 meetrao-landing-page.html
 
 # supabase→convex backfill dumps (contain OAuth tokens)
-.migrate/
+.migrate*/

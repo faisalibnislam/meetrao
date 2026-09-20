@@ -85,6 +85,31 @@ There is no RLS in Convex, so `contacts.listForScreen` gathers invitees per
 booking of the calling host. An unscoped read would have returned every
 invitee in the database — exactly the failure mode the risk register calls out.
 
+## Production deployment
+
+Provisioned 2026-09-20 as **`avid-dotterel-109`** (the dev deployment is
+`festive-meerkat-460`). Functions and schema deployed; `SUPABASE_URL` and
+`SITE_URL` set, the latter to `https://meetrao.com` rather than localhost.
+
+Backfilled from a **fresh** Supabase export — 245 rows across 15 tables, all
+counts verified equal — and both avatars imported into production storage, so
+no profile there points at a Supabase Storage URL. Verified against prod: every
+host resolves on the guest path, a real Supabase token authenticates and maps
+to a migrated profile, an anonymous caller is refused, and avatars serve from
+`avid-dotterel-109`.
+
+**It is not serving anyone.** Vercel has no Convex variables, so production
+still runs entirely on Supabase. Convex production is a loaded, verified
+standby.
+
+### Before flipping the switch
+
+The backfill is a **snapshot**. Supabase keeps taking writes while it is the
+live backend, so whatever lands between the export and the cutover exists only
+in Postgres. Re-run `scripts/export-supabase.mjs` and re-import immediately
+before switching any domain that takes writes — `--replace` makes that safe to
+repeat.
+
 ## What still runs on Supabase, and why
 
 Two things, both deliberate.
