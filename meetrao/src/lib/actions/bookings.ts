@@ -6,6 +6,10 @@ import { cancellationMail } from "@/lib/email/booking-mail";
 import { sendCancellationToGuest, sendCancellationToHost } from "@/lib/email/send";
 import { CalendarError, deleteBookingEvent } from "@/lib/google/calendar";
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { convexMessage } from "@/lib/convex/error";
+import { api } from "@/convex/_generated/api";
 import type { Booking } from "@/lib/types";
 
 export type CancelResult = { error?: string; calendarWarning?: string };
@@ -20,31 +24,51 @@ export type CancelResult = { error?: string; calendarWarning?: string };
  */
 export async function cancelBooking(bookingId: string): Promise<CancelResult> {
   const session = await requireSession();
-  const supabase = await supabaseServer();
+  const onConvex = convexServes("bookings");
+  const supabase = onConvex ? null : await supabaseServer();
 
-  const { data: existing } = await supabase
-    .from("bookings")
-    .select("*")
-    .eq("id", bookingId)
-    .eq("host_id", session.userId)
-    .maybeSingle();
+  let booking: Booking;
+  let invitees: { name: string; email: string }[] = [];
 
-  if (!existing) return { error: "That booking is not yours to cancel." };
+  if (onConvex) {
+    const convex = await convexServer();
+    const existing = await convex.query(api.bookings.getForHost, { id: bookingId });
+    if (!existing) return { error: "That booking is not yours to cancel." };
 
-  const booking = existing as Booking;
-  if (booking.status === "cancelled") return {};
+    booking = existing as unknown as Booking;
+    invitees = existing.invitees.map((i) => ({ name: i.name, email: i.email }));
+    if (booking.status === "cancelled") return {};
 
-  const { error } = await supabase
-    .from("bookings")
-    .update({
-      status: "cancelled",
-      cancelled_at: new Date().toISOString(),
-      cancelled_by: "host",
-    })
-    .eq("id", bookingId)
-    .eq("host_id", session.userId);
+    try {
+      await convex.mutation(api.bookings.cancelAsHost, { id: bookingId });
+    } catch (cause) {
+      return { error: convexMessage(cause, "That booking could not be cancelled.") };
+    }
+  } else {
+    const { data: existing } = await supabase!
+      .from("bookings")
+      .select("*")
+      .eq("id", bookingId)
+      .eq("host_id", session.userId)
+      .maybeSingle();
 
-  if (error) return { error: error.message };
+    if (!existing) return { error: "That booking is not yours to cancel." };
+
+    booking = existing as Booking;
+    if (booking.status === "cancelled") return {};
+
+    const { error } = await supabase!
+      .from("bookings")
+      .update({
+        status: "cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancelled_by: "host",
+      })
+      .eq("id", bookingId)
+      .eq("host_id", session.userId);
+
+    if (error) return { error: error.message };
+  }
 
   let calendarWarning: string | undefined;
   if (booking.google_event_id) {
@@ -63,12 +87,15 @@ export async function cancelBooking(bookingId: string): Promise<CancelResult> {
   // Every invitee, not just the guest of record. A meeting the host scheduled
   // for three people that only tells one of them it is cancelled leaves two
   // sitting in an empty Meet — the failure this feature would otherwise add.
-  const { data: extra } = await supabase
-    .from("booking_invitees")
-    .select("name, email")
-    .eq("booking_id", bookingId);
+  if (!onConvex) {
+    const { data: extra } = await supabase!
+      .from("booking_invitees")
+      .select("name, email")
+      .eq("booking_id", bookingId);
+    invitees = (extra ?? []) as { name: string; email: string }[];
+  }
 
-  const others = (extra ?? []).filter((i) => i.email.toLowerCase() !== booking.guest_email.toLowerCase());
+  const others = invitees.filter((i) => i.email.toLowerCase() !== booking.guest_email.toLowerCase());
 
   await Promise.allSettled([
     sendCancellationToHost(mail, session.profile),

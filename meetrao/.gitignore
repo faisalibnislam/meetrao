@@ -51,3 +51,6 @@ next-env.d.ts
 design/**/*.measure.html
 design/**/*.png
 meetrao-landing-page.html
+
+# supabase→convex backfill dumps (contain OAuth tokens)
+.migrate/

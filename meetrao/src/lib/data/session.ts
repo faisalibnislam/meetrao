@@ -3,6 +3,9 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import type { Profile } from "@/lib/types";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -46,13 +49,21 @@ export type Session = { userId: string; email: string; verified: boolean; profil
  */
 export const requireSession = cache(async function requireSession(): Promise<Session> {
   const supabase = await supabaseServer();
+  const onConvex = convexServes("session");
 
-  // Both at once. Neither depends on the other: getUser() revalidates the token
-  // with the auth server, and current_profile() is filtered by auth.uid() in
-  // the database, so the request carries everything each of them needs.
-  const [{ data: userData }, { data: profileData }] = await Promise.all([
+  /* Both at once, on either backend. Neither depends on the other: getUser()
+     revalidates the token with the auth server, and the profile read is
+     filtered by the caller's own identity on the other side — in Postgres by
+     auth.uid() inside current_profile(), in Convex by the `sub` of the same
+     JWT. So the request already carries everything each of them needs.
+
+     Note that Supabase remains the auth half either way. Only the profile read
+     moves; see docs/decisions/auth-provider.md. */
+  const [{ data: userData }, profileData] = await Promise.all([
     supabase.auth.getUser(),
-    supabase.rpc("current_profile"),
+    onConvex
+      ? convexServer().then((c) => c.query(api.profiles.current, {}))
+      : supabase.rpc("current_profile").then((r) => r.data),
   ]);
 
   const user = userData.user;
@@ -69,8 +80,13 @@ export const requireSession = cache(async function requireSession(): Promise<Ses
   let row = (profileData ?? null) as Profile | null;
   if (row && row.id !== user.id) row = null;
   if (!row) {
-    const { data: refetched } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-    row = (refetched ?? null) as Profile | null;
+    if (onConvex) {
+      const convex = await convexServer();
+      row = (await convex.query(api.profiles.current, {})) as Profile | null;
+    } else {
+      const { data: refetched } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+      row = (refetched ?? null) as Profile | null;
+    }
   }
 
   if (!row) {
@@ -116,8 +132,9 @@ export const optionalSession = cache(async function optionalSession(): Promise<S
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
-  const row = (profile ?? null) as Profile | null;
+  const row = convexServes("session")
+    ? (((await (await convexServer()).query(api.profiles.current, {})) ?? null) as Profile | null)
+    : (((await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()).data ?? null) as Profile | null);
   if (!row) return null;
 
   return {

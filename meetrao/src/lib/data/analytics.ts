@@ -1,6 +1,9 @@
 import "server-only";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The admin analytics read.
@@ -50,10 +53,36 @@ export type SiteAnalytics = {
   systems: TopRow[];
 };
 
-export async function siteAnalytics(range: Range): Promise<SiteAnalytics> {
+type Head = {
+  visits: number; visitors: number; countries: number; bots: number;
+  visits_prev: number; visitors_prev: number;
+};
+type Raw = {
+  head: Head | null;
+  daily: { day: string; visits: number; visitors: number }[];
+  countries: unknown; pages: unknown; referrers: unknown;
+  devices: unknown; browsers: unknown; systems: unknown;
+};
+
+async function raw(range: Range): Promise<Raw> {
+  if (convexServes("analytics")) {
+    const convex = await convexServer();
+    const days = { days: range };
+    const [head, daily, countries, pages, referrers, devices, browsers, systems] = await Promise.all([
+      convex.query(api.analytics.overview, days),
+      convex.query(api.analytics.daily, days),
+      convex.query(api.analytics.top, { dimension: "country", ...days, limit: 8 }),
+      convex.query(api.analytics.top, { dimension: "path", ...days, limit: 8 }),
+      convex.query(api.analytics.top, { dimension: "referrer", ...days, limit: 6 }),
+      convex.query(api.analytics.top, { dimension: "device", ...days, limit: 4 }),
+      convex.query(api.analytics.top, { dimension: "browser", ...days, limit: 6 }),
+      convex.query(api.analytics.top, { dimension: "os", ...days, limit: 6 }),
+    ]);
+    return { head, daily, countries, pages, referrers, devices, browsers, systems };
+  }
+
   const supabase = await supabaseServer();
   const days = { p_days: range };
-
   const [overview, daily, countries, pages, referrers, devices, browsers, systems] = await Promise.all([
     supabase.rpc("analytics_overview", days),
     supabase.rpc("analytics_daily", days),
@@ -67,7 +96,16 @@ export async function siteAnalytics(range: Range): Promise<SiteAnalytics> {
 
   /* analytics_overview returns one row; PostgREST hands back an array for a
      set-returning function even when it is always a single row. */
-  const head = (Array.isArray(overview.data) ? overview.data[0] : overview.data) as Record<string, number> | null;
+  return {
+    head: (Array.isArray(overview.data) ? overview.data[0] : overview.data) as Head | null,
+    daily: (daily.data ?? []) as { day: string; visits: number; visitors: number }[],
+    countries: countries.data, pages: pages.data, referrers: referrers.data,
+    devices: devices.data, browsers: browsers.data, systems: systems.data,
+  };
+}
+
+export async function siteAnalytics(range: Range): Promise<SiteAnalytics> {
+  const { head, daily, countries, pages, referrers, devices, browsers, systems } = await raw(range);
 
   return {
     range,
@@ -77,17 +115,13 @@ export async function siteAnalytics(range: Range): Promise<SiteAnalytics> {
     bots: num(head?.bots),
     visitsPrev: num(head?.visits_prev),
     visitorsPrev: num(head?.visitors_prev),
-    daily: ((daily.data ?? []) as { day: string; visits: number; visitors: number }[]).map((r) => ({
-      day: r.day,
-      visits: num(r.visits),
-      visitors: num(r.visitors),
-    })),
-    topCountries: rows(countries.data).map((r) => ({ ...r, label: countryName(r.label) })),
-    topPages: rows(pages.data),
-    topReferrers: rows(referrers.data),
-    devices: rows(devices.data).map((r) => ({ ...r, label: deviceName(r.label) })),
-    browsers: rows(browsers.data),
-    systems: rows(systems.data),
+    daily: daily.map((r) => ({ day: r.day, visits: num(r.visits), visitors: num(r.visitors) })),
+    topCountries: rows(countries).map((r) => ({ ...r, label: countryName(r.label) })),
+    topPages: rows(pages),
+    topReferrers: rows(referrers),
+    devices: rows(devices).map((r) => ({ ...r, label: deviceName(r.label) })),
+    browsers: rows(browsers),
+    systems: rows(systems),
   };
 }
 

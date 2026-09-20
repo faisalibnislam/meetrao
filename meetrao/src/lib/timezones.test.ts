@@ -45,3 +45,26 @@ describe("nearestSupportedTimezone", () => {
     }
   });
 });
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The Convex mirror.
+
+   convex/lib/zones.ts holds a copy of this list, because a Convex function
+   cannot import from src/. A copy that nothing checks is a copy that drifts,
+   and the drift would show up as a host's chosen timezone being silently
+   rejected on one side and accepted on the other. This is the check.
+   ───────────────────────────────────────────────────────────────────────────── */
+describe("the Convex mirror of the zone list", () => {
+  it("is identical to this one, in the same order", async () => {
+    const mirror = await import("../../convex/lib/zones");
+    expect(mirror.TIMEZONES).toEqual(TIMEZONES);
+  });
+
+  it("agrees about what is supported", async () => {
+    const mirror = await import("../../convex/lib/zones");
+    for (const zone of [...TIMEZONES, "Not/AZone", "UTC"]) {
+      const here = (TIMEZONES as readonly string[]).includes(zone);
+      expect(mirror.supportedZoneOrNull(zone) !== null).toBe(here);
+    }
+  });
+});

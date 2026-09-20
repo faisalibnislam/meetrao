@@ -1,6 +1,9 @@
 import "server-only";
 
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexAnonymous } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 /* The guest's own view of their booking, reached by reference. The reference is
    32 hex characters of CSPRNG and is the only credential the guest has — it
@@ -40,9 +43,35 @@ type Row = {
   host_timezone: string;
 };
 
-export async function getBookingByReference(reference: string): Promise<GuestBooking | null> {
+async function fetchRow(reference: string): Promise<Row | null> {
+  if (convexServes("publicBooking")) {
+    const b = await convexAnonymous().query(api.publicBooking.getByReference, { reference });
+    if (!b) return null;
+    // The Convex query nests the host; the RPC returned it flattened.
+    return {
+      reference: b.reference,
+      meeting_name: b.meeting_name,
+      duration_minutes: b.duration_minutes,
+      guest_name: b.guest_name,
+      guest_email: b.guest_email,
+      guest_note: b.guest_note,
+      guest_timezone: b.guest_timezone,
+      starts_at: b.starts_at,
+      ends_at: b.ends_at,
+      status: b.status,
+      meet_url: b.meet_url,
+      host_name: b.host?.full_name ?? "",
+      host_username: b.host?.username ?? "",
+      host_timezone: b.host?.timezone ?? "UTC",
+    };
+  }
+
   const { data } = await supabaseAdmin().rpc("get_booking_by_reference", { p_reference: reference });
-  const row = (Array.isArray(data) ? data[0] : data) as Row | undefined;
+  return ((Array.isArray(data) ? data[0] : data) as Row | undefined) ?? null;
+}
+
+export async function getBookingByReference(reference: string): Promise<GuestBooking | null> {
+  const row = await fetchRow(reference);
   if (!row) return null;
 
   return {

@@ -1,6 +1,9 @@
 import "server-only";
 
 import { supabaseServer } from "@/lib/supabase/server";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 export type NotificationKind = "booking_new" | "booking_cancelled" | "booking_changed";
 
@@ -40,25 +43,20 @@ function relative(at: Date, now: number): string {
   return at.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export async function listNotifications(userId: string): Promise<NotificationView[]> {
-  const supabase = await supabaseServer();
-  const { data } = await supabase
-    .from("notifications")
-    .select("id, kind, title, body, booking_id, read_at, created_at")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(PAGE);
+type Row = {
+  id: string;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  booking_id: string | null;
+  read_at: string | null;
+  created_at: string;
+};
 
+/** One shape in, one shape out — so both backends land on the same view. */
+function toView(rows: Row[]): NotificationView[] {
   const now = Date.now();
-  return ((data ?? []) as {
-    id: string;
-    kind: NotificationKind;
-    title: string;
-    body: string;
-    booking_id: string | null;
-    read_at: string | null;
-    created_at: string;
-  }[]).map((n) => ({
+  return rows.map((n) => ({
     id: n.id,
     kind: n.kind,
     title: n.title,
@@ -70,8 +68,31 @@ export async function listNotifications(userId: string): Promise<NotificationVie
   }));
 }
 
+export async function listNotifications(userId: string): Promise<NotificationView[]> {
+  if (convexServes("notifications")) {
+    const convex = await convexServer();
+    const rows = await convex.query(api.notifications.listOwn, { limit: PAGE });
+    return toView(rows as Row[]);
+  }
+
+  const supabase = await supabaseServer();
+  const { data } = await supabase
+    .from("notifications")
+    .select("id, kind, title, body, booking_id, read_at, created_at")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(PAGE);
+
+  return toView((data ?? []) as Row[]);
+}
+
 /** Just the badge. A count query, not a fetch-and-filter of the whole list. */
 export async function unreadNotifications(userId: string): Promise<number> {
+  if (convexServes("notifications")) {
+    const convex = await convexServer();
+    return await convex.query(api.notifications.unreadCount, {});
+  }
+
   const supabase = await supabaseServer();
   const { count } = await supabase
     .from("notifications")

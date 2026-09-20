@@ -1,0 +1,149 @@
+import type { MutationCtx } from "../_generated/server";
+import type { Doc } from "../_generated/dataModel";
+import { uuid } from "./ids";
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The triggers.
+
+   Seventeen of them fired in Postgres without anyone asking. Convex has no
+   triggers, so each one is a function here and every mutation that used to
+   cause one must call it explicitly. A missed call is a silent data bug — the
+   row simply never appears — which is why they all live in one file rather
+   than being inlined at their call sites.
+
+   Checklist, against docs/convex-migration.md §1.10:
+
+     on_auth_user_created          → profiles.ensureProfile
+     *_touch_updated_at (×6)       → every patch here sets updated_at
+     profiles_reject_reserved_...  → profiles.setUsername / generateUsername
+     bookings_notify_created       → notifyBookingCreated
+     bookings_notify_changed       → notifyBookingChanged
+     bookings_make_contact         → upsertContact
+     booking_invitees_make_contact → upsertContact
+     bookings_log_created          → logActivity("booking_created")
+     bookings_log_cancelled        → logActivity("booking_cancelled")
+     meeting_types_log_created     → logActivity("meeting_type_created")
+     calendar_connections_log_...  → logActivity("calendar_connected")
+   ───────────────────────────────────────────────────────────────────────────── */
+
+/** public.local_when — the host's wall clock, formatted as the emails write it. */
+export function localWhen(atMs: number, timezone: string): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: timezone || "UTC",
+    weekday: "long",
+    day: "numeric",
+    month: "short",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  }).formatToParts(new Date(atMs));
+  const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
+  const ampm = get("dayPeriod").toUpperCase();
+  return `${get("weekday")} ${get("day")} ${get("month")}, ${get("hour")}:${get("minute")} ${ampm}`;
+}
+
+/** public.notify_host. */
+export async function notifyHost(
+  ctx: MutationCtx,
+  args: { userId: string; kind: "booking_new" | "booking_cancelled" | "booking_changed"; title: string; body: string; bookingId: string | null },
+): Promise<void> {
+  await ctx.db.insert("notifications", {
+    id: uuid(),
+    user_id: args.userId,
+    kind: args.kind,
+    title: args.title,
+    body: args.body,
+    booking_id: args.bookingId,
+    read_at: null,
+    created_at: Date.now(),
+  });
+}
+
+async function timezoneOf(ctx: MutationCtx, userId: string): Promise<string> {
+  const p = await ctx.db
+    .query("profiles")
+    .withIndex("by_uuid", (q) => q.eq("id", userId))
+    .unique();
+  return p?.timezone ?? "UTC";
+}
+
+/** bookings_notify_created. Host-created bookings are not news to the host. */
+export async function notifyBookingCreated(ctx: MutationCtx, booking: Doc<"bookings">): Promise<void> {
+  if (booking.host_created) return;
+  await notifyHost(ctx, {
+    userId: booking.host_id,
+    kind: "booking_new",
+    title: `${booking.guest_name} booked ${booking.meeting_name}`,
+    body: localWhen(booking.starts_at, await timezoneOf(ctx, booking.host_id)),
+    bookingId: booking.id,
+  });
+}
+
+/** bookings_notify_changed — fires on a status change to cancelled. */
+export async function notifyBookingCancelled(ctx: MutationCtx, booking: Doc<"bookings">): Promise<void> {
+  await notifyHost(ctx, {
+    userId: booking.host_id,
+    kind: "booking_cancelled",
+    title: `${booking.guest_name} cancelled ${booking.meeting_name}`,
+    body: localWhen(booking.starts_at, await timezoneOf(ctx, booking.host_id)),
+    bookingId: booking.id,
+  });
+}
+
+/**
+ * public.upsert_contact, including its conflict rule: an existing contact keeps
+ * the name it already has unless that name is blank.
+ *
+ * Postgres did this with ON CONFLICT on a unique index. There is no unique
+ * index here, so the read-then-write is what enforces it — safe because the
+ * whole mutation is serializable.
+ */
+export async function upsertContact(
+  ctx: MutationCtx,
+  args: { userId: string; name: string; email: string },
+): Promise<void> {
+  const email = args.email.trim().toLowerCase();
+  if (!email) return;
+  const name = (args.name ?? "").trim();
+  const now = Date.now();
+
+  const existing = await ctx.db
+    .query("contacts")
+    .withIndex("by_user_email", (q) => q.eq("user_id", args.userId).eq("email", email))
+    .unique();
+
+  if (existing) {
+    await ctx.db.patch(existing._id, {
+      name: existing.name.trim() === "" ? name : existing.name,
+      updated_at: now,
+    });
+    return;
+  }
+
+  await ctx.db.insert("contacts", {
+    id: uuid(),
+    user_id: args.userId,
+    name,
+    email,
+    phone: "",
+    company: "",
+    notes: "",
+    source: "booking",
+    created_at: now,
+    updated_at: now,
+  });
+}
+
+/** The four log_* triggers, which all wrote one admin_activity row. */
+export async function logActivity(
+  ctx: MutationCtx,
+  args: { actorId: string | null; kind: string; summary: string },
+): Promise<void> {
+  await ctx.db.insert("admin_activity", {
+    id: uuid(),
+    actor_id: args.actorId,
+    kind: args.kind,
+    summary: args.summary,
+    created_at: Date.now(),
+  });
+}

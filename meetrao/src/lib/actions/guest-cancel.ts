@@ -5,6 +5,9 @@ import { cancellationMail } from "@/lib/email/booking-mail";
 import { sendCancellationToGuest, sendCancellationToHost } from "@/lib/email/send";
 import { CalendarError, deleteBookingEvent } from "@/lib/google/calendar";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexAnonymous } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import type { Booking, Profile } from "@/lib/types";
 
 /**
@@ -19,19 +22,38 @@ export async function cancelAsGuest(formData: FormData): Promise<void> {
 
   const admin = supabaseAdmin();
 
-  const { data, error } = await admin.rpc("cancel_booking_by_reference", { p_reference: reference });
-  if (error) redirect("/");
+  let wasOpen = false;
+  let booking: Booking | null = null;
 
-  const result = (Array.isArray(data) ? data[0] : data) as { id: string; was_open: boolean } | undefined;
-  if (!result) redirect("/");
+  if (convexServes("publicBooking")) {
+    try {
+      const r = await convexAnonymous().mutation(api.publicBooking.cancelByReference, { reference });
+      wasOpen = r.was_open;
+      booking = r.booking as unknown as Booking;
+    } catch {
+      redirect("/");
+    }
+  } else {
+    const { data, error } = await admin.rpc("cancel_booking_by_reference", { p_reference: reference });
+    if (error) redirect("/");
+
+    const result = (Array.isArray(data) ? data[0] : data) as { id: string; was_open: boolean } | undefined;
+    if (!result) redirect("/");
+
+    wasOpen = result.was_open;
+    if (wasOpen) {
+      const { data: row } = await admin.from("bookings").select("*").eq("id", result.id).maybeSingle();
+      booking = row as Booking | null;
+    }
+  }
 
   // Already cancelled: show the same screen rather than an error. Cancelling
   // twice is not a failure from the guest's side.
-  if (result.was_open) {
-    const { data: row } = await admin.from("bookings").select("*").eq("id", result.id).maybeSingle();
-    const booking = row as Booking | null;
+  if (wasOpen) {
 
     if (booking) {
+      // Profiles are still Supabase-authoritative, and host_id is the same
+      // UUID on both sides, so this read works whichever backend cancelled.
       const { data: hostRow } = await admin
         .from("profiles")
         .select("full_name, username, email, timezone, notify_booking_cancelled")

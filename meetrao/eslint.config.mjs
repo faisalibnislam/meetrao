@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Convex writes these; they are not ours to lint.
+    "convex/_generated/**",
+    // Spikes are preserved proofs, not shipped code.
+    "docs/spikes/**",
   ]),
 ]);
 
