@@ -34,7 +34,7 @@ Done, on **dev only** — production still runs entirely on Supabase Auth:
 | 2. Run beside Supabase | done — `convex/auth.config.ts` accepts **both** issuers |
 | 3. Keep `profiles.id` stable | done — `users.supabase_id`, resolved only in `convex/lib/auth.ts:currentUserId` |
 | 4. Import the users | done for identities and Google links; **password hashes still to come** (see below) |
-| 5. Swap the app's auth surface | **partly done — see below** |
+| 5. Swap the app's auth surface | **done — sign-in verified end to end on dev** |
 | 6. Confirmation email to Resend | wired in step 1, unexercised |
 | 7. Cut over, then delete | not started |
 
@@ -71,14 +71,28 @@ than one that fails.
 Server-action branches for sign-in, sign-up, reset and sign-out were written,
 proved non-viable, and **removed** rather than left looking plausible.
 
-**So the remaining work in step 5 is the forms, not the actions.**
-`login`, `signup`, `forgot` and `reset` become client components calling
-`useAuthActions().signIn(...)`, with the server actions kept only for the
-Supabase path until the cutover. Two properties must survive that port, and
-both are easy to lose in a client component:
+**The forms are ported.** There were two, not four —
+`components/auth/auth-form.tsx` (login, signup, forgot) and
+`reset-form.tsx` — and each now carries both paths, choosing on a
+`convexAuth` prop passed down from its server page. Both security properties
+survived and are commented where someone might "fix" them: ONE message for
+unknown-account and wrong-password, and a reset that redirects identically
+whether or not the address exists.
 
-- one message for "no such account" and "wrong password";
-- reset that never reveals whether an address is registered.
+Convex Auth also needs BOTH providers mounted — `ConvexAuthNextjsServerProvider`
+in the root layout to read the cookie, and `ConvexAuthNextjsProvider` inside it
+for `useAuthActions`. The client one alone throws `Cannot destructure property
+'isLoading' of 'useAuth(...)'`. Neither is mounted while the domain is off, so
+the Supabase path renders exactly the tree it always did.
+
+**Verified end to end on dev**: signed in through the real form with an
+imported bcrypt hash, landed on the dashboard as the right person, and
+`/contacts` rendered all four contacts with their meeting counts and dates.
+
+The reset flow differs by backend and the form shows it: Supabase emails a link
+that creates a session, Convex Auth emails a CODE and no session, so the
+address and code travel in the query string with visible fields as the
+fallback.
 
 ### Two things that bit, recorded so they do not bite twice
 

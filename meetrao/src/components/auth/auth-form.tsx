@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useState, useTransition } from "react";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Field, Help, Input } from "@/components/ui/controls";
 import { Callout } from "@/components/ui/panels";
@@ -20,6 +22,16 @@ import {
 
 export type AuthMode = "login" | "signup" | "forgot";
 
+/**
+ * ONE message, whatever went wrong.
+ *
+ * Not laziness — a form that distinguishes "no such account" from "wrong
+ * password" is an account-enumeration oracle, and the Supabase path has said
+ * exactly this since the beginning (`GENERIC` in src/lib/actions/auth.ts).
+ * Do not be tempted to surface the provider's error to make debugging easier.
+ */
+const GENERIC = "That email and password do not match an account.";
+
 const ACTION = {
   login: signInWithPassword,
   signup: signUpWithPassword,
@@ -28,10 +40,74 @@ const ACTION = {
 
 const CTA = { login: "Sign in", signup: "Create account", forgot: "Send reset link" } as const;
 
-export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
+export function AuthForm({
+  mode,
+  next,
+  convexAuth = false,
+}: {
+  mode: AuthMode;
+  next?: string;
+  /**
+   * Decided on the SERVER and passed down, never read from a NEXT_PUBLIC
+   * variable — the browser must not be able to disagree with the backend
+   * about who issues sessions.
+   */
+  convexAuth?: boolean;
+}) {
   const [state, formAction, pending] = useActionState<AuthResult, FormData>(ACTION[mode], {});
   const [googlePending, startGoogle] = useTransition();
   const [googleError, setGoogleError] = useState<string | null>(null);
+
+  /* Convex Auth has no server-side signIn: the cookie the middleware reads is
+     written HERE, by useAuthActions. That is why these flows cannot be server
+     actions, and why this component carries both paths until the cutover. */
+  const { signIn } = useAuthActions();
+  const router = useRouter();
+  const [convexPending, startConvex] = useTransition();
+  const [convexError, setConvexError] = useState<string | null>(null);
+
+  function submitViaConvex(form: FormData) {
+    startConvex(async () => {
+      setConvexError(null);
+      const email = String(form.get("email") ?? "").trim().toLowerCase();
+      const password = String(form.get("password") ?? "");
+
+      try {
+        if (mode === "forgot") {
+          /* Swallowed on purpose, exactly as the server action does: whether
+             an address is registered is not something an unauthenticated form
+             may reveal, and an error here would reveal it. */
+          try {
+            await signIn("password", { email, flow: "reset" });
+          } catch {
+            /* ignored, deliberately */
+          }
+          router.push("/login?sent=reset");
+          return;
+        }
+
+        if (mode === "signup") {
+          await signIn("password", {
+            email,
+            password,
+            name: String(form.get("full_name") ?? "").trim(),
+            flow: "signUp",
+          });
+          router.push(`/verify?email=${encodeURIComponent(email)}`);
+          return;
+        }
+
+        await signIn("password", { email, password, flow: "signIn" });
+        router.push(next && next.startsWith("/") ? next : "/dashboard");
+        router.refresh();
+      } catch {
+        setConvexError(mode === "signup" ? "That email could not be registered." : GENERIC);
+      }
+    });
+  }
+
+  const busy = convexAuth ? convexPending : pending;
+  const error = convexAuth ? convexError : state.error;
 
   const isForgot = mode === "forgot";
   const isSignup = mode === "signup";
@@ -43,10 +119,13 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
 
   return (
     <div className="flex flex-col gap-[14px]">
-      {state.error ? <Callout tone="red">{state.error}</Callout> : null}
+      {error ? <Callout tone="red">{error}</Callout> : null}
       {googleError ? <Callout tone="red">{googleError}</Callout> : null}
 
-      <form action={formAction} className="flex flex-col gap-[14px]">
+      <form
+        action={convexAuth ? submitViaConvex : formAction}
+        className="flex flex-col gap-[14px]"
+      >
         {next ? <input type="hidden" name="next" value={next} /> : null}
         {/* Registration sets the host's timezone from their own device, so a
             new account never offers its hours in UTC by accident. Changed
@@ -97,8 +176,8 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
           </Field>
         ) : null}
 
-        <Button type="submit" variant="accent" size={40} full busy={pending} className="mt-[2px]">
-          {pending && mode === "login" ? "Signing in…" : CTA[mode]}
+        <Button type="submit" variant="accent" size={40} full busy={busy} className="mt-[2px]">
+          {busy && mode === "login" ? "Signing in…" : CTA[mode]}
         </Button>
       </form>
 
@@ -116,6 +195,15 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
             onClick={() =>
               startGoogle(async () => {
                 setGoogleError(null);
+                if (convexAuth) {
+                  try {
+                    // Convex Auth performs the redirect itself.
+                    await signIn("google", { redirectTo: `/auth/callback?tz=${encodeURIComponent(timezone)}` });
+                  } catch {
+                    setGoogleError("Google sign-in is unavailable.");
+                  }
+                  return;
+                }
                 const result = await startGoogleSignIn(timezone);
                 if (result.url) window.location.href = result.url;
                 else setGoogleError(result.error ?? "Google sign-in is unavailable.");

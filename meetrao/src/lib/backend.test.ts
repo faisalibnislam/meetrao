@@ -43,6 +43,18 @@ describe("which backend serves a domain", () => {
     expect(convexServes("auth")).toBe(false);
   });
 
+  /* The combination that broke: "all" is a MEMBER of the list, not a value the
+     whole string must equal. Read as an equality, `all,auth` matches neither
+     branch — every data domain falls back to Supabase while auth has already
+     moved, and the symptom is a signed-in user whose every screen is empty. */
+  it("honours all when it appears beside another domain", () => {
+    set("all,auth");
+    expect(convexServes("contacts")).toBe(true);
+    expect(convexServes("bookings")).toBe(true);
+    expect(convexServes("google")).toBe(true);
+    expect(convexServes("auth")).toBe(true);
+  });
+
   it("switches auth on only when it is named outright", () => {
     set("all,auth");
     expect(convexServes("auth")).toBe(true);

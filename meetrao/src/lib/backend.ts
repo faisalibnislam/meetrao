@@ -67,5 +67,11 @@ export function convexServes(domain: Domain): boolean {
 
   const named = raw.split(",").map((s) => s.trim());
   if (named.includes(domain)) return true;
-  return raw === "all" && !NEVER_WILDCARD.includes(domain);
+
+  /* "all" is a MEMBER of the list, not a value the whole string must equal.
+     Comparing the raw string meant `all,auth` matched neither branch, so every
+     data domain silently fell back to Supabase while auth had moved — which
+     presents as a signed-in user whose screens are all empty, because the
+     Supabase session no longer exists. */
+  return named.includes("all") && !NEVER_WILDCARD.includes(domain);
 }
