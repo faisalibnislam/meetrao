@@ -6,7 +6,8 @@ import { Eyebrow } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Logo } from "@/components/ui/logo";
 import { Callout } from "@/components/ui/panels";
-import { supabaseServer } from "@/lib/supabase/server";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 export const metadata: Metadata = { title: "Confirm your email" };
 
@@ -20,14 +21,13 @@ export default async function VerifyPage({
 }) {
   const { email, expired, unverified } = await searchParams;
 
-  const supabase = await supabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const convex = await convexServer();
+  const who = await convex.query(api.whoami.emailVerified, {});
 
-  if (user && (user.email_confirmed_at ?? user.confirmed_at)) redirect("/onboarding/1");
+  // Already confirmed: there is nothing to wait for on this screen.
+  if (who.authenticated && who.verified) redirect("/onboarding/1");
 
-  const pending = user?.email ?? email ?? "your email address";
+  const pending = who.email ?? email ?? "your email address";
 
   return (
     <div className="box-border flex min-h-screen items-start justify-center p-[20px]">
@@ -67,7 +67,7 @@ export default async function VerifyPage({
             </span>
           </div>
 
-          <VerifyActions signedIn={Boolean(user)} />
+          <VerifyActions signedIn={who.authenticated} />
         </div>
 
         <span className="pl-[2px] text-[12.5px] text-ink-3">

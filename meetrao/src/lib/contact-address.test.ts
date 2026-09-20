@@ -151,45 +151,21 @@ describe("one operator, one address", () => {
     expect(found).toEqual([]);
   });
 
-  /* The Supabase confirmation email is the one file that cannot import
-     anything. It is a static HTML document pasted by hand into the Supabase
-     dashboard — Supabase renders and sends it, not this app — so the address
-     has to be written out, and changing it here changes nothing until somebody
-     pastes it again. That is the whole reason it went out without one. */
-  const PASTED_BY_HAND = path.join(
-    "src",
-    "emails",
-    "supabase",
-    "confirm-signup.html",
-  );
+  /* Was: an exception for src/emails/supabase/confirm-signup.html, a static
+     document pasted by hand into the Supabase dashboard, which therefore could
+     not import the constant and had to spell the address out. Supabase no
+     longer sends anything, the file is gone, and the rule is now absolute:
+     ONE definition, in src/lib/contact.ts.
 
-  it("defines the postal address once in code, plus the one file that cannot import it", () => {
+     Note the gap this leaves, which is tracked in src/emails/README.md: Convex
+     Auth sends the verification and reset emails itself, with Auth.js's default
+     template, so those two carry no postal address at all. This test cannot see
+     them because they are not files in this repo. */
+  it("defines the postal address exactly once, in code", () => {
     const literals = FILES.filter((f) => f.text.includes(POSTAL_ADDRESS)).map(
       (f) => f.file,
     );
-    expect(literals.sort()).toEqual(
-      [PASTED_BY_HAND, path.join("src", "lib", "contact.ts")].sort(),
-    );
-  });
-
-  /* The inverse, and the defect that actually shipped: Supabase's email went
-     out with a footer reading "Meetrao" and nothing else. */
-  it("puts the address in the hand-pasted Supabase template too", () => {
-    const template = FILES.find((f) => f.file === PASTED_BY_HAND);
-    expect(template, "the Supabase template is missing").toBeDefined();
-    expect(
-      template!.text,
-      "no postal address in the Supabase confirmation email",
-    ).toContain(POSTAL_ADDRESS);
-  });
-
-  /* And it must not offer to unsubscribe from a confirmation. The link pointed
-     at /settings/notifications, which requires the account the recipient is in
-     the middle of confirming — an unsubscribe that cannot work is worse than
-     none, and on a transactional message it should not be there at all. */
-  it("does not offer an unsubscribe on the signup confirmation", () => {
-    const template = FILES.find((f) => f.file === PASTED_BY_HAND);
-    expect(template!.text.toLowerCase()).not.toContain("unsubscribe");
+    expect(literals).toEqual([path.join("src", "lib", "contact.ts")]);
   });
 
   /* The rule above existed for the postal address and not for the support

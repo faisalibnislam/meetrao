@@ -338,3 +338,36 @@ export async function createProfileForNewUser(
     created_at: now,
   });
 }
+
+/**
+ * Claims the welcome email, once and only once.
+ *
+ * The flag is set and the row returned in ONE transaction, so two sign-ins
+ * racing cannot both send. A welcome that never arrives is a small thing; one
+ * that arrives every time a host signs in is the kind of bug people
+ * unsubscribe over — which is why this is a claim rather than a read-then-write.
+ */
+export const claimWelcome = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const me = await optionalProfile(ctx);
+    if (!me || me.welcomed_at !== null) return null;
+
+    await ctx.db.patch(me._id, { welcomed_at: Date.now(), updated_at: Date.now() });
+    return { id: me.id, username: me.username, full_name: me.full_name, email: me.email };
+  },
+});
+
+/** Step 3 of onboarding: the host's first meeting, if they have made one. */
+export const firstMeeting = query({
+  args: {},
+  handler: async (ctx) => {
+    const me = await requireProfile(ctx);
+    const rows = await ctx.db
+      .query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
+    const first = rows.sort((a, b) => a.created_at - b.created_at)[0];
+    return first
+      ? { name: first.name, description: first.description, duration_minutes: first.duration_minutes }
+      : null;
+  },
+});

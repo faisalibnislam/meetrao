@@ -6,7 +6,6 @@
  * guard, the trigger effects and the rate limiter, then deletes everything it
  * made. Nothing it touches belongs to anyone else.
  */
-import { createClient } from "@supabase/supabase-js";
 import { ConvexHttpClient } from "convex/browser";
 import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
@@ -18,8 +17,18 @@ if (existsSync(f)) for (const line of readFileSync(f, "utf8").split("\n")) {
   const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)$/.exec(line);
   if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
 }
-const admin = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 const URL_ = env.NEXT_PUBLIC_CONVEX_URL;
+const prod = process.argv.includes("--prod");
+
+/* The privileged half. There is no ambient admin client any more — the
+   service-role key went with Postgres — so the few reads this needs beyond
+   the guest path go through `npx convex run` against the internalQueries in
+   convex/verify.ts, which a deploy key authorises and nothing else can reach. */
+const run = (fn, args = {}) => {
+  const a = ["convex", "run", fn, JSON.stringify(args)];
+  if (prod) a.push("--prod");
+  return JSON.parse(execFileSync("npx", a, { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim() || "null");
+};
 
 let failures = 0;
 const check = (label, ok, detail) => {
@@ -28,13 +37,6 @@ const check = (label, ok, detail) => {
 };
 const msg = (e) => e?.data?.message ?? e?.message ?? String(e);
 
-async function sessionFor(email) {
-  const { data } = await admin.auth.admin.generateLink({ type: "magiclink", email });
-  const anon = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, { auth: { persistSession: false } });
-  const { data: v } = await anon.auth.verifyOtp({ type: "magiclink", token_hash: data.properties.hashed_token });
-  return v.session.access_token;
-}
-
 const guest = new ConvexHttpClient(URL_);
 
 /* The host is DISCOVERED, never named.
@@ -42,11 +44,7 @@ const guest = new ConvexHttpClient(URL_);
    source, and hardcoding a username here tripped it — correctly. Picking the
    first host that has an active meeting type also means this keeps working
    when the seed data changes. */
-const { data: candidates } = await admin
-  .from("profiles")
-  .select("id, username, email, is_suspended")
-  .eq("is_suspended", false)
-  .order("created_at");
+const candidates = run("verify:hosts");
 
 let host = null;
 let types = [];
@@ -62,15 +60,8 @@ const username = host.username;
 const slug = types[0].slug;
 console.log(`\n  Host ${username}, meeting "${types[0].name}" (${types[0].duration_minutes}m)\n`);
 
-const hostToken = await sessionFor(host.email);
-const asHost = new ConvexHttpClient(URL_);
-asHost.setAuth(hostToken);
-
 const made = [];
-const baseline = {
-  notifications: (await asHost.query("notifications:listOwn", {})).length,
-  contacts: (await asHost.query("contacts:listOwn", {})).length,
-};
+const baseline = run("verify:effectsFor", { userId: host.id });
 
 /** A Monday far out, 10:00 in the host's zone — inside the seeded 09:00–17:00. */
 function mondayAt(weeksAhead, hour) {
@@ -103,11 +94,10 @@ for (const w of won) made.push(w.value.reference);
 check(`${RACERS} concurrent guests, one slot: exactly one wins`, won.length === 1, `${won.length} won / ${taken.length} "slot taken"`);
 
 // ── 2. the trigger effects fired ────────────────────────────────────────────
-const notifsAfter = await asHost.query("notifications:listOwn", {});
-const contactsAfter = await asHost.query("contacts:listOwn", {});
-check("a notification was written for the host", notifsAfter.length === baseline.notifications + 1, `${baseline.notifications} → ${notifsAfter.length}`);
-check("the guest became a contact", contactsAfter.length === baseline.contacts + 1, `${baseline.contacts} → ${contactsAfter.length}`);
-check("the notification names the guest and meeting", /Racer \d+ booked/.test(notifsAfter[0]?.title ?? ""), notifsAfter[0]?.title);
+const after = run("verify:effectsFor", { userId: host.id });
+check("a notification was written for the host", after.notifications === baseline.notifications + 1, `${baseline.notifications} → ${after.notifications}`);
+check("the guest became a contact", after.contacts === baseline.contacts + 1, `${baseline.contacts} → ${after.contacts}`);
+check("the notification names the guest and meeting", /Racer \d+ booked/.test(after.newestNotificationTitle ?? ""), after.newestNotificationTitle);
 
 // ── 3. the guards still refuse what Postgres refused ────────────────────────
 /* The unavailable time is DERIVED by scanning, using the SAME host-local
@@ -117,8 +107,7 @@ check("the notification names the guest and meeting", /Racer \d+ booked/.test(no
    was closed, and the harness picked a host who works Sundays; the next tried
    to do timezone arithmetic by hand. Asking Intl the same question the server
    asks is the only version that cannot drift. */
-const hostProfile = (await admin.from("profiles").select("timezone").eq("id", host.id).single()).data;
-const hostTimezone = hostProfile.timezone || "UTC";
+const hostTimezone = host.timezone || "UTC";
 
 function hostLocal(atMs) {
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -199,16 +188,11 @@ check("the limiter refuses the 6th booking from one guest", limited !== null && 
 // reachable from a client. Needs the same Convex auth the rest of the repo's
 // tooling uses.
 console.log(`\n  Purging ${made.length} test booking(s) and their side effects…`);
-const purged = execFileSync(
-  "npx",
-  ["convex", "run", "testCleanup:purgeByReferences", JSON.stringify({
-    references: made,
-    emailPrefix: "booking-core-check",
-    summaryContains: ["Racer ", "Repeat ", "Guard "],
-  })],
-  { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
-);
-console.log(purged.trim().split("\n").slice(-9).join("\n"));
+console.log(JSON.stringify(run("testCleanup:purgeByReferences", {
+  references: made,
+  emailPrefix: "booking-core-check",
+  summaryContains: ["Racer ", "Repeat ", "Guard "],
+}), null, 2));
 
 console.log(failures === 0 ? "\nBooking core clean.\n" : `\n${failures} failure(s).\n`);
 process.exit(failures ? 1 : 0);

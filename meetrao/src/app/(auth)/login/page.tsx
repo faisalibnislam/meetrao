@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { convexServes } from "@/lib/backend";
 import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
@@ -39,7 +38,7 @@ export default async function LoginPage({
           Sign up again, or contact support if this keeps happening.
         </Callout>
       ) : null}
-      <AuthForm mode="login" next={next} convexAuth={convexServes("auth")} />
+      <AuthForm mode="login" next={next} />
     </AuthCard>
   );
 }

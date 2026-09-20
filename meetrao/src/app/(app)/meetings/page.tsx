@@ -5,7 +5,8 @@ import { MeetingsTable, type MeetingRow } from "@/components/app/meetings-table"
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/panels";
 import { requireOnboardedSession } from "@/lib/data/session";
-import { supabaseServer } from "@/lib/supabase/server";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { bookingLink } from "@/lib/username";
 import type { MeetingType } from "@/lib/types";
 
@@ -13,15 +14,8 @@ export const metadata: Metadata = { title: "Meetings" };
 
 export default async function MeetingsPage() {
   const { profile } = await requireOnboardedSession();
-  const supabase = await supabaseServer();
-
-  const { data } = await supabase
-    .from("meeting_types")
-    .select("*")
-    .eq("user_id", profile.id)
-    .order("created_at");
-
-  const meetings = (data ?? []) as MeetingType[];
+  const convex = await convexServer();
+  const meetings = (await convex.query(api.meetingTypes.listOwn, {})) as unknown as MeetingType[];
 
   const rows: MeetingRow[] = meetings.map((m) => ({
     id: m.id,

@@ -336,11 +336,18 @@ export const takeTokensForRevoke = internalMutation({
 });
 
 /**
- * Disconnect: revoke with Google, then forget.
+ * Disconnect: take the token, then revoke it.
  *
- * Revoke FIRST — deleting the row without revoking leaves the grant alive with
- * nothing left to revoke it with. The revoke never throws and never hangs, so
- * a bad afternoon at Google cannot block a host disconnecting.
+ * `takeTokensForRevoke` reads and deletes in ONE transaction and hands the
+ * token back, which is what makes the order safe. Deleting the row on its own
+ * would leave the grant alive in the host's Google account with nothing left
+ * to revoke it with — the UI would say "disconnected", the calendar would be
+ * unreachable, and the grant would quietly survive.
+ *
+ * The revoke never throws and never hangs, so a bad afternoon at Google cannot
+ * block a host disconnecting. It can still leave a grant standing if this
+ * action dies between the two steps; that is the residual, and it is why
+ * revokeToken has a timeout rather than a retry.
  */
 export const disconnect = action({
   args: {},

@@ -14,7 +14,8 @@ import { ensureDefaultAvailability } from "@/lib/data/availability";
 import { minutesToLabel } from "@/lib/booking/time";
 import { requireSession } from "@/lib/data/session";
 import { connectionStatus } from "@/lib/google/connection";
-import { supabaseServer } from "@/lib/supabase/server";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { timezoneOptions } from "@/lib/timezones";
 
 export const metadata: Metadata = { title: "Set up Meetrao" };
@@ -43,21 +44,21 @@ export default async function OnboardingStep({
   // Onboarding is for setting up. Once it is done, this is the dashboard's job.
   if (session.profile.onboarding_completed_at) redirect("/dashboard");
 
-  const supabase = await supabaseServer();
+  const convex = await convexServer();
   const name = session.profile.full_name || session.profile.username;
 
   return (
     <div className="box-border flex min-h-screen flex-col">
       <StepRail step={step} name={name} email={session.profile.email} onSignOut={signOut} />
-      {await stepContent(step, session, supabase, calendar)}
+      {await stepContent(step, session, convex, calendar)}
     </div>
   );
 }
 
 type Session = Awaited<ReturnType<typeof requireSession>>;
-type Client = Awaited<ReturnType<typeof supabaseServer>>;
+type Client = Awaited<ReturnType<typeof convexServer>>;
 
-async function stepContent(step: number, session: Session, supabase: Client, calendar?: string) {
+async function stepContent(step: number, session: Session, convex: Client, calendar?: string) {
   if (step === 1) {
     return <StepClaimLink initial={session.profile.username} />;
   }
@@ -74,13 +75,7 @@ async function stepContent(step: number, session: Session, supabase: Client, cal
   }
 
   if (step === 3) {
-    const { data } = await supabase
-      .from("meeting_types")
-      .select("name, description, duration_minutes")
-      .eq("user_id", session.userId)
-      .order("created_at")
-      .limit(1)
-      .maybeSingle();
+    const data = await convex.query(api.profiles.firstMeeting, {});
 
     return (
       <StepFirstMeeting
@@ -100,20 +95,11 @@ async function stepContent(step: number, session: Session, supabase: Client, cal
     // Onboarding edits the default schedule. A new host has exactly one, and
     // naming schedules is not a step-4 concern — the Availability screen is
     // where a host adds more.
-    const { data: defaultSchedule } = await supabase
-      .from("availability_schedules")
-      .select("id")
-      .eq("user_id", session.userId)
-      .order("is_default", { ascending: false })
-      .order("created_at")
-      .limit(1)
-      .maybeSingle();
+    const defaultSchedule = (await convex.query(api.availability.listSchedules, {}))[0] ?? null;
 
-    const { data } = await supabase
-      .from("availability_rules")
-      .select("weekday, start_minute, end_minute")
-      .eq("user_id", session.userId)
-      .eq("schedule_id", defaultSchedule?.id ?? "");
+    const data = defaultSchedule
+      ? await convex.query(api.availability.listRules, { scheduleId: defaultSchedule.id })
+      : [];
 
     return (
       <StepAvailability
@@ -126,19 +112,13 @@ async function stepContent(step: number, session: Session, supabase: Client, cal
     );
   }
 
-  const [{ data: meeting }, { data: rules }, status] = await Promise.all([
-    supabase
-      .from("meeting_types")
-      .select("name, duration_minutes")
-      .eq("user_id", session.userId)
-      .order("created_at")
-      .limit(1)
-      .maybeSingle(),
-    supabase.from("availability_rules").select("weekday, start_minute, end_minute").eq("user_id", session.userId),
+  const [meeting, screen, status] = await Promise.all([
+    convex.query(api.profiles.firstMeeting, {}),
+    convex.query(api.availability.screen, {}),
     connectionStatus(session.userId),
   ]);
 
-  const days: Day[] = rulesToDays(rules ?? []);
+  const days: Day[] = rulesToDays(screen.rules);
   const open = days.filter((d) => d.on);
 
   return (

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { CalendarError, createBookingEvent, createEventForBooking } from "@/lib/google/calendar";
+import { createEventForBooking } from "@/lib/google/calendar";
 import { formatDuration, formatLongDate, formatTime } from "@/lib/booking/time";
 import { timezoneLabel } from "@/lib/timezones";
 import { zonedInstant } from "@/lib/booking/slots";

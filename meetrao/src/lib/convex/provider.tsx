@@ -12,22 +12,10 @@ function client() {
 /**
  * Mounted at the root so the auth forms can reach `useAuthActions`.
  *
- * When Convex Auth is off this renders NOTHING of its own — no provider, no
- * client connection, no behaviour change. That is deliberate: the Supabase
- * path is still what production runs, and it should not start paying for a
- * Convex websocket to support a feature that is switched off.
- *
- * `convexAuth` is decided on the server and passed down rather than read from
- * a NEXT_PUBLIC variable, so the browser cannot disagree with the backend
- * about who issues sessions.
+ * This is the CLIENT half. It has to sit inside `ConvexAuthNextjsServerProvider`
+ * (see src/app/layout.tsx) — on its own it throws, because `useAuth()` comes
+ * back undefined with nothing above it to supply the state.
  */
-export function ConvexClientProvider({
-  children,
-  convexAuth,
-}: {
-  children: React.ReactNode;
-  convexAuth: boolean;
-}) {
-  if (!convexAuth) return <>{children}</>;
+export function ConvexClientProvider({ children }: { children: React.ReactNode }) {
   return <ConvexAuthNextjsProvider client={client()}>{children}</ConvexAuthNextjsProvider>;
 }

@@ -1,7 +1,5 @@
 import { after } from "next/server";
 import { env } from "@/lib/env";
-import { supabaseAdmin } from "@/lib/supabase/admin";
-import { convexServes } from "@/lib/backend";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import {
@@ -16,7 +14,7 @@ import {
 /* ─────────────────────────────────────────────────────────────────────────────
    The analytics beacon's other end.
 
-   Why a route at all, rather than letting the browser write to Supabase: two
+   Why a route at all, rather than letting the browser write directly: two
    of the four interesting fields can only be known here.
 
      · the country comes from Vercel's edge headers, which the page never sees
@@ -63,8 +61,10 @@ function withinBudget(hash: string, now: number): boolean {
   return entry.count <= MAX_PER_WINDOW;
 }
 
-/** 1 in 500 requests also takes out the rows past the retention period. */
-const PRUNE_ODDS = 500;
+/* Retention pruning used to ride along on 1 request in 500, because there was
+   nowhere else to put it. It is a scheduled job now — see convex/crons.ts —
+   which is both more predictable and does not make one unlucky visitor pay for
+   it. */
 
 const NO_CONTENT = new Response(null, { status: 204, headers: { "cache-control": "no-store" } });
 
@@ -79,7 +79,7 @@ export async function POST(request: Request): Promise<Response> {
 
   // Local development does not write to the production table. Checked from the
   // request's own host rather than NODE_ENV, so `next start` against a local
-  // Supabase behaves the same way.
+  // Convex behaves the same way.
   const host = (headers.get("host") ?? "").toLowerCase();
   if (/^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(host)) return NO_CONTENT;
 
@@ -119,38 +119,24 @@ export async function POST(request: Request): Promise<Response> {
   // The visitor waits for none of this. `after` runs once the response is on
   // its way, so a slow database is not a slow page.
   after(async () => {
-    if (convexServes("analytics")) {
-      /* The secret is what keeps this endpoint ours. site_visits had no insert
-         grant precisely so a browser could not forge a visit, and a Convex
-         mutation has no service role to inherit that from — see the note on
-         `record` in convex/analytics.ts. */
-      const secret = process.env.ANALYTICS_INGEST_SECRET;
-      if (!secret) {
-        console.error("analytics: ANALYTICS_INGEST_SECRET is not set; visit not recorded");
-        return;
-      }
-      try {
-        await convexAnonymous().mutation(api.analytics.record, { secret, ...row });
-      } catch (cause) {
-        // Logged, not thrown: a page view that fails to record is not an
-        // outage, and there is no one to tell.
-        console.error("analytics: convex insert failed", cause);
-      }
-      // No opportunistic prune here — convex/crons.ts runs it on a schedule,
-      // which is what it should always have been.
+    /* The secret is what keeps this endpoint ours. site_visits had no insert
+       grant precisely so a browser could not forge a visit, and a Convex
+       mutation has no service role to inherit that from — see the note on
+       `record` in convex/analytics.ts. */
+    const secret = process.env.ANALYTICS_INGEST_SECRET;
+    if (!secret) {
+      console.error("analytics: ANALYTICS_INGEST_SECRET is not set; visit not recorded");
       return;
     }
-
-    const supabase = supabaseAdmin();
-    const { error } = await supabase.from("site_visits").insert(row);
-    // Logged, not thrown: a page view that fails to record is not an outage,
-    // and there is no one to tell. The log is where it is findable.
-    if (error) console.error("analytics: insert failed", error.message);
-
-    if (Math.floor(Math.random() * PRUNE_ODDS) === 0) {
-      const { error: pruneError } = await supabase.rpc("analytics_prune", { p_keep_days: 400 });
-      if (pruneError) console.error("analytics: prune failed", pruneError.message);
+    try {
+      await convexAnonymous().mutation(api.analytics.record, { secret, ...row });
+    } catch (cause) {
+      // Logged, not thrown: a page view that fails to record is not an
+      // outage, and there is no one to tell.
+      console.error("analytics: convex insert failed", cause);
     }
+    // No opportunistic prune here — convex/crons.ts runs it on a schedule,
+    // which is what it should always have been.
   });
 
   return NO_CONTENT;
@@ -159,15 +145,15 @@ export async function POST(request: Request): Promise<Response> {
 /**
  * The hash salt.
  *
- * Falls back to the service-role key when ANALYTICS_SALT is unset: a stable,
- * server-only secret is exactly what is needed, and one that already exists
- * means the analytics work with no configuration at all. The cost of the
- * fallback is that rotating the service-role key resets that day's
- * unique-visitor count — which is why ANALYTICS_SALT exists.
+ * Must be set. It used to fall back to the service-role key, which made the
+ * analytics work with no configuration at all — and tied the visitor hash to a
+ * credential that could be rotated for unrelated reasons, silently resetting
+ * that day's unique-visitor count. There is no service-role key now, and the
+ * fallback would be worse than the requirement.
  *
  * The salt is never sent anywhere. It goes into a sha256 and stays here.
  */
 function analyticsSalt(): string {
   const e = env();
-  return e.ANALYTICS_SALT || e.SUPABASE_SERVICE_ROLE_KEY;
+  return e.ANALYTICS_SALT;
 }

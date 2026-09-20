@@ -21,9 +21,7 @@ import { POSTAL_ADDRESS } from "@/lib/contact";
    ───────────────────────────────────────────────────────────────────────────── */
 
 const REQUIRED = {
-  NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key-000000",
-  SUPABASE_SERVICE_ROLE_KEY: "test-service-key-0000",
+  NEXT_PUBLIC_CONVEX_URL: "https://example-deployment.convex.cloud",
   GOOGLE_CLIENT_ID: "test-client-id",
   GOOGLE_CLIENT_SECRET: "test-client-secret",
   RESEND_API_KEY: "re_test_00000000",

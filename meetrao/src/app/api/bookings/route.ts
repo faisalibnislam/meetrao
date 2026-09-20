@@ -6,14 +6,11 @@ import { isSlotBookable } from "@/lib/booking/slots";
 import { formatDuration, formatLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
 import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
-import { CalendarError, createBookingEvent, createEventForBooking } from "@/lib/google/calendar";
-import { supabaseAdmin } from "@/lib/supabase/admin";
-import { convexServes } from "@/lib/backend";
+import { createEventForBooking } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 import { timezoneLabel } from "@/lib/timezones";
-import type { Profile } from "@/lib/types";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Booking creation. Public: the guest has no account.
@@ -79,8 +76,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "slot-taken" }, { status: 409 });
   }
 
-  const admin = supabaseAdmin();
-
   type CreatedRow = {
     reference: string;
     id: string;
@@ -91,60 +86,39 @@ export async function POST(request: NextRequest) {
   };
   let row: CreatedRow;
 
-  if (convexServes("publicBooking")) {
-    try {
-      // The rate limiter cannot see the caller's address from inside Convex, so
-      // the coarse key is derived here, where the request is. Hashed rather
-      // than stored raw: a rate-limit row should not become an IP log.
-      const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-      const callerKey = forwarded
-        ? createHash("sha256").update(`${forwarded}:${input.username}`).digest("hex").slice(0, 32)
-        : undefined;
+  try {
+    // The rate limiter cannot see the caller's address from inside Convex, so
+    // the coarse key is derived here, where the request is. Hashed rather
+    // than stored raw: a rate-limit row should not become an IP log.
+    const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const callerKey = forwarded
+      ? createHash("sha256").update(`${forwarded}:${input.username}`).digest("hex").slice(0, 32)
+      : undefined;
 
-      row = (await convexAnonymous().mutation(api.publicBooking.createBooking, {
-        username: input.username,
-        slug: input.slug,
-        startsAt: start.getTime(),
-        guestName: input.guestName,
-        guestEmail: input.guestEmail,
-        guestNote: input.guestNote ?? "",
-        guestTimezone,
-        pageViewId: input.pageViewId ?? null,
-        callerKey,
-      })) as CreatedRow;
-    } catch (cause) {
-      // These are create_booking's own refusals, carried across as messages.
-      const message = convexMessage(cause, "That booking could not be made.");
-      if (/slot taken|outside availability|minimum notice|booking window/i.test(message)) {
-        return NextResponse.json({ error: "slot-taken" }, { status: 409 });
-      }
-      if (/unknown host|unknown meeting/i.test(message)) {
-        return NextResponse.json({ error: message }, { status: 404 });
-      }
-      if (/too many|try again shortly/i.test(message)) {
-        return NextResponse.json({ error: message }, { status: 429 });
-      }
-      return NextResponse.json({ error: message }, { status: 500 });
+    row = (await convexAnonymous().mutation(api.publicBooking.createBooking, {
+      username: input.username,
+      slug: input.slug,
+      startsAt: start.getTime(),
+      guestName: input.guestName,
+      guestEmail: input.guestEmail,
+      guestNote: input.guestNote ?? "",
+      guestTimezone,
+      pageViewId: input.pageViewId ?? null,
+      callerKey,
+    })) as CreatedRow;
+  } catch (cause) {
+    // These are create_booking's own refusals, carried across as messages.
+    const message = convexMessage(cause, "That booking could not be made.");
+    if (/slot taken|outside availability|minimum notice|booking window/i.test(message)) {
+      return NextResponse.json({ error: "slot-taken" }, { status: 409 });
     }
-  } else {
-    const { data, error } = await admin.rpc("create_booking", {
-      p_username: input.username,
-      p_slug: input.slug,
-      p_starts_at: start.toISOString(),
-      p_guest_name: input.guestName,
-      p_guest_email: input.guestEmail,
-      p_guest_note: input.guestNote ?? "",
-      p_guest_timezone: guestTimezone,
-      p_page_view_id: input.pageViewId ?? null,
-    });
-
-    if (error) {
-      // MR409 is the function's own "this slot is gone" signal.
-      const status = error.code === "MR409" ? 409 : error.code === "MR404" ? 404 : 500;
-      return NextResponse.json({ error: status === 409 ? "slot-taken" : error.message }, { status });
+    if (/unknown host|unknown meeting/i.test(message)) {
+      return NextResponse.json({ error: message }, { status: 404 });
     }
-
-    row = (Array.isArray(data) ? data[0] : data) as CreatedRow;
+    if (/too many|try again shortly/i.test(message)) {
+      return NextResponse.json({ error: message }, { status: 429 });
+    }
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 
   const end = new Date(row.ends_at);
@@ -155,50 +129,15 @@ export async function POST(request: NextRequest) {
   let meetUrl: string | null = null;
   let calendarWarning: string | null = null;
 
-  if (convexServes("google")) {
-    const r = await createEventForBooking(row.reference);
-    if ("failure" in r) {
-      calendarWarning = r.failure;
-    } else {
-      meetUrl = r.meetUrl;
-    }
-  } else try {
-    const event = await createBookingEvent({
-      userId: host.id,
-      summary: `${row.meeting_name} — ${input.guestName}`,
-      description: input.guestNote
-        ? `Booked through Meetrao.\n\nNote from ${input.guestName}:\n${input.guestNote}`
-        : "Booked through Meetrao.",
-      start,
-      end,
-      timeZone: host.timezone,
-      attendees: [{ email: input.guestEmail, name: input.guestName }],
-    });
+  const event = await createEventForBooking(row.reference);
+  if ("failure" in event) calendarWarning = event.failure;
+  else meetUrl = event.meetUrl;
 
-    meetUrl = event.meetUrl;
-    if (convexServes("publicBooking")) {
-      await convexAnonymous().mutation(api.bookings.attachGoogleEventByReference, {
-        reference: row.reference,
-        googleEventId: event.eventId,
-        meetUrl: event.meetUrl,
-      });
-    } else {
-      await admin
-        .from("bookings")
-        .update({ google_event_id: event.eventId, meet_url: event.meetUrl })
-        .eq("id", row.id);
-    }
-  } catch (cause) {
-    calendarWarning = cause instanceof CalendarError ? cause.kind : "api-unavailable";
-  }
-
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("full_name, username, email, notify_new_booking")
-    .eq("id", host.id)
-    .maybeSingle();
-
-  const hostProfile = profile as Pick<Profile, "full_name" | "username" | "email" | "notify_new_booking"> | null;
+  /* Just enough of the host to address the confirmation email, keyed by the
+     booking's own reference. */
+  const hostProfile = await convexAnonymous().query(api.publicBooking.hostForBookingMail, {
+    reference: row.reference,
+  });
 
   const mail: BookingMail = {
     bookingId: row.id,

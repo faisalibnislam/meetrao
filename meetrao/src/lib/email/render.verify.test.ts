@@ -11,9 +11,7 @@ beforeAll(() => {
   // Dummies, deliberately. The point is to render the templates, not to reach
   // Resend — the SDK's fetch is intercepted below and never leaves the process.
   for (const [k, v] of Object.entries({
-    NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key-000000",
-    SUPABASE_SERVICE_ROLE_KEY: "test-service-key-0000",
+    NEXT_PUBLIC_CONVEX_URL: "https://example-deployment.convex.cloud",
     GOOGLE_CLIENT_ID: "test-client-id",
     GOOGLE_CLIENT_SECRET: "test-client-secret",
     RESEND_API_KEY: "re_test_00000000",

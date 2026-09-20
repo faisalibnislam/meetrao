@@ -23,11 +23,9 @@ export type AvatarResult = { url?: string | null; error?: string };
 /**
  * Records a freshly uploaded avatar.
  *
- * On Convex the argument is an opaque storage id rather than a path, and that
- * is the point: the client never chooses where the bytes land, so there is no
- * path to forge and no equivalent of the `avatars_insert_own` policy to check.
- * The Supabase branch keeps that check, because there a path DOES arrive from
- * a client and this code runs with the service role.
+ * The argument is an opaque storage id rather than a path, and that is the
+ * point: the client never chooses where the bytes land, so there is no path to
+ * forge and nothing for a policy to have to check.
  */
 export async function saveAvatarFromStorageId(storageId: string): Promise<AvatarResult> {
   try {

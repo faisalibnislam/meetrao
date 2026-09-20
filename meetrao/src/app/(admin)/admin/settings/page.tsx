@@ -3,17 +3,16 @@ import { AppScreen } from "@/components/app/app-screen";
 import { AdminSettingsForm } from "@/components/admin/admin-settings";
 import { signOut } from "@/lib/actions/auth";
 import { requireAdmin } from "@/lib/data/session";
-import { supabaseServer } from "@/lib/supabase/server";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import type { PlatformSettings } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Admin settings" };
 
 export default async function AdminSettingsPage() {
   const { profile } = await requireAdmin();
-  const supabase = await supabaseServer();
-
-  const { data } = await supabase.from("platform_settings").select("*").eq("id", true).maybeSingle();
-  const settings = data as PlatformSettings | null;
+  const convex = await convexServer();
+  const settings = (await convex.query(api.platformSettings.getForApp, {})) as PlatformSettings | null;
 
   return (
     <AppScreen title="Settings">

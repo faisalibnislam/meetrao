@@ -83,7 +83,7 @@ export function Avatar({
 
   if (src) {
     return (
-      // Plain <img>, not next/image: the source is a Supabase Storage URL that
+      // Plain <img>, not next/image: the source is a Convex file-storage URL that
       // changes whenever the host re-crops, and these are 24-42px — there is
       // nothing for the optimiser to save.
       // eslint-disable-next-line @next/next/no-img-element

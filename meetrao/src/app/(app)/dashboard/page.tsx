@@ -12,7 +12,8 @@ import { formatTime } from "@/lib/booking/time";
 import { listBookings } from "@/lib/data/bookings";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { connectionStatus } from "@/lib/google/connection";
-import { supabaseServer } from "@/lib/supabase/server";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { bookingLink } from "@/lib/username";
 import type { MeetingType } from "@/lib/types";
 
@@ -20,18 +21,18 @@ export const metadata: Metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
   const { profile } = await requireOnboardedSession();
-  const supabase = await supabaseServer();
+  const convex = await convexServer();
   const zone = profile.timezone;
 
-  const [bookings, { data: meetingRows }, calendar, { data: replyMinutes }] = await Promise.all([
+  const [bookings, meetingRows, calendar, replyMinutes] = await Promise.all([
     // The dashboard shows what is next; it has never rendered a past booking.
     listBookings(profile.id, zone, { history: false }),
-    supabase.from("meeting_types").select("*").eq("user_id", profile.id).order("created_at"),
+    convex.query(api.meetingTypes.listOwn, {}),
     connectionStatus(profile.id),
-    supabase.rpc("avg_reply_minutes", { p_user_id: profile.id, p_days: 30 }),
+    convex.query(api.admin.avgReplyMinutes, { days: 30 }),
   ]);
 
-  const meetings = (meetingRows ?? []) as MeetingType[];
+  const meetings = meetingRows as unknown as MeetingType[];
   const active = meetings.filter((m) => m.is_active);
 
   const upcoming = bookings.filter((b) => !b.past && !b.cancelled);

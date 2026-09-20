@@ -4,7 +4,8 @@ import { AppScreen } from "@/components/app/app-screen";
 import { MeetingForm } from "@/components/app/meeting-form";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { scheduleOptions } from "@/lib/data/schedules";
-import { supabaseServer } from "@/lib/supabase/server";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import type { MeetingType } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Edit meeting" };
@@ -12,14 +13,10 @@ export const metadata: Metadata = { title: "Edit meeting" };
 export default async function EditMeetingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const { profile } = await requireOnboardedSession();
-  const supabase = await supabaseServer();
-
-  const { data } = await supabase
-    .from("meeting_types")
-    .select("*")
-    .eq("id", id)
-    .eq("user_id", profile.id)
-    .maybeSingle();
+  const convex = await convexServer();
+  // Scoped by the caller's own identity inside the query — an id belonging to
+  // another host comes back null rather than someone else's meeting.
+  const data = await convex.query(api.meetingTypes.getOwn, { id });
 
   if (!data) notFound();
   const meeting = data as MeetingType;

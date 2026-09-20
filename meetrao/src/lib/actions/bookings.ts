@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
 import { cancellationMail } from "@/lib/email/booking-mail";
 import { sendCancellationToGuest, sendCancellationToHost } from "@/lib/email/send";
-import { CalendarError, deleteBookingEvent, deleteEventForBooking } from "@/lib/google/calendar";
+import { CalendarError, deleteEventForBooking } from "@/lib/google/calendar";
 import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
@@ -22,15 +22,12 @@ export type CancelResult = { error?: string; calendarWarning?: string };
  */
 export async function cancelBooking(bookingId: string): Promise<CancelResult> {
   const session = await requireSession();
-  let booking: Booking;
-  let invitees: { name: string; email: string }[] = [];
-
   const convex = await convexServer();
   const existing = await convex.query(api.bookings.getForHost, { id: bookingId });
   if (!existing) return { error: "That booking is not yours to cancel." };
 
-  booking = existing as unknown as Booking;
-  invitees = existing.invitees.map((i) => ({ name: i.name, email: i.email }));
+  const booking = existing as unknown as Booking;
+  const invitees = existing.invitees.map((i) => ({ name: i.name, email: i.email }));
   if (booking.status === "cancelled") return {};
 
   try {
@@ -44,8 +41,7 @@ export async function cancelBooking(bookingId: string): Promise<CancelResult> {
     try {
       const outcome = await deleteEventForBooking(booking.reference);
       if (outcome !== "ok" && outcome !== "already-deleted") throw new CalendarError(outcome, "Google refused the removal.");
-    
-} catch (cause) {
+    } catch (cause) {
       // An event that is already gone is not a problem worth reporting.
       if (cause instanceof CalendarError && cause.kind !== "already-deleted") {
         calendarWarning = "The booking is cancelled, but Google Calendar did not confirm the removal.";

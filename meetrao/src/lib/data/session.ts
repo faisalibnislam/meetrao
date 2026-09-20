@@ -36,6 +36,18 @@ export const requireSession = cache(async function requireSession(): Promise<Ses
   const who = await convex.query(api.whoami.identity, {});
 
   if (!who.authenticated) redirect("/login");
+
+  /* THE VERIFICATION GATE. Supabase put `email_confirmed_at` in the token, so
+     src/proxy.ts could check it before a render; Convex Auth does not, so it
+     is checked where the profile is read — which was always the real boundary
+     anyway. The cost is one extra redirect, on a path taken once.
+
+     Convex Auth already refuses to issue a session to an unverified account,
+     so this is the second line rather than the only one. It matters for the
+     case that first line does not cover: an address that was verified when
+     the session was issued and is not any more. */
+  if (!who.emailVerified) redirect("/verify?unverified=1");
+
   if (!who.hasConvexProfile) {
     // Authenticated with no profile is a half-created account. The profile is
     // written by convex/auth.ts's afterUserCreatedOrUpdated callback, so this
@@ -50,7 +62,7 @@ export const requireSession = cache(async function requireSession(): Promise<Ses
   return {
     userId: profile.id,
     email: who.email ?? profile.email,
-    verified: true,
+    verified: who.emailVerified,
     profile,
   };
 });
@@ -71,11 +83,12 @@ export async function requireAdmin(): Promise<Session> {
 /**
  * For screens that render differently when signed in but do not require it.
  *
- * Deliberately NOT the two-at-once shape requireSession uses. This one runs on
- * the public pages, where the overwhelmingly common caller is signed out — and
- * for them there is no profile to fetch, so firing current_profile() alongside
- * getUser() would not save a hop, it would just add a call that anon has no
- * grant to make, on every landing page view, to throw the 403 away.
+ * ONE query, deliberately — this runs on the public pages, where almost every
+ * caller is signed out and there is no profile to fetch. It does NOT apply the
+ * verification gate: these screens only decide which nav to draw, and an
+ * unverified visitor should see their own name in it rather than be bounced
+ * off the pricing page. Every screen that shows real data goes through
+ * requireSession, which does gate.
  *
  * It still gets `cache()`: the site chrome and the page both call this, and one
  * request should mean one check.
@@ -84,5 +97,7 @@ export const optionalSession = cache(async function optionalSession(): Promise<S
   const convex = await convexServer();
   const profile = (await convex.query(api.profiles.current, {})) as Profile | null;
   if (!profile) return null;
-  return { userId: profile.id, email: profile.email, verified: true, profile };
+  // `verified` is not read on these screens; requireSession is the caller
+  // that answers it truthfully, and this one has not asked.
+  return { userId: profile.id, email: profile.email, verified: false, profile };
 });

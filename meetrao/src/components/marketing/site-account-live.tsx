@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SiteAccountMenu } from "./site-account-menu";
-import { supabaseBrowser } from "@/lib/supabase/client";
+import { useConvexAuth, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import type { Profile } from "@/lib/types";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -55,53 +56,29 @@ export function accountFrom(profile: Profile | null, sessionEmail: string | null
 }
 
 export function SiteAccountLive({ onSignOut }: { onSignOut: () => void | Promise<void> }) {
-  /* "unknown" until the browser has looked, and it draws the same thing as
-     "signed-out". That is deliberate: the first client render has to match the
-     server's HTML or React reports a hydration mismatch, and the server's HTML
-     is the signed-out nav. */
-  const [state, setState] = useState<State>("unknown");
+  /* Convex Auth owns the session, and `useConvexAuth` already tracks it live —
+     including a sign-out in another tab, which is what the old
+     onAuthStateChange subscription was for. `useQuery` re-runs on its own when
+     that changes, so there is nothing to subscribe to and nothing to
+     unsubscribe.
 
-  useEffect(() => {
-    let live = true;
-    const supabase = supabaseBrowser();
+     DERIVED DURING RENDER, not synced in an effect. Both are live values that
+     React already re-renders on, so an effect would only copy them into state
+     one render later — a cascading render for no new information. It also read
+     as if there were something to clean up, and there is not.
 
-    async function read() {
-      /* getSession, not getUser: it reads the session the browser already has
-         instead of asking Supabase to verify it, which is the difference
-         between an instant answer and a round trip to Tokyo. Fine here, and
-         only here — this picks an avatar, it does not grant access to
-         anything. Every screen behind the menu re-checks on the server. */
-      const { data } = await supabase.auth.getSession();
-      const user = data.session?.user;
-      if (!live) return;
-      if (!user) {
-        setState("signed-out");
-        return;
-      }
+     "unknown" and "signed-out" draw the same thing on purpose: the first
+     client render has to match the server's HTML or React reports a hydration
+     mismatch, and the server's HTML is the signed-out nav. */
+  const { isLoading, isAuthenticated } = useConvexAuth();
+  const profile = useQuery(api.profiles.current, isAuthenticated ? {} : "skip");
 
-      // The profile carries the display name and the avatar; the session only
-      // has the email. current_profile needs no id — see migration 0015.
-      const { data: profile } = await supabase.rpc("current_profile");
-      if (!live) return;
-
-      const row = (Array.isArray(profile) ? profile[0] : profile) as Profile | null;
-      setState(accountFrom(row, user.email ?? null));
-    }
-
-    void read();
-
-    /* Logging out in another tab, or the token expiring, should change this nav
-       rather than leave a stale avatar pointing at a dashboard that will bounce
-       the visitor to /login. */
-    const { data: sub } = supabase.auth.onAuthStateChange(() => {
-      void read();
-    });
-
-    return () => {
-      live = false;
-      sub.subscription.unsubscribe();
-    };
-  }, []);
+  const state: State =
+    isLoading || (isAuthenticated && profile === undefined)
+      ? "unknown"
+      : !isAuthenticated
+        ? "signed-out"
+        : accountFrom((profile ?? null) as Profile | null, profile?.email ?? null);
 
   if (state === "unknown" || state === "signed-out") return <SignedOutActions />;
 

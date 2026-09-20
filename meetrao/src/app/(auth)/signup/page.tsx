@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { convexServes } from "@/lib/backend";
 import type { Metadata } from "next";
 import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
@@ -30,7 +29,7 @@ export default function SignupPage() {
         </>
       }
     >
-      <AuthForm mode="signup" convexAuth={convexServes("auth")} />
+      <AuthForm mode="signup" />
     </AuthCard>
   );
 }

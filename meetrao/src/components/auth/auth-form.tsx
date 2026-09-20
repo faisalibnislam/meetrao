@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useActionState, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Field, Help, Input } from "@/components/ui/controls";
@@ -12,13 +12,6 @@ import { Eyebrow } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button-class";
 import { useClientValue } from "@/lib/use-client-value";
 import { detectTimezone, nearestSupportedTimezone } from "@/lib/timezones";
-import {
-  sendPasswordReset,
-  signInWithPassword,
-  signUpWithPassword,
-  startGoogleSignIn,
-  type AuthResult,
-} from "@/lib/actions/auth";
 
 export type AuthMode = "login" | "signup" | "forgot";
 
@@ -26,43 +19,23 @@ export type AuthMode = "login" | "signup" | "forgot";
  * ONE message, whatever went wrong.
  *
  * Not laziness — a form that distinguishes "no such account" from "wrong
- * password" is an account-enumeration oracle, and the Supabase path has said
- * exactly this since the beginning (`GENERIC` in src/lib/actions/auth.ts).
- * Do not be tempted to surface the provider's error to make debugging easier.
+ * password" is an account-enumeration oracle. Do not be tempted to surface
+ * Convex Auth's own error to make debugging easier.
  */
 const GENERIC = "That email and password do not match an account.";
-
-const ACTION = {
-  login: signInWithPassword,
-  signup: signUpWithPassword,
-  forgot: sendPasswordReset,
-} as const;
 
 const CTA = { login: "Sign in", signup: "Create account", forgot: "Send reset link" } as const;
 
 /**
- * Two components, not one branch, because `useAuthActions` may only be called
- * where `ConvexAuthNextjsProvider` is mounted — and it is mounted only when
- * Convex Auth is on. Calling it behind an `if` is not an option: hooks cannot
- * be conditional. Calling it unconditionally is what broke the build, because
- * prerendering a static auth page with no provider above it throws
- * "Cannot destructure property 'signIn'".
- *
- * `convexAuth` is decided on the SERVER and passed down, never read from a
- * NEXT_PUBLIC variable — the browser must not be able to disagree with the
- * backend about who issues sessions.
+ * `useAuthActions` may only be called where `ConvexAuthNextjsProvider` is
+ * mounted, which is why this is a client component and why the flows below
+ * are not server actions: Convex Auth has no server-side `signIn`, and the
+ * cookie the proxy reads is written HERE, in the browser.
  */
-export function AuthForm(props: { mode: AuthMode; next?: string; convexAuth?: boolean }) {
-  return props.convexAuth ? <ConvexAuthForm {...props} /> : <SupabaseAuthForm {...props} />;
-}
-
-function ConvexAuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
+export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
   const [googlePending, startGoogle] = useTransition();
   const [googleError, setGoogleError] = useState<string | null>(null);
 
-  /* Convex Auth has no server-side signIn: the cookie the middleware reads is
-     written HERE, by useAuthActions. That is why these flows cannot be server
-     actions, and why this component carries both paths until the cutover. */
   const { signIn } = useAuthActions();
   const router = useRouter();
   const [convexPending, startConvex] = useTransition();
@@ -132,34 +105,6 @@ function ConvexAuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
   );
 }
 
-function SupabaseAuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
-  const [state, formAction, pending] = useActionState<AuthResult, FormData>(ACTION[mode], {});
-  const [googlePending, startGoogle] = useTransition();
-  const [googleError, setGoogleError] = useState<string | null>(null);
-  const timezone = useClientValue(() => nearestSupportedTimezone(detectTimezone()), "UTC");
-
-  return (
-    <Fields
-      mode={mode}
-      next={next}
-      action={formAction}
-      busy={pending}
-      error={state.error}
-      onGoogle={() =>
-        startGoogle(async () => {
-          setGoogleError(null);
-          const result = await startGoogleSignIn(timezone);
-          if (result.url) window.location.href = result.url;
-          else setGoogleError(result.error ?? "Google sign-in is unavailable.");
-        })
-      }
-      googleBusy={googlePending}
-      googleError={googleError}
-    />
-  );
-}
-
-/** The markup, shared verbatim so the two paths cannot drift visually. */
 function Fields({
   mode,
   next,

@@ -9,26 +9,26 @@ import { createProfileForNewUser } from "./profiles";
 /* ─────────────────────────────────────────────────────────────────────────────
    Convex Auth.
 
-   Running BESIDE Supabase Auth, not instead of it — convex/auth.config.ts
-   accepts both issuers at once, so this can be switched on, watched, and
-   switched back without anyone being locked out. Supabase stays the live
-   identity provider until the app is repointed.
+   The only identity provider. It ran beside Supabase Auth during the cutover,
+   with convex/auth.config.ts accepting both issuers at once so the app could be
+   repointed either way; that entry is gone now.
 
-   Two properties of src/lib/actions/auth.ts must survive the port here,
-   because both are deliberate and both fail silently if lost:
+   Two properties are deliberate and both fail silently if lost:
 
      · sign-in must give ONE message for "no such account" and "wrong
        password", or the form becomes an account-enumeration oracle;
      · password reset must not reveal whether an address is registered.
 
-   Convex Auth does not leak either by default; the risk is in what the UI
-   does with the errors, so the check belongs in the port of the forms rather
-   than here. It is on the runbook's checklist.
+   Convex Auth does not leak either by default; the risk is in what the UI does
+   with the errors, so both are enforced in src/components/auth/auth-form.tsx —
+   one `GENERIC` string for every sign-in failure, and a reset that routes to
+   the same confirmation whether or not the address exists.
    ───────────────────────────────────────────────────────────────────────────── */
 
 const passwordProvider = Password<DataModel>({
-  // Verifies bcrypt (imported from Supabase) and Scrypt (everything since).
-  // See the note in convex/authCrypto.ts.
+  // Scrypt for everything created here, plus bcrypt for anything imported.
+  // See the note in convex/authCrypto.ts — the bcrypt half has no users left
+  // and is kept only because removing a verifier is a one-way door.
   crypto: passwordCrypto,
 
   /**

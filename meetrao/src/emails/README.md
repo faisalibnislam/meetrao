@@ -12,7 +12,7 @@ untouched.
 
 | File | Trigger | To | Honours prefs? |
 | --- | --- | --- | --- |
-| `verify-email.html` | Email sign-up | New signup | No — transactional |
+| `verify-email.html` | Email sign-up | New signup | No — transactional (NOT WIRED, see below) |
 | `welcome.html` | Email confirmed, or Google sign-up | Host | See note below |
 | `booking-new-host.html` | Guest confirms a slot | Host | Yes — "New booking" |
 | `booking-new-guest.html` | Same event | Guest | No — transactional |
@@ -21,18 +21,21 @@ untouched.
 
 ## Who sends what
 
-**`verify-email.html` is sent by Supabase, not by us.** The verification gate is
-built on Supabase Auth's own `email_confirmed_at`, so Supabase issues the token
-and sends the mail. To use this design rather than Supabase's default:
+**Four of the five wired templates go out through Resend from
+`src/lib/email/send.ts`**, which renders them, escapes every merge value and
+applies the preference rules below.
 
-> Supabase dashboard → Authentication → Emails → **Confirm signup** → paste
-> `supabase/confirm-signup.html`.
+**The verification and reset emails do not.** Convex Auth owns those two flows
+and sends them itself, via the `Resend` providers configured in
+`convex/auth.ts`. With no `sendVerificationRequest` supplied, that is Auth.js's
+own generic template — so those two messages are currently unbranded and carry
+no postal address. `verify-email.html` is the design for the first of them and
+is **not wired to anything**; see "Still open".
 
-That file is this template with `{{ .ConfirmationURL }}` in place of the link and
-the footer values filled in — Supabase's template language, not ours. Keep the
-two in step if the design changes.
-
-The other five go out through Resend from `src/lib/email/send.ts`.
+Note also that Convex Auth verifies with a **code**, not a link, which the
+`/reset` page reads from `?email=&code=`. `verify-email.html` is written around
+`{{verify_url}}` and will need that link built for it, or the copy changed to
+present a code.
 
 ## Rules that are enforced in code
 
@@ -48,6 +51,14 @@ The other five go out through Resend from `src/lib/email/send.ts`.
 
 ## Still open
 
+- **The verification and reset emails are unbranded.** They are Auth.js
+  defaults, sent by Convex Auth. Fixing it means passing
+  `sendVerificationRequest` to the two `Resend(...)` providers in
+  `convex/auth.ts` and rendering the template there — Convex functions cannot
+  import from `src/`, so the HTML has to be copied into `convex/` or read from
+  storage. Until then these are the only two messages the product sends that do
+  not look like the product, and the only two with no postal address in the
+  footer. **This is the largest outstanding item on this list.**
 - **`booking-changed.html` has no trigger.** There is no reschedule flow — guests
   cancel and rebook. `sendRescheduled()` exists and is unwired, so building
   reschedule later is a matter of calling it.

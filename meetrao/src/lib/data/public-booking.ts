@@ -8,10 +8,9 @@ import { api } from "@/convex/_generated/api";
 /* ─────────────────────────────────────────────────────────────────────────────
    The public booking page runs with no session at all.
 
-   On Supabase that meant every read went through a SECURITY DEFINER function
-   rather than a table. On Convex it means an ANONYMOUS client against the
-   public functions in convex/publicBooking.ts — the same principle, that the
-   guest path gets named doors and never general table access.
+   So it uses an ANONYMOUS client against the named public functions in
+   convex/publicBooking.ts, never general table access: the guest path gets
+   named doors, each of which decides for itself what a stranger may see.
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type PublicHost = {

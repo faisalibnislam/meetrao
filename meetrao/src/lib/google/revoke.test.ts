@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { hasCalendarWrite, revokeToken } from "@/convex/lib/googleApi";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Disconnecting has to end the grant, not just lose our key to it.
@@ -8,57 +9,24 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
    itself, which stays valid until it expires. The Privacy Policy says the grant
    ends; this is what makes that true.
 
-   The order is the part that can silently break. Delete first and the refresh
-   token is gone before anything can be revoked with it, and the failure is
-   invisible — the UI still says "disconnected", the calendar is still
-   unreachable, and the grant just quietly survives in somebody's Google
-   account. So the test asserts the sequence, not only the calls.
+   The call now lives in Convex, next to the tokens — `convex/google.ts`
+   disconnect takes the refresh token out of the row and revokes it. The
+   ordering that test used to guard (revoke before delete) is no longer a risk
+   there, because the mutation RETURNS the token as it deletes, so the action
+   cannot be left holding a deleted row and nothing to revoke with. What is
+   still worth pinning down is this function's own behaviour, because every one
+   of its answers is a judgement call about what "failed" means.
    ───────────────────────────────────────────────────────────────────────────── */
 
 const calls: string[] = [];
 const revokedTokens: string[] = [];
 
-/** What getConnection will find. Reassigned per test. */
-let row: Record<string, unknown> | null = null;
-
 /** What the revoke endpoint answers with. Reassigned per test. */
 let revokeResponse: () => Response | Promise<Response> = () => new Response("", { status: 200 });
-
-vi.mock("server-only", () => ({}));
-
-vi.mock("@/lib/supabase/admin", () => ({
-  supabaseAdmin: () => ({
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          maybeSingle: async () => {
-            calls.push("read");
-            return { data: row };
-          },
-        }),
-      }),
-      delete: () => ({
-        eq: async () => {
-          calls.push("delete");
-          return { error: null };
-        },
-      }),
-    }),
-  }),
-}));
-
-vi.mock("@/lib/env", () => ({
-  env: () => ({ GOOGLE_CLIENT_ID: "id", GOOGLE_CLIENT_SECRET: "secret" }),
-  siteUrl: () => "https://meetrao.com",
-}));
-
-const { disconnect } = await import("./connection");
-const { revokeToken } = await import("./oauth");
 
 beforeEach(() => {
   calls.length = 0;
   revokedTokens.length = 0;
-  row = { user_id: "u1", refresh_token: "refresh-abc", access_token: "access-xyz" };
   revokeResponse = () => new Response("", { status: 200 });
 
   vi.stubGlobal("fetch", async (url: string, init: RequestInit) => {
@@ -69,56 +37,11 @@ beforeEach(() => {
     }
     throw new Error(`unexpected fetch: ${url}`);
   });
-
-  vi.spyOn(console, "warn").mockImplementation(() => {});
 });
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
-});
-
-describe("disconnect", () => {
-  it("revokes the grant with Google before deleting our copy", async () => {
-    await disconnect("u1");
-    expect(calls).toEqual(["read", "revoke", "delete"]);
-  });
-
-  /* The refresh token is the durable half of the grant. Revoking the access
-     token works too — until it expires, which for an idle connection is most of
-     the time. Sending the wrong one would pass a "did we call revoke" test. */
-  it("sends the refresh token, not the access token", async () => {
-    await disconnect("u1");
-    expect(revokedTokens).toEqual(["refresh-abc"]);
-  });
-
-  it("falls back to the access token when there is no refresh token", async () => {
-    row = { user_id: "u1", refresh_token: null, access_token: "access-xyz" };
-    await disconnect("u1");
-    expect(revokedTokens).toEqual(["access-xyz"]);
-  });
-
-  /* Google being unreachable must never leave a host unable to disconnect. Our
-     copy still goes; the grant is the part they may have to finish by hand. */
-  it("still deletes our copy when Google refuses", async () => {
-    revokeResponse = () => new Response("nope", { status: 503 });
-    await disconnect("u1");
-    expect(calls).toEqual(["read", "revoke", "delete"]);
-  });
-
-  it("still deletes our copy when the network fails outright", async () => {
-    revokeResponse = () => {
-      throw new Error("ECONNREFUSED");
-    };
-    await expect(disconnect("u1")).resolves.toBeUndefined();
-    expect(calls).toContain("delete");
-  });
-
-  it("does not call Google for a user who has no connection", async () => {
-    row = null;
-    await disconnect("u1");
-    expect(calls).toEqual(["read", "delete"]);
-  });
 });
 
 describe("revokeToken", () => {
@@ -139,6 +62,8 @@ describe("revokeToken", () => {
     expect(await revokeToken("t")).toBe("failed");
   });
 
+  /* Never throws. The caller is in the middle of disconnecting a calendar or
+     deleting an account, and neither may fail because Google is unreachable. */
   it("reports failure rather than throwing when the network dies", async () => {
     revokeResponse = () => {
       throw new Error("ECONNREFUSED");
@@ -154,5 +79,23 @@ describe("revokeToken", () => {
   it("posts the token as form data, and nothing else", async () => {
     await revokeToken("refresh-abc");
     expect(revokedTokens).toEqual(["refresh-abc"]);
+  });
+});
+
+/* Google lets a user tick only some of the consent boxes. Without the write
+   scope the guest cannot be invited, which is the whole point of connecting,
+   so the callback refuses the connection rather than storing a token that
+   will fail on the first booking. */
+describe("hasCalendarWrite", () => {
+  it("accepts the write scope", () => {
+    expect(hasCalendarWrite(["https://www.googleapis.com/auth/calendar.events"])).toBe(true);
+  });
+
+  it("rejects read-only consent", () => {
+    expect(hasCalendarWrite(["https://www.googleapis.com/auth/calendar.readonly"])).toBe(false);
+  });
+
+  it("rejects no calendar scope at all", () => {
+    expect(hasCalendarWrite(["openid", "email"])).toBe(false);
   });
 });

@@ -1,115 +1,50 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { supabaseServer } from "@/lib/supabase/server";
-import { siteUrl } from "@/lib/env";
-import { supportedTimezone } from "@/lib/timezones";
+import { fetchAction } from "convex/nextjs";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+import { api } from "@/convex/_generated/api";
 
-/* Auth server actions. Each returns a plain `{ error }` so the form can render
-   the message inline rather than throwing. */
+/* ─────────────────────────────────────────────────────────────────────────────
+   Signing out.
 
-export type AuthResult = { error?: string };
+   The only auth server action left. Everything else — sign in, sign up, reset,
+   Google — is client-side now, because Convex Auth writes its session cookie in
+   the browser and has no server-side `signIn`. See src/components/auth/.
 
-const GENERIC = "That email and password do not match an account.";
-
-export async function signInWithPassword(_prev: AuthResult, formData: FormData): Promise<AuthResult> {
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  const next = String(formData.get("next") ?? "");
-
-  if (!email || !password) return { error: "Enter your email and password." };
-
-  const supabase = await supabaseServer();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-  // Never distinguish "no such account" from "wrong password" — that turns the
-  // form into an account-enumeration oracle.
-  if (error) return { error: GENERIC };
-
-  const verified = Boolean(data.user?.email_confirmed_at ?? data.user?.confirmed_at);
-  if (!verified) redirect("/verify?unverified=1");
-
-  redirect(next && next.startsWith("/") ? next : "/dashboard");
-}
-
-export async function signUpWithPassword(_prev: AuthResult, formData: FormData): Promise<AuthResult> {
-  const fullName = String(formData.get("full_name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  // The browser's own zone, carried in a hidden field. Checked against the
-  // list this app offers before it goes anywhere near the account: it arrives
-  // from a client, and the slot engine reads the result.
-  const timezone = supportedTimezone(formData.get("timezone"));
-
-  if (!fullName) return { error: "Enter your full name." };
-  if (!email.includes("@")) return { error: "Enter an email we can send the confirmation to." };
-  if (password.length < 8) return { error: "Use at least 8 characters." };
-
-  const supabase = await supabaseServer();
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      // handle_new_user reads this and writes it to the profile, so the host
-      // lands on their real hours rather than UTC. See migration 0008.
-      data: { full_name: fullName, timezone },
-      emailRedirectTo: `${siteUrl()}/auth/confirm`,
-    },
-  });
-
-  if (error) return { error: error.message };
-
-  // Sign-up routes to the verify gate, not to onboarding.
-  redirect(`/verify?email=${encodeURIComponent(email)}`);
-}
-
-export async function sendPasswordReset(_prev: AuthResult, formData: FormData): Promise<AuthResult> {
-  const email = String(formData.get("email") ?? "").trim();
-  if (!email.includes("@")) return { error: "Enter the email you signed up with." };
-
-  const supabase = await supabaseServer();
-  // The result is deliberately not surfaced: whether an address is registered
-  // is not something an unauthenticated form should reveal.
-  await supabase.auth.resetPasswordForEmail(email, { redirectTo: `${siteUrl()}/auth/confirm?next=/reset` });
-
-  redirect("/login?sent=reset");
-}
-
-export async function updatePassword(_prev: AuthResult, formData: FormData): Promise<AuthResult> {
-  const password = String(formData.get("password") ?? "");
-  if (password.length < 8) return { error: "Use at least 8 characters." };
-
-  const supabase = await supabaseServer();
-  const { error } = await supabase.auth.updateUser({ password });
-  if (error) return { error: error.message };
-
-  redirect("/dashboard?updated=password");
-}
-
-export async function signOut() {
-  const supabase = await supabaseServer();
-  await supabase.auth.signOut();
-  redirect("/login");
-}
+   Sign-out is the exception, and only because it is DESTRUCTION rather than
+   issuance: there is nothing to hand back to the browser. It is kept as a
+   server action so the eight screens that already pass it down as `onSignOut`
+   did not have to become client components to log a person out.
+   ───────────────────────────────────────────────────────────────────────────── */
 
 /**
- * Returns Google's consent URL; the caller navigates to it.
+ * Ends the session at both ends.
  *
- * A Google sign-up has no form to carry the detected zone, so it rides on the
- * return URL instead and /auth/callback applies it. Not sensitive, and
- * validated again on the way back — the round trip goes through Google.
+ * Deleting the cookies alone would leave the refresh token live in Convex —
+ * the browser would forget it, and anything still holding it would not. So the
+ * session is invalidated in Convex FIRST, and the cookies go afterwards.
+ *
+ * Convex is allowed to fail here. A person who clicked "Log out" must end up
+ * logged out of this browser whatever the network did, and an un-cleared
+ * cookie is the worse of the two failures.
  */
-export async function startGoogleSignIn(detected?: string): Promise<{ url?: string; error?: string }> {
-  const supabase = await supabaseServer();
-  const timezone = supportedTimezone(detected);
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${siteUrl()}/auth/callback?tz=${encodeURIComponent(timezone)}`,
-      queryParams: { prompt: "select_account" },
-    },
-  });
+export async function signOut() {
+  try {
+    const token = await convexAuthNextjsToken();
+    if (token) await fetchAction(api.auth.signOut, {}, { token });
+  } catch {
+    /* ignored, deliberately — the cookies below are what this screen needs */
+  }
 
-  if (error || !data.url) return { error: error?.message ?? "Google sign-in is unavailable." };
-  return { url: data.url };
+  const store = await cookies();
+  // Off localhost the package prefixes both names with `__Host-`, so both
+  // spellings are cleared rather than guessing which environment this is.
+  for (const name of ["__convexAuthJWT", "__convexAuthRefreshToken"]) {
+    store.delete(name);
+    store.delete(`__Host-${name}`);
+  }
+
+  redirect("/login");
 }

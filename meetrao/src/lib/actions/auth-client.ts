@@ -1,7 +1,8 @@
 "use server";
 
-import { supabaseServer } from "@/lib/supabase/server";
-import { siteUrl } from "@/lib/env";
+import { convexServer } from "@/lib/convex/server";
+import { convexMessage } from "@/lib/convex/error";
+import { api } from "@/convex/_generated/api";
 
 /* Actions the verify screen calls from an event handler. Kept apart from
    auth.ts because those redirect, and a redirect thrown inside a transition is
@@ -9,28 +10,28 @@ import { siteUrl } from "@/lib/env";
 
 export type AuthResult = { error?: string };
 
-/** Re-reads the session from Supabase. True once the emailed link has been opened. */
+/** True once the emailed link has been opened. */
 export async function checkVerified(): Promise<boolean> {
-  const supabase = await supabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return Boolean(user && (user.email_confirmed_at ?? user.confirmed_at));
+  const convex = await convexServer();
+  const who = await convex.query(api.whoami.emailVerified, {});
+  return who.authenticated && who.verified;
 }
 
 export async function resendVerification(): Promise<AuthResult> {
-  const supabase = await supabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const convex = await convexServer();
+  const who = await convex.query(api.whoami.emailVerified, {});
+  if (!who.authenticated || !who.email) return { error: "Sign in again to resend the link." };
 
-  if (!user?.email) return { error: "Sign in again to resend the link." };
-
-  const { error } = await supabase.auth.resend({
-    type: "signup",
-    email: user.email,
-    options: { emailRedirectTo: `${siteUrl()}/auth/confirm` },
-  });
-
-  return error ? { error: error.message } : {};
+  try {
+    // Re-running the sign-up flow for an existing unverified account issues a
+    // fresh code and sends it; Convex Auth treats it as another attempt at the
+    // same verification rather than a second account.
+    await convex.action(api.auth.signIn, {
+      provider: "password",
+      params: { email: who.email, flow: "email-verification" },
+    });
+    return {};
+  } catch (cause) {
+    return { error: convexMessage(cause, "That link could not be resent.") };
+  }
 }
