@@ -114,6 +114,41 @@ Verified after the switch: a real beacon to `meetrao.com/api/analytics/collect`
 landed in Convex (85 → 86) while Postgres stayed put; the admin reads return
 real figures at 7/30/90 days; an anonymous caller is refused.
 
+**2026-09-20 — `auth` switched on. The cutover.**
+`CONVEX_BACKENDS=all,auth`. Convex Auth now issues every session; Supabase Auth
+no longer does. Production Convex got its OWN signing keypair (not dev's),
+Resend credentials, the auth schema, and the four identities — all four
+pre-verified, so nobody is asked to confirm an address they confirmed months
+ago. Verified against production: a sign-up is accepted, the profile callback
+runs, and the dataset is untouched at 4 profiles / 7 bookings / 5 contacts.
+
+**Everyone was signed out by this**, which is inherent: a Supabase session is
+not a Convex Auth session. Two consequences, both known and accepted because
+these four accounts are test data:
+
+| Who | What they must do |
+| --- | --- |
+| The three password accounts | Use **Forgot password**. Their bcrypt hashes were deliberately not imported, so the old passwords do not work. The reset flow is wired to Resend. |
+| The two Google accounts | **Blocked until a redirect URI is registered** — see below. |
+
+### The one thing that needs Google Cloud
+
+Convex Auth's callback is its own URL, not the app's:
+
+    https://avid-dotterel-109.convex.site/api/auth/callback/google
+
+That is **not** registered on the OAuth client, so "Continue with Google" will
+fail with `redirect_uri_mismatch` until someone adds it in Google Cloud →
+Credentials → the Web application client → Authorised redirect URIs. Add the
+dev one too if Google sign-in is wanted locally:
+
+    https://festive-meerkat-460.convex.site/api/auth/callback/google
+
+This is separate from the calendar integration's own URI
+(`https://meetrao.com/api/google/callback`), which stays exactly as it is —
+sign-in and calendar access are two concerns sharing one OAuth client, which
+is what the original `.env.example` said from the beginning.
+
 **2026-09-20 — `google` switched on.**
 `CONVEX_BACKENDS=analytics,notifications,contacts,schedules,google`. Google
 Calendar tokens are now read, refreshed and used entirely inside Convex;
