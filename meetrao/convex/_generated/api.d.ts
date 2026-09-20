@@ -10,6 +10,9 @@
 
 import type * as admin from "../admin.js";
 import type * as analytics from "../analytics.js";
+import type * as auth from "../auth.js";
+import type * as authCrypto from "../authCrypto.js";
+import type * as authImport from "../authImport.js";
 import type * as availability from "../availability.js";
 import type * as avatars from "../avatars.js";
 import type * as bookings from "../bookings.js";
@@ -17,6 +20,7 @@ import type * as calendarConnections from "../calendarConnections.js";
 import type * as contacts from "../contacts.js";
 import type * as crons from "../crons.js";
 import type * as google from "../google.js";
+import type * as http from "../http.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_effects from "../lib/effects.js";
 import type * as lib_errors from "../lib/errors.js";
@@ -45,6 +49,9 @@ import type {
 declare const fullApi: ApiFromModules<{
   admin: typeof admin;
   analytics: typeof analytics;
+  auth: typeof auth;
+  authCrypto: typeof authCrypto;
+  authImport: typeof authImport;
   availability: typeof availability;
   avatars: typeof avatars;
   bookings: typeof bookings;
@@ -52,6 +59,7 @@ declare const fullApi: ApiFromModules<{
   contacts: typeof contacts;
   crons: typeof crons;
   google: typeof google;
+  http: typeof http;
   "lib/auth": typeof lib_auth;
   "lib/effects": typeof lib_effects;
   "lib/errors": typeof lib_errors;

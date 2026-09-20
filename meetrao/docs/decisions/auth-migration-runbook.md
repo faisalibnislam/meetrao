@@ -1,6 +1,6 @@
 # Runbook — moving auth off Supabase, so the project can be deleted
 
-Status: **ready to execute, and no longer blocked on anyone.** Rewritten
+Status: **steps 1–4 done on the dev deployment and verified; 5–7 remain.** Rewritten
 2026-09-20 for **Convex Auth** rather than Clerk, because the deciding
 constraint turned out to be "no additional service" — see the revision at the
 end of `docs/decisions/auth-provider.md`.
@@ -24,6 +24,55 @@ And one thing that is not auth but dies with the project: `admin.auth.admin.dele
 in `src/lib/actions/{settings,admin}.ts`, which removes the identity after
 Convex has purged the data.
 
+## Progress, 2026-09-20
+
+Done, on **dev only** — production still runs entirely on Supabase Auth:
+
+| Step | State |
+| --- | --- |
+| 1. Install and configure Convex Auth | done — `convex/auth.ts`, Password + Google, Resend wired for verification and reset |
+| 2. Run beside Supabase | done — `convex/auth.config.ts` accepts **both** issuers |
+| 3. Keep `profiles.id` stable | done — `users.supabase_id`, resolved only in `convex/lib/auth.ts:currentUserId` |
+| 4. Import the users | done for identities and Google links; **password hashes still to come** (see below) |
+| 5. Swap the app's auth surface | not started |
+| 6. Confirmation email to Resend | wired in step 1, unexercised |
+| 7. Cut over, then delete | not started |
+
+**Verified end to end on dev, with a real migrated host:** signs in with a
+bcrypt hash, the token authenticates, `currentUserId` resolves it to the
+Supabase UUID, the migrated profile is found, and owner-scoped reads return
+that host's own rows — 4 contacts and 2 schedules, matching Postgres.
+
+### Two things that bit, recorded so they do not bite twice
+
+**`bcryptjs.compare` cannot run in Convex.** The async form yields with
+`setTimeout`, which Convex forbids outside actions, and sign-in fails with
+`Can't use setTimeout in queries`. Use `compareSync`. It is CPU-bound for a few
+milliseconds at cost 10, which is the entire point of a password hash.
+
+**Convex Auth needs its own signing keypair** — `JWT_PRIVATE_KEY` and `JWKS`.
+Without them every sign-in returns an opaque `Server Error`. Set them with
+`npx convex env set NAME --from-file <file>`: the value begins with `-----`,
+so passing it as an argument makes the CLI read it as a flag, and the failure
+message echoes the whole private key.
+
+### The step that still needs a person
+
+The password hashes are not imported yet. `scripts/import-auth-users.mjs`
+does it in one command, but it needs a Postgres connection string, and Vercel
+correctly refuses to hand `POSTGRES_URL` to `env pull` because it is marked
+sensitive. Put the connection string (Supabase → Project Settings → Database)
+in a local file and run:
+
+```bash
+node scripts/import-auth-users.mjs path/to/env-file        # dev
+node scripts/import-auth-users.mjs path/to/env-file --prod # production
+```
+
+The script prints a count and an email per user and **never** prints a hash.
+Re-run it immediately before the real cutover: hashes change whenever someone
+changes their password.
+
 ## The one thing to prove first
 
 **That a Supabase bcrypt hash verifies through Convex Auth's `crypto` hook.**
@@ -31,9 +80,11 @@ The Password provider takes a custom `crypto`, so first sign-in can verify the
 bcrypt hash from `auth.users.encrypted_password` and re-hash to the default
 afterwards — which is what avoids forcing anyone to reset a password.
 
-**Prove it on ONE test account before migrating anyone.** If it does not work
-the plan survives — with four users a forced reset is a Slack message — but you
-should know which world you are in before you start, not after.
+~~**Prove it on ONE test account before migrating anyone.**~~ **Proven** — see
+Progress above. A `$2a$10$` 60-character hash in Supabase's exact format
+verifies through the `crypto` hook, a wrong password is refused, and new
+passwords are written as Scrypt so an imported bcrypt hash is a one-way door
+in the right direction.
 
 ## Order of work
 
