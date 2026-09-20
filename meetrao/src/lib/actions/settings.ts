@@ -121,10 +121,12 @@ export async function changePassword(input: {
 
 export async function disconnectCalendar(): Promise<SettingsResult> {
   const session = await requireSession();
-  await disconnect(session.userId);
+  const r = await disconnect(session.userId);
+  // Revalidate either way: on failure the card must keep showing "Connected",
+  // which is the truth, rather than a stale optimistic state.
   revalidatePath("/settings");
   revalidatePath("/dashboard");
-  return {};
+  return r.ok ? {} : { error: r.error ?? "Google Calendar could not be disconnected." };
 }
 
 /**

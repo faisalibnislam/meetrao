@@ -13,7 +13,7 @@ import { uuid } from "./ids";
 
    Checklist, against docs/convex-migration.md §1.10:
 
-     on_auth_user_created          → profiles.ensureProfile
+     on_auth_user_created          → convex/auth.ts afterUserCreatedOrUpdated
      *_touch_updated_at (×6)       → every patch here sets updated_at
      profiles_reject_reserved_...  → profiles.setUsername / generateUsername
      bookings_notify_created       → notifyBookingCreated

@@ -300,12 +300,20 @@ export function CalendarPanel({
             busy={pending}
             onClick={() =>
               startAction(async () => {
-                await disconnectCalendar();
-                toast({
-                  tone: "warn",
-                  title: "Calendar disconnected",
-                  text: "Meetrao can no longer check for conflicts.",
-                });
+                /* The result is READ. It used to be discarded, so the warm
+                   "Calendar disconnected" toast fired over a calendar that was
+                   still connected — the card said Connected, the toast said
+                   otherwise, and the toast was the one that was lying. */
+                const r = await disconnectCalendar();
+                toast(
+                  r.error
+                    ? { tone: "bad", title: "Could not disconnect", text: r.error }
+                    : {
+                        tone: "warn",
+                        title: "Calendar disconnected",
+                        text: "Meetrao can no longer check for conflicts.",
+                      },
+                );
                 router.refresh();
               })
             }

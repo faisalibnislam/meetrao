@@ -2,6 +2,7 @@ import "server-only";
 
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
+import { convexMessage } from "@/lib/convex/error";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Google Calendar connection state.
@@ -50,22 +51,30 @@ export async function connectionStatus(userId: string): Promise<ConnectionStatus
   }
 }
 
+export type DisconnectResult = { ok: boolean; error?: string };
+
 /**
  * Revoke with Google, then forget.
  *
- * Revoke FIRST — deleting the row without revoking leaves the grant alive with
- * nothing left to revoke it with. Both halves happen inside Convex, where the
- * token is. Never throws: a host disconnecting must not be blocked by Google
- * having a bad afternoon, and account deletion calls this on its way out.
+ * Both halves happen inside Convex, where the token is: the row is read and
+ * deleted in one transaction that hands the token back, and the revoke follows.
+ *
+ * STILL DOES NOT THROW — account deletion calls this on its way out, and a
+ * host must not be trapped in a connected state because Google is having a bad
+ * afternoon. But it now REPORTS. It used to swallow everything into
+ * console.error and return void, so when the action started refusing every
+ * caller the Settings screen went on saying "Calendar disconnected" over a
+ * calendar that was still connected. A failure nobody can see is worse than
+ * one that is merely inconvenient.
  */
-export async function disconnect(userId: string): Promise<void> {
+export async function disconnect(userId: string): Promise<DisconnectResult> {
   try {
     const convex = await convexServer();
     await convex.action(api.google.disconnectFor, { userId });
+    return { ok: true };
   } catch (cause) {
-    console.error("disconnect failed", {
-      userId,
-      error: cause instanceof Error ? cause.message : String(cause),
-    });
+    const error = convexMessage(cause, "Google Calendar could not be disconnected.");
+    console.error("disconnect failed", { userId, error });
+    return { ok: false, error };
   }
 }
