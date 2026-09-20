@@ -40,21 +40,23 @@ const ACTION = {
 
 const CTA = { login: "Sign in", signup: "Create account", forgot: "Send reset link" } as const;
 
-export function AuthForm({
-  mode,
-  next,
-  convexAuth = false,
-}: {
-  mode: AuthMode;
-  next?: string;
-  /**
-   * Decided on the SERVER and passed down, never read from a NEXT_PUBLIC
-   * variable — the browser must not be able to disagree with the backend
-   * about who issues sessions.
-   */
-  convexAuth?: boolean;
-}) {
-  const [state, formAction, pending] = useActionState<AuthResult, FormData>(ACTION[mode], {});
+/**
+ * Two components, not one branch, because `useAuthActions` may only be called
+ * where `ConvexAuthNextjsProvider` is mounted — and it is mounted only when
+ * Convex Auth is on. Calling it behind an `if` is not an option: hooks cannot
+ * be conditional. Calling it unconditionally is what broke the build, because
+ * prerendering a static auth page with no provider above it throws
+ * "Cannot destructure property 'signIn'".
+ *
+ * `convexAuth` is decided on the SERVER and passed down, never read from a
+ * NEXT_PUBLIC variable — the browser must not be able to disagree with the
+ * backend about who issues sessions.
+ */
+export function AuthForm(props: { mode: AuthMode; next?: string; convexAuth?: boolean }) {
+  return props.convexAuth ? <ConvexAuthForm {...props} /> : <SupabaseAuthForm {...props} />;
+}
+
+function ConvexAuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
   const [googlePending, startGoogle] = useTransition();
   const [googleError, setGoogleError] = useState<string | null>(null);
 
@@ -106,8 +108,77 @@ export function AuthForm({
     });
   }
 
-  const busy = convexAuth ? convexPending : pending;
-  const error = convexAuth ? convexError : state.error;
+  return (
+    <Fields
+      mode={mode}
+      next={next}
+      action={submitViaConvex}
+      busy={convexPending}
+      error={convexError}
+      onGoogle={() =>
+        startGoogle(async () => {
+          setGoogleError(null);
+          try {
+            // Convex Auth performs the redirect itself.
+            await signIn("google", { redirectTo: "/auth/callback" });
+          } catch {
+            setGoogleError("Google sign-in is unavailable.");
+          }
+        })
+      }
+      googleBusy={googlePending}
+      googleError={googleError}
+    />
+  );
+}
+
+function SupabaseAuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
+  const [state, formAction, pending] = useActionState<AuthResult, FormData>(ACTION[mode], {});
+  const [googlePending, startGoogle] = useTransition();
+  const [googleError, setGoogleError] = useState<string | null>(null);
+  const timezone = useClientValue(() => nearestSupportedTimezone(detectTimezone()), "UTC");
+
+  return (
+    <Fields
+      mode={mode}
+      next={next}
+      action={formAction}
+      busy={pending}
+      error={state.error}
+      onGoogle={() =>
+        startGoogle(async () => {
+          setGoogleError(null);
+          const result = await startGoogleSignIn(timezone);
+          if (result.url) window.location.href = result.url;
+          else setGoogleError(result.error ?? "Google sign-in is unavailable.");
+        })
+      }
+      googleBusy={googlePending}
+      googleError={googleError}
+    />
+  );
+}
+
+/** The markup, shared verbatim so the two paths cannot drift visually. */
+function Fields({
+  mode,
+  next,
+  action,
+  busy,
+  error,
+  onGoogle,
+  googleBusy,
+  googleError,
+}: {
+  mode: AuthMode;
+  next?: string;
+  action: (form: FormData) => void;
+  busy: boolean;
+  error: string | null | undefined;
+  onGoogle: () => void;
+  googleBusy: boolean;
+  googleError: string | null;
+}) {
 
   const isForgot = mode === "forgot";
   const isSignup = mode === "signup";
@@ -122,10 +193,7 @@ export function AuthForm({
       {error ? <Callout tone="red">{error}</Callout> : null}
       {googleError ? <Callout tone="red">{googleError}</Callout> : null}
 
-      <form
-        action={convexAuth ? submitViaConvex : formAction}
-        className="flex flex-col gap-[14px]"
-      >
+      <form action={action} className="flex flex-col gap-[14px]">
         {next ? <input type="hidden" name="next" value={next} /> : null}
         {/* Registration sets the host's timezone from their own device, so a
             new account never offers its hours in UTC by accident. Changed
@@ -191,24 +259,8 @@ export function AuthForm({
 
           <button
             type="button"
-            disabled={googlePending}
-            onClick={() =>
-              startGoogle(async () => {
-                setGoogleError(null);
-                if (convexAuth) {
-                  try {
-                    // Convex Auth performs the redirect itself.
-                    await signIn("google", { redirectTo: `/auth/callback?tz=${encodeURIComponent(timezone)}` });
-                  } catch {
-                    setGoogleError("Google sign-in is unavailable.");
-                  }
-                  return;
-                }
-                const result = await startGoogleSignIn(timezone);
-                if (result.url) window.location.href = result.url;
-                else setGoogleError(result.error ?? "Google sign-in is unavailable.");
-              })
-            }
+            disabled={googleBusy}
+            onClick={onGoogle}
             className={buttonClass("secondary", 40, "w-full")}
           >
             <GoogleG size={16} />

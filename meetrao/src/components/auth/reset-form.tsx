@@ -21,16 +21,25 @@ import { updatePassword, type AuthResult } from "@/lib/actions/auth";
  *     the query string; the fields below are the fallback for someone who
  *     typed the address by hand or lost the link's parameters.
  */
-export function ResetForm({
-  convexAuth = false,
+/* Two components for the same reason as auth-form.tsx: `useAuthActions` may
+   only be called where the provider is mounted, and hooks cannot be
+   conditional. */
+export function ResetForm(props: { convexAuth?: boolean; email?: string; code?: string }) {
+  return props.convexAuth ? <ConvexResetForm {...props} /> : <SupabaseResetForm />;
+}
+
+function SupabaseResetForm() {
+  const [state, formAction, pending] = useActionState<AuthResult, FormData>(updatePassword, {});
+  return <Fields action={formAction} busy={pending} error={state.error} showLinkFields={false} />;
+}
+
+function ConvexResetForm({
   email: emailFromLink = "",
   code: codeFromLink = "",
 }: {
-  convexAuth?: boolean;
   email?: string;
   code?: string;
 }) {
-  const [state, formAction, pending] = useActionState<AuthResult, FormData>(updatePassword, {});
   const { signIn } = useAuthActions();
   const router = useRouter();
   const [convexPending, startConvex] = useTransition();
@@ -60,25 +69,48 @@ export function ResetForm({
     });
   }
 
-  const busy = convexAuth ? convexPending : pending;
-  const error = convexAuth ? convexError : state.error;
-  const needsLinkFields = convexAuth && (!emailFromLink || !codeFromLink);
+  const needsLinkFields = !emailFromLink || !codeFromLink;
 
   return (
-    <form
-      action={convexAuth ? submitViaConvex : formAction}
-      className="flex flex-col gap-[14px]"
-    >
+    <Fields
+      action={submitViaConvex}
+      busy={convexPending}
+      error={convexError}
+      showLinkFields={needsLinkFields}
+      email={emailFromLink}
+      code={codeFromLink}
+    />
+  );
+}
+
+/** The markup, shared so the two paths cannot drift visually. */
+function Fields({
+  action,
+  busy,
+  error,
+  showLinkFields,
+  email = "",
+  code = "",
+}: {
+  action: (form: FormData) => void;
+  busy: boolean;
+  error: string | null | undefined;
+  showLinkFields: boolean;
+  email?: string;
+  code?: string;
+}) {
+  return (
+    <form action={action} className="flex flex-col gap-[14px]">
       {error ? <Callout tone="red">{error}</Callout> : null}
 
-      {convexAuth && !needsLinkFields ? (
+      {!showLinkFields && (email || code) ? (
         <>
-          <input type="hidden" name="email" value={emailFromLink} />
-          <input type="hidden" name="code" value={codeFromLink} />
+          <input type="hidden" name="email" value={email} />
+          <input type="hidden" name="code" value={code} />
         </>
       ) : null}
 
-      {needsLinkFields ? (
+      {showLinkFields ? (
         <>
           <Field label="Work email" htmlFor="email">
             <Input
@@ -88,7 +120,7 @@ export function ResetForm({
               height={38}
               placeholder="you@company.com"
               autoComplete="email"
-              defaultValue={emailFromLink}
+              defaultValue={email}
               required
             />
           </Field>
