@@ -147,10 +147,13 @@ people forget:
    the Phase 4 work deferred on purpose, and `docs/decisions/auth-provider.md`
    names Clerk as the destination precisely because it can import the bcrypt
    hashes Supabase stores, so the move need not force a password reset.
-2. **Google refresh tokens live in `calendar_connections` on Supabase**, because
-   the app has no privileged channel into Convex. Fixable without any vendor
-   decision by moving the Google calls into Convex actions, so tokens are used
-   without ever leaving — see the section below.
+2. ~~**Google refresh tokens live in `calendar_connections` on Supabase.**~~
+   **Done — `convex/google.ts`.** Exchange, refresh, revoke, free/busy, event
+   create and delete all run as Convex actions now, so a refresh token is used
+   where it lives and never crosses back out. Nothing returns a token, not even
+   a short-lived access token. Public entry points are scoped by a session or a
+   booking reference; everything else is internal. Enable with `google` in
+   `CONVEX_BACKENDS`.
 3. **The signup confirmation email is sent by Supabase Auth**, from a template
    pasted into its dashboard (`src/emails/supabase/confirm-signup.html`), not by
    Resend. It moves only when auth moves.
@@ -174,13 +177,28 @@ four connections are flagged `needs_reconnect`:
 | `hellonafis@gmail.com` | `needs_reconnect` — "Token has been expired or revoked" |
 | `airlystudio@gmail.com` | `needs_reconnect` — "Token has been expired or revoked" |
 
-The first export of the day recorded only ONE failing connection; the other two
-broke during 2026-09-20. No code path in this session revokes a Google grant,
-and the migration only ever copied these rows. The likeliest explanation is the
+**Update, same day: all FOUR are dead.** Exercising the ported path against
+`faisalibnislam@yahoo.com` — the one still marked healthy — produced Google's
+`Token has been expired or revoked`. Its `needs_reconnect=false` only meant
+nobody had tried to use it recently.
+
+The first export of the day recorded one failing connection; by evening every
+one had failed. No code path in this session revokes a Google grant, and the
+migration only ever copied these rows. The likeliest explanation is the
 standard one: **an OAuth client still in "Testing" publishing status issues
 refresh tokens that expire after seven days.** The connections are 8–12 days
-old, which fits. Worth confirming the publishing status in Google Cloud before
-assuming anything else — and either way those three hosts must reconnect.
+old, which fits exactly.
+
+**Check the OAuth consent screen's publishing status before asking anyone to
+reconnect** — if it is still Testing, the new tokens will die in another seven
+days and it will look like the same bug.
+
+The silver lining: this WAS a real test of the port. `google.busyForHost` read
+the connection, attempted the refresh, received Google's rejection and flagged
+`needs_reconnect` with the message — the same behaviour `accessTokenFor` has in
+`src/lib/google/connection.ts`. Every part of the chain except a successful
+API response is verified. A successful free/busy call cannot be tested until
+one host reconnects.
 
 ## What still runs on Supabase, and why
 
