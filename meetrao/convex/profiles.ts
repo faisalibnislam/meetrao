@@ -79,77 +79,16 @@ export const byUsername = query({
   },
 });
 
-/**
- * The replacement for the on_auth_user_created trigger.
- *
- * Idempotent on purpose: it is called on every sign-in, not just the first, so
- * that a user who existed before this code did still gets a profile. The
- * bootstrap_admins lookup and the admin_activity row both come from the
- * original trigger body.
- */
-export const ensureProfile = mutation({
-  args: { email: v.string(), fullName: v.optional(v.string()), timezone: v.optional(v.string()) },
-  handler: async (ctx, a) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) AuthError("Not signed in.", "UNAUTHENTICATED");
-    const userId = identity.subject;
+/* `ensureProfile` stood here: the direct port of the on_auth_user_created
+   trigger, called by the app on every sign-in. Convex Auth's
+   afterUserCreatedOrUpdated callback took that job at the cutover — see
+   createProfileForNewUser below — and nothing has called it since.
 
-    const existing = await ctx.db
-      .query("profiles")
-      .withIndex("by_uuid", (q) => q.eq("id", userId))
-      .unique();
-    if (existing) return profileOut(existing);
-
-    const email = a.email.trim().toLowerCase();
-    const displayName = (a.fullName ?? "").trim();
-    const bootstrap = await ctx.db
-      .query("bootstrap_admins")
-      .withIndex("by_email", (q) => q.eq("email", email))
-      .first();
-
-    const username = await generateUsername(ctx, displayName || email);
-    const now = Date.now();
-
-    await ctx.db.insert("profiles", {
-      id: userId,
-      username,
-      username_lower: username.toLowerCase(),
-      full_name: displayName,
-      job_title: "",
-      email,
-      timezone: a.timezone ?? "UTC",
-      timezone_auto: true,
-      avatar_url: null,
-      is_admin: bootstrap !== null,
-      is_suspended: false,
-      default_duration_minutes: 30,
-      default_notice_minutes: 60,
-      notify_new_booking: true,
-      notify_booking_changed: true,
-      notify_booking_cancelled: true,
-      notify_daily_agenda: false,
-      notify_product_news: false,
-      onboarding_completed_at: null,
-      welcomed_at: null,
-      created_at: now,
-      updated_at: now,
-    });
-
-    await ctx.db.insert("admin_activity", {
-      id: uuid(),
-      actor_id: userId,
-      kind: "user_created",
-      summary: `${displayName || email || "A user"} created an account`,
-      created_at: now,
-    });
-
-    const created = await ctx.db
-      .query("profiles")
-      .withIndex("by_uuid", (q) => q.eq("id", userId))
-      .unique();
-    return profileOut(created!);
-  },
-});
+   Deleted rather than left, because it was a PUBLIC mutation that keyed the
+   profile it inserted on `identity.subject`. Under Convex Auth that is
+   "<userId>|<sessionId>", so anyone reaching it would have been given a second
+   profile that no screen could read, for an account that already had one.
+   Dead code that still had a public door on it. */
 
 /**
  * Field-level updates the host is allowed to make to their own profile.

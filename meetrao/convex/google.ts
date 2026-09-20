@@ -2,6 +2,7 @@ import { action, internalAction, internalMutation, internalQuery } from "./_gene
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { fail } from "./lib/errors";
+import { currentUserId } from "./lib/auth";
 import {
   exchangeCode, refreshAccessToken, revokeToken, fetchAccountEmail, hasCalendarWrite,
   freeBusy, createEvent, deleteEvent, GoogleAuthError,
@@ -300,8 +301,8 @@ export const upsertConnection = internalMutation({
 export const completeConnect = action({
   args: { code: v.string(), redirectUri: v.string() },
   handler: async (ctx, a): Promise<{ ok: true; email: string | null } | { ok: false; reason: string }> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) fail("Not signed in.", "UNAUTHENTICATED");
+    const userId = await ctx.runQuery(internal.google.callerId, {});
+    if (!userId) fail("Not signed in.", "UNAUTHENTICATED");
 
     let tokens;
     try {
@@ -313,7 +314,7 @@ export const completeConnect = action({
 
     const email = await fetchAccountEmail(tokens.accessToken);
     await ctx.runMutation(internal.google.upsertConnection, {
-      userId: identity.subject,
+      userId,
       googleAccountEmail: email,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,
@@ -352,10 +353,10 @@ export const takeTokensForRevoke = internalMutation({
 export const disconnect = action({
   args: {},
   handler: async (ctx): Promise<{ ok: true; revoked: string }> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) fail("Not signed in.", "UNAUTHENTICATED");
+    const userId = await ctx.runQuery(internal.google.callerId, {});
+    if (!userId) fail("Not signed in.", "UNAUTHENTICATED");
 
-    const tokens = await ctx.runMutation(internal.google.takeTokensForRevoke, { userId: identity.subject });
+    const tokens = await ctx.runMutation(internal.google.takeTokensForRevoke, { userId });
     if (!tokens) return { ok: true, revoked: "nothing-to-revoke" };
 
     const outcome = await revokeToken(tokens.refresh ?? tokens.access ?? "");
@@ -367,18 +368,41 @@ export const disconnect = action({
 export const disconnectFor = action({
   args: { userId: v.string() },
   handler: async (ctx, a): Promise<{ ok: true; revoked: string }> => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) fail("Not signed in.", "UNAUTHENTICATED");
+    const userId = await ctx.runQuery(internal.google.callerId, {});
+    if (!userId) fail("Not signed in.", "UNAUTHENTICATED");
 
-    const caller = await ctx.runQuery(internal.google.profileOf, { userId: identity.subject });
+    const caller = await ctx.runQuery(internal.google.profileOf, { userId });
     // Your own, or an admin acting on someone else's. Nothing else.
-    if (identity.subject !== a.userId && !caller?.is_admin) fail("Not permitted.", "FORBIDDEN");
+    if (userId !== a.userId && !caller?.is_admin) fail("Not permitted.", "FORBIDDEN");
 
     const tokens = await ctx.runMutation(internal.google.takeTokensForRevoke, { userId: a.userId });
     if (!tokens) return { ok: true, revoked: "nothing-to-revoke" };
     const outcome = await revokeToken(tokens.refresh ?? tokens.access ?? "");
     return { ok: true, revoked: outcome };
   },
+});
+
+/**
+ * The caller's profile id, for use from an ACTION.
+ *
+ * Actions have no `ctx.db`, so they cannot call `currentUserId` themselves —
+ * and `identity.subject` is "<userId>|<sessionId>", which is not what any row
+ * in this database is keyed by. Three actions in this file used the raw
+ * subject, and every one of them failed silently:
+ *
+ *   · `completeConnect` stored a fresh connection under a key no screen reads,
+ *     so reconnecting a calendar appeared to do nothing;
+ *   · `disconnect` looked up a row that could not match, found none, and
+ *     reported "nothing-to-revoke" as success;
+ *   · `disconnectFor` resolved no profile, so its admin check saw a non-admin
+ *     acting on someone else and refused every caller with FORBIDDEN.
+ *
+ * `ctx.runQuery` from an action carries the caller's identity, so this is the
+ * same answer `requireProfile` gives the queries next door.
+ */
+export const callerId = internalQuery({
+  args: {},
+  handler: async (ctx) => await currentUserId(ctx),
 });
 
 export const profileOf = internalQuery({
