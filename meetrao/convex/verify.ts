@@ -14,3 +14,12 @@ export const counts = internalQuery({
     return out;
   },
 });
+
+/** Keys for reconciling site_visits against Postgres after a cutover. */
+export const visitKeys = internalQuery({
+  args: {},
+  handler: async (ctx) => {
+    const rows = await ctx.db.query("site_visits").collect();
+    return rows.map((r) => `${r.visited_at}|${r.visitor_hash}|${r.path}`);
+  },
+});

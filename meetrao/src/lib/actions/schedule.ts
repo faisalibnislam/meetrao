@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { CalendarError, createBookingEvent } from "@/lib/google/calendar";
+import { CalendarError, createBookingEvent, createEventForBooking } from "@/lib/google/calendar";
 import { formatDuration, formatLongDate, formatTime } from "@/lib/booking/time";
 import { timezoneLabel } from "@/lib/timezones";
 import { zonedInstant } from "@/lib/booking/slots";
@@ -188,7 +188,11 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
   let meetUrl = "";
   let calendarWarning: string | undefined;
 
-  try {
+  if (convexServes("google")) {
+    const r = await createEventForBooking(created.reference);
+    if ("failure" in r) calendarWarning = r.failure;
+    else meetUrl = r.meetUrl ?? "";
+  } else try {
     const event = await createBookingEvent({
       userId,
       summary: name,

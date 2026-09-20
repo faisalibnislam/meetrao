@@ -1,7 +1,10 @@
 import { cookies } from "next/headers";
+import { convexServes } from "@/lib/backend";
+import { convexServer } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { NextResponse, type NextRequest } from "next/server";
 import { saveConnection } from "@/lib/google/connection";
-import { exchangeCode, fetchAccountEmail, hasCalendarWrite } from "@/lib/google/oauth";
+import { exchangeCode, fetchAccountEmail, hasCalendarWrite , redirectUri} from "@/lib/google/oauth";
 import { supabaseServer } from "@/lib/supabase/server";
 
 /**
@@ -35,6 +38,17 @@ export async function GET(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.redirect(new URL("/login", origin));
+
+  if (convexServes("google")) {
+    /* The code is exchanged INSIDE Convex, so the refresh token is created and
+       stored without ever passing through this process. The code is
+       single-use, arrives via our own registered redirect URI, and the caller
+       is signed in — so the tokens can only attach to their own account. */
+    const c = await convexServer();
+    const r = await c.action(api.google.completeConnect, { code, redirectUri: redirectUri() });
+    if (!r.ok) return back(r.reason === "missing-scope" ? "scope" : "failed");
+    return back();
+  }
 
   try {
     const tokens = await exchangeCode(code);

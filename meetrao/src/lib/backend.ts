@@ -35,7 +35,9 @@ export type Domain =
   | "bookings"
   | "publicBooking"
   | "session"
-  | "admin";
+  | "admin"
+  /** Google Calendar: tokens and API calls move into Convex actions. */
+  | "google";
 
 export function convexServes(domain: Domain): boolean {
   const raw = (process.env.CONVEX_BACKENDS ?? "").trim().toLowerCase();

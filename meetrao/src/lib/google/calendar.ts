@@ -1,6 +1,9 @@
 import "server-only";
 
 import type { Interval } from "@/lib/booking/slots";
+import { convexServes } from "@/lib/backend";
+import { convexAnonymous } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import { accessTokenFor, markNeedsReconnect } from "./connection";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -103,6 +106,18 @@ async function call<T>(token: string, path: string, init: RequestInit = {}): Pro
  * the caller decides what that means — it must never be read as "free".
  */
 export async function busyPeriods(userId: string, from: Date, to: Date): Promise<Interval[]> {
+  if (convexServes("google")) {
+    // The guest path has no session, so this goes through the anonymous client.
+    // The action clamps the window and never returns a token.
+    const r = await convexAnonymous().action(api.google.busyForHost, {
+      hostId: userId,
+      from: from.getTime(),
+      to: to.getTime(),
+    });
+    if (!r.checked) throw new CalendarError("api-unavailable", "Google Calendar could not be reached.");
+    return r.busy.map((b) => ({ start: new Date(b.start), end: new Date(b.end) }));
+  }
+
   const auth = await accessTokenFor(userId);
   if (!auth) return [];
 
@@ -213,4 +228,30 @@ export async function readGuestRsvp(
   } catch {
     return null;
   }
+}
+
+
+/* ── The Convex path ────────────────────────────────────────────────────────
+   Keyed by the booking's reference rather than a user id and an event id,
+   because on Convex the action reads the booking, the host and the tokens for
+   itself — nothing has to be handed to it, and no token comes back. */
+
+export async function createEventForBooking(
+  reference: string,
+): Promise<{ meetUrl: string | null } | { failure: CalendarFailure }> {
+  const r = await convexAnonymous().action(api.google.createEventForBooking, { reference });
+  if (r.ok) return { meetUrl: r.meetUrl };
+  const map: Record<string, CalendarFailure> = {
+    "not-connected": "not-connected",
+    "api-unavailable": "api-unavailable",
+    "already-attached": "api-unavailable",
+    "unknown-booking": "api-unavailable",
+  };
+  return { failure: map[r.reason] ?? "api-unavailable" };
+}
+
+export async function deleteEventForBooking(reference: string): Promise<"ok" | CalendarFailure> {
+  const r = await convexAnonymous().action(api.google.deleteEventForBooking, { reference });
+  if (r.ok) return "ok";
+  return (r.reason as CalendarFailure) ?? "api-unavailable";
 }

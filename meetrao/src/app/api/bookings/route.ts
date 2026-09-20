@@ -6,7 +6,7 @@ import { isSlotBookable } from "@/lib/booking/slots";
 import { formatDuration, formatLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
 import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
-import { CalendarError, createBookingEvent } from "@/lib/google/calendar";
+import { CalendarError, createBookingEvent, createEventForBooking } from "@/lib/google/calendar";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { convexServes } from "@/lib/backend";
 import { convexAnonymous } from "@/lib/convex/server";
@@ -155,7 +155,14 @@ export async function POST(request: NextRequest) {
   let meetUrl: string | null = null;
   let calendarWarning: string | null = null;
 
-  try {
+  if (convexServes("google")) {
+    const r = await createEventForBooking(row.reference);
+    if ("failure" in r) {
+      calendarWarning = r.failure;
+    } else {
+      meetUrl = r.meetUrl;
+    }
+  } else try {
     const event = await createBookingEvent({
       userId: host.id,
       summary: `${row.meeting_name} — ${input.guestName}`,

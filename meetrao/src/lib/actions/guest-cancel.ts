@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { cancellationMail } from "@/lib/email/booking-mail";
 import { sendCancellationToGuest, sendCancellationToHost } from "@/lib/email/send";
-import { CalendarError, deleteBookingEvent } from "@/lib/google/calendar";
+import { CalendarError, deleteBookingEvent, deleteEventForBooking } from "@/lib/google/calendar";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { convexServes } from "@/lib/backend";
 import { convexAnonymous } from "@/lib/convex/server";
@@ -67,7 +67,12 @@ export async function cancelAsGuest(formData: FormData): Promise<void> {
 
       if (booking.google_event_id) {
         try {
-          await deleteBookingEvent(booking.host_id, booking.google_event_id);
+          if (convexServes("google")) {
+        const outcome = await deleteEventForBooking(booking.reference);
+        if (outcome !== "ok" && outcome !== "already-deleted") throw new CalendarError(outcome, "Google refused the removal.");
+      } else {
+        await deleteBookingEvent(booking.host_id, booking.google_event_id);
+      }
         } catch (cause) {
           // Already gone is fine; anything else is logged and the cancellation
           // still stands — the guest is not made to try again.

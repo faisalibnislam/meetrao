@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
 import { cancellationMail } from "@/lib/email/booking-mail";
 import { sendCancellationToGuest, sendCancellationToHost } from "@/lib/email/send";
-import { CalendarError, deleteBookingEvent } from "@/lib/google/calendar";
+import { CalendarError, deleteBookingEvent, deleteEventForBooking } from "@/lib/google/calendar";
 import { supabaseServer } from "@/lib/supabase/server";
 import { convexServes } from "@/lib/backend";
 import { convexServer } from "@/lib/convex/server";
@@ -73,7 +73,12 @@ export async function cancelBooking(bookingId: string): Promise<CancelResult> {
   let calendarWarning: string | undefined;
   if (booking.google_event_id) {
     try {
-      await deleteBookingEvent(session.userId, booking.google_event_id);
+      if (convexServes("google")) {
+        const outcome = await deleteEventForBooking(booking.reference);
+        if (outcome !== "ok" && outcome !== "already-deleted") throw new CalendarError(outcome, "Google refused the removal.");
+      } else {
+        await deleteBookingEvent(session.userId, booking.google_event_id);
+      }
     } catch (cause) {
       // An event that is already gone is not a problem worth reporting.
       if (cause instanceof CalendarError && cause.kind !== "already-deleted") {

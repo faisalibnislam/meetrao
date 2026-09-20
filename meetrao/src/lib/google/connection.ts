@@ -53,6 +53,17 @@ export type ConnectionStatus = {
 
 /** What the UI needs, with no token ever leaving this module. */
 export async function connectionStatus(userId: string): Promise<ConnectionStatus> {
+  if (convexServes("google")) {
+    const c = await convexServer();
+    const r = await c.query(api.calendarConnections.statusOwn, {});
+    return {
+      connected: Boolean(r?.connected),
+      accountEmail: r?.google_account_email ?? null,
+      needsReconnect: Boolean(r?.needs_reconnect),
+      lastError: r?.last_error ?? null,
+    };
+  }
+
   const row = await getConnection(userId);
   if (!row) return { connected: false, accountEmail: null, needsReconnect: false, lastError: null };
   return {
@@ -113,6 +124,22 @@ export async function saveConnection(input: {
  * nothing and deletes nothing.
  */
 export async function disconnect(userId: string): Promise<void> {
+  if (convexServes("google")) {
+    // Revoke and delete happen inside Convex, so the refresh token is used
+    // where it lives and never crosses back out. Never throws, by the same
+    // reasoning as the Supabase path below.
+    try {
+      const c = await convexServer();
+      await c.action(api.google.disconnectFor, { userId });
+    } catch (cause) {
+      console.error("convex disconnect failed", {
+        userId,
+        error: cause instanceof Error ? cause.message : String(cause),
+      });
+    }
+    return;
+  }
+
   const row = await getConnection(userId);
 
   if (row) {
