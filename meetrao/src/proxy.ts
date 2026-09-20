@@ -21,8 +21,28 @@ import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server
 /** Signed-in-only areas. Everything else is public or handles its own gate. */
 const PRIVATE_PREFIXES = ["/dashboard", "/bookings", "/meetings", "/availability", "/settings", "/admin", "/onboarding"];
 
-/** Signed-out-only. A signed-in visitor is sent on to the app. */
-const AUTH_PAGES = ["/login", "/signup", "/forgot"];
+/* THE PROXY NEVER REDIRECTS AWAY FROM AN AUTH PAGE, and that is deliberate.
+
+   It used to send a signed-in visitor from /login to /dashboard. That is a
+   convenience, and it was one half of a redirect loop that took the live site
+   down for signed-in users with ERR_TOO_MANY_REDIRECTS:
+
+     /dashboard  the page asks Convex through requireSession, is told the token
+                 is not good, and redirects to /login
+     /login      the proxy asks Convex too, is told it IS good, and redirects
+                 back to /dashboard
+
+   Both sides call Convex, so "just ask the server" does not settle it. They
+   disagree because the middleware refreshes the token and validates the FRESH
+   one, while the page render reads the stale cookie from the original request
+   — so a session whose access token has expired while its refresh token is
+   still good can sit in exactly this gap.
+
+   Sending an already-signed-in person to a login form is a small, visible,
+   self-correcting oddity. A redirect loop is a blank page and a dead product.
+   The gate that matters — keeping signed-OUT visitors out of private screens —
+   is below and is unaffected, and every private screen re-checks for itself
+   anyway. */
 
 /**
  * The ONLY route where a `?code=` belongs to Convex Auth.
@@ -74,9 +94,7 @@ let convexProxy: ((request: NextRequest, event: NextFetchEvent) => Promise<unkno
 
 async function convexProxyOnce() {
   if (convexProxy) return convexProxy;
-  const { convexAuthNextjsMiddleware, nextjsMiddlewareRedirect } = await import(
-    "@convex-dev/auth/nextjs/server"
-  );
+  const { convexAuthNextjsMiddleware } = await import("@convex-dev/auth/nextjs/server");
   convexProxy = convexAuthNextjsMiddleware(
     async (request, { convexAuth }) => {
       const path = request.nextUrl.pathname;
@@ -89,7 +107,6 @@ async function convexProxyOnce() {
         to.searchParams.set("next", path);
         return NextResponse.redirect(to);
       }
-      if (authed && AUTH_PAGES.includes(path)) return nextjsMiddlewareRedirect(request, "/dashboard");
       return undefined;
     },
     {
