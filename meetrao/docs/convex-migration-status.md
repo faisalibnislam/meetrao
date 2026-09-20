@@ -114,6 +114,14 @@ Verified after the switch: a real beacon to `meetrao.com/api/analytics/collect`
 landed in Convex (85 → 86) while Postgres stayed put; the admin reads return
 real figures at 7/30/90 days; an anonymous caller is refused.
 
+**2026-09-20 — `notifications`, `contacts`, `schedules` switched on.**
+`CONVEX_BACKENDS=analytics,notifications,contacts,schedules`. All tables except
+`site_visits` were re-synced first; `site_visits` was deliberately excluded,
+because Convex is now authoritative for it and `--replace` would have wiped
+every row written since the analytics cutover. **That exclusion is the rule
+from here on: never `--replace` a table a switched-on domain owns.** Verified
+after the switch: all four hosts match Postgres exactly on all three domains.
+
 Two rows had landed in Postgres between the pre-cutover sync and the switch.
 Reconciled by diffing on `(visited_at, visitor_hash, path)` and appending only
 the missing ones — 88 rows now, nothing only-in-Postgres, no duplicates.
@@ -127,6 +135,52 @@ live backend, so whatever lands between the export and the cutover exists only
 in Postgres. Re-run `scripts/export-supabase.mjs` and re-import immediately
 before switching any domain that takes writes — `--replace` makes that safe to
 repeat.
+
+## What deleting Supabase would actually take
+
+Not reachable by setting variables. Two hard blockers, and one consequence
+people forget:
+
+1. **Supabase Auth is the identity provider.** Convex validates Supabase-issued
+   ES256 tokens; `sub` is `profiles.id`. Delete the project and nobody can sign
+   in — every session, the `/verify` gate and password reset go with it. This is
+   the Phase 4 work deferred on purpose, and `docs/decisions/auth-provider.md`
+   names Clerk as the destination precisely because it can import the bcrypt
+   hashes Supabase stores, so the move need not force a password reset.
+2. **Google refresh tokens live in `calendar_connections` on Supabase**, because
+   the app has no privileged channel into Convex. Fixable without any vendor
+   decision by moving the Google calls into Convex actions, so tokens are used
+   without ever leaving — see the section below.
+3. **The signup confirmation email is sent by Supabase Auth**, from a template
+   pasted into its dashboard (`src/emails/supabase/confirm-signup.html`), not by
+   Resend. It moves only when auth moves.
+
+Everything else — all fifteen tables and file storage — can run on Convex today.
+
+### Email and calendar, checked 2026-09-20
+
+**Resend is already independent of Supabase.** `meetrao.com` is verified with
+sending enabled, so booking, cancellation and reminder mail does not depend on
+anything being migrated. (The README's "until DKIM verifies, Resend delivers
+only to the account owner" caveat is now stale.)
+
+**Google Calendar is degraded, and it is not the migration's doing.** Three of
+four connections are flagged `needs_reconnect`:
+
+| Account | State |
+| --- | --- |
+| `faisalibnislam@yahoo.com` | healthy |
+| `faisalibnislam@gmail.com` | `needs_reconnect` — "Bad Request" (already failing before any migration work) |
+| `hellonafis@gmail.com` | `needs_reconnect` — "Token has been expired or revoked" |
+| `airlystudio@gmail.com` | `needs_reconnect` — "Token has been expired or revoked" |
+
+The first export of the day recorded only ONE failing connection; the other two
+broke during 2026-09-20. No code path in this session revokes a Google grant,
+and the migration only ever copied these rows. The likeliest explanation is the
+standard one: **an OAuth client still in "Testing" publishing status issues
+refresh tokens that expire after seven days.** The connections are 8–12 days
+old, which fits. Worth confirming the publishing status in Google Cloud before
+assuming anything else — and either way those three hosts must reconnect.
 
 ## What still runs on Supabase, and why
 
