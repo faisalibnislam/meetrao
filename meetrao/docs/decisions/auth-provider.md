@@ -1,6 +1,6 @@
 # Decision — auth provider for the Convex migration
 
-Status: **proposed**, awaiting a call. Written 2026-09-20. Gate 2 of Phase 0 in
+Status: **superseded 2026-09-20 — see the revision at the end.** Originally proposed, awaiting a call. Written 2026-09-20. Gate 2 of Phase 0 in
 `docs/convex-migration.md`.
 
 ## What auth actually has to do here
@@ -134,3 +134,51 @@ relying on it.
 - `proxy.ts` keeps its Supabase session refresh until the Clerk move.
 - The signup confirmation email stays on the Supabase dashboard template until
   then, rather than moving to Resend with everything else.
+
+
+---
+
+## Revision, 2026-09-20 — Convex Auth, not Clerk
+
+**The constraint changed the answer.** The recommendation above weighed Clerk
+against Convex Auth on reliability and landed on Clerk, calling Convex Auth's
+beta status a poor trade for a login path. The user has since said plainly:
+*no additional service*. That is not a preference to be argued out of — it is
+the kind of constraint that decides an architecture, and it removes Clerk and
+WorkOS from the table entirely.
+
+So: **Convex Auth**, and the good news is that it fits this app better than the
+original analysis implied. Checked against `@convex-dev/auth` rather than from
+memory:
+
+| Requirement | Convex Auth |
+| --- | --- |
+| Email + password | `Password` provider |
+| Password reset by emailed link | `reset` and `reset-verification` flows |
+| Email verification (the `/verify` gate) | `email-verification` flow |
+| Google OAuth | OAuth provider |
+| Sending the mail | `EmailConfig` — **you supply the sender, so Resend plugs straight in** |
+| Migrating Supabase's bcrypt hashes | `crypto` option on the Password provider — a custom verifier means **no forced password reset** |
+
+Two of those matter more than they look. Sending through Resend means the
+signup confirmation email stops being a template pasted into someone's
+dashboard and becomes part of the codebase like every other email. And the
+custom `crypto` hook is what makes this migration non-destructive: bcrypt
+verification on first sign-in, re-hashed to the default afterwards.
+
+### The honest cost
+
+**It is pre-1.0.** The published version is `0.0.95`, with `2.0.0-alpha` builds
+already in flight — so expect the API to move under you, and budget for a
+migration when 2.0 lands. You also own the security surface that a hosted
+provider would own: reset-token lifetimes, rate limiting on sign-in, and
+resistance to account enumeration. That last one matters here, because
+`src/lib/actions/auth.ts` deliberately returns one generic message for both
+"no such account" and "wrong password", and deliberately does not reveal
+whether a reset address is registered. **Those two properties must survive the
+port** — they are easy to lose and invisible when lost.
+
+Everything in the runbook still applies except the provider: keeping
+`profiles.id` stable across the issuer change is still the step that would
+otherwise orphan every user-keyed row, and running both issuers at once is
+still what makes the cutover reversible.

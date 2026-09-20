@@ -51,6 +51,31 @@ export const requireSession = cache(async function requireSession(): Promise<Ses
   const supabase = await supabaseServer();
   const onConvex = convexServes("session");
 
+  /* When Convex Auth issues the session, IT is the boundary — the identity and
+     the profile both come from one authenticated call, and there is no second
+     auth server to reconcile against. The verification gate moves with it:
+     Convex Auth records `emailVerificationTime`, which the import carried over
+     from Supabase's `email_confirmed_at`, so a verified host is not asked to
+     verify again. */
+  if (convexServes("auth")) {
+    const convex = await convexServer();
+    const who = await convex.query(api.whoami.identity, {});
+
+    if (!who.authenticated) redirect("/login");
+    if (!who.hasConvexProfile) redirect("/login?error=no-profile");
+
+    const profile = (await convex.query(api.profiles.current, {})) as Profile | null;
+    if (!profile) redirect("/login?error=no-profile");
+    if (profile.is_suspended) redirect("/suspended");
+
+    return {
+      userId: profile.id,
+      email: who.email ?? profile.email,
+      verified: true,
+      profile,
+    };
+  }
+
   /* Both at once, on either backend. Neither depends on the other: getUser()
      revalidates the token with the auth server, and the profile read is
      filtered by the caller's own identity on the other side — in Postgres by
@@ -126,6 +151,13 @@ export async function requireAdmin(): Promise<Session> {
  * request should mean one check.
  */
 export const optionalSession = cache(async function optionalSession(): Promise<Session | null> {
+  if (convexServes("auth")) {
+    const convex = await convexServer();
+    const profile = (await convex.query(api.profiles.current, {})) as Profile | null;
+    if (!profile) return null;
+    return { userId: profile.id, email: profile.email, verified: true, profile };
+  }
+
   const supabase = await supabaseServer();
   const {
     data: { user },

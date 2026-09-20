@@ -1,5 +1,5 @@
 import type { QueryCtx, MutationCtx } from "../_generated/server";
-import type { Doc } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import { fail } from "./errors";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -27,10 +27,37 @@ export function AuthError(message: string, code: string): never {
   return fail(message, code);
 }
 
-/** The Supabase `sub`, which is also profiles.id. Null when signed out. */
+/**
+ * The caller's identity as a Supabase UUID — which is also `profiles.id`.
+ *
+ * THE ONE PLACE identity is resolved, and deliberately so. Two issuers are
+ * live during the auth migration:
+ *
+ *   · Supabase, whose `sub` IS the UUID, so it passes straight through;
+ *   · Convex Auth, whose subject is its own user id, and whose `users` row
+ *     carries `supabase_id` — set during the import for exactly this.
+ *
+ * Because every authorization path already goes through here, nothing else in
+ * the codebase learns that identity changed shape, and `profiles.id` and its
+ * foreign keys stay UUIDs on both sides of the cutover.
+ */
 export async function currentUserId(ctx: QueryCtx | MutationCtx): Promise<string | null> {
   const identity = await ctx.auth.getUserIdentity();
-  return identity?.subject ?? null;
+  if (!identity) return null;
+
+  // A Supabase token: issuer ends in /auth/v1 and the subject is the UUID.
+  if (identity.issuer.includes("/auth/v1")) return identity.subject;
+
+  // A Convex Auth token: subject is "<userId>|<sessionId>".
+  const userId = identity.subject.split("|")[0];
+  const user = await ctx.db.get(userId as Id<"users">).catch(() => null);
+  const mapped = (user as { supabase_id?: string } | null)?.supabase_id;
+  if (mapped) return mapped;
+
+  // No mapping: an account created on Convex Auth after the cutover, whose
+  // profile is keyed by the Convex user id instead. Both shapes are UUID-ish
+  // strings to everything downstream.
+  return userId;
 }
 
 /** The caller's profile, or null. Does not throw — for optional-session paths. */

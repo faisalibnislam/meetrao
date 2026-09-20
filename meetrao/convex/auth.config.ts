@@ -12,6 +12,13 @@ const issuer = `${supabaseUrl.replace(/\/$/, "")}/auth/v1`;
 
 const authConfig = {
   providers: [
+    /* Convex Auth, running BESIDE Supabase rather than instead of it.
+       Both issuers are accepted at once, which is what makes the cutover
+       reversible: the app can be pointed at either, watched, and pointed back
+       without anyone being locked out. The Supabase entry comes out only after
+       Convex Auth has been live for a while. */
+    { domain: process.env.CONVEX_SITE_URL, applicationID: "convex" },
+
     {
       type: "customJwt" as const,
       issuer,

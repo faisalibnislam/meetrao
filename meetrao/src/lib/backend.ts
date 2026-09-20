@@ -37,11 +37,41 @@ export type Domain =
   | "session"
   | "admin"
   /** Google Calendar: tokens and API calls move into Convex actions. */
-  | "google";
+  | "google"
+  /**
+   * IDENTITY ITSELF — Convex Auth instead of Supabase Auth.
+   *
+   * Unlike every other domain, this one is not about where rows live. It
+   * decides who issues the session, so turning it on changes how people sign
+   * in. Both issuers are accepted by Convex at once (convex/auth.config.ts),
+   * which is what makes it reversible — but a password changed while this is
+   * on is written to Convex Auth and will NOT be understood by Supabase if it
+   * is turned back off.
+   */
+  | "auth";
+
+/**
+ * Domains that "all" does NOT cover.
+ *
+ * `auth` decides who issues sessions, not where rows live. Sweeping it in with
+ * a wildcard would mean a routine "move everything to Convex" also changed how
+ * every person signs in — and it is the one domain where turning the flag back
+ * off can leave someone unable to get in, because a password changed under
+ * Convex Auth is not a password Supabase understands. It has to be typed out.
+ */
+const NEVER_WILDCARD: readonly Domain[] = ["auth"];
 
 export function convexServes(domain: Domain): boolean {
   const raw = (process.env.CONVEX_BACKENDS ?? "").trim().toLowerCase();
   if (!raw || raw === "none") return false;
-  if (raw === "all") return true;
-  return raw.split(",").map((s) => s.trim()).includes(domain);
+
+  const named = raw.split(",").map((s) => s.trim());
+  if (named.includes(domain)) return true;
+
+  /* "all" is a MEMBER of the list, not a value the whole string must equal.
+     Comparing the raw string meant `all,auth` matched neither branch, so every
+     data domain silently fell back to Supabase while auth had moved — which
+     presents as a signed-in user whose screens are all empty, because the
+     Supabase session no longer exists. */
+  return named.includes("all") && !NEVER_WILDCARD.includes(domain);
 }

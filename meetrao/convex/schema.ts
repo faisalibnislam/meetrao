@@ -1,5 +1,6 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import { authTables } from "@convex-dev/auth/server";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Convex schema — a transcription of supabase/migrations, with three rules
@@ -32,6 +33,41 @@ const nullableString = v.union(v.string(), v.null());
 const nullableNumber = v.union(v.number(), v.null());
 
 export default defineSchema({
+  /* Convex Auth's own tables — users, accounts, sessions, verification codes.
+     `users` is extended with `supabase_id`: the Supabase UUID that is also
+     `profiles.id`. That one field is what keeps every user-keyed row valid
+     across the issuer change, and it is resolved in exactly one place,
+     convex/lib/auth.ts:currentUserId, which every authorization path already
+     goes through. profiles.id and its foreign keys stay UUIDs — rewriting
+     fifteen tables to Convex ids would buy nothing and would cost the ability
+     to compare the two databases row for row. */
+  ...authTables,
+
+  /* Convex Auth's `users`, extended with ONE field.
+
+     `supabase_id` is the Supabase UUID, which is also `profiles.id`. It is
+     what keeps every user-keyed row valid across the issuer change, and it is
+     resolved in exactly one place — convex/lib/auth.ts:currentUserId, which
+     every authorization path already goes through. Nothing else in the
+     codebase learns that identity changed shape.
+
+     Spelled out rather than spread from authTables because the table needs a
+     field and an index of its own; the other fields mirror Convex Auth's own
+     definition and must stay in step with it across upgrades. */
+  users: defineTable({
+    name: v.optional(v.string()),
+    image: v.optional(v.string()),
+    email: v.optional(v.string()),
+    emailVerificationTime: v.optional(v.number()),
+    phone: v.optional(v.string()),
+    phoneVerificationTime: v.optional(v.number()),
+    isAnonymous: v.optional(v.boolean()),
+    supabase_id: v.optional(v.string()),
+  })
+    .index("email", ["email"])
+    .index("phone", ["phone"])
+    .index("by_supabase_id", ["supabase_id"]),
+
   /* unique: lower(username) — enforced in convex/profiles.ts */
   profiles: defineTable({
     id: v.string(),
