@@ -21,11 +21,16 @@ import { codeFromEmail, latestEmailTo } from "./lib/inbox.mjs";
 
 process.chdir(resolve(dirname(fileURLToPath(import.meta.url)), ".."));
 
+/* .env.local names the DEV deployment, so a real process.env wins over it —
+   otherwise `--prod` reached the convex-run half while the ConvexHttpClient
+   kept talking to dev, and the two halves silently disagreed about which
+   database they were checking. A green run that proved nothing. */
 const env = {};
 for (const l of readFileSync(".env.local", "utf8").split("\n")) {
   const m = /^\s*([A-Z0-9_]+)\s*=\s*(.*)$/.exec(l);
   if (m) env[m[1]] = m[2].trim().replace(/^["']|["']$/g, "");
 }
+Object.assign(env, Object.fromEntries(Object.entries(process.env).filter(([, v]) => v)));
 const prod = process.argv.includes("--prod");
 const run = (fn, args) => {
   const a = ["convex", "run", fn, JSON.stringify(args)];
