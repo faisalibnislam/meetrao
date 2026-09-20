@@ -12,10 +12,17 @@ import { NextRequest } from "next/server";
    accidentally dead proxy would also satisfy. */
 const delegated: string[] = [];
 
+/** The options the proxy hands the auth middleware, captured for assertion. */
+type MiddlewareOptions = { shouldHandleCode?: (r: NextRequest) => boolean | Promise<boolean> };
+let options: MiddlewareOptions = {};
+
 vi.mock("@convex-dev/auth/nextjs/server", () => ({
-  convexAuthNextjsMiddleware: () => async (request: NextRequest) => {
-    delegated.push(request.nextUrl.pathname);
-    return undefined;
+  convexAuthNextjsMiddleware: (_handler: unknown, opts: MiddlewareOptions) => {
+    options = opts ?? {};
+    return async (request: NextRequest) => {
+      delegated.push(request.nextUrl.pathname);
+      return undefined;
+    };
   },
   nextjsMiddlewareRedirect: () => undefined,
 }));
@@ -65,5 +72,46 @@ describe("proxy · an OAuth code stranded on the site root", () => {
   it("forwards without consulting the auth middleware at all", async () => {
     await get("https://meetrao.com/?code=abc123");
     expect(delegated).toEqual([]);
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Connecting a calendar must not sign you out.
+
+   Convex Auth claims EVERY `?code=` unless told otherwise — the option
+   defaults to undefined, which means "handle all of them". Google Calendar
+   consent returns to /api/google/callback with its own code, and the
+   middleware would try to redeem it as a sign-in code, fail, and CLEAR THE
+   AUTH COOKIES on the way past.
+
+   That shipped. Connecting a calendar logged the host out and landed them on
+   /login, and the code was eaten before the route handler could read it — so
+   the calendar never connected either. One missing line, both symptoms, and
+   neither of them looks like a middleware problem from the outside.
+   ───────────────────────────────────────────────────────────────────────────── */
+describe("proxy · the calendar callback's code is not an auth code", () => {
+  const ask = (url: string) => options.shouldHandleCode!(new NextRequest(new Request(url)));
+
+  it("tells the auth middleware which codes are its own", async () => {
+    await get("https://meetrao.com/dashboard");
+    expect(options.shouldHandleCode, "shouldHandleCode was not passed at all").toBeTypeOf("function");
+  });
+
+  it("refuses the calendar callback", async () => {
+    await get("https://meetrao.com/dashboard");
+    expect(await ask("https://meetrao.com/api/google/callback?code=google-code&state=x")).toBe(false);
+  });
+
+  /* The guard has to be narrow. Convex Auth's OWN Google sign-in comes back
+     with a code, and blanket-disabling this would break signing in instead. */
+  it("still claims codes on every other path", async () => {
+    await get("https://meetrao.com/dashboard");
+    for (const url of [
+      "https://meetrao.com/?code=auth-code",
+      "https://meetrao.com/auth/callback?code=auth-code",
+      "https://meetrao.com/login?code=auth-code",
+    ]) {
+      expect(await ask(url), `${url} should still be handled`).toBe(true);
+    }
   });
 });

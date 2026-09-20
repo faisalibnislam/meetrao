@@ -25,6 +25,14 @@ const PRIVATE_PREFIXES = ["/dashboard", "/bookings", "/meetings", "/availability
 const AUTH_PAGES = ["/login", "/signup", "/forgot"];
 
 /**
+ * The one route whose `?code=` is NOT an auth code.
+ *
+ * Google Calendar consent returns here with its own single-use code, to be
+ * exchanged for calendar tokens. It has nothing to do with signing in.
+ */
+const CALENDAR_CALLBACK = "/api/google/callback";
+
+/**
  * An OAuth code that landed on the site root instead of `/auth/callback`.
  *
  * A provider that cannot match its configured redirect may fall back to the
@@ -63,20 +71,39 @@ async function convexProxyOnce() {
   const { convexAuthNextjsMiddleware, nextjsMiddlewareRedirect } = await import(
     "@convex-dev/auth/nextjs/server"
   );
-  convexProxy = convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
-    const path = request.nextUrl.pathname;
-    const isPrivate = PRIVATE_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
-    const authed = await convexAuth.isAuthenticated();
+  convexProxy = convexAuthNextjsMiddleware(
+    async (request, { convexAuth }) => {
+      const path = request.nextUrl.pathname;
+      const isPrivate = PRIVATE_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
+      const authed = await convexAuth.isAuthenticated();
 
-    if (!authed && isPrivate) {
-      const to = request.nextUrl.clone();
-      to.pathname = "/login";
-      to.searchParams.set("next", path);
-      return NextResponse.redirect(to);
-    }
-    if (authed && AUTH_PAGES.includes(path)) return nextjsMiddlewareRedirect(request, "/dashboard");
-    return undefined;
-  }) as unknown as (request: NextRequest, event: NextFetchEvent) => Promise<unknown>;
+      if (!authed && isPrivate) {
+        const to = request.nextUrl.clone();
+        to.pathname = "/login";
+        to.searchParams.set("next", path);
+        return NextResponse.redirect(to);
+      }
+      if (authed && AUTH_PAGES.includes(path)) return nextjsMiddlewareRedirect(request, "/dashboard");
+      return undefined;
+    },
+    {
+      /* WITHOUT THIS, CONNECTING A CALENDAR SIGNS YOU OUT.
+         
+         Convex Auth claims EVERY `?code=` it sees — the option defaults to
+         undefined, which means "handle all of them". Google Calendar consent
+         returns to CALENDAR_CALLBACK carrying its own code, so the middleware
+         would try to redeem a calendar code as a sign-in code, fail, and —
+         this is the damaging part — CLEAR THE AUTH COOKIES on the way past
+         (see the package's server/request.js). The browser then reached the
+         callback with no session, and the route handler, correctly, sent it
+         to /login.
+
+         It also ate the code before the route handler could read it, which is
+         why connecting a calendar had been impossible since the auth cutover
+         rather than merely annoying. Both symptoms, one line. */
+      shouldHandleCode: (request) => request.nextUrl.pathname !== CALENDAR_CALLBACK,
+    },
+  ) as unknown as (request: NextRequest, event: NextFetchEvent) => Promise<unknown>;
   return convexProxy;
 }
 
