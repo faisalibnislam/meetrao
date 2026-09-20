@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-const UPDATED = "12 September 2026";
+const UPDATED = "20 September 2026";
 
 const TOC: TocEntry[] = [
   { id: "p-who", label: "1. Who we are" },
@@ -98,7 +98,7 @@ const PURPOSES: [string, string][] = [
  */
 const GOOGLE_DATA_RECIPIENTS: [string, string][] = [
   [
-    "Convex (database and authentication)",
+    "Convex (database and authentication, N. Virginia)",
     "Stores the Google refresh and access tokens, the connected account's email address, and the calendar identifier. Also stores the booking records that produce calendar events, and runs the code that calls Google — the tokens are used where they are stored and are never returned to the website. The only provider that holds Google user data at rest.",
   ],
   [
@@ -117,7 +117,7 @@ const GOOGLE_DATA_RECIPIENTS: [string, string][] = [
 
 const PROCESSORS: [string, string, string][] = [
   ["Vercel", "Hosting and content delivery", "United States"],
-  ["Convex", "Database, authentication and file storage", "United States"],
+  ["Convex", "Database, authentication and file storage", "United States (N. Virginia)"],
   ["Google", "Calendar, Meet, Sign in with Google, and Google Analytics", "United States"],
   ["Resend", "Transactional email delivery", "United States"],
 ];
@@ -452,9 +452,9 @@ export default function PrivacyPage() {
         <h2 id="p-where">8. Where it is stored</h2>
         <p>
           Meetrao is operated from Bangladesh. Your account data and bookings are stored by Convex in the
-          United States. The website is served by Vercel&rsquo;s global network, and email, calendar and
-          analytics are handled by providers in the United States. Your data will therefore be transferred and
-          stored outside your own country.
+          United States, in the US&nbsp;East (N.&nbsp;Virginia) region. The website is served by
+          Vercel&rsquo;s global network, and email, calendar and analytics are handled by providers in the
+          United States. Your data will therefore be transferred and stored outside your own country.
         </p>
         <p>
           Where we move personal data out of the EU or UK, we rely on the European Commission&rsquo;s Standard
