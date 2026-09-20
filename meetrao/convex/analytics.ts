@@ -11,9 +11,22 @@ import { requireProfile } from "./lib/auth";
 const DAY = 24 * 60 * 60 * 1000;
 const dayKey = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
-/** Insert-only, and reachable without a session — the collect route is public. */
+/**
+ * Insert-only, and called with no session — visitors are anonymous.
+ *
+ * BUT NOT OPEN. `src/app/api/analytics/collect/route.ts` says why: "a browser
+ * that could insert into site_visits directly could also invent a country and
+ * forge a hash", which is why that table had no insert policy and no grant —
+ * only the service role could write it.
+ *
+ * A Convex mutation has no service role and this deployment's URL ships to
+ * every browser, so the equivalent is a shared secret that only our own route
+ * handler knows. Without it this function is a public endpoint for inventing
+ * analytics.
+ */
 export const record = mutation({
   args: {
+    secret: v.string(),
     visitor_hash: v.string(), path: v.string(),
     referrer_host: v.union(v.string(), v.null()),
     country: v.union(v.string(), v.null()), region: v.union(v.string(), v.null()), city: v.union(v.string(), v.null()),
@@ -21,7 +34,21 @@ export const record = mutation({
     is_bot: v.boolean(),
   },
   handler: async (ctx, a) => {
-    await ctx.db.insert("site_visits", { ...a, visited_at: Date.now() });
+    const expected = process.env.ANALYTICS_INGEST_SECRET;
+    if (!expected) fail("Analytics ingest is not configured.", "MISCONFIGURED");
+
+    // Length first, then a full comparison that does not stop at the first
+    // differing byte. A timing attack over the network is impractical here;
+    // this costs nothing and removes the argument.
+    let same = a.secret.length === expected.length;
+    for (let i = 0; i < expected.length; i++) {
+      if (a.secret.charCodeAt(i) !== expected.charCodeAt(i)) same = false;
+    }
+    if (!same) fail("Not permitted.", "FORBIDDEN");
+
+    const { secret: _secret, ...row } = a;
+    void _secret;
+    await ctx.db.insert("site_visits", { ...row, visited_at: Date.now() });
     return true;
   },
 });

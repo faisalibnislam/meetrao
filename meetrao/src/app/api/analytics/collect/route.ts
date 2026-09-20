@@ -1,6 +1,9 @@
 import { after } from "next/server";
 import { env } from "@/lib/env";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { convexServes } from "@/lib/backend";
+import { convexAnonymous } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 import {
   classifyUserAgent,
   clientAddress,
@@ -116,6 +119,28 @@ export async function POST(request: Request): Promise<Response> {
   // The visitor waits for none of this. `after` runs once the response is on
   // its way, so a slow database is not a slow page.
   after(async () => {
+    if (convexServes("analytics")) {
+      /* The secret is what keeps this endpoint ours. site_visits had no insert
+         grant precisely so a browser could not forge a visit, and a Convex
+         mutation has no service role to inherit that from — see the note on
+         `record` in convex/analytics.ts. */
+      const secret = process.env.ANALYTICS_INGEST_SECRET;
+      if (!secret) {
+        console.error("analytics: ANALYTICS_INGEST_SECRET is not set; visit not recorded");
+        return;
+      }
+      try {
+        await convexAnonymous().mutation(api.analytics.record, { secret, ...row });
+      } catch (cause) {
+        // Logged, not thrown: a page view that fails to record is not an
+        // outage, and there is no one to tell.
+        console.error("analytics: convex insert failed", cause);
+      }
+      // No opportunistic prune here — convex/crons.ts runs it on a schedule,
+      // which is what it should always have been.
+      return;
+    }
+
     const supabase = supabaseAdmin();
     const { error } = await supabase.from("site_visits").insert(row);
     // Logged, not thrown: a page view that fails to record is not an outage,
