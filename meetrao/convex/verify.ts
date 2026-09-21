@@ -81,3 +81,27 @@ export const effectsFor = internalQuery({
     };
   },
 });
+
+/**
+ * The tail of the audit log.
+ *
+ * `admin_activity` is the one record of who did what — account creation,
+ * removal, suspension, calendar connects. When rows go missing this is the
+ * first thing to read, and reading it should not require reconstructing the
+ * day from memory.
+ */
+export const recentActivity = internalQuery({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, a) => {
+    const rows = await ctx.db.query("admin_activity").collect();
+    return rows
+      .sort((x, y) => y.created_at - x.created_at)
+      .slice(0, a.limit ?? 15)
+      .map((r) => ({
+        when: new Date(r.created_at).toISOString(),
+        kind: r.kind,
+        summary: r.summary,
+        actor: r.actor_id,
+      }));
+  },
+});
