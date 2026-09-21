@@ -13,12 +13,27 @@ That folder is the authority for every value and every piece of copy; where its
 
 ```bash
 npm install
-cp .env.example .env.local     # then fill it in
+npx convex dev                 # signs you in to Convex, links the dev deployment,
+                               # writes CONVEX_DEPLOYMENT + NEXT_PUBLIC_CONVEX_URL
+cp .env.example .env.local     # then fill in the rest (merge, don't overwrite
+                               # the two lines convex dev just wrote)
 npm run setup:check            # names anything still missing
 npm run dev
 ```
 
-`npm test` runs the slot-engine suite. `npm run build` is the same build Vercel runs.
+**Two lists of secrets, not one.** The code that talks to Google and sends the
+sign-up and reset emails runs inside Convex, so its credentials live on the
+Convex deployment, not in `.env.local` and not on Vercel. `setup:check` cannot
+see them; `npx convex env list` can. `.env.example` names which is which.
+
+`npm test` runs the suite. `npm run build` is the same build Vercel runs.
+
+**Deploying.** Vercel builds `main` on merge, from the repository root — the
+project's Root Directory is `meetrao`, so a CLI `vercel deploy` has to run from
+**above** this folder or it looks for `meetrao/meetrao/`. Convex is separate and
+Vercel does not deploy it: `npx convex deploy` with a production deploy key. When
+a change touches both, **deploy Convex first** — the app reading a field an older
+Convex deployment does not return is how a redirect loop took the site down once.
 
 ## What is where
 
@@ -33,9 +48,12 @@ npm run dev
 | `src/app/api/` | The slot query, booking creation, Google OAuth |
 | `src/components/ui/` | Primitives — Button, Icon, MenuSelect, Modal, Toast, table parts |
 | `src/lib/booking/slots.ts` | The slot engine. Pure, unit-tested |
-| `src/lib/google/` | OAuth, connection storage, Calendar API |
+| `src/lib/google/` | The calendar consent URL, and a thin façade over `convex/google.ts` |
 | `src/emails/` | The design's send-ready HTML, used as-is |
-| `supabase/migrations/` | Schema and the guest-facing booking API |
+| `convex/` | The backend: schema, every query and mutation, auth, crons, and the Google calls |
+| `convex/lib/auth.ts` | `currentUserId` — the ONE place an auth subject becomes a profile id |
+| `convex/lib/emails.ts` | The sign-up confirmation and password-reset emails |
+| `supabase/migrations/` | History only. Nothing runs — see `supabase/README.md` |
 
 ## Decisions worth knowing
 
@@ -236,40 +254,36 @@ the only thing enforcing the reserved-word list, the 30-character cap and the
 no-double-hyphen rule; the database constraint is looser on all three. An admin
 path that skipped it could save a name the host could never edit back.
 
-## Supabase Auth settings that the app cannot enforce
+## Auth, and the settings the app cannot enforce
 
-**Confirm email must be ON.** Authentication → Providers → Email → *Confirm
-email*. With it off, Supabase creates every account already confirmed — it
-stamps `email_confirmed_at` within a tenth of a second of `created_at`, leaves
-`confirmation_sent_at` null, and sends nothing. The app's verification gate
-then works exactly as written and lets the user straight through, because
-Supabase is telling it the address is verified. Both halves of "no verification
-email, and no gate" are that one switch.
+Convex Auth owns sign-in: email and password, and Google. Its session lives in
+cookies the middleware refreshes; everything else reads Convex from the server.
 
-**Paste the confirmation template.** Authentication → Email Templates → Confirm
-signup, replaced with `src/emails/supabase/confirm-signup.html`. That email is
-sent by Supabase, not by this app, so it is the design's only email that is not
-already wired.
+**Google needs TWO redirect URIs on the one OAuth client.** Sign-in with Google
+returns to the Convex deployment's own origin, and calendar consent returns to
+this app. Both must be registered, for every origin in use, or the missing one
+fails as `redirect_uri_mismatch` and nothing else:
 
-## Supabase Auth URL configuration
+- `https://<deployment>.convex.site/api/auth/callback/google` — sign-in
+- `<origin>/api/google/callback` — calendar, for localhost, previews and production
 
-Set these in the Supabase dashboard under **Authentication → URL Configuration**.
-They are not in a migration because they are project settings, not schema.
+Removing either to tidy the list breaks the other half of the product.
 
-- **Site URL** — an origin that actually serves this app.
-- **Redirect URLs** — must include `<origin>/**` for every origin that signs
-  people in: production, each preview domain, and `http://localhost:3000/**`.
+**Publish the OAuth consent screen.** In **Testing**, refresh tokens expire
+seven days after they are issued, so every connected calendar quietly dies a
+week later. Google Cloud Console → APIs & Services → OAuth consent screen →
+**Publish app**. Full verification is only needed to remove the "unverified
+app" warning for other people; publishing alone stops the expiry.
 
-This matters more than it looks. Supabase does not reject a `redirectTo` that
-is missing from the allow-list — it silently substitutes the Site URL, which is
-a bare origin with no path. The browser then lands on `/` holding `?code=…`,
-nothing exchanges it, and sign-in looks like it did nothing. `auth.flow_state`
-is where to check: its `referrer` column shows the URL Supabase actually chose,
-and a bare origin there means the allow-list rejected ours.
+**Only `/auth/callback` may be claimed by the auth middleware.** Convex Auth
+takes every `?code=` it sees unless told otherwise, and when redemption fails it
+strips the parameter and clears the session. `/verify`, `/reset` and the
+calendar callback each redeem their own code. `src/proxy.ts` is an allow-list
+for that reason; do not turn it back into a deny-list.
 
-`NEXT_PUBLIC_SITE_URL` must be set on Vercel to that same origin. Without it,
+`NEXT_PUBLIC_SITE_URL` must be set on Vercel to the real origin. Without it,
 `siteUrl()` falls back to Vercel's host variables, and the per-deployment one
-changes on every push — an address that can never be allow-listed.
+changes on every push — an address that can never be registered with Google.
 
 **The app renders 1.3x on desktop.** `.app-scale` in `globals.css`, on the app
 shell only — the marketing side is untouched. As built the dashboard's content
@@ -360,11 +374,18 @@ filters by `auth.uid()` inside Postgres, so the profile read no longer waits on
 call it, Next dedupes identical GET fetches but an RPC is a POST and is not
 deduped, so without it the profile would be fetched twice per navigation.
 
-**`regions: ["hnd1"]` in `vercel.json`.** The Supabase project is in
-`ap-northeast-1` (Tokyo). Vercel functions default to `iad1` (Washington), which
-put a Pacific crossing — roughly 150–180 ms — on every one of those hops. Pinning
-the functions to Tokyo is the largest single win here and needs no code, and a
-*single* region is allowed on Hobby — only multi-region is a paid feature.
+**`regions: ["hnd1"]` in `vercel.json` — AND IT IS NOW WRONG.** This was set when
+the database was Supabase in `ap-northeast-1` (Tokyo): Vercel functions default
+to `iad1` (Washington), which put a Pacific crossing — roughly 150–180 ms — on
+every database hop, and pinning the functions next to the data was the largest
+single win available.
+
+The database is now **Convex, in US East (N. Virginia)**. So the pin does the
+opposite of its purpose: functions in Tokyo now cross the Pacific to reach it,
+on every one of those hops. The same reasoning says `iad1`. Not changed yet,
+because it is a production behaviour change — but the rationale below describes
+the old arrangement. A *single* region is allowed on Hobby; only multi-region is
+a paid feature.
 Confirmed: every deploy since the key was added reports success. Check which
 region actually served a request with
 `curl -sI https://www.meetrao.com/login | grep x-vercel-id` — the region is the
@@ -467,29 +488,19 @@ braces: not required, because the envelope domain is what SPF checks, but it
 helps filters that wrongly check the header `From:` domain. Only ever publish
 **one** SPF record per name — several is a permerror, which is worse than none.
 
-**Supabase's own emails are a separate system.** The signup confirmation is
-rendered from `src/emails/supabase/confirm-signup.html` **pasted by hand into
-the Supabase dashboard**, and sent by whatever SMTP Supabase is configured
-with. It never reads `EMAIL_FROM` or `EMAIL_POSTAL_ADDRESS`, never goes through
-`lib/email/send.ts`, and changing anything in this repo does nothing to it until
-somebody pastes the template again. That is how it went out with a footer
-reading "Meetrao" and no postal address, and with an Unsubscribe link pointing
-at a settings page that requires the account the reader is in the middle of
-confirming.
+**The sign-up and password-reset emails are rendered inside Convex**, in
+`convex/lib/emails.ts`, not from `src/emails/`. Convex Auth sends them from an
+action, and Convex cannot read from disk, so `lib/email/send.ts` cannot reach
+them. They read `EMAIL_FROM` and `EMAIL_POSTAL_ADDRESS` from the **Convex**
+deployment's environment, and throw rather than send when the postal address is
+missing — a footer with no address is not a compliant footer. Both go through
+Resend from meetrao.com, so the DKIM, SPF and DMARC above apply to them.
 
-Supabase's SMTP is configured and correct — custom SMTP on, `smtp.resend.com`
-port 465, sender `hello@meetrao.com`. So this mail leaves from meetrao.com
-through Resend like everything else, and the DKIM, SPF and DMARC above do apply
-to it. (Written down because "Supabase must be on its shared built-in SMTP" is
-the obvious guess when its mail junks and everything else looks right, and it
-was wrong here — checking the screen beats assuming.)
-
-What is still odd about that email is the link domain. The button and the
-visible fallback URL both point at `<project>.supabase.co` with a long opaque
-token, in a message sent from meetrao.com. Sender and link domains disagreeing
-is a phishing heuristic, and this one disagrees loudly. Supabase's custom auth
-domain add-on puts that link on a meetrao.com subdomain and removes the signal;
-short of that, the raw URL does not have to be printed as visible body text.
+They used to be Supabase's, pasted by hand into its dashboard, which is how they
+went out for weeks with a footer reading only "Meetrao" and an unsubscribe link
+to a page the reader could not open. Neither message carries an unsubscribe now:
+both are transactional, and nobody may opt out of the email that lets them into
+their own account.
 
 **Diagnosing a junked message.** Open it, view the original, and read
 `Authentication-Results`. `spf=pass` and `dkim=pass` there means authentication
@@ -588,10 +599,9 @@ Read back through three aggregate functions — `analytics_overview`,
 the only access rule and a non-admin sees zeroes rather than an error. The screen
 is `/admin/analytics`.
 
-- `ANALYTICS_SALT` — optional. Unset, the salt is derived from
-  `SUPABASE_SERVICE_ROLE_KEY`, which is already a stable server-only secret.
-  Setting it explicitly means rotating that key no longer resets the day's
-  unique-visitor count.
+- `ANALYTICS_SALT` — set it on the **Convex** deployment. It salts the daily
+  visitor hash; rotating it resets that day's unique-visitor count, which is
+  the point of keeping it stable.
 
 **Google Analytics** is off unless `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set, and
 then it still does not load until a visitor presses Accept. Not "loaded with
@@ -728,12 +738,16 @@ contradicts your own Terms is how a rich result gets pulled.
 
 ## Still open
 
-- **Google redirect URIs.** The credentials are verified working, but which
-  origins are registered cannot be checked from outside — Google validates the
-  authorization code before the redirect URI, so every probe returns the same
-  error. `<origin>/api/google/callback` must be registered for **every** origin
-  by hand: localhost, each Vercel preview domain, production. A missing one
-  fails as `redirect_uri_mismatch` and gives no other signal.
+- **Google redirect URIs.** Which origins are registered cannot be checked from
+  outside — Google validates the authorization code before the redirect URI, so
+  every probe returns the same error. Both URIs in *Auth* above must be
+  registered by hand, for every origin in use.
+- **`vercel.json` pins functions to Tokyo** while the database is in Virginia —
+  see *Why navigation is fast*. One line to change, and a production decision.
+- **Preview deployments use the DEV Convex deployment.** `NEXT_PUBLIC_CONVEX_URL`
+  on Vercel's Preview environment points at `festive-meerkat-460`. That is
+  reasonable for previews, but it means a preview build can never be promoted
+  to production — it would point meetrao.com at the dev database.
 - **The calendar privacy copy overstates what the grant enforces.** /help, the
   FAQ and the footer all say Meetrao never reads event titles, guests or
   descriptions. That is true of the code — `busyPeriods` calls freeBusy and is
@@ -757,5 +771,6 @@ contradicts your own Terms is how a rich result gets pulled.
   Bangladeshi lawyer's time before anyone relies on the cap.
 - **No reschedule flow.** Guests cancel and rebook. `booking-changed.html` and
   `sendRescheduled()` exist, unwired, for whenever it is built.
-- **The verification email** is sent by Supabase, not by us — see the Auth
-  settings section above for the template and the Confirm email switch.
+- **Vercel Hobby allows ~100 deployments a day**, counting every PR preview and
+  every production build. Pushing and merging after each small fix hit it twice
+  in one day and left a live bug stranded behind it. Batch changes.
