@@ -144,13 +144,40 @@ export const bookingLinkAvailable = query({
   },
 });
 
+/**
+ * Booking links that are held back, and whether anything still occupies them.
+ *
+ * A name lands here when an account is removed or an admin retires a link, so
+ * that a dead `meetrao.com/<link>` cannot be claimed by the next person to
+ * sign up — someone else's old meeting invitations still point at it.
+ *
+ * `heldBy` is the honest part. A reservation is only supposed to exist for a
+ * name nobody holds, but the two are separate rows and nothing enforces it, so
+ * the console reports what is actually there rather than assuming. A name with
+ * a holder must not be offered for reclaim: freeing it would let a second
+ * account claim a link the first is still serving.
+ */
 export const listReservedUsernames = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
     const rows = await ctx.db.query("reserved_usernames").collect();
     rows.sort((a, b) => b.reserved_at - a.reserved_at);
-    return rows.map((r) => ({ username: r.username, reason: r.reason, reserved_at: new Date(r.reserved_at).toISOString() }));
+
+    return await Promise.all(
+      rows.map(async (r) => {
+        const holder = await ctx.db
+          .query("profiles")
+          .withIndex("by_username_lower", (q) => q.eq("username_lower", r.username))
+          .unique();
+        return {
+          username: r.username,
+          reason: r.reason,
+          reserved_at: new Date(r.reserved_at).toISOString(),
+          heldBy: holder ? { id: holder.id, name: holder.full_name || holder.email } : null,
+        };
+      }),
+    );
   },
 });
 
