@@ -242,6 +242,78 @@ export async function releaseBookingLink(userId: string): Promise<AdminResult & 
   return { username: data.new_username };
 }
 
+/* ── Held-back booking links ────────────────────────────────────────────────
+   A name goes into `reserved_usernames` when an account is removed or an admin
+   retires a link, so a dead `meetrao.com/<link>` cannot be handed to the next
+   person who signs up — old meeting invitations still point at it.
+
+   That hold is permanent until someone lifts it, and until now nothing could:
+   the Convex functions existed and no screen reached them, so a reserved name
+   was gone for good. These two are that screen. */
+
+export type ReclaimableLink = {
+  username: string;
+  reason: string;
+  reserved_at: string;
+  /** Non-null means a profile still serves this link; it must not be freed. */
+  heldBy: { id: string; name: string } | null;
+};
+
+export async function listHeldBookingLinks(): Promise<ReclaimableLink[]> {
+  await requireAdmin();
+  try {
+    return (await (await convexServer()).query(api.admin.listReservedUsernames, {})) as ReclaimableLink[];
+  } catch (cause) {
+    console.error("held booking links could not be read", cause);
+    return [];
+  }
+}
+
+/**
+ * Frees a held-back link so it can be claimed again.
+ *
+ * REFUSES A NAME SOMETHING STILL HOLDS. A reservation should only exist for a
+ * name nobody occupies, but they are separate rows and nothing enforces it —
+ * and freeing an occupied name would let a second account claim a link the
+ * first is still serving, which is the one outcome the hold exists to prevent.
+ * Checked here against live data rather than trusting what the page rendered,
+ * because the list the admin clicked may be minutes old.
+ *
+ * The audit row is written inside the Convex mutation, so this does not add a
+ * second one.
+ */
+export async function reclaimBookingLink(username: string): Promise<AdminResult> {
+  await requireAdmin();
+  const key = sanitizeUsername(username);
+  if (!key) return { error: "That is not a booking link." };
+
+  const convex = await convexServer();
+
+  let held: ReclaimableLink[];
+  try {
+    held = (await convex.query(api.admin.listReservedUsernames, {})) as ReclaimableLink[];
+  } catch (cause) {
+    return { error: convexMessage(cause, "That link could not be reclaimed.") };
+  }
+
+  const row = held.find((r) => r.username === key);
+  if (!row) return { error: `/${key} is not being held back.` };
+  if (row.heldBy) {
+    return { error: `/${key} is in use by ${row.heldBy.name}. Retire their link first.` };
+  }
+
+  try {
+    const freed = await convex.mutation(api.admin.unreserveUsername, { username: key });
+    if (!freed) return { error: `/${key} is not being held back.` };
+  } catch (cause) {
+    return { error: convexMessage(cause, "That link could not be reclaimed.") };
+  }
+
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/users");
+  return {};
+}
+
 export async function savePlatformSettings(input: {
   appName: string;
   supportEmail: string;

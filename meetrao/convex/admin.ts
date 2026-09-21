@@ -144,13 +144,40 @@ export const bookingLinkAvailable = query({
   },
 });
 
+/**
+ * Booking links that are held back, and whether anything still occupies them.
+ *
+ * A name lands here when an account is removed or an admin retires a link, so
+ * that a dead `meetrao.com/<link>` cannot be claimed by the next person to
+ * sign up — someone else's old meeting invitations still point at it.
+ *
+ * `heldBy` is the honest part. A reservation is only supposed to exist for a
+ * name nobody holds, but the two are separate rows and nothing enforces it, so
+ * the console reports what is actually there rather than assuming. A name with
+ * a holder must not be offered for reclaim: freeing it would let a second
+ * account claim a link the first is still serving.
+ */
 export const listReservedUsernames = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
     const rows = await ctx.db.query("reserved_usernames").collect();
     rows.sort((a, b) => b.reserved_at - a.reserved_at);
-    return rows.map((r) => ({ username: r.username, reason: r.reason, reserved_at: new Date(r.reserved_at).toISOString() }));
+
+    return await Promise.all(
+      rows.map(async (r) => {
+        const holder = await ctx.db
+          .query("profiles")
+          .withIndex("by_username_lower", (q) => q.eq("username_lower", r.username))
+          .unique();
+        return {
+          username: r.username,
+          reason: r.reason,
+          reserved_at: new Date(r.reserved_at).toISOString(),
+          heldBy: holder ? { id: holder.id, name: holder.full_name || holder.email } : null,
+        };
+      }),
+    );
   },
 });
 
@@ -199,6 +226,60 @@ export async function purgeAccount(
 
     const username = p.username_lower;
     await ctx.db.delete(p._id);
+
+    /* THE AUTH IDENTITY GOES TOO, and leaving it behind was a real defect.
+       Postgres cascaded from auth.users; Convex has no cascades, and this
+       function was written from the profile side only. So a removed account
+       kept its `users` row, its password and its sessions:
+
+         · the person could still sign in, land with no profile, and — before
+           the proxy stopped bouncing them off /login — spin in a redirect
+           loop on every screen;
+         · a removed address could be "signed up" again, which quietly set a
+           password on the surviving identity rather than creating anything;
+         · and the privacy policy promises deletion is immediate and complete,
+           while the email address sat in `users` indefinitely.
+
+       `supabase_id` is the link in both directions: imported accounts carry
+       the old UUID, and accounts created here have it set to their own Convex
+       user id, so one lookup covers both. */
+    const user = await ctx.db
+      .query("users")
+      .withIndex("by_supabase_id", (q) => q.eq("supabase_id", p.id))
+      .unique();
+
+    if (user) {
+      for (const acc of await ctx.db
+        .query("authAccounts")
+        .withIndex("userIdAndProvider", (q) => q.eq("userId", user._id))
+        .collect()) {
+        // Codes hang off the account, so they go before it does.
+        for (const code of await ctx.db
+          .query("authVerificationCodes")
+          .withIndex("accountId", (q) => q.eq("accountId", acc._id))
+          .collect()) {
+          await ctx.db.delete(code._id);
+        }
+        await ctx.db.delete(acc._id);
+      }
+
+      for (const session of await ctx.db
+        .query("authSessions")
+        .withIndex("userId", (q) => q.eq("userId", user._id))
+        .collect()) {
+        // Refresh tokens outlive the access token; without these the session
+        // is revoked on paper only.
+        for (const token of await ctx.db
+          .query("authRefreshTokens")
+          .withIndex("sessionId", (q) => q.eq("sessionId", session._id))
+          .collect()) {
+          await ctx.db.delete(token._id);
+        }
+        await ctx.db.delete(session._id);
+      }
+
+      await ctx.db.delete(user._id);
+    }
 
     const already = await ctx.db.query("reserved_usernames").withIndex("by_username", (q) => q.eq("username", username)).unique();
     if (!already) await ctx.db.insert("reserved_usernames", { username, reason: "account removed", reserved_at: Date.now() });
