@@ -1,3 +1,4 @@
 # Vercel CLI link for the repository root (the app has its own in meetrao/).
 # Local tooling state: it names the project and org, and nothing builds from it.
 /.vercel
+.vercel

@@ -16,15 +16,27 @@ const delegated: string[] = [];
 type MiddlewareOptions = { shouldHandleCode?: (r: NextRequest) => boolean | Promise<boolean> };
 let options: MiddlewareOptions = {};
 
+type Handler = (
+  request: NextRequest,
+  ctx: { convexAuth: { isAuthenticated: () => Promise<boolean> } },
+) => Promise<unknown>;
+
+let handler: Handler = async () => undefined;
+
+/** What Convex answers when the middleware asks. Reassigned per test. */
+let convexSaysAuthenticated = false;
+
 vi.mock("@convex-dev/auth/nextjs/server", () => ({
-  convexAuthNextjsMiddleware: (_handler: unknown, opts: MiddlewareOptions) => {
+  convexAuthNextjsMiddleware: (h: Handler, opts: MiddlewareOptions) => {
     options = opts ?? {};
+    handler = h;
     return async (request: NextRequest) => {
       delegated.push(request.nextUrl.pathname);
-      return undefined;
+      return await handler(request, {
+        convexAuth: { isAuthenticated: async () => convexSaysAuthenticated },
+      });
     };
   },
-  nextjsMiddlewareRedirect: () => undefined,
 }));
 
 const { proxy } = await import("./proxy");
@@ -125,5 +137,53 @@ describe("proxy · only the OAuth callback's code belongs to the auth middleware
     for (const path of ["/", "/login", "/signup", "/dashboard", "/settings/calendar"]) {
       expect(await ask(`https://meetrao.com${path}?code=x`), `${path} should not be claimed`).toBe(false);
     }
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The proxy must never send a signed-in visitor away from an auth page.
+
+   It used to redirect /login to /dashboard as a convenience. That was one half
+   of a redirect loop which took the live site down for signed-in users:
+
+     /dashboard  requireSession asks Convex, is told the token is not good,
+                 and redirects to /login
+     /login      the proxy asks Convex, is told it IS good, and redirects back
+
+   Both call Convex, so they are not simply trusting different things — the
+   middleware validates the token it just REFRESHED, while the page reads the
+   stale cookie from the same request. A session whose access token expired
+   while its refresh token is still valid sits exactly in that gap, and the
+   browser gives up with ERR_TOO_MANY_REDIRECTS.
+
+   The half that had to go is the convenience, not the gate.
+   ───────────────────────────────────────────────────────────────────────────── */
+describe("proxy · a signed-in visitor is never bounced off an auth page", () => {
+  it.each(["/login", "/signup", "/forgot", "/reset", "/verify"])(
+    "leaves %s alone even when Convex says the session is good",
+    async (path) => {
+      convexSaysAuthenticated = true;
+      const res = await get(`https://meetrao.com${path}`);
+      expect(res.headers.get("location"), `${path} redirected a signed-in visitor`).toBeNull();
+    },
+  );
+
+  /* The gate that matters is untouched: a signed-OUT visitor still cannot open
+     a private screen. */
+  it.each(["/dashboard", "/bookings", "/settings", "/admin", "/onboarding/1"])(
+    "still sends a signed-out visitor from %s to the login page",
+    async (path) => {
+      convexSaysAuthenticated = false;
+      const res = await get(`https://meetrao.com${path}`);
+      const to = res.headers.get("location");
+      expect(to, `${path} let a signed-out visitor through`).not.toBeNull();
+      expect(new URL(to!).pathname).toBe("/login");
+      expect(new URL(to!).searchParams.get("next")).toBe(path);
+    },
+  );
+
+  it("lets a signed-in visitor into a private screen", async () => {
+    convexSaysAuthenticated = true;
+    expect((await get("https://meetrao.com/dashboard")).headers.get("location")).toBeNull();
   });
 });

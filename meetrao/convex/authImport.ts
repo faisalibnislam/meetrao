@@ -1,4 +1,4 @@
-import { internalMutation } from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 import { v } from "convex/values";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -203,6 +203,49 @@ export const purgeNewUser = internalMutation({
 });
 
 /** The profile belonging to an address. Verification only. */
+/**
+ * What KIND of password an account holds — never the hash itself.
+ *
+ * Answers "should this password still work?" without anyone having to reason
+ * from a changelog. A bcrypt secret came in from Supabase at the cutover and
+ * the old password is expected to work; a Scrypt one was set here since; none
+ * means the account has no password credential at all and only Google or a
+ * reset can get in.
+ *
+ * internalQuery, so no client can reach it, and it returns a word rather than
+ * anything derived from the secret.
+ */
+export const passwordKind = internalQuery({
+  args: { email: v.string() },
+  handler: async (ctx, a) => {
+    const email = a.email.trim().toLowerCase();
+    const accounts = await ctx.db
+      .query("authAccounts")
+      .withIndex("providerAndAccountId", (q) =>
+        q.eq("provider", "password").eq("providerAccountId", email),
+      )
+      .collect();
+
+    const google = await ctx.db
+      .query("authAccounts")
+      .withIndex("providerAndAccountId", (q) =>
+        q.eq("provider", "google").eq("providerAccountId", email),
+      )
+      .collect();
+
+    return {
+      passwordAccounts: accounts.length,
+      googleAccounts: google.length,
+      kind: accounts.map((acc) => {
+        const secret = (acc as { secret?: string }).secret;
+        if (!secret) return "none";
+        if (/^\$2[aby]?\$/.test(secret)) return "bcrypt (imported from Supabase)";
+        return "scrypt (set on Convex)";
+      }),
+    };
+  },
+});
+
 export const profileFor = internalMutation({
   args: { email: v.string() },
   handler: async (ctx, a) => {
