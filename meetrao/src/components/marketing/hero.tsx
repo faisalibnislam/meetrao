@@ -80,7 +80,7 @@ export function Hero() {
     <section
       ref={heroRef}
       id="top"
-      className="relative isolate -mt-[78px] overflow-hidden bg-[#0B1714] pt-[78px]"
+      className="relative isolate -mt-[80px] overflow-hidden bg-[#0B1714] pt-[80px]"
     >
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-0 overflow-hidden">
         <div className="drift-a absolute -top-[24%] -left-[14%] h-[104%] w-[74%] rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(24,105,90,1),rgba(24,105,90,0)_70%)] blur-[44px]" />
