@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { cancelBooking, rescheduleBooking } from "@/lib/actions/bookings";
 import { timeOptions } from "@/lib/booking/time";
 import type { BookingView } from "@/lib/data/bookings";
+import { whereText } from "@/lib/locations";
 
 /* Booking detail, its cancel confirmation, and moving it. "Cancel meeting"
    moves to the confirm; "Keep it" comes back here, so the destructive action
@@ -149,10 +150,12 @@ export function BookingDialogs({
       title={booking.meetingName}
       subtitle={`${booking.dayLabel} · ${booking.timeRange}`}
       primary={{
-        label: "Join Google Meet",
+        // A phone call has nothing to join, so the button closes instead of
+        // offering a link that does not exist.
+        label: booking.meetUrl ? "Join Google Meet" : "Close",
         onClick: () => {
           if (booking.meetUrl) window.open(booking.meetUrl, "_blank", "noopener,noreferrer");
-          else toast({ tone: "warn", title: "No Meet link yet", text: "This booking has no calendar event." });
+          else onClose();
         },
       }}
       secondary={{ label: "Cancel meeting", onClick: onOpenCancel }}
@@ -197,8 +200,12 @@ export function BookingDialogs({
         <DetailRow label="Duration" value={`${booking.duration} minutes`} />
         <DetailRow label="Status" value={booking.status} />
         <DetailRow
-          label="Meet"
-          value={booking.cancelled ? "Removed with the event" : (booking.meetUrl ?? "Not created")}
+          label="Where"
+          value={
+            booking.cancelled
+              ? "Removed with the event"
+              : whereText(booking.location, booking.locationDetail, booking.meetUrl)
+          }
           machine={!booking.cancelled && Boolean(booking.meetUrl)}
         />
         <DetailRow

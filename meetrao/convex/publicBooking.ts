@@ -95,6 +95,7 @@ export const getMeetingAvailability = query({
         duration_minutes: meeting.duration_minutes, buffer_minutes: meeting.buffer_minutes,
         minimum_notice_minutes: meeting.minimum_notice_minutes, booking_window_days: meeting.booking_window_days,
         location: meeting.location,
+        location_detail: meeting.location_detail ?? "",
         /* The booking form has to know what to ask. Labels only — a question
            is written to be read by the guest it is put to. */
         questions: meeting.questions ?? [],
@@ -321,6 +322,8 @@ export const createBooking = mutation({
       hostCreated: false,
       pageViewId: a.pageViewId ?? null,
       answers,
+      location: meeting.location,
+      locationDetail: meeting.location_detail ?? "",
     });
 
     return {

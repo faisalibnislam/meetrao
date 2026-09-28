@@ -4,6 +4,7 @@ import { v } from "convex/values";
 import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
 import { meetingTypeOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
+import { isLocationKind } from "./lib/locations";
 import { logActivity } from "./lib/effects";
 
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,78}[a-z0-9])?$/;
@@ -47,6 +48,23 @@ export const getOwn = query({
  *  only in the form, because the form is not the boundary. */
 const MAX_QUESTIONS = 5;
 
+/**
+ * The kind, from the allow-list, and its detail.
+ *
+ * An unknown kind falls back to Meet rather than failing: the alternative is a
+ * meeting that cannot be saved because a value nobody typed is wrong. A kind
+ * that needs a detail and has none is still allowed — the host may not know
+ * the room yet, and the guest is told "details to follow" rather than being
+ * refused a booking.
+ */
+function validLocation(kind: string, detail: string): { location: string; location_detail: string } {
+  const location = isLocationKind(kind) ? kind : "google_meet";
+  const trimmed = detail.trim().slice(0, 200);
+  // Meet mints its own link; a leftover address on a Meet meeting would print
+  // beside it and contradict it.
+  return { location, location_detail: location === "google_meet" ? "" : trimmed };
+}
+
 function validQuestions(
   input: { id: string; label: string; kind: "short" | "long"; required: boolean }[],
 ): { id: string; label: string; kind: "short" | "long"; required: boolean }[] {
@@ -68,7 +86,8 @@ export const create = mutation({
     name: v.string(), description: v.optional(v.string()), slug: v.string(),
     duration_minutes: v.number(), buffer_minutes: v.optional(v.number()),
     minimum_notice_minutes: v.optional(v.number()), booking_window_days: v.optional(v.number()),
-    location: v.optional(v.string()), schedule_id: v.optional(v.union(v.string(), v.null())),
+    location: v.optional(v.string()), location_detail: v.optional(v.string()),
+    schedule_id: v.optional(v.union(v.string(), v.null())),
     questions: v.optional(
       v.array(
         v.object({
@@ -100,7 +119,8 @@ export const create = mutation({
     const id = uuid();
     await ctx.db.insert("meeting_types", {
       id, user_id: me.id, description: a.description ?? "",
-      location: a.location ?? "google_meet", is_active: true,
+      ...validLocation(a.location ?? "google_meet", a.location_detail ?? ""),
+      is_active: true,
       questions: validQuestions(a.questions ?? []),
       schedule_id: a.schedule_id ?? null, created_at: now, updated_at: now, ...row,
     });
@@ -140,6 +160,15 @@ export const update = mutation({
     const patch: Record<string, unknown> = { updated_at: Date.now() };
     for (const [k, val] of Object.entries(rest)) if (val !== undefined) patch[k] = val;
     if (typeof patch.slug === "string") patch.slug = patch.slug.trim().toLowerCase();
+
+    if (patch.location !== undefined || patch.location_detail !== undefined) {
+      const fixed = validLocation(
+        (patch.location as string | undefined) ?? m.location,
+        (patch.location_detail as string | undefined) ?? m.location_detail ?? "",
+      );
+      patch.location = fixed.location;
+      patch.location_detail = fixed.location_detail;
+    }
 
     if (patch.questions !== undefined) {
       patch.questions = validQuestions(patch.questions as { id: string; label: string; kind: "short" | "long"; required: boolean }[]);

@@ -173,9 +173,14 @@ export async function createEvent(
     endMs: number;
     timeZone: string;
     attendees: { email: string; name: string }[];
+    /** Ask Google for a Meet link. False for a phone call or an address. */
+    conference?: boolean;
+    /** Google's own "location" field — the address, the number, the note. */
+    location?: string;
   },
 ): Promise<CreatedEvent> {
   const requestId = crypto.randomUUID();
+  const wantsConference = event.conference !== false;
   const url =
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events` +
     `?conferenceDataVersion=1&sendUpdates=all`;
@@ -189,7 +194,10 @@ export async function createEvent(
       start: { dateTime: new Date(event.startMs).toISOString(), timeZone: event.timeZone },
       end: { dateTime: new Date(event.endMs).toISOString(), timeZone: event.timeZone },
       attendees: event.attendees.map((a) => ({ email: a.email, displayName: a.name || undefined })),
-      conferenceData: { createRequest: { requestId, conferenceSolutionKey: { type: "hangoutsMeet" } } },
+      ...(event.location ? { location: event.location } : {}),
+      ...(wantsConference
+        ? { conferenceData: { createRequest: { requestId, conferenceSolutionKey: { type: "hangoutsMeet" } } } }
+        : {}),
     }),
   });
 

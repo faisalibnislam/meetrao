@@ -116,7 +116,16 @@ export default defineSchema({
     buffer_minutes: v.number(),
     minimum_notice_minutes: v.number(),
     booking_window_days: v.number(),
+    /**
+     * How the meeting happens: "google_meet", "phone", "in_person" or
+     * "custom". Kept as a plain string rather than a union because every row
+     * written before the other three existed holds "google_meet" and a union
+     * would have to be widened anyway; the allow-list lives in
+     * convex/meetingTypes.ts, which is the boundary.
+     */
     location: v.string(),
+    /** The number to call, the address, or whatever "custom" means here. */
+    location_detail: v.optional(v.string()),
     is_active: v.boolean(),
     /** null = the host's default schedule. See migration 0010. */
     schedule_id: nullableString,
@@ -201,6 +210,11 @@ export default defineSchema({
     page_view_id: nullableString,
     /** The guest's answers, each carrying the label it was asked under. */
     answers: v.optional(v.array(v.object({ label: v.string(), value: v.string() }))),
+    /* Where this booking happens, snapshotted at booking time beside
+       meeting_name and duration_minutes — a host who switches a meeting from
+       Meet to a phone call next month has not moved last month's meeting. */
+    location: v.optional(v.string()),
+    location_detail: v.optional(v.string()),
     /**
      * How many times this booking has been moved. Optional because every row
      * written before reschedule existed has no such field, and absent means 0.

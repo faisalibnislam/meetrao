@@ -6,6 +6,7 @@ import { Icon } from "@/components/ui/icon";
 import { LogoLink } from "@/components/ui/logo";
 import { formatDuration, formatLongDate, formatTimeRange } from "@/lib/booking/time";
 import { getBookingByReference } from "@/lib/data/guest-booking";
+import { whereText } from "@/lib/locations";
 import { cx } from "@/lib/cx";
 
 export const dynamic = "force-dynamic";
@@ -44,7 +45,7 @@ export default async function ConfirmedPage({
     { key: "Duration", value: formatDuration(booking.durationMinutes) },
     {
       key: "Where",
-      value: booking.meetUrl ? booking.meetUrl.replace(/^https?:\/\//, "") : "Link to follow by email",
+      value: whereText(booking.location, booking.locationDetail, booking.meetUrl),
       machine: Boolean(booking.meetUrl),
     },
   ];
@@ -109,14 +110,14 @@ export default async function ConfirmedPage({
               {moved ? (
                 <>
                   Moved. Both calendars now read the new time, and we emailed{" "}
-                  <strong className="font-semibold text-ink">{booking.guestEmail}</strong>. The same Meet link
-                  still works.
+                  <strong className="font-semibold text-ink">{booking.guestEmail}</strong>.
+                  {booking.meetUrl ? " The same Meet link still works." : ""}
                 </>
               ) : (
                 <>
                   This is already on your calendar. We sent an invitation to{" "}
-                  <strong className="font-semibold text-ink">{booking.guestEmail}</strong> with the Meet link
-                  attached.
+                  <strong className="font-semibold text-ink">{booking.guestEmail}</strong>
+                  {booking.meetUrl ? " with the Meet link attached." : " with the details."}
                 </>
               )}
             </span>

@@ -53,6 +53,9 @@ export type FlowProps = {
   };
   /** What this meeting asks, besides name, email and the note. */
   questions?: BookingQuestion[];
+  /** How the meeting happens, and its detail: a number, an address, a note. */
+  location?: string;
+  locationDetail?: string;
   pageViewId: string | null;
   /** Present when this is an existing booking being moved, not a new one. */
   move?: { reference: string; currentStart: string };
@@ -249,6 +252,19 @@ export function BookingFlow(props: FlowProps) {
       toast({ tone: "bad", title: "Could not book", text: "Check your connection and try again." });
     }
   }
+
+  /* Before a booking exists there is no Meet link to name, so this reads as
+     the KIND — "Google Meet" — and the confirmation carries the actual link. */
+  const locationLine =
+    props.location === "phone"
+      ? props.locationDetail
+        ? `Phone — ${props.locationDetail}`
+        : "Phone call"
+      : props.location === "in_person"
+        ? props.locationDetail || "In person"
+        : props.location === "custom"
+          ? props.locationDetail || "Details to follow"
+          : "Google Meet";
 
   const chosenStart = chosen ? new Date(chosen) : null;
   const chosenEnd = chosenStart ? new Date(chosenStart.getTime() + props.durationMinutes * 60_000) : null;
@@ -537,9 +553,13 @@ export function BookingFlow(props: FlowProps) {
               <Icon name="clock" size={13} className="w-[15px] flex-none text-ink-3" />
               <span className="text-[13px] text-ink">{props.durationMinutes} minutes</span>
             </div>
-            <div className="flex items-center gap-[10px]">
-              <Icon name="video" size={13} className="w-[15px] flex-none text-ink-3" />
-              <span className="text-[13px] text-ink">Google Meet</span>
+            <div className="flex items-start gap-[10px]">
+              <Icon
+                name={props.location === "in_person" ? "globe" : props.location === "phone" ? "user" : "video"}
+                size={13}
+                className="mt-[1px] w-[15px] flex-none text-ink-3"
+              />
+              <span className="text-[13px] leading-[1.45] text-ink">{locationLine}</span>
             </div>
             <div className="flex items-start gap-[10px]">
               <Icon name="globe" size={13} className="mt-[1px] w-[15px] flex-none text-ink-3" />

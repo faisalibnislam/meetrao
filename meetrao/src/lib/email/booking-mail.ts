@@ -1,5 +1,6 @@
 import { formatDuration, formatLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
 import { timezoneLabel } from "@/lib/timezones";
+import { whereText } from "@/lib/locations";
 import type { BookingMail, CancellationMail } from "./send";
 import type { Booking } from "@/lib/types";
 
@@ -23,6 +24,8 @@ export type MailableBooking = Pick<
   | "starts_at"
   | "ends_at"
   | "meet_url"
+  | "location"
+  | "location_detail"
 >;
 
 /**
@@ -63,6 +66,7 @@ export function rescheduleMail(
     guestTimezoneLabel: base.guestTimezoneLabel,
     durationLabel: base.durationLabel,
     meetUrl: base.meetUrl,
+    where: base.where,
     oldStartLong: `${formatLongDate(oldStart, hostTimezone)} · ${formatTimeRange(oldStart, oldEnd, hostTimezone)}`,
     changedByName: by === "host" ? base.hostName : booking.guest_name,
   };
@@ -108,6 +112,7 @@ export function cancellationMail(
     guestTimezoneLabel: timezoneLabel(guestZone),
     durationLabel: formatDuration(booking.duration_minutes),
     meetUrl: booking.meet_url ?? "",
+    where: whereText(booking.location ?? "google_meet", booking.location_detail ?? "", booking.meet_url),
     cancelledByName: by === "host" ? hostName : booking.guest_name,
     cancelledAtLong: `${formatLongDate(new Date(), hostTimezone)} · ${formatTime(new Date(), hostTimezone)}`,
     reason: "",

@@ -45,6 +45,7 @@ export type MeetingType = {
   minimum_notice_minutes: number;
   booking_window_days: number;
   location: string;
+  location_detail?: string;
   is_active: boolean;
   /** null = the host's default schedule. See migration 0010. */
   schedule_id: string | null;
@@ -93,6 +94,9 @@ export type Booking = {
   guest_rsvp: string | null;
   /** Absent on every booking made before a meeting could ask questions. */
   answers?: BookingAnswer[];
+  /** Where it happens, as it was when the booking was made. */
+  location?: string;
+  location_detail?: string;
   created_at: string;
 };
 

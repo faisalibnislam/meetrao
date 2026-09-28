@@ -70,6 +70,8 @@ export async function insertBooking(
     hostCreated: boolean;
     pageViewId?: string | null;
     answers?: { label: string; value: string }[];
+    location?: string;
+    locationDetail?: string;
   },
 ): Promise<Doc<"bookings">> {
   const endsAt = args.startsAt + args.durationMinutes * MINUTE;
@@ -109,6 +111,8 @@ export async function insertBooking(
     host_created: args.hostCreated,
     page_view_id: args.pageViewId ?? null,
     answers: args.answers ?? [],
+    location: args.location ?? "google_meet",
+    location_detail: args.locationDetail ?? "",
     created_at: now,
     updated_at: now,
   };

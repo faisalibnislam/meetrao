@@ -12,6 +12,7 @@ import { convexAnonymous } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 import { timezoneLabel } from "@/lib/timezones";
+import { whereText } from "@/lib/locations";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Booking creation. Public: the guest has no account.
@@ -162,6 +163,7 @@ export async function POST(request: NextRequest) {
     guestTimezoneLabel: timezoneLabel(guestTimezone),
     durationLabel: formatDuration(row.duration),
     meetUrl: meetUrl ?? "",
+    where: whereText(meeting.location, meeting.locationDetail, meetUrl),
   };
 
   // Mail must never keep a guest waiting on a confirmation screen.

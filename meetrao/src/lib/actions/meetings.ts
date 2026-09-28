@@ -7,6 +7,7 @@ import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 import { slugify } from "@/lib/username";
 import type { BookingQuestion } from "@/lib/types";
+import { isLocationKind } from "@/lib/locations";
 
 export type MeetingResult = { error?: string; id?: string };
 
@@ -23,6 +24,9 @@ export type MeetingInput = {
   active: boolean;
   /** What the guest is asked besides name, email and the note. */
   questions?: BookingQuestion[];
+  /** "google_meet" · "phone" · "in_person" · "custom". */
+  location?: string;
+  locationDetail?: string;
 };
 
 /** The design's number, and a kindness: a booking form asking eight questions
@@ -48,6 +52,9 @@ function invalid(input: MeetingInput): string | null {
     if (q.label.trim().length > 120) return "Keep each question under 120 characters.";
   }
   if (new Set(questions.map((q) => q.id)).size !== questions.length) return "Two questions share an id.";
+
+  if (input.location && !isLocationKind(input.location)) return "Pick one of the offered locations.";
+  if ((input.locationDetail ?? "").length > 200) return "Keep the location under 200 characters.";
   return null;
 }
 
@@ -66,6 +73,8 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
     minimum_notice_minutes: input.notice,
     booking_window_days: input.window,
     is_active: input.active,
+    location: input.location ?? "google_meet",
+    location_detail: (input.locationDetail ?? "").trim(),
     questions: (input.questions ?? [])
       .filter((q) => q.label.trim())
       .map((q) => ({ id: q.id, label: q.label.trim(), kind: q.kind, required: q.required })),

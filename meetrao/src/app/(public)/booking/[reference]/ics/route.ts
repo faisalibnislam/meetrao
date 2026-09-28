@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBookingByReference } from "@/lib/data/guest-booking";
+import { whereText } from "@/lib/locations";
 import { SUPPORT_EMAIL } from "@/lib/contact";
 import { siteUrl } from "@/lib/env";
 
@@ -70,9 +71,7 @@ export async function GET(
     `DTEND:${stamp(end)}`,
     line("SUMMARY", `${booking.meetingName} — ${booking.hostName}`),
     line("DESCRIPTION", description),
-    booking.meetUrl
-      ? line("LOCATION", booking.meetUrl)
-      : line("LOCATION", "Google Meet"),
+    line("LOCATION", booking.meetUrl || whereText(booking.location, booking.locationDetail, null)),
     // Calendar apps show this address beside the host's name. It used to be
     // noreply@, which was honest when nothing on the domain was received; now
     // that support@ is forwarded to a real inbox, an address that reaches a

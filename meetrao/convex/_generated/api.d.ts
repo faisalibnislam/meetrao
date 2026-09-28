@@ -27,6 +27,7 @@ import type * as lib_emails from "../lib/emails.js";
 import type * as lib_errors from "../lib/errors.js";
 import type * as lib_googleApi from "../lib/googleApi.js";
 import type * as lib_ids from "../lib/ids.js";
+import type * as lib_locations from "../lib/locations.js";
 import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_reminderEmail from "../lib/reminderEmail.js";
 import type * as lib_reminderWindow from "../lib/reminderWindow.js";
@@ -70,6 +71,7 @@ declare const fullApi: ApiFromModules<{
   "lib/errors": typeof lib_errors;
   "lib/googleApi": typeof lib_googleApi;
   "lib/ids": typeof lib_ids;
+  "lib/locations": typeof lib_locations;
   "lib/rateLimit": typeof lib_rateLimit;
   "lib/reminderEmail": typeof lib_reminderEmail;
   "lib/reminderWindow": typeof lib_reminderWindow;

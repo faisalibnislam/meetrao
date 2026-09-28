@@ -10,6 +10,8 @@ import { PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { saveMeeting, type MeetingInput } from "@/lib/actions/meetings";
 import type { BookingQuestion } from "@/lib/types";
+import { LOCATION_OPTIONS } from "@/lib/locations";
+import { cx } from "@/lib/cx";
 
 const DURATIONS = [15, 30, 45, 60];
 
@@ -58,6 +60,7 @@ export function MeetingForm({
     setForm((f) => ({ ...f, [key]: value }));
 
   const questions = form.questions ?? [];
+  const locationKind = form.location ?? "google_meet";
 
   function addQuestion() {
     // crypto.randomUUID is the id an answer is matched back by, so it has to
@@ -126,20 +129,69 @@ export function MeetingForm({
       </section>
 
       <section className="flex flex-col gap-[11px] border-b border-line py-[20px]">
-        <PanelHeading title="Location" subtitle="Every booking gets its own Google Meet link, on both calendars." />
+        <PanelHeading title="Location" subtitle="Where this one happens. Guests are told on the booking page." />
 
-        <div className="flex h-[36px] items-center gap-[9px] rounded-[6px] border border-line bg-fill px-[12px]">
-          <Icon name="video" size={13} className="text-ink-2" />
-          <span className="text-[13.5px] text-ink">Google Meet</span>
+        <div className="flex flex-wrap gap-[8px]">
+          {LOCATION_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={locationKind === o.value}
+              onClick={() => set("location", o.value)}
+              className={cx(
+                "inline-flex h-[32px] cursor-pointer items-center rounded-[6px] border px-[12px] text-[12.5px]",
+                "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
+                locationKind === o.value
+                  ? "border-accent bg-accent-soft font-semibold text-accent"
+                  : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
+              )}
+            >
+              {o.label}
+            </button>
+          ))}
         </div>
 
-        <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
-          <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-accent" />
-          <span className="text-[12.5px] leading-[1.6] text-ink-2">
-            Meetrao creates one calendar event and invites your guest to it, so the meeting, the description and
-            the Meet link land on both calendars. Changes and cancellations update both sides.
-          </span>
-        </div>
+        {locationKind === "google_meet" ? (
+          <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
+            <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-accent" />
+            <span className="text-[12.5px] leading-[1.6] text-ink-2">
+              Meetrao creates one calendar event and invites your guest to it, so the meeting, the description
+              and the Meet link land on both calendars. Changes and cancellations update both sides.
+            </span>
+          </div>
+        ) : (
+          <Field
+            label={
+              locationKind === "phone" ? "Number or arrangement" : locationKind === "in_person" ? "Address" : "Details"
+            }
+            htmlFor="meeting-location-detail"
+            help={LOCATION_OPTIONS.find((o) => o.value === locationKind)?.hint}
+          >
+            <Input
+              id="meeting-location-detail"
+              height={36}
+              maxLength={200}
+              placeholder={
+                locationKind === "phone"
+                  ? "+880 1XXX-XXXXXX, or “I’ll call you”"
+                  : locationKind === "in_person"
+                    ? "12 Example Road, Cumilla"
+                    : "Your Zoom link, or what guests should do"
+              }
+              value={form.locationDetail ?? ""}
+              onChange={(e) => set("locationDetail", e.target.value)}
+            />
+          </Field>
+        )}
+
+        {locationKind !== "google_meet" ? (
+          <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
+            <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
+            <span className="text-[12.5px] leading-[1.6] text-ink-2">
+              No Meet link is created. The booking still lands on both calendars, carrying this as its location.
+            </span>
+          </div>
+        ) : null}
       </section>
 
       {/* ── questions ────────────────────────────────────────────────── */}

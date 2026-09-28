@@ -7,6 +7,7 @@ import {
   exchangeCode, refreshAccessToken, revokeToken, fetchAccountEmail, hasCalendarWrite,
   freeBusy, createEvent, deleteEvent, patchEventTime, GoogleAuthError,
 } from "./lib/googleApi";
+import { needsMeetLink } from "./lib/locations";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Google Calendar, entirely inside Convex.
@@ -216,6 +217,11 @@ export const createEventForBooking = action({
         endMs: booking.ends_at,
         timeZone: hostTimezone,
         attendees,
+        /* A phone call or an address gets no Meet link: asking Google for a
+           conference on a meeting that happens in a room puts a video link in
+           front of a guest who is supposed to turn up somewhere. */
+        conference: needsMeetLink(booking.location ?? "google_meet"),
+        location: needsMeetLink(booking.location ?? "google_meet") ? "" : (booking.location_detail ?? ""),
       });
       await ctx.runMutation(internal.google.attachEvent, {
         reference: a.reference, eventId: event.eventId, meetUrl: event.meetUrl,
@@ -273,6 +279,8 @@ export const updateEventForBooking = action({
         endMs: booking.ends_at,
         timeZone: hostTimezone,
         attendees: [{ email: booking.guest_email, name: booking.guest_name }, ...invitees],
+        conference: needsMeetLink(booking.location ?? "google_meet"),
+        location: needsMeetLink(booking.location ?? "google_meet") ? "" : (booking.location_detail ?? ""),
       });
       await ctx.runMutation(internal.google.attachEvent, {
         reference: a.reference, eventId: event.eventId, meetUrl: event.meetUrl,

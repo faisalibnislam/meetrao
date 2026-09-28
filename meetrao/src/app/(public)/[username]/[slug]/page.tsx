@@ -148,6 +148,8 @@ export default async function BookingPage({
         durationMinutes={meeting.durationMinutes}
         bookingWindowDays={meeting.rules.bookingWindowDays}
         questions={meeting.questions}
+        location={meeting.location}
+        locationDetail={meeting.locationDetail}
         initial={{
           year,
           month,

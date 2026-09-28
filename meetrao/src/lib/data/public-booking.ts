@@ -31,6 +31,9 @@ export type PublicMeeting = {
   durationMinutes: number;
   /** What this meeting asks the guest, besides name, email and the note. */
   questions: BookingQuestion[];
+  /** How it happens: "google_meet", "phone", "in_person" or "custom". */
+  location: string;
+  locationDetail: string;
   rules: SlotRules;
 };
 
@@ -70,6 +73,8 @@ type MeetingRow = {
   minimum_notice_minutes: number;
   booking_window_days: number;
   questions?: BookingQuestion[];
+  location?: string;
+  location_detail?: string;
 };
 
 function toMeeting(row: MeetingRow): PublicMeeting {
@@ -80,6 +85,8 @@ function toMeeting(row: MeetingRow): PublicMeeting {
     slug: row.slug,
     durationMinutes: row.duration_minutes,
     questions: row.questions ?? [],
+    location: row.location ?? "google_meet",
+    locationDetail: row.location_detail ?? "",
     rules: {
       durationMinutes: row.duration_minutes,
       bufferMinutes: row.buffer_minutes,

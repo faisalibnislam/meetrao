@@ -32,6 +32,9 @@ export type BookingView = {
   note: string;
   /** What the guest answered, each carrying the label it was asked under. */
   answers: { label: string; value: string }[];
+  /** Where it happens, as it was when the booking was made. */
+  location: string;
+  locationDetail: string;
   /** Everyone invited, when the host scheduled this. Empty for guest bookings. */
   invitees: { name: string; email: string }[];
   hostCreated: boolean;
@@ -73,6 +76,8 @@ export function toView(row: Booking, timeZone: string, now: Date): BookingView {
     meetUrl: row.meet_url,
     note: row.guest_note,
     answers: row.answers ?? [],
+    location: row.location ?? "google_meet",
+    locationDetail: row.location_detail ?? "",
     invitees: [],
     hostCreated: Boolean((row as { host_created?: boolean }).host_created),
   };

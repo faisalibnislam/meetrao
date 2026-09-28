@@ -5,6 +5,7 @@ import { createEventForBooking } from "@/lib/google/calendar";
 import { formatDuration, formatLongDate, formatTime } from "@/lib/booking/time";
 import { timezoneLabel } from "@/lib/timezones";
 import { zonedInstant } from "@/lib/booking/slots";
+import { whereText } from "@/lib/locations";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
 import { convexServer } from "@/lib/convex/server";
@@ -161,6 +162,8 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
     guestTimezoneLabel: timezoneLabel(zone),
     durationLabel: formatDuration(duration),
     meetUrl,
+    // A meeting the host schedules themselves is a Meet, as it always was.
+    where: whereText("google_meet", "", meetUrl || null),
   };
 
   // One confirmation each. Every invitee is a guest of this meeting, so each

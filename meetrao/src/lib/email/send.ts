@@ -170,6 +170,8 @@ export type BookingMail = {
   guestTimezoneLabel: string;
   durationLabel: string;
   meetUrl: string;
+  /** The "Where" line as the guest should read it: a link, a number, a room. */
+  where: string;
 };
 
 function bookingUrls(reference: string) {
@@ -177,9 +179,22 @@ function bookingUrls(reference: string) {
   return { gcal_url: `${base}/gcal`, ics_url: `${base}/ics`, cancel_url: `${base}/cancel` };
 }
 
-function meetFields(meetUrl: string) {
-  const display = meetUrl.replace(/^https?:\/\//, "");
-  return { meet_url: meetUrl || `${siteUrl()}`, meet_url_display: display || "Link to follow" };
+/**
+ * The "Where" line and the button above it.
+ *
+ * A Meet link is a thing to click; an address is not. When there is nothing to
+ * join, the button points at the booking itself — which is where the guest
+ * moves or cancels it — and says so, rather than offering "Join Google Meet"
+ * for a meeting that happens in a room.
+ */
+function meetFields(mail: Pick<BookingMail, "meetUrl" | "reference" | "where">) {
+  const display = mail.meetUrl.replace(/^https?:\/\//, "");
+  const joinable = Boolean(mail.meetUrl);
+  return {
+    meet_url: joinable ? mail.meetUrl : `${siteUrl()}/booking/${mail.reference}`,
+    meet_url_display: mail.where || display || "Link to follow",
+    where_cta: joinable ? "Join Google Meet" : "View your booking",
+  };
 }
 
 /** "New booking" — the host's copy. Suppressed when the host turned it off. */
@@ -198,7 +213,7 @@ export async function sendBookingNewToHost(
     html: render("booking-new-host", {
       ...chrome(),
       ...bookingUrls(mail.reference),
-      ...meetFields(mail.meetUrl),
+      ...meetFields(mail),
       guest_name: mail.guestName,
       guest_first: firstName(mail.guestName),
       guest_email: mail.guestEmail,
@@ -223,7 +238,7 @@ export async function sendBookingNewToGuest(mail: BookingMail): Promise<SendResu
     html: render("booking-new-guest", {
       ...chrome(),
       ...bookingUrls(mail.reference),
-      ...meetFields(mail.meetUrl),
+      ...meetFields(mail),
       guest_first: firstName(mail.guestName),
       host_name: mail.hostName,
       meeting_name: mail.meetingName,
@@ -306,7 +321,7 @@ export async function sendRescheduled(
     html: render("booking-changed", {
       ...chrome(),
       ...bookingUrls(mail.reference),
-      ...meetFields(mail.meetUrl),
+      ...meetFields(mail),
       meeting_name: mail.meetingName,
       other_party: to === "host" ? mail.guestName : mail.hostName,
       changed_by: mail.changedByName,

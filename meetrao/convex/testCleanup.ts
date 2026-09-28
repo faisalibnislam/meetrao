@@ -230,3 +230,25 @@ export const seedQuestionsFixture = internalMutation({
     return { ok: true as const, id: meeting.id, restored: before.length };
   },
 });
+
+/** Sets a meeting's location, and puts it back. The booking page cannot be
+ *  exercised for a phone meeting without a meeting that is one. */
+export const seedLocationFixture = internalMutation({
+  args: { username: v.string(), slug: v.string(), location: v.string(), detail: v.string() },
+  handler: async (ctx, a) => {
+    const host = await ctx.db
+      .query("profiles")
+      .withIndex("by_username_lower", (q) => q.eq("username_lower", a.username.trim().toLowerCase()))
+      .unique();
+    if (!host) return { ok: false as const, reason: "no such host" };
+    const meeting = await ctx.db
+      .query("meeting_types")
+      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
+      .unique();
+    if (!meeting) return { ok: false as const, reason: "no such meeting" };
+
+    const was = { location: meeting.location, detail: meeting.location_detail ?? "" };
+    await ctx.db.patch(meeting._id, { location: a.location, location_detail: a.detail, updated_at: Date.now() });
+    return { ok: true as const, was };
+  },
+});
