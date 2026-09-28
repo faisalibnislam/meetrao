@@ -1,11 +1,12 @@
 import { query, mutation, internalQuery } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { fail } from "./lib/errors";
 import { v } from "convex/values";
 import { bookingOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
 import { insertBooking, moveBooking } from "./bookings";
-import { rulesForMeeting } from "./availability";
-import { zonedWeekdayMinute } from "./lib/zoned";
+import { overridesForMeeting, rulesForMeeting } from "./availability";
+import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
 
@@ -114,6 +115,26 @@ export const availabilityForMeeting = query({
 });
 
 /**
+ * The days that do not follow the weekly pattern — the host's time off, and
+ * any day they have given different hours.
+ *
+ * Public, and it says only that a date is closed or carries these hours. The
+ * note beside it on the host's own screen ("Eid", "school run") is theirs and
+ * does not come back here.
+ */
+export const overridesForMeetingPublic = query({
+  args: { meetingId: v.string() },
+  handler: async (ctx, a) => {
+    const meeting = await ctx.db.query("meeting_types").withIndex("by_uuid", (q) => q.eq("id", a.meetingId)).unique();
+    if (!meeting || !meeting.is_active) return [];
+    const host = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", meeting.user_id)).unique();
+    const from = zonedDateKey(Date.now() - DAY, host?.timezone ?? "UTC");
+    const rows = await overridesForMeeting(ctx, meeting.user_id, meeting.schedule_id, from);
+    return rows.map((o) => ({ date: o.date, ranges: o.ranges }));
+  },
+});
+
+/**
  * Busy blocks for a host, for the booking page.
  *
  * ── A deliberate, bounded widening, and worth understanding ─────────────────
@@ -188,6 +209,38 @@ export const recordPageView = mutation({
   },
 });
 
+/**
+ * Does this instant fall inside the hours the meeting is offered on?
+ *
+ * The slot engine in src/lib/booking/slots.ts answers this on the way in, and
+ * this answers it again on the way through, because anyone can call the
+ * mutation directly — migration 0005 is what a missing re-check looks like.
+ * Convex cannot import the engine (different tsconfig root and bundle), so
+ * this is the second implementation and has to learn every rule the first one
+ * learns. Date overrides are the most recent of those: a host's day off is a
+ * claim about their calendar date, so the date is resolved in the HOST's zone
+ * and an override REPLACES the weekday's rules, exactly as it does in the
+ * engine.
+ */
+async function fitsAvailability(
+  ctx: QueryCtx | MutationCtx,
+  args: { hostId: string; hostTimezone: string; scheduleId: string | null; startsAt: number; durationMinutes: number },
+): Promise<boolean> {
+  const { weekday, minute } = zonedWeekdayMinute(args.startsAt, args.hostTimezone);
+  const dateKey = zonedDateKey(args.startsAt, args.hostTimezone);
+
+  const overrides = await overridesForMeeting(ctx, args.hostId, args.scheduleId, dateKey);
+  const onTheDay = overrides.find((o) => o.date === dateKey);
+
+  const ranges = onTheDay
+    ? onTheDay.ranges.map((r) => ({ start_minute: r.start_minute, end_minute: r.end_minute }))
+    : (await rulesForMeeting(ctx, args.hostId, args.scheduleId))
+        .filter((r) => r.weekday === weekday)
+        .map((r) => ({ start_minute: r.start_minute, end_minute: r.end_minute }));
+
+  return ranges.some((r) => minute >= r.start_minute && minute + args.durationMinutes <= r.end_minute);
+}
+
 /** public.create_booking. Every guard from migration 0005, in order. */
 export const createBooking = mutation({
   args: {
@@ -216,12 +269,13 @@ export const createBooking = mutation({
     if (a.startsAt < now + meeting.minimum_notice_minutes * MINUTE) fail("inside minimum notice");
     if (a.startsAt > now + meeting.booking_window_days * DAY) fail("beyond booking window");
 
-    // The host's own weekday and minute-of-day, as create_booking computed them.
-    const { weekday, minute } = zonedWeekdayMinute(a.startsAt, host.timezone);
-    const rules = await rulesForMeeting(ctx, host.id, meeting.schedule_id);
-    const fits = rules.some(
-      (r) => r.weekday === weekday && minute >= r.start_minute && minute + meeting.duration_minutes <= r.end_minute,
-    );
+    const fits = await fitsAvailability(ctx, {
+      hostId: host.id,
+      hostTimezone: host.timezone,
+      scheduleId: meeting.schedule_id,
+      startsAt: a.startsAt,
+      durationMinutes: meeting.duration_minutes,
+    });
     if (!fits) fail("outside availability");
 
     /* Limits are consumed only once the booking is known to be legitimate, so
@@ -350,11 +404,13 @@ export const rescheduleByReference = mutation({
     if (a.startsAt < now + meeting.minimum_notice_minutes * MINUTE) fail("inside minimum notice");
     if (a.startsAt > now + meeting.booking_window_days * DAY) fail("beyond booking window");
 
-    const { weekday, minute } = zonedWeekdayMinute(a.startsAt, host.timezone);
-    const rules = await rulesForMeeting(ctx, host.id, meeting.schedule_id);
-    const fits = rules.some(
-      (r) => r.weekday === weekday && minute >= r.start_minute && minute + b.duration_minutes <= r.end_minute,
-    );
+    const fits = await fitsAvailability(ctx, {
+      hostId: host.id,
+      hostTimezone: host.timezone,
+      scheduleId: meeting.schedule_id,
+      startsAt: a.startsAt,
+      durationMinutes: b.duration_minutes,
+    });
     if (!fits) fail("outside availability");
 
     /* Tighter than booking, on purpose: moving is cheap for the guest and

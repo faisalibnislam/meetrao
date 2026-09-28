@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { AppScreen } from "@/components/app/app-screen";
 import { AvailabilityScreen } from "@/components/app/availability-screen";
-import { rulesToDays, type ScheduleView } from "@/lib/availability";
+import { rulesToDays, type ScheduleView, type TimeOffView } from "@/lib/availability";
 import { ensureDefaultAvailability } from "@/lib/data/availability";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { convexServer } from "@/lib/convex/server";
@@ -19,7 +19,7 @@ export default async function AvailabilityPage() {
   await ensureDefaultAvailability(profile.id);
 
   const convex = await convexServer();
-  const { schedules: scheduleRows, rules, meetings } = await convex.query(api.availability.screen, {});
+  const { schedules: scheduleRows, rules, meetings, overrides } = await convex.query(api.availability.screen, {});
 
   const defaultId = scheduleRows.find((s) => s.is_default)?.id ?? null;
 
@@ -33,10 +33,19 @@ export default async function AvailabilityPage() {
     usedBy: meetings.filter((m) => m.schedule_id === s.id || (m.schedule_id === null && s.id === defaultId)).map((m) => m.name),
   }));
 
+  const timeOff: TimeOffView[] = overrides.map((o) => ({
+    id: o.id,
+    scheduleId: o.schedule_id,
+    date: o.date,
+    ranges: o.ranges.map((r) => ({ start: r.start_minute, end: r.end_minute })),
+    note: o.note,
+  }));
+
   return (
     <AppScreen title="Availability" subtitle="When people can book you.">
       <AvailabilityScreen
         initialSchedules={schedules}
+        initialTimeOff={timeOff}
         initialTimezone={profile.timezone}
         timezones={timezoneOptions()}
       />

@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { isSlotBookable } from "@/lib/booking/slots";
 import { formatDuration, formatLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
-import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
 import { createEventForBooking } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
   if (!meeting) return NextResponse.json({ error: "Unknown meeting." }, { status: 404 });
 
   const availability = await getMeetingAvailability(meeting.id);
+  const overrides = await getMeetingOverrides(meeting.id);
   const { busy } = await getBusy(host.id, new Date(start.getTime() - DAY), new Date(start.getTime() + DAY));
 
   const guestTimezone = input.guestTimezone || host.timezone;
@@ -67,6 +68,7 @@ export async function POST(request: NextRequest) {
     guestTimezone,
     hostTimezone: host.timezone,
     availability,
+    overrides,
     rules: meeting.rules,
     busy,
     now: new Date(),

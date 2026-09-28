@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { isSlotBookable } from "@/lib/booking/slots";
-import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 import { getBookingByReference } from "@/lib/data/guest-booking";
 import { rescheduleMail, type MailableBooking } from "@/lib/email/booking-mail";
 import { sendRescheduled } from "@/lib/email/send";
@@ -60,6 +60,7 @@ export async function POST(request: NextRequest) {
   if (!meeting) return NextResponse.json({ error: "This meeting can no longer be moved online." }, { status: 409 });
 
   const availability = await getMeetingAvailability(meeting.id);
+  const overrides = await getMeetingOverrides(meeting.id);
   const { busy } = await getBusy(host.id, new Date(start.getTime() - DAY), new Date(start.getTime() + DAY));
 
   const guestTimezone = input.guestTimezone || booking.guestTimezone || host.timezone;
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
     guestTimezone,
     hostTimezone: host.timezone,
     availability,
+    overrides,
     rules: meeting.rules,
     busy: others,
     now: new Date(),

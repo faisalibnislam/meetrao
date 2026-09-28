@@ -208,6 +208,31 @@ export default defineSchema({
     .index("by_starts", ["starts_at"])
     .index("by_meeting_type", ["meeting_type_id"]),
 
+  /* ONE calendar day that does not follow the weekly pattern: a holiday, a
+     day off, or a day with different hours. Keyed by the DATE as the host
+     writes it ("2026-12-25"), not by an instant — "Christmas Day" is a day in
+     the host's calendar, and an instant would drift a timezone either way.
+
+     `ranges` empty means the day is closed. A day with ranges replaces the
+     weekly rules for that date rather than adding to them, which is what a
+     host means by "I work 14:00–17:00 that Friday".
+
+     unique: (schedule_id, date) — enforced in convex/availability.ts */
+  availability_overrides: defineTable({
+    id: v.string(),
+    user_id: v.string(),
+    schedule_id: v.string(),
+    /** "YYYY-MM-DD" in the host's own timezone. */
+    date: v.string(),
+    ranges: v.array(v.object({ start_minute: v.number(), end_minute: v.number() })),
+    note: v.string(),
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_schedule", ["schedule_id"])
+    .index("by_schedule_date", ["schedule_id", "date"])
+    .index("by_user", ["user_id"]),
+
   /* unique: (booking_id, email) — enforced in convex/bookings.ts */
   booking_invitees: defineTable({
     id: v.string(),

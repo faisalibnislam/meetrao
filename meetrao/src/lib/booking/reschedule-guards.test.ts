@@ -111,3 +111,28 @@ describe("Convex re-checks a move for itself", () => {
     expect(read("src/app/(public)/booking/[reference]/ics/route.ts")).toContain("SEQUENCE:${booking.revision}");
   });
 });
+
+describe("time off is enforced at the booking door too", () => {
+  const publicBooking = read("convex/publicBooking.ts");
+
+  it("guards the guard", () => {
+    expect(publicBooking, "the shared availability check has moved").toContain("fitsAvailability");
+  });
+
+  /* The engine filters the times on the way in; Convex cannot import it, so
+     the second implementation has to learn the same rules. Migration 0005
+     exists because that check was once missing entirely — a date override
+     that only the engine knew about would be the same hole, reopened. */
+  it("both doors use the one check", () => {
+    const uses = publicBooking.match(/await fitsAvailability\(/g) ?? [];
+    expect(uses.length, "create and reschedule should both call it").toBe(2);
+  });
+
+  it("resolves the day in the host's zone and lets it replace the weekday", () => {
+    const check = publicBooking.slice(publicBooking.indexOf("async function fitsAvailability"));
+    expect(check).toContain("zonedDateKey");
+    // The override's ranges are used INSTEAD of the weekday's rules.
+    expect(check).toMatch(/onTheDay\s*\n?\s*\?/);
+    expect(check).toContain("overridesForMeeting");
+  });
+});

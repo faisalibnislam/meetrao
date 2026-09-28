@@ -7,7 +7,7 @@ import { Callout } from "@/components/ui/panels";
 import { LogoLink } from "@/components/ui/logo";
 import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import { getBookingByReference } from "@/lib/data/guest-booking";
-import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +65,7 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
   }
 
   const availability = await getMeetingAvailability(meeting.id);
+  const overrides = await getMeetingOverrides(meeting.id);
 
   // First paint in the host's zone, as the booking page does; the client
   // corrects to the guest's own zone on mount.
@@ -96,6 +97,7 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
     guestTimezone: host.timezone,
     hostTimezone: host.timezone,
     availability,
+    overrides,
     rules: meeting.rules,
     busy: others,
     now,

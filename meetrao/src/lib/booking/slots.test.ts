@@ -263,3 +263,77 @@ describe("bookableDatesInMonth", () => {
     expect([...open].sort()).toEqual(["2026-09-07"]);
   });
 });
+
+/* ── date overrides: time off, holidays, one-off hours ───────────────────── */
+
+describe("computeSlots · date overrides", () => {
+  /* Monday 2026-09-07 is the baseline day, 09:00–12:00 in New York. */
+  const MONDAY = "2026-09-07";
+
+  it("closes a day the host has taken off", () => {
+    const slots = computeSlots(input({ overrides: [{ date: MONDAY, ranges: [] }] }));
+    expect(slots).toEqual([]);
+  });
+
+  it("replaces the weekly hours rather than adding to them", () => {
+    // "I work 14:00–15:00 that Monday" means instead of 09:00–12:00, not as
+    // well as — the morning has to disappear.
+    const slots = hostClock(
+      computeSlots({
+        ...input({ overrides: [{ date: MONDAY, ranges: [{ startMinute: 840, endMinute: 900 }] }] }),
+      }),
+    );
+    expect(slots).toEqual(["14:00", "14:30"]);
+  });
+
+  it("leaves other days alone", () => {
+    const tuesday = { year: 2026, month: 9, day: 8 };
+    const withRule = input({
+      date: tuesday,
+      availability: [{ weekday: 2, startMinute: 540, endMinute: 660 }],
+      overrides: [{ date: MONDAY, ranges: [] }],
+    });
+    expect(hostClock(computeSlots(withRule))).toEqual(["09:00", "09:30", "10:00", "10:30"]);
+  });
+
+  it("can open a day the week never offered", () => {
+    // A host with Monday-only hours opening one Saturday. Without this the
+    // early return for "no rule on this weekday" would hide it.
+    const saturday = { year: 2026, month: 9, day: 12 };
+    const slots = hostClock(
+      computeSlots(
+        input({
+          date: saturday,
+          overrides: [{ date: "2026-09-12", ranges: [{ startMinute: 600, endMinute: 660 }] }],
+        }),
+      ),
+    );
+    expect(slots).toEqual(["10:00", "10:30"]);
+  });
+
+  it("is keyed by the HOST's calendar date, not the guest's", () => {
+    /* The host's Monday is still the host's Monday when the guest is in
+       Kolkata and reading it as Monday evening — and a date override the host
+       wrote as "2026-09-07" has to close exactly that day. */
+    const slots = computeSlots(
+      input({ guestTimezone: IST, overrides: [{ date: MONDAY, ranges: [] }] }),
+    );
+    expect(slots).toEqual([]);
+  });
+});
+
+describe("bookableDatesInMonth · date overrides", () => {
+  it("drops a day off from the calendar's open dates", () => {
+    const open = bookableDatesInMonth({ ...input(), year: 2026, month: 9 });
+    expect(open.has("2026-09-07")).toBe(true);
+
+    const withOff = bookableDatesInMonth({
+      ...input({ overrides: [{ date: "2026-09-07", ranges: [] }] }),
+      year: 2026,
+      month: 9,
+    });
+    expect(withOff.has("2026-09-07")).toBe(false);
+    // The other Mondays are untouched.
+    expect(withOff.has("2026-09-14")).toBe(true);
+  });
+});

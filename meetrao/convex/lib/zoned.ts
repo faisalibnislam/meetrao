@@ -15,3 +15,18 @@ export function zonedWeekdayMinute(atMs: number, timeZone: string): { weekday: n
   const hour = Number(get("hour")) % 24;
   return { weekday, minute: hour * 60 + Number(get("minute")) };
 }
+
+/** The host's own calendar date for an instant: "2026-12-25".
+ *
+ *  A date override is a claim about a day in the host's calendar, so the
+ *  booking door has to ask which of the host's days an instant falls on.
+ *  en-CA because it formats as YYYY-MM-DD, which is the key the overrides
+ *  table and the slot engine both use. */
+export function zonedDateKey(atMs: number, timeZone: string): string {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: timeZone || "UTC",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(atMs));
+}

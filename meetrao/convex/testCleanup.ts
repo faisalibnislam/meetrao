@@ -144,3 +144,55 @@ export const purgeAdminFixture = internalMutation({
     return { holds, users: 1, profile: profile ? 1 : 0 };
   },
 });
+
+/**
+ * A day off on a named host's default schedule, and its removal.
+ *
+ * The booking page cannot be exercised for time off without a real override
+ * on a real schedule, and creating one by hand in a dashboard is how a check
+ * stops being run — the same reasoning as seedAdminFixture above.
+ */
+export const seedTimeOffFixture = internalMutation({
+  args: { username: v.string(), date: v.string() },
+  handler: async (ctx, a) => {
+    const host = await ctx.db
+      .query("profiles")
+      .withIndex("by_username_lower", (q) => q.eq("username_lower", a.username.trim().toLowerCase()))
+      .unique();
+    if (!host) return { ok: false as const, reason: "no such host" };
+
+    const schedules = await ctx.db
+      .query("availability_schedules").withIndex("by_user", (q) => q.eq("user_id", host.id)).collect();
+    const schedule = schedules.find((s) => s.is_default) ?? schedules[0];
+    if (!schedule) return { ok: false as const, reason: "host has no schedule" };
+
+    const existing = await ctx.db
+      .query("availability_overrides")
+      .withIndex("by_schedule_date", (q) => q.eq("schedule_id", schedule.id).eq("date", a.date))
+      .unique();
+    if (existing) return { ok: true as const, id: existing.id, scheduleId: schedule.id, reused: true };
+
+    const id = crypto.randomUUID();
+    await ctx.db.insert("availability_overrides", {
+      id,
+      user_id: host.id,
+      schedule_id: schedule.id,
+      date: a.date,
+      ranges: [],
+      note: "verification fixture",
+      created_at: Date.now(),
+    });
+    return { ok: true as const, id, scheduleId: schedule.id, reused: false };
+  },
+});
+
+export const purgeTimeOffFixture = internalMutation({
+  args: { id: v.string() },
+  handler: async (ctx, a) => {
+    const row = await ctx.db
+      .query("availability_overrides").withIndex("by_uuid", (q) => q.eq("id", a.id)).unique();
+    if (!row) return false;
+    await ctx.db.delete(row._id);
+    return true;
+  },
+});

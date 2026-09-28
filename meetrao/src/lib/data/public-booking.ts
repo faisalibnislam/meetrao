@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { AvailabilityRule, Interval, SlotRules } from "@/lib/booking/slots";
+import type { AvailabilityRule, DateOverride, Interval, SlotRules } from "@/lib/booking/slots";
 import { busyPeriods } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
@@ -111,6 +111,20 @@ export async function getMeetingAvailability(meetingId: string): Promise<Availab
     weekday: r.weekday,
     startMinute: r.start_minute,
     endMinute: r.end_minute,
+  }));
+}
+
+/**
+ * The days the meeting does not follow its weekly pattern on.
+ *
+ * Fetched beside the weekly rules and handed to the engine with them — a slot
+ * list built from one without the other offers a host's holiday as bookable.
+ */
+export async function getMeetingOverrides(meetingId: string): Promise<DateOverride[]> {
+  const rows = await convexAnonymous().query(api.publicBooking.overridesForMeetingPublic, { meetingId });
+  return rows.map((o) => ({
+    date: o.date,
+    ranges: o.ranges.map((r) => ({ startMinute: r.start_minute, endMinute: r.end_minute })),
   }));
 }
 

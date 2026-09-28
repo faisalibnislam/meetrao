@@ -8,6 +8,7 @@ import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import {
   getBusy,
   getMeetingAvailability,
+  getMeetingOverrides,
   getPublicHost,
   getPublicMeetings,
 } from "@/lib/data/public-booking";
@@ -75,6 +76,7 @@ export default async function BookingPage({
   if (!meeting) notFound();
 
   const availability = await getMeetingAvailability(meeting.id);
+  const overrides = await getMeetingOverrides(meeting.id);
 
   // The first paint is rendered in the host's zone, because the server cannot
   // know the guest's. The client corrects it on mount.
@@ -101,6 +103,7 @@ export default async function BookingPage({
     guestTimezone: host.timezone,
     hostTimezone: host.timezone,
     availability,
+    overrides,
     rules: meeting.rules,
     busy,
     now,

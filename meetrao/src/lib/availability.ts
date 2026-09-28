@@ -91,3 +91,47 @@ export function daysToRules(days: Day[]): AvailabilityRow[] {
         .map((r) => ({ weekday: d.weekday, start_minute: r.start, end_minute: r.end })),
     );
 }
+
+/* ── time off ─────────────────────────────────────────────────────────────── */
+
+/** One date that does not follow the week. Empty `ranges` means away all day. */
+export type TimeOffView = {
+  id: string;
+  scheduleId: string;
+  /** "YYYY-MM-DD" in the host's own zone. */
+  date: string;
+  ranges: Range[];
+  note: string;
+};
+
+/**
+ * "Fri 25 Dec 2026", from a plain date string.
+ *
+ * Parsed as UTC and formatted as UTC deliberately: "2026-12-25" is a calendar
+ * date, not an instant, and letting the browser localise it turns Christmas
+ * into Christmas Eve for anyone west of London.
+ */
+export function formatTimeOffDate(date: string): string {
+  const [y, m, d] = date.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(Date.UTC(y, m - 1, d)));
+}
+
+/** "Away all day" · "9:00 AM – 12:00 PM" — what a time-off row reads as. */
+export function timeOffSummary(ranges: Range[]): string {
+  if (ranges.length === 0) return "Away all day";
+  return ranges.map((r) => `${minutesToClock(r.start)} – ${minutesToClock(r.end)}`).join(", ");
+}
+
+function minutesToClock(minute: number): string {
+  const h24 = Math.floor(minute / 60) % 24;
+  const mm = String(minute % 60).padStart(2, "0");
+  const ampm = h24 < 12 ? "AM" : "PM";
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  return `${h12}:${mm} ${ampm}`;
+}
