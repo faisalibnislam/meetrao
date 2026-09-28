@@ -22,6 +22,18 @@ export type Profile = {
   created_at: string;
 };
 
+/** One question a meeting asks its guests, besides name, email and the note. */
+export type BookingQuestion = {
+  id: string;
+  label: string;
+  kind: "short" | "long";
+  required: boolean;
+};
+
+/** A guest's answer, carrying the label it was asked under: a host rewording
+    a question must not rewrite what a past guest was asked. */
+export type BookingAnswer = { label: string; value: string };
+
 export type MeetingType = {
   id: string;
   user_id: string;
@@ -36,6 +48,7 @@ export type MeetingType = {
   is_active: boolean;
   /** null = the host's default schedule. See migration 0010. */
   schedule_id: string | null;
+  questions?: BookingQuestion[];
   created_at: string;
 };
 
@@ -78,6 +91,8 @@ export type Booking = {
   google_event_id: string | null;
   meet_url: string | null;
   guest_rsvp: string | null;
+  /** Absent on every booking made before a meeting could ask questions. */
+  answers?: BookingAnswer[];
   created_at: string;
 };
 

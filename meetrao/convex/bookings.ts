@@ -69,6 +69,7 @@ export async function insertBooking(
     bufferMinutes: number;
     hostCreated: boolean;
     pageViewId?: string | null;
+    answers?: { label: string; value: string }[];
   },
 ): Promise<Doc<"bookings">> {
   const endsAt = args.startsAt + args.durationMinutes * MINUTE;
@@ -107,6 +108,7 @@ export async function insertBooking(
     guest_rsvp_notified_at: null,
     host_created: args.hostCreated,
     page_view_id: args.pageViewId ?? null,
+    answers: args.answers ?? [],
     created_at: now,
     updated_at: now,
   };

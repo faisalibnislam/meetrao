@@ -30,6 +30,8 @@ export type BookingView = {
   joinable: boolean;
   meetUrl: string | null;
   note: string;
+  /** What the guest answered, each carrying the label it was asked under. */
+  answers: { label: string; value: string }[];
   /** Everyone invited, when the host scheduled this. Empty for guest bookings. */
   invitees: { name: string; email: string }[];
   hostCreated: boolean;
@@ -70,6 +72,7 @@ export function toView(row: Booking, timeZone: string, now: Date): BookingView {
     joinable: !cancelled && !past,
     meetUrl: row.meet_url,
     note: row.guest_note,
+    answers: row.answers ?? [],
     invitees: [],
     hostCreated: Boolean((row as { host_created?: boolean }).host_created),
   };

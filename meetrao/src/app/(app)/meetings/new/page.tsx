@@ -23,6 +23,7 @@ export default async function NewMeetingPage() {
           window: 30,
           active: true,
           scheduleId: null,
+          questions: [],
         }}
       />
     </AppScreen>

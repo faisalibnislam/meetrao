@@ -13,6 +13,7 @@ import { formatLongDate, formatMonth, formatPlainLongDate, formatTime, formatTim
 import { detectTimezone, timezoneLabel } from "@/lib/timezones";
 import { useClientValue } from "@/lib/use-client-value";
 import { cx } from "@/lib/cx";
+import type { BookingQuestion } from "@/lib/types";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The guest path: pick a date, pick a time, confirm details.
@@ -50,6 +51,8 @@ export type FlowProps = {
     times: string[];
     timezone: string;
   };
+  /** What this meeting asks, besides name, email and the note. */
+  questions?: BookingQuestion[];
   pageViewId: string | null;
   /** Present when this is an existing booking being moved, not a new one. */
   move?: { reference: string; currentStart: string };
@@ -82,6 +85,7 @@ export function BookingFlow(props: FlowProps) {
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestNote, setGuestNote] = useState("");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState(false);
@@ -192,7 +196,8 @@ export function BookingFlow(props: FlowProps) {
 
   async function submit() {
     if (!chosen) return;
-    if (!guestName.trim() || !guestEmail.includes("@")) {
+    const missing = (props.questions ?? []).filter((q) => q.required && !(answers[q.id] ?? "").trim());
+    if (!guestName.trim() || !guestEmail.includes("@") || missing.length) {
       setTouched(true);
       setBookingError(false);
       return;
@@ -212,6 +217,7 @@ export function BookingFlow(props: FlowProps) {
           guestName,
           guestEmail,
           guestNote,
+          answers: (props.questions ?? []).map((q) => ({ id: q.id, value: answers[q.id] ?? "" })),
           guestTimezone: timezone,
           pageViewId: props.pageViewId ?? undefined,
         }),
@@ -408,6 +414,47 @@ export function BookingFlow(props: FlowProps) {
                 autoComplete="email"
               />
             </Field>
+
+            {(props.questions ?? []).map((q) => {
+              const value = answers[q.id] ?? "";
+              const missing = touched && q.required && !value.trim();
+              return (
+                <Field
+                  key={q.id}
+                  label={
+                    q.required ? (
+                      q.label
+                    ) : (
+                      <>
+                        {q.label} <span className="font-normal text-ink-3">(optional)</span>
+                      </>
+                    )
+                  }
+                  htmlFor={`q-${q.id}`}
+                  error={missing ? "This one is needed before you can book." : undefined}
+                >
+                  {q.kind === "long" ? (
+                    <Textarea
+                      id={`q-${q.id}`}
+                      rows={3}
+                      value={value}
+                      invalid={missing}
+                      maxLength={2000}
+                      onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                    />
+                  ) : (
+                    <Input
+                      id={`q-${q.id}`}
+                      height={38}
+                      value={value}
+                      invalid={missing}
+                      maxLength={2000}
+                      onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                    />
+                  )}
+                </Field>
+              );
+            })}
 
             <Field
               label={

@@ -208,6 +208,20 @@ export function BookingDialogs({
           }
         />
 
+        {booking.answers.length ? (
+          // What the guest was asked, in the order the meeting asks it. The
+          // label comes from the answer rather than the meeting, so a question
+          // reworded since does not relabel an old reply.
+          <div className="mt-[4px] flex flex-col gap-[9px] rounded-[8px] border border-line bg-fill px-[13px] py-[11px]">
+            {booking.answers.map((a) => (
+              <div key={a.label} className="flex flex-col gap-[2px]">
+                <span className="text-[11px] tracking-[0.04em] text-ink-3 uppercase">{a.label}</span>
+                <span className="text-[12.5px] leading-[1.5] text-pretty text-ink">{a.value}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
+
         {booking.note ? (
           <div className="mt-[4px] rounded-[8px] border border-line bg-fill px-[13px] py-[11px]">
             <span className="text-[12.5px] leading-[1.5] text-pretty text-ink-2">{booking.note}</span>

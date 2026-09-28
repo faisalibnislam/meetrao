@@ -68,6 +68,20 @@ export function rescheduleMail(
   };
 }
 
+/**
+ * The note and the answers as one string, for the "Note from …" block.
+ *
+ * The templates substitute escaped TEXT, not markup, so answers cannot be a
+ * table without teaching the renderer to trust pre-built HTML — which is the
+ * one thing it refuses to do. A labelled run of lines is the honest fit, and
+ * it is what a host reads on their phone anyway.
+ */
+export function noteWithAnswers(note: string, answers: { label: string; value: string }[]): string {
+  const lines = answers.filter((a) => a.value.trim()).map((a) => `${a.label}: ${a.value.trim()}`);
+  const parts = [note.trim(), ...lines].filter(Boolean);
+  return parts.join(" · ");
+}
+
 export function cancellationMail(
   booking: MailableBooking,
   host: { full_name: string; username: string; email: string; timezone: string },

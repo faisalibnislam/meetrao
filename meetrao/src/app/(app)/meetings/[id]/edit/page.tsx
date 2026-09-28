@@ -35,6 +35,7 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
           window: meeting.booking_window_days,
           active: meeting.is_active,
           scheduleId: meeting.schedule_id,
+          questions: meeting.questions ?? [],
         }}
       />
     </AppScreen>

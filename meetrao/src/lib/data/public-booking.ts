@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { AvailabilityRule, DateOverride, Interval, SlotRules } from "@/lib/booking/slots";
+import type { BookingQuestion } from "@/lib/types";
 import { busyPeriods } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
@@ -28,6 +29,8 @@ export type PublicMeeting = {
   description: string;
   slug: string;
   durationMinutes: number;
+  /** What this meeting asks the guest, besides name, email and the note. */
+  questions: BookingQuestion[];
   rules: SlotRules;
 };
 
@@ -66,6 +69,7 @@ type MeetingRow = {
   buffer_minutes: number;
   minimum_notice_minutes: number;
   booking_window_days: number;
+  questions?: BookingQuestion[];
 };
 
 function toMeeting(row: MeetingRow): PublicMeeting {
@@ -75,6 +79,7 @@ function toMeeting(row: MeetingRow): PublicMeeting {
     description: row.description,
     slug: row.slug,
     durationMinutes: row.duration_minutes,
+    questions: row.questions ?? [],
     rules: {
       durationMinutes: row.duration_minutes,
       bufferMinutes: row.buffer_minutes,

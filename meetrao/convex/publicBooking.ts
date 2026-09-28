@@ -95,6 +95,9 @@ export const getMeetingAvailability = query({
         duration_minutes: meeting.duration_minutes, buffer_minutes: meeting.buffer_minutes,
         minimum_notice_minutes: meeting.minimum_notice_minutes, booking_window_days: meeting.booking_window_days,
         location: meeting.location,
+        /* The booking form has to know what to ask. Labels only — a question
+           is written to be read by the guest it is put to. */
+        questions: meeting.questions ?? [],
       },
       rules: rules.map((r) => ({ weekday: r.weekday, start_minute: r.start_minute, end_minute: r.end_minute })),
     };
@@ -248,6 +251,9 @@ export const createBooking = mutation({
     guestName: v.string(), guestEmail: v.string(),
     guestNote: v.optional(v.string()), guestTimezone: v.optional(v.union(v.string(), v.null())),
     pageViewId: v.optional(v.union(v.string(), v.null())),
+    /** Keyed by question id; the label is read from the meeting, so a guest
+        cannot invent a question they were never asked. */
+    answers: v.optional(v.array(v.object({ id: v.string(), value: v.string() }))),
     /** A coarse caller key from our own route handler, which can see the IP. */
     callerKey: v.optional(v.string()),
   },
@@ -288,6 +294,19 @@ export const createBooking = mutation({
       ...(a.callerKey ? [{ key: `caller:${a.callerKey}`, limit: 20, windowMs: 60 * 60_000, message: "Too many requests. Try again shortly." }] : []),
     ]);
 
+    /* The questions come from the meeting, never from the request: the
+       answers arrive keyed by id, and anything not on the meeting's own list
+       is dropped rather than stored. A required question with no answer
+       refuses the booking here as well as in the form. */
+    const asked = meeting.questions ?? [];
+    const given = new Map((a.answers ?? []).map((x) => [x.id, x.value.trim()]));
+    const answers: { label: string; value: string }[] = [];
+    for (const q of asked) {
+      const value = (given.get(q.id) ?? "").slice(0, 2000);
+      if (q.required && !value) fail(`${q.label} is required.`);
+      if (value) answers.push({ label: q.label, value });
+    }
+
     const booking = await insertBooking(ctx, {
       hostId: host.id,
       meetingTypeId: meeting.id,
@@ -301,10 +320,11 @@ export const createBooking = mutation({
       bufferMinutes: meeting.buffer_minutes,
       hostCreated: false,
       pageViewId: a.pageViewId ?? null,
+      answers,
     });
 
     return {
-      reference: booking.reference, id: booking.id,
+      reference: booking.reference, id: booking.id, answers,
       starts_at: new Date(booking.starts_at).toISOString(),
       ends_at: new Date(booking.ends_at).toISOString(),
       meeting_name: booking.meeting_name, duration: booking.duration_minutes, host_id: booking.host_id,

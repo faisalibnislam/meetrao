@@ -9,6 +9,7 @@ import { MenuSelect } from "@/components/ui/menu-select";
 import { PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { saveMeeting, type MeetingInput } from "@/lib/actions/meetings";
+import type { BookingQuestion } from "@/lib/types";
 
 const DURATIONS = [15, 30, 45, 60];
 
@@ -37,6 +38,9 @@ const WINDOWS = [
 /** The host's named schedules, plus the "Default" entry that means null. */
 export type ScheduleOption = { value: string; label: string };
 
+/** Five, matching the cap the action and Convex both enforce. */
+const MAX_QUESTIONS = 5;
+
 export function MeetingForm({
   initial,
   schedules = [],
@@ -52,6 +56,31 @@ export function MeetingForm({
 
   const set = <K extends keyof MeetingInput>(key: K, value: MeetingInput[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const questions = form.questions ?? [];
+
+  function addQuestion() {
+    // crypto.randomUUID is the id an answer is matched back by, so it has to
+    // outlive any edit to the label.
+    const next: BookingQuestion = {
+      id: crypto.randomUUID(),
+      label: "",
+      kind: "short",
+      required: false,
+    };
+    set("questions", [...questions, next]);
+  }
+
+  function editQuestion(id: string, patch: Partial<BookingQuestion>) {
+    set(
+      "questions",
+      questions.map((q) => (q.id === id ? { ...q, ...patch } : q)),
+    );
+  }
+
+  function setQuestions(next: BookingQuestion[]) {
+    set("questions", next);
+  }
 
   const nameInvalid = touched && !form.name.trim();
   const editing = Boolean(initial.id);
@@ -111,6 +140,82 @@ export function MeetingForm({
             the Meet link land on both calendars. Changes and cancellations update both sides.
           </span>
         </div>
+      </section>
+
+      {/* ── questions ────────────────────────────────────────────────── */}
+      <section className="flex flex-col gap-[12px] border-b border-line py-[20px]">
+        <PanelHeading
+          title="Questions"
+          subtitle="Asked on the booking form, after name and email. The note field is always there."
+        />
+
+        {questions.length ? (
+          <div className="flex flex-col gap-[10px]">
+            {questions.map((q, i) => (
+              <div key={q.id} className="flex flex-col gap-[9px] rounded-[8px] border border-line bg-fill px-[13px] py-[11px]">
+                <div className="flex flex-wrap items-center gap-[9px]">
+                  <Input
+                    aria-label={`Question ${i + 1}`}
+                    height={34}
+                    maxLength={120}
+                    placeholder="What would you like to cover?"
+                    value={q.label}
+                    className="min-w-[180px] flex-1"
+                    onChange={(e) => editQuestion(q.id, { label: e.target.value })}
+                  />
+                  <Button
+                    variant="ghost"
+                    size={28}
+                    className="text-red hover:text-red"
+                    onClick={() => setQuestions(questions.filter((x) => x.id !== q.id))}
+                  >
+                    Remove
+                  </Button>
+                </div>
+                <div className="flex flex-wrap items-center gap-[14px]">
+                  <div className="flex min-w-[150px] flex-1 flex-col gap-[6px]">
+                    <span className="text-[12px] font-semibold text-ink">Answer</span>
+                    <MenuSelect
+                      size="sm"
+                      aria-label={`Answer length for question ${i + 1}`}
+                      options={[
+                        { value: "short", label: "One line" },
+                        { value: "long", label: "A paragraph" },
+                      ]}
+                      value={q.kind}
+                      onChange={(v) => editQuestion(q.id, { kind: v as "short" | "long" })}
+                    />
+                  </div>
+                  <label className="flex cursor-pointer items-center gap-[8px] text-[12.5px] text-ink">
+                    <Switch
+                      checked={q.required}
+                      label={`Question ${i + 1} is required`}
+                      onChange={(next) => editQuestion(q.id, { required: next })}
+                    />
+                    Required
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-[4px] rounded-[6px] border border-dashed border-line-strong px-[14px] py-[15px]">
+            <span className="text-[13px] font-semibold text-ink">No questions</span>
+            <span className="text-[12px] leading-[1.5] text-ink-3">
+              Guests give a name, an email and an optional note. Ask more only if you will read it.
+            </span>
+          </div>
+        )}
+
+        {questions.length < MAX_QUESTIONS ? (
+          <div>
+            <Button variant="secondary" size={30} icon="plus" onClick={addQuestion}>
+              Add question
+            </Button>
+          </div>
+        ) : (
+          <span className="text-[12px] text-ink-3">Five is the most a booking form should ask.</span>
+        )}
       </section>
 
       <section className="flex flex-col gap-[14px] border-b border-line py-[20px]">

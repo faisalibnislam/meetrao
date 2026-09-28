@@ -40,12 +40,45 @@ export const getOwn = query({
   },
 });
 
+/** At most five, each with a label, and no two sharing an id.
+ *
+ *  Five is the design's number and it is a kindness: a booking form that asks
+ *  eight questions is one guests abandon. The cap is enforced here rather than
+ *  only in the form, because the form is not the boundary. */
+const MAX_QUESTIONS = 5;
+
+function validQuestions(
+  input: { id: string; label: string; kind: "short" | "long"; required: boolean }[],
+): { id: string; label: string; kind: "short" | "long"; required: boolean }[] {
+  const out = input
+    .map((q) => ({ ...q, label: q.label.trim() }))
+    .filter((q) => q.label.length > 0);
+
+  if (out.length > MAX_QUESTIONS) fail(`A meeting can ask at most ${MAX_QUESTIONS} questions.`);
+  for (const q of out) {
+    if (q.label.length > 120) fail("Keep a question under 120 characters.");
+    if (!q.id) fail("A question is missing its id.");
+  }
+  if (new Set(out.map((q) => q.id)).size !== out.length) fail("Two questions share an id.");
+  return out;
+}
+
 export const create = mutation({
   args: {
     name: v.string(), description: v.optional(v.string()), slug: v.string(),
     duration_minutes: v.number(), buffer_minutes: v.optional(v.number()),
     minimum_notice_minutes: v.optional(v.number()), booking_window_days: v.optional(v.number()),
     location: v.optional(v.string()), schedule_id: v.optional(v.union(v.string(), v.null())),
+    questions: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          label: v.string(),
+          kind: v.union(v.literal("short"), v.literal("long")),
+          required: v.boolean(),
+        }),
+      ),
+    ),
   },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
@@ -68,6 +101,7 @@ export const create = mutation({
     await ctx.db.insert("meeting_types", {
       id, user_id: me.id, description: a.description ?? "",
       location: a.location ?? "google_meet", is_active: true,
+      questions: validQuestions(a.questions ?? []),
       schedule_id: a.schedule_id ?? null, created_at: now, updated_at: now, ...row,
     });
     // meeting_types_log_created
@@ -84,6 +118,16 @@ export const update = mutation({
     buffer_minutes: v.optional(v.number()), minimum_notice_minutes: v.optional(v.number()),
     booking_window_days: v.optional(v.number()), location: v.optional(v.string()),
     is_active: v.optional(v.boolean()), schedule_id: v.optional(v.union(v.string(), v.null())),
+    questions: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          label: v.string(),
+          kind: v.union(v.literal("short"), v.literal("long")),
+          required: v.boolean(),
+        }),
+      ),
+    ),
   },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
@@ -96,6 +140,10 @@ export const update = mutation({
     const patch: Record<string, unknown> = { updated_at: Date.now() };
     for (const [k, val] of Object.entries(rest)) if (val !== undefined) patch[k] = val;
     if (typeof patch.slug === "string") patch.slug = patch.slug.trim().toLowerCase();
+
+    if (patch.questions !== undefined) {
+      patch.questions = validQuestions(patch.questions as { id: string; label: string; kind: "short" | "long"; required: boolean }[]);
+    }
 
     const merged = { ...m, ...patch } as typeof m;
     validate(merged);

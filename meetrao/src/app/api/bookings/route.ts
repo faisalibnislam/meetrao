@@ -5,6 +5,7 @@ import { z } from "zod";
 import { isSlotBookable } from "@/lib/booking/slots";
 import { formatDuration, formatLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
 import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { noteWithAnswers } from "@/lib/email/booking-mail";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
 import { createEventForBooking } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
@@ -37,6 +38,9 @@ const Body = z.object({
   guestEmail: z.string().trim().email("Enter an email we can send the confirmation to."),
   guestNote: z.string().max(2000).optional().default(""),
   guestTimezone: z.string().optional(),
+  /* Keyed by question id. The labels are read from the meeting inside Convex,
+     so a request cannot invent a question it was never asked. */
+  answers: z.array(z.object({ id: z.string().min(1), value: z.string().max(2000) })).max(5).optional(),
   pageViewId: z.string().uuid().optional(),
 });
 
@@ -85,6 +89,7 @@ export async function POST(request: NextRequest) {
     ends_at: string;
     meeting_name: string;
     duration: number;
+    answers: { label: string; value: string }[];
   };
   let row: CreatedRow;
 
@@ -104,6 +109,7 @@ export async function POST(request: NextRequest) {
       guestName: input.guestName,
       guestEmail: input.guestEmail,
       guestNote: input.guestNote ?? "",
+      answers: input.answers ?? [],
       guestTimezone,
       pageViewId: input.pageViewId ?? null,
       callerKey,
@@ -147,7 +153,7 @@ export async function POST(request: NextRequest) {
     meetingName: row.meeting_name,
     guestName: input.guestName,
     guestEmail: input.guestEmail,
-    guestNote: input.guestNote ?? "",
+    guestNote: noteWithAnswers(input.guestNote ?? "", row.answers ?? []),
     hostName: hostProfile?.full_name || host.fullName || host.username,
     hostEmail: hostProfile?.email ?? "",
     startLong: `${formatLongDate(start, host.timezone)} · ${formatTimeRange(start, end, host.timezone)}`,

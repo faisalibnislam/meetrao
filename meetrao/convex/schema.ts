@@ -120,6 +120,25 @@ export default defineSchema({
     is_active: v.boolean(),
     /** null = the host's default schedule. See migration 0010. */
     schedule_id: nullableString,
+    /**
+     * What the guest is asked besides name, email and the free-text note.
+     * Optional because every meeting written before questions existed has
+     * none, and none is the same as an empty list.
+     *
+     * `id` is stable across edits so an answer can be matched back to the
+     * question that was asked; the ANSWER still stores the label it was shown
+     * under, because a host rewording a question must not rewrite history.
+     */
+    questions: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          label: v.string(),
+          kind: v.union(v.literal("short"), v.literal("long")),
+          required: v.boolean(),
+        }),
+      ),
+    ),
     created_at: v.number(),
     updated_at: v.number(),
   })
@@ -180,6 +199,8 @@ export default defineSchema({
     guest_rsvp_notified_at: nullableNumber,
     host_created: v.boolean(),
     page_view_id: nullableString,
+    /** The guest's answers, each carrying the label it was asked under. */
+    answers: v.optional(v.array(v.object({ label: v.string(), value: v.string() }))),
     /**
      * How many times this booking has been moved. Optional because every row
      * written before reschedule existed has no such field, and absent means 0.
