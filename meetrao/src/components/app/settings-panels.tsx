@@ -46,6 +46,11 @@ const NOTIFY_ROWS: { key: NotificationKey; label: string; text: string }[] = [
   { key: "notify_new_booking", label: "New booking", text: "When someone books a time with you." },
   { key: "notify_booking_changed", label: "Booking changed", text: "When a booking is rescheduled or edited." },
   { key: "notify_booking_cancelled", label: "Booking cancelled", text: "When you or your guest cancels." },
+  {
+    key: "notify_reminders",
+    label: "Meeting reminders",
+    text: "A nudge the day before and an hour before. Your guest is reminded either way.",
+  },
   { key: "notify_daily_agenda", label: "Daily agenda", text: "One email each morning listing the day’s meetings." },
   { key: "notify_product_news", label: "Product news", text: "Occasional updates about new Meetrao features." },
 ];
@@ -421,6 +426,8 @@ export function NotificationsPanel({ profile }: { profile: Profile }) {
     notify_new_booking: profile.notify_new_booking,
     notify_booking_changed: profile.notify_booking_changed,
     notify_booking_cancelled: profile.notify_booking_cancelled,
+    // Absent means on, as it does in the sweep that reads it.
+    notify_reminders: profile.notify_reminders !== false,
     notify_daily_agenda: profile.notify_daily_agenda,
     notify_product_news: profile.notify_product_news,
   });

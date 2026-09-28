@@ -13,6 +13,9 @@ export type Profile = {
   notify_new_booking: boolean;
   notify_booking_changed: boolean;
   notify_booking_cancelled: boolean;
+  /** Absent on every profile written before reminders existed, and absent
+      reads as on — the server applies the same rule. */
+  notify_reminders?: boolean;
   notify_daily_agenda: boolean;
   notify_product_news: boolean;
   onboarding_completed_at: string | null;
@@ -102,6 +105,7 @@ export const NOTIFICATION_KEYS = [
   "notify_new_booking",
   "notify_booking_changed",
   "notify_booking_cancelled",
+  "notify_reminders",
   "notify_daily_agenda",
   "notify_product_news",
 ] as const;

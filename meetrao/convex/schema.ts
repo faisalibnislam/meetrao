@@ -91,6 +91,9 @@ export default defineSchema({
     notify_new_booking: v.boolean(),
     notify_booking_changed: v.boolean(),
     notify_booking_cancelled: v.boolean(),
+    /** Optional: every profile written before reminders existed has none, and
+        absent reads as ON — see convex/reminders.ts. */
+    notify_reminders: v.optional(v.boolean()),
     notify_daily_agenda: v.boolean(),
     notify_product_news: v.boolean(),
     onboarding_completed_at: nullableNumber,
@@ -184,12 +187,25 @@ export default defineSchema({
      * of the same UID unless the sequence has gone up.
      */
     revision: v.optional(v.number()),
+    /**
+     * When each reminder was claimed, not when Resend accepted it. Claiming
+     * before sending is the welcome email's rule: a reminder that goes missing
+     * is a small thing, one that arrives twice is why people turn them off.
+     * Optional because every row written before reminders existed has neither.
+     */
+    reminded_24h_at: v.optional(v.number()),
+    reminded_1h_at: v.optional(v.number()),
     created_at: v.number(),
     updated_at: v.number(),
   })
     .index("by_uuid", ["id"])
     .index("by_reference", ["reference"])
     .index("by_host_starts", ["host_id", "starts_at"])
+    /* The reminder sweep asks "what starts soon" across every host, which
+       by_host_starts cannot answer without a scan per host. Kept separate
+       rather than widened: by_host_starts is the double-booking guard's read
+       set and must stay narrow. */
+    .index("by_starts", ["starts_at"])
     .index("by_meeting_type", ["meeting_type_id"]),
 
   /* unique: (booking_id, email) — enforced in convex/bookings.ts */

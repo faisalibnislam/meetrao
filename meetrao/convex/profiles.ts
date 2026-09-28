@@ -110,6 +110,7 @@ export const updateOwn = mutation({
     notify_new_booking: v.optional(v.boolean()),
     notify_booking_changed: v.optional(v.boolean()),
     notify_booking_cancelled: v.optional(v.boolean()),
+    notify_reminders: v.optional(v.boolean()),
     notify_daily_agenda: v.optional(v.boolean()),
     notify_product_news: v.optional(v.boolean()),
     onboarding_completed_at: v.optional(v.union(v.string(), v.null())),
@@ -261,6 +262,10 @@ export async function createProfileForNewUser(
     notify_new_booking: true,
     notify_booking_changed: true,
     notify_booking_cancelled: true,
+    /* On, like the other three transactional switches. A host who does not
+       want them turns them off; one who never opens settings still gets the
+       reminder that stops them missing a meeting. */
+    notify_reminders: true,
     notify_daily_agenda: false,
     notify_product_news: false,
     onboarding_completed_at: null,
