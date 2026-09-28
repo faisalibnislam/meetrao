@@ -299,7 +299,14 @@ export default defineSchema({
   notifications: defineTable({
     id: v.string(),
     user_id: v.string(),
-    kind: v.union(v.literal("booking_new"), v.literal("booking_cancelled"), v.literal("booking_changed")),
+    kind: v.union(
+      v.literal("booking_new"),
+      v.literal("booking_cancelled"),
+      v.literal("booking_changed"),
+      /* The guest answered the calendar invitation. Written only by the RSVP
+         sweep, which reads the events Meetrao itself created. */
+      v.literal("booking_declined"),
+    ),
     title: v.string(),
     body: v.string(),
     booking_id: nullableString,

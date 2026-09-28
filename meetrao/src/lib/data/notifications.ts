@@ -3,7 +3,7 @@ import "server-only";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
-export type NotificationKind = "booking_new" | "booking_cancelled" | "booking_changed";
+export type NotificationKind = "booking_new" | "booking_cancelled" | "booking_changed" | "booking_declined";
 
 export type NotificationView = {
   id: string;

@@ -45,7 +45,13 @@ export function localWhen(atMs: number, timezone: string): string {
 /** public.notify_host. */
 export async function notifyHost(
   ctx: MutationCtx,
-  args: { userId: string; kind: "booking_new" | "booking_cancelled" | "booking_changed"; title: string; body: string; bookingId: string | null },
+  args: {
+    userId: string;
+    kind: "booking_new" | "booking_cancelled" | "booking_changed" | "booking_declined";
+    title: string;
+    body: string;
+    bookingId: string | null;
+  },
 ): Promise<void> {
   await ctx.db.insert("notifications", {
     id: uuid(),
@@ -112,6 +118,24 @@ export async function notifyBookingCancelled(ctx: MutationCtx, booking: Doc<"boo
     userId: booking.host_id,
     kind: "booking_cancelled",
     title: `${booking.guest_name} cancelled ${booking.meeting_name}`,
+    body: localWhen(booking.starts_at, await timezoneOf(ctx, booking.host_id)),
+    bookingId: booking.id,
+  });
+}
+
+/**
+ * The guest said no in their own calendar.
+ *
+ * NOT a cancellation: the booking stands, the slot stays held, and the host
+ * decides what to do. Declining in Google and cancelling through the link are
+ * different acts and the host should be able to tell them apart — which is the
+ * whole reason this notification exists rather than a silent column.
+ */
+export async function notifyBookingDeclined(ctx: MutationCtx, booking: Doc<"bookings">): Promise<void> {
+  await notifyHost(ctx, {
+    userId: booking.host_id,
+    kind: "booking_declined",
+    title: `${booking.guest_name} declined ${booking.meeting_name}`,
     body: localWhen(booking.starts_at, await timezoneOf(ctx, booking.host_id)),
     bookingId: booking.id,
   });

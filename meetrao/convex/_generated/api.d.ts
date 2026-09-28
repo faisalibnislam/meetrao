@@ -41,6 +41,7 @@ import type * as platformSettings from "../platformSettings.js";
 import type * as profiles from "../profiles.js";
 import type * as publicBooking from "../publicBooking.js";
 import type * as reminders from "../reminders.js";
+import type * as rsvp from "../rsvp.js";
 import type * as testCleanup from "../testCleanup.js";
 import type * as verify from "../verify.js";
 import type * as whoami from "../whoami.js";
@@ -85,6 +86,7 @@ declare const fullApi: ApiFromModules<{
   profiles: typeof profiles;
   publicBooking: typeof publicBooking;
   reminders: typeof reminders;
+  rsvp: typeof rsvp;
   testCleanup: typeof testCleanup;
   verify: typeof verify;
   whoami: typeof whoami;

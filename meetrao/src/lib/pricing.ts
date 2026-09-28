@@ -78,7 +78,7 @@ export const LIMITS: readonly [string, string][] = [
  */
 export const WHY: readonly string[] = [
   "Meetrao is built and run by one person. There is no sales team to fund, no investor expecting a return this quarter, and no growth target that a paywall would be the answer to.",
-  "It is not free because your data is worth something. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free — never what your meetings are about. The Privacy Policy names every permission it holds and why.",
+  "It is not free because your data is worth something. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free — never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
   "It is free because it is small. It does a narrow job, it costs little to run at this size, and charging for it today would buy a billing system nobody has asked for.",
 ];
 
@@ -108,7 +108,7 @@ export const PRICING_FAQ: readonly (readonly [string, string, string])[] = [
   [
     "data",
     "Am I the product?",
-    "No. Meetrao does not sell data, does not run ads, and does not share your calendar with anyone. It asks Google only whether a period is busy or free — never event titles, guests, descriptions or attachments. Disconnecting from Settings revokes the permission with Google, not just with us.",
+    "No. Meetrao does not sell data, does not run ads, and does not share your calendar with anyone. It asks Google only whether a period is busy or free — never event titles, descriptions or attachments. For the events Meetrao creates itself it also reads whether your guest accepted or declined, which is how it can tell you. Disconnecting from Settings revokes the permission with Google, not just with us.",
   ],
   [
     "limits",

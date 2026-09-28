@@ -26,6 +26,9 @@ const LOOK: Record<NotificationKind, { icon: IconName; ring: string; tint: strin
   booking_new: { icon: "calendar", ring: "border-accent-line bg-accent-soft", tint: "text-accent", label: "New booking" },
   booking_cancelled: { icon: "circle-xmark", ring: "border-red-line bg-red-soft", tint: "text-red", label: "Cancelled" },
   booking_changed: { icon: "rotate-left", ring: "border-amber-line bg-amber-soft", tint: "text-amber", label: "Moved" },
+  /* Amber, not red: the guest said no in their calendar, which is news — but
+     the meeting is still in the diary until somebody cancels it. */
+  booking_declined: { icon: "circle-exclamation", ring: "border-amber-line bg-amber-soft", tint: "text-amber", label: "Declined" },
 };
 
 export function NotificationsScreen({ notifications }: { notifications: NotificationView[] }) {

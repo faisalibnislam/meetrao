@@ -11,6 +11,11 @@ const crons = cronJobs();
    nothing is due. */
 crons.interval("send booking reminders", { minutes: 15 }, internal.reminders.sweep, {});
 
+/* Hourly. A guest who declines an hour before is news worth having; one who
+   declines a week out can wait an hour to be reported, and asking Google more
+   often than that spends requests on an answer that rarely changes. */
+crons.interval("sync guest RSVPs", { hours: 1 }, internal.rsvp.sweep, {});
+
 crons.daily("prune site visits", { hourUTC: 3, minuteUTC: 15 }, internal.analytics.prune, { keepDays: 400 });
 crons.daily("sweep rate limit windows", { hourUTC: 3, minuteUTC: 30 }, internal.maintenance.sweepRateLimits, {});
 

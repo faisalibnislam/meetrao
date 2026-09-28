@@ -72,7 +72,7 @@ export const FAQS: [string, string, string][] = [
   [
     "private",
     "Is my calendar private?",
-    "Meetrao reads only whether a period is busy or free. Never event titles, guests, descriptions, locations or attachments. Disconnect any time from Settings.",
+    "Meetrao reads only whether a period is busy or free — never event titles, descriptions, locations or attachments. The one exception is the events it creates itself: for those, and only those, it reads whether your guest accepted or declined, so you are told before you sit in an empty Meet. Disconnect any time from Settings.",
   ],
   [
     "who",

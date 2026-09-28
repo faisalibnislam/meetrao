@@ -252,3 +252,23 @@ export const seedLocationFixture = internalMutation({
     return { ok: true as const, was };
   },
 });
+
+/** Clears the RSVP columns on one booking, so a verification run can be
+ *  repeated and leaves the row as it found it. */
+export const resetRsvpFixture = internalMutation({
+  args: { id: v.string() },
+  handler: async (ctx, a) => {
+    const b = await ctx.db.query("bookings").withIndex("by_uuid", (q) => q.eq("id", a.id)).unique();
+    if (!b) return false;
+    await ctx.db.patch(b._id, {
+      guest_rsvp: null,
+      guest_rsvp_synced_at: null,
+      guest_rsvp_notified_at: null,
+      updated_at: Date.now(),
+    });
+    for (const n of await ctx.db.query("notifications").withIndex("by_user", (q) => q.eq("user_id", b.host_id)).collect()) {
+      if (n.booking_id === b.id && n.kind === "booking_declined") await ctx.db.delete(n._id);
+    }
+    return true;
+  },
+});

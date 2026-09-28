@@ -250,6 +250,40 @@ export async function patchEventTime(
   }
 }
 
+/**
+ * Whether one named attendee has answered one named event.
+ *
+ * SCOPED TO AN EVENT MEETRAO CREATED. The caller passes an event id read from
+ * a booking row, so this can only ever ask about an event this product wrote —
+ * never a listing, never a search, never anything else in the host's calendar.
+ * `fields` narrows the response to the attendee list, so even the title of the
+ * event we made does not come back.
+ *
+ * "missing" means the event is gone from Google; null means it is there and
+ * that address is not on it.
+ */
+export async function attendeeResponse(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  email: string,
+): Promise<{ status: string | null } | "missing" | "failed"> {
+  const url =
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}` +
+    `/events/${encodeURIComponent(eventId)}?fields=attendees(email,responseStatus)`;
+  try {
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (response.status === 404 || response.status === 410) return "missing";
+    if (!response.ok) return "failed";
+    const json = (await response.json()) as { attendees?: { email?: string; responseStatus?: string }[] };
+    const wanted = email.trim().toLowerCase();
+    const found = (json.attendees ?? []).find((a) => (a.email ?? "").toLowerCase() === wanted);
+    return { status: found?.responseStatus ?? null };
+  } catch {
+    return "failed";
+  }
+}
+
 /** "Already gone" is success: the caller wanted the event not to exist. */
 export async function deleteEvent(
   accessToken: string,
