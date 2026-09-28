@@ -79,6 +79,33 @@ export async function notifyBookingCreated(ctx: MutationCtx, booking: Doc<"booki
   });
 }
 
+/**
+ * bookings_notify_changed — the other half, fired when a booking MOVES.
+ *
+ * The kind, the schema's union and the screen's "Moved" row all existed from
+ * the port; nothing wrote one, because nothing could move a booking. It reads
+ * as both times because "moved" without the old time is not news the host can
+ * act on.
+ *
+ * A move the host made themselves raises nothing, for the same reason a
+ * host-created booking raises nothing: they already know.
+ */
+export async function notifyBookingChanged(
+  ctx: MutationCtx,
+  booking: Doc<"bookings">,
+  args: { oldStartsAt: number; byHost: boolean },
+): Promise<void> {
+  if (args.byHost) return;
+  const zone = await timezoneOf(ctx, booking.host_id);
+  await notifyHost(ctx, {
+    userId: booking.host_id,
+    kind: "booking_changed",
+    title: `${booking.guest_name} moved ${booking.meeting_name}`,
+    body: `${localWhen(args.oldStartsAt, zone)} → ${localWhen(booking.starts_at, zone)}`,
+    bookingId: booking.id,
+  });
+}
+
 /** bookings_notify_changed — fires on a status change to cancelled. */
 export async function notifyBookingCancelled(ctx: MutationCtx, booking: Doc<"bookings">): Promise<void> {
   await notifyHost(ctx, {

@@ -4,7 +4,7 @@ import { v } from "convex/values";
 import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
 import { bookingOut, inviteeOut } from "./lib/serialize";
 import { uuid, reference as newReference } from "./lib/ids";
-import { notifyBookingCreated, notifyBookingCancelled, upsertContact, logActivity } from "./lib/effects";
+import { notifyBookingCreated, notifyBookingCancelled, notifyBookingChanged, upsertContact, logActivity } from "./lib/effects";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 
@@ -124,6 +124,96 @@ export async function insertBooking(
 
   return booking;
 }
+
+/**
+ * Moves a booking that already exists — shared by the guest's reschedule link
+ * and the host's own screen.
+ *
+ * The overlap read is the same guard `insertBooking` uses and carries the same
+ * two rules, with one addition: `ignoreBookingId`, so a booking does not
+ * collide with the slot it is currently occupying. That parameter has existed
+ * since the port for exactly this caller.
+ *
+ * The row keeps its id, its reference and its Google event. A moved booking is
+ * the same meeting at a different time — cancelling and re-creating would send
+ * a cancellation the guest did not ask for, and mint a new Meet link.
+ */
+export async function moveBooking(
+  ctx: MutationCtx,
+  args: { booking: Doc<"bookings">; startsAt: number; bufferMinutes: number; byHost: boolean },
+): Promise<Doc<"bookings">> {
+  const b = args.booking;
+  if (b.status !== "confirmed") fail("This meeting has been cancelled.");
+  if (args.startsAt === b.starts_at) fail("That is the time it is already at.");
+
+  const endsAt = args.startsAt + b.duration_minutes * MINUTE;
+  if (
+    await findOverlap(ctx, {
+      hostId: b.host_id,
+      startsAt: args.startsAt,
+      endsAt,
+      bufferMinutes: args.bufferMinutes,
+      ignoreBookingId: b.id,
+    })
+  ) {
+    fail("slot taken");
+  }
+
+  const now = Date.now();
+  await ctx.db.patch(b._id, {
+    starts_at: args.startsAt,
+    ends_at: endsAt,
+    // Absent means zero: every row written before reschedule existed.
+    revision: (b.revision ?? 0) + 1,
+    updated_at: now,
+  });
+  const after = (await ctx.db.get(b._id))!;
+
+  await notifyBookingChanged(ctx, after, { oldStartsAt: b.starts_at, byHost: args.byHost });
+  await logActivity(ctx, {
+    actorId: after.host_id,
+    kind: "booking_changed",
+    summary: `${args.byHost ? after.guest_name + "'s" : after.guest_name} ${after.meeting_name} moved`,
+  });
+  return after;
+}
+
+/**
+ * The host moving one of their own bookings.
+ *
+ * Their own hours are not consulted, for the reason `createAsHost` does not
+ * consult them either: a host rearranging their day has already decided they
+ * are free. A clash still refuses, because that is double-booking rather than
+ * a preference.
+ */
+export const rescheduleAsHost = mutation({
+  args: { id: v.string(), startsAt: v.number() },
+  handler: async (ctx, a) => {
+    const me = await requireProfile(ctx);
+    const b = await ctx.db
+      .query("bookings")
+      .withIndex("by_uuid", (q) => q.eq("id", a.id))
+      .unique();
+    if (!b) AuthError("No such booking.", "NOT_FOUND");
+    assertOwnerOrAdmin(me, b.host_id);
+
+    const meeting = b.meeting_type_id
+      ? await ctx.db
+          .query("meeting_types")
+          .withIndex("by_uuid", (q) => q.eq("id", b.meeting_type_id as string))
+          .unique()
+      : null;
+
+    const oldStartsAt = b.starts_at;
+    const after = await moveBooking(ctx, {
+      booking: b,
+      startsAt: a.startsAt,
+      bufferMinutes: meeting?.buffer_minutes ?? 0,
+      byHost: true,
+    });
+    return { booking: bookingOut(after), old_starts_at: new Date(oldStartsAt).toISOString() };
+  },
+});
 
 /* ── host-facing reads (RLS: bookings_select_own / _select_admin) ──────────── */
 

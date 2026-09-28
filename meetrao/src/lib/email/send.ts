@@ -285,9 +285,12 @@ export async function sendCancellationToGuest(mail: CancellationMail): Promise<S
 }
 
 /**
- * `booking-changed.html` has no trigger: there is no reschedule flow, because
- * guests cancel and rebook. The renderer is here and unwired, so building
- * reschedule later is a matter of calling it — not of writing an email.
+ * Sent when a booking moves, from either side.
+ *
+ * The idempotency key carries the new start time, not just the booking id: a
+ * booking can be moved more than once, and a key that named only the booking
+ * would make every move after the first a duplicate of the first — silently
+ * dropped by Resend, with the guest left holding the old time.
  */
 export async function sendRescheduled(
   mail: BookingMail & { oldStartLong: string; changedByName: string },
@@ -299,7 +302,7 @@ export async function sendRescheduled(
   return deliver({
     to: to === "host" ? mail.hostEmail : mail.guestEmail,
     subject: `Moved: ${mail.meetingName} is now ${mail.startShort}`,
-    idempotencyKey: `booking-changed-${to}:${mail.bookingId}`,
+    idempotencyKey: `booking-changed-${to}:${mail.bookingId}:${mail.startLong}`,
     html: render("booking-changed", {
       ...chrome(),
       ...bookingUrls(mail.reference),

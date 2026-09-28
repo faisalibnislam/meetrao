@@ -177,6 +177,13 @@ export default defineSchema({
     guest_rsvp_notified_at: nullableNumber,
     host_created: v.boolean(),
     page_view_id: nullableString,
+    /**
+     * How many times this booking has been moved. Optional because every row
+     * written before reschedule existed has no such field, and absent means 0.
+     * The .ics SEQUENCE is read from it: a calendar client ignores a re-import
+     * of the same UID unless the sequence has gone up.
+     */
+    revision: v.optional(v.number()),
     created_at: v.number(),
     updated_at: v.number(),
   })

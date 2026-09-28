@@ -79,7 +79,9 @@ export async function GET(
     // person is the better one to put in front of a guest.
     line("ORGANIZER;CN=" + booking.hostName, `mailto:${SUPPORT_EMAIL}`),
     `STATUS:${cancelled ? "CANCELLED" : "CONFIRMED"}`,
-    "SEQUENCE:0",
+    // Rises on every move. A client that already holds this UID treats a
+    // lower or equal sequence as stale and keeps the time it has.
+    `SEQUENCE:${booking.revision}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");

@@ -3,7 +3,7 @@ import { fail } from "./lib/errors";
 import { v } from "convex/values";
 import { bookingOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
-import { insertBooking } from "./bookings";
+import { insertBooking, moveBooking } from "./bookings";
 import { rulesForMeeting } from "./availability";
 import { zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity } from "./lib/effects";
@@ -265,8 +265,19 @@ export const getByReference = query({
     const b = await ctx.db.query("bookings").withIndex("by_reference", (q) => q.eq("reference", a.reference.trim())).unique();
     if (!b) return null;
     const host = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", b.host_id)).unique();
+    /* The meeting's slug, so the guest's own screen can offer to move the
+       booking: the slot query is keyed by username and slug, and the booking
+       row carries only an id. `null` when the meeting has since been deleted
+       or switched off, which is what the screen reads as "cannot be moved". */
+    const meeting = b.meeting_type_id
+      ? await ctx.db
+          .query("meeting_types")
+          .withIndex("by_uuid", (q) => q.eq("id", b.meeting_type_id as string))
+          .unique()
+      : null;
     return {
       ...bookingOut(b),
+      meeting_slug: meeting && meeting.is_active ? meeting.slug : null,
       host: host ? { username: host.username, full_name: host.full_name, timezone: host.timezone, avatar_url: host.avatar_url } : null,
     };
   },
@@ -296,6 +307,84 @@ export const cancelByReference = mutation({
 });
 
 /**
+ * The guest moving their own booking. The reference IS the authorisation, as
+ * it is for cancelling — and moving is the gentler of the two, so nothing
+ * stricter is warranted.
+ *
+ * Every guard `createBooking` applies runs again here, for the same reason it
+ * runs there: the slot engine filtered the times on the way in, and anyone can
+ * call this directly. Migration 0005 is what a missing check looks like.
+ *
+ * A booking with no live meeting type behind it — a meeting the host has since
+ * deleted, or one the host arranged themselves — is refused rather than moved
+ * against rules that no longer exist. The guest can still cancel.
+ */
+export const rescheduleByReference = mutation({
+  args: {
+    reference: v.string(),
+    startsAt: v.number(),
+    /** A coarse caller key from our own route handler, which can see the IP. */
+    callerKey: v.optional(v.string()),
+  },
+  handler: async (ctx, a) => {
+    const b = await ctx.db
+      .query("bookings")
+      .withIndex("by_reference", (q) => q.eq("reference", a.reference.trim()))
+      .unique();
+    if (!b) fail("unknown booking", "NOT_FOUND");
+    if (b.status !== "confirmed") fail("This meeting has been cancelled.");
+
+    const host = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", b.host_id)).unique();
+    if (!host) fail("unknown host");
+    if (host.is_suspended) fail("host is not accepting bookings");
+
+    const meeting = b.meeting_type_id
+      ? await ctx.db
+          .query("meeting_types")
+          .withIndex("by_uuid", (q) => q.eq("id", b.meeting_type_id as string))
+          .unique()
+      : null;
+    if (!meeting || !meeting.is_active) fail("This meeting can no longer be moved online.");
+
+    const now = Date.now();
+    if (a.startsAt < now + meeting.minimum_notice_minutes * MINUTE) fail("inside minimum notice");
+    if (a.startsAt > now + meeting.booking_window_days * DAY) fail("beyond booking window");
+
+    const { weekday, minute } = zonedWeekdayMinute(a.startsAt, host.timezone);
+    const rules = await rulesForMeeting(ctx, host.id, meeting.schedule_id);
+    const fits = rules.some(
+      (r) => r.weekday === weekday && minute >= r.start_minute && minute + b.duration_minutes <= r.end_minute,
+    );
+    if (!fits) fail("outside availability");
+
+    /* Tighter than booking, on purpose: moving is cheap for the guest and
+       expensive for the host, whose calendar and guests are notified each
+       time. Consumed after validation, before the write, as create does. */
+    await consume(ctx, [
+      { key: `move:${b.reference}`, limit: 5, windowMs: 24 * 60 * 60_000, message: "This meeting has been moved several times. Contact the host instead." },
+      { key: `host:${host.id}`, limit: 30, windowMs: 60 * 60_000, message: "This host has taken too many bookings just now. Try again shortly." },
+      ...(a.callerKey ? [{ key: `caller:${a.callerKey}`, limit: 20, windowMs: 60 * 60_000, message: "Too many requests. Try again shortly." }] : []),
+    ]);
+
+    const oldStartsAt = b.starts_at;
+    const after = await moveBooking(ctx, {
+      booking: b,
+      startsAt: a.startsAt,
+      bufferMinutes: meeting.buffer_minutes,
+      byHost: false,
+    });
+
+    return {
+      reference: after.reference,
+      id: after.id,
+      starts_at: new Date(after.starts_at).toISOString(),
+      ends_at: new Date(after.ends_at).toISOString(),
+      old_starts_at: new Date(oldStartsAt).toISOString(),
+    };
+  },
+});
+
+/**
  * Just enough of the host to address a cancellation email.
  *
  * Scoped by the booking's reference — the guest's own credential — and it
@@ -317,6 +406,28 @@ export const hostForCancellationMail = query({
       email: p.email,
       timezone: p.timezone,
       notify_booking_cancelled: p.notify_booking_cancelled,
+    };
+  },
+});
+
+/**
+ * Just enough of the host to address a reschedule email. Same shape and same
+ * reasoning as the two beside it.
+ */
+export const hostForRescheduleMail = query({
+  args: { reference: v.string() },
+  handler: async (ctx, a) => {
+    const b = await ctx.db
+      .query("bookings").withIndex("by_reference", (q) => q.eq("reference", a.reference.trim())).unique();
+    if (!b) return null;
+    const p = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", b.host_id)).unique();
+    if (!p) return null;
+    return {
+      full_name: p.full_name,
+      username: p.username,
+      email: p.email,
+      timezone: p.timezone,
+      notify_booking_changed: p.notify_booking_changed,
     };
   },
 });

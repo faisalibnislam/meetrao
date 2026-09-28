@@ -3,6 +3,7 @@ import { AppScreen } from "@/components/app/app-screen";
 import { BookingsScreen } from "@/components/app/bookings-screen";
 import { listBookings } from "@/lib/data/bookings";
 import { requireOnboardedSession } from "@/lib/data/session";
+import { timezoneLabel } from "@/lib/timezones";
 
 export const metadata: Metadata = { title: "Bookings" };
 
@@ -15,7 +16,7 @@ export default async function BookingsPage() {
       title="Bookings"
       subtitle="Everyone who has booked time with you — and everything you scheduled yourself."
     >
-      <BookingsScreen bookings={bookings} />
+      <BookingsScreen bookings={bookings} timezoneLabel={timezoneLabel(profile.timezone)} />
     </AppScreen>
   );
 }

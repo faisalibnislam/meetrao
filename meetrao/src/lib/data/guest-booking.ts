@@ -19,6 +19,12 @@ export type GuestBooking = {
   endsAt: string;
   status: "confirmed" | "cancelled";
   meetUrl: string | null;
+  /** The meeting's slug, or null when it can no longer be booked — and so
+      can no longer be moved. The cancel path stays open either way. */
+  meetingSlug: string | null;
+  /** How many times the booking has moved. The .ics SEQUENCE: a calendar
+      client ignores a re-import of a UID it already holds unless this rises. */
+  revision: number;
   hostName: string;
   hostUsername: string;
   hostTimezone: string;
@@ -36,6 +42,8 @@ type Row = {
   ends_at: string;
   status: "confirmed" | "cancelled";
   meet_url: string | null;
+  meeting_slug: string | null;
+  revision: number;
   host_name: string;
   host_username: string;
   host_timezone: string;
@@ -57,6 +65,8 @@ async function fetchRow(reference: string): Promise<Row | null> {
     ends_at: b.ends_at,
     status: b.status,
     meet_url: b.meet_url,
+    meeting_slug: b.meeting_slug,
+    revision: b.revision ?? 0,
     host_name: b.host?.full_name ?? "",
     host_username: b.host?.username ?? "",
     host_timezone: b.host?.timezone ?? "UTC",
@@ -79,6 +89,8 @@ export async function getBookingByReference(reference: string): Promise<GuestBoo
     endsAt: row.ends_at,
     status: row.status,
     meetUrl: row.meet_url,
+    meetingSlug: row.meeting_slug,
+    revision: row.revision,
     hostName: row.host_name || row.host_username,
     hostUsername: row.host_username,
     hostTimezone: row.host_timezone,

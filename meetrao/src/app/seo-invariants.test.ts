@@ -42,6 +42,7 @@ describe("pages that must never be indexed", () => {
       "(public)/booking/[reference]/cancel/page.tsx",
       "(public)/booking/[reference]/cancelled/page.tsx",
       "(public)/booking/[reference]/page.tsx",
+      "(public)/booking/[reference]/reschedule/page.tsx",
     ]);
   });
 

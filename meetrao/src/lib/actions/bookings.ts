@@ -2,15 +2,92 @@
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
-import { cancellationMail } from "@/lib/email/booking-mail";
-import { sendCancellationToGuest, sendCancellationToHost } from "@/lib/email/send";
-import { CalendarError, deleteEventForBooking } from "@/lib/google/calendar";
+import { zonedInstant } from "@/lib/booking/slots";
+import { cancellationMail, rescheduleMail } from "@/lib/email/booking-mail";
+import { sendCancellationToGuest, sendCancellationToHost, sendRescheduled } from "@/lib/email/send";
+import { CalendarError, deleteEventForBooking, updateEventForBooking } from "@/lib/google/calendar";
 import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 import type { Booking } from "@/lib/types";
 
 export type CancelResult = { error?: string; calendarWarning?: string };
+
+export type MoveResult = { error?: string; calendarWarning?: string };
+
+/**
+ * Host-side reschedule. Same ordering as cancellation, and for the same
+ * reason: the booking moves first, then the calendar event, then the mail.
+ *
+ * The host's own hours are not consulted — Convex does not check them for a
+ * host moving their own meeting, exactly as it does not when the host creates
+ * one. A clash with another booking still refuses.
+ *
+ * The new time arrives as a calendar date and minutes into that day, and is
+ * turned into an instant HERE, against the host's own timezone — the same
+ * conversion `scheduleMeeting` does, and for the same reason: the host's
+ * screen only ever shows their own wall clock, and a browser in another zone
+ * would otherwise move the meeting by its offset.
+ */
+export async function rescheduleBooking(
+  bookingId: string,
+  date: string,
+  time: number,
+): Promise<MoveResult> {
+  const session = await requireSession();
+  const convex = await convexServer();
+
+  const existing = await convex.query(api.bookings.getForHost, { id: bookingId });
+  if (!existing) return { error: "That booking is not yours to move." };
+
+  const before = existing as unknown as Booking;
+  if (before.status === "cancelled") return { error: "That meeting has been cancelled." };
+
+  const [year, month, day] = date.split("-").map(Number);
+  if (!year || !month || !day) return { error: "Pick a date." };
+  if (!Number.isInteger(time) || time < 0 || time > 1439) return { error: "Pick a time." };
+
+  const when = zonedInstant({ year, month, day }, time, session.profile.timezone);
+  if (when.getTime() < Date.now()) return { error: "That time has already passed." };
+
+  let moved: { booking: Booking; old_starts_at: string };
+  try {
+    moved = (await convex.mutation(api.bookings.rescheduleAsHost, {
+      id: bookingId,
+      startsAt: when.getTime(),
+    })) as unknown as { booking: Booking; old_starts_at: string };
+  } catch (cause) {
+    const message = convexMessage(cause, "That meeting could not be moved.");
+    // The one refusal worth rewording: "slot taken" is Convex's vocabulary.
+    return { error: /slot taken/i.test(message) ? "You already have a meeting then." : message };
+  }
+
+  let calendarWarning: string | undefined;
+  if (before.google_event_id) {
+    const outcome = await updateEventForBooking(before.reference);
+    if ("failure" in outcome) {
+      calendarWarning = "The meeting has moved, but Google Calendar did not confirm the new time.";
+    }
+  }
+
+  const mail = rescheduleMail(moved.booking, session.profile, "host", moved.old_starts_at);
+  const invitees = existing.invitees
+    .map((i) => ({ name: i.name, email: i.email }))
+    .filter((i) => i.email.toLowerCase() !== before.guest_email.toLowerCase());
+
+  // Everyone who was told about the old time is told about the new one.
+  await Promise.allSettled([
+    sendRescheduled(mail, "host", session.profile),
+    sendRescheduled(mail, "guest", null),
+    ...invitees.map((i) =>
+      sendRescheduled({ ...mail, guestName: i.name || i.email, guestEmail: i.email }, "guest", null),
+    ),
+  ]);
+
+  revalidatePath("/bookings");
+  revalidatePath("/dashboard");
+  return { calendarWarning };
+}
 
 /**
  * Host-side cancellation.

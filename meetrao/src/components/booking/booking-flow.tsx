@@ -9,7 +9,7 @@ import { Icon } from "@/components/ui/icon";
 import { Callout } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { addDays, dateKey, type PlainDate } from "@/lib/booking/slots";
-import { formatMonth, formatPlainLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
+import { formatLongDate, formatMonth, formatPlainLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
 import { detectTimezone, timezoneLabel } from "@/lib/timezones";
 import { useClientValue } from "@/lib/use-client-value";
 import { cx } from "@/lib/cx";
@@ -21,6 +21,12 @@ import { cx } from "@/lib/cx";
    phone, from an email link — so it renders complete from the server and then
    corrects itself to the guest's real timezone once the browser can say what
    that is.
+
+   `move` turns the same screen into the reschedule flow. The calendar, the
+   timezone correction, the slot re-fetching and the taken-slot recovery are
+   identical work; only the last step differs, because a guest moving a meeting
+   has already told us who they are. A second copy of this picker would be a
+   second place for a timezone bug to live.
    ───────────────────────────────────────────────────────────────────────────── */
 
 const WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -45,6 +51,8 @@ export type FlowProps = {
     timezone: string;
   };
   pageViewId: string | null;
+  /** Present when this is an existing booking being moved, not a new one. */
+  move?: { reference: string; currentStart: string };
 };
 
 type SlotState = { openDates: Set<string>; times: string[] };
@@ -146,6 +154,42 @@ export function BookingFlow(props: FlowProps) {
     void load(year, month, day, timezone);
   }
 
+  async function move() {
+    const target = props.move;
+    if (!chosen || !target) return;
+
+    setSubmitting(true);
+    setBookingError(false);
+
+    try {
+      const response = await fetch("/api/bookings/reschedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference: target.reference, start: chosen, guestTimezone: timezone }),
+      });
+
+      if (response.status === 409) {
+        setBookingError(true);
+        setSubmitting(false);
+        toast({ tone: "bad", title: "Could not move", text: "That time went while you were deciding." });
+        return;
+      }
+
+      const json = (await response.json()) as { reference?: string; error?: string };
+      if (!response.ok || !json.reference) {
+        setSubmitting(false);
+        toast({ tone: "bad", title: "Could not move", text: json.error ?? "Try again in a moment." });
+        return;
+      }
+
+      // The confirmation screen reads the new time, and says so on arrival.
+      router.push(`/booking/${json.reference}?moved=1`);
+    } catch {
+      setSubmitting(false);
+      toast({ tone: "bad", title: "Could not move", text: "Check your connection and try again." });
+    }
+  }
+
   async function submit() {
     if (!chosen) return;
     if (!guestName.trim() || !guestEmail.includes("@")) {
@@ -202,6 +246,87 @@ export function BookingFlow(props: FlowProps) {
 
   const chosenStart = chosen ? new Date(chosen) : null;
   const chosenEnd = chosenStart ? new Date(chosenStart.getTime() + props.durationMinutes * 60_000) : null;
+
+  if (step === "details" && chosenStart && chosenEnd && selected && props.move) {
+    const was = new Date(props.move.currentStart);
+    return (
+      <div className="m-auto flex w-full max-w-[520px] flex-col gap-[14px]">
+        <div className="flex flex-col gap-[22px] rounded-[12px] border border-line bg-surface p-[30px] max-[820px]:p-[22px]">
+          <div className="flex flex-col gap-[8px]">
+            <h1 className="m-0 font-serif text-[28px] leading-[1.1] font-normal tracking-[-0.01em] text-ink">
+              Move this meeting?
+            </h1>
+            <p className="m-0 text-[13.5px] leading-[1.55] text-ink-2">
+              {firstName(props.hostName)} is told, both calendars are updated, and your Google Meet link stays
+              the same.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-fill px-[14px] py-[13px]">
+            <span className="text-[13.5px] font-semibold text-ink">
+              {props.meetingName} · {props.durationMinutes} min
+            </span>
+            <div className="flex flex-col gap-[3px]">
+              <Eyebrow size={10}>Was</Eyebrow>
+              <span className="text-[12.5px] text-ink-3 line-through">
+                {formatLongDate(was, timezone)} · {formatTime(was, timezone)}
+              </span>
+            </div>
+            <div className="flex flex-col gap-[3px]">
+              <Eyebrow size={10}>Now</Eyebrow>
+              <span className="text-[13px] font-semibold text-ink">
+                {formatPlainLongDate(selected, timezone)} · {formatTimeRange(chosenStart, chosenEnd, timezone)}
+              </span>
+            </div>
+          </div>
+
+          {bookingError ? (
+            <Callout
+              tone="red"
+              title="That time is no longer available"
+              align="center"
+              action={
+                <Button
+                  variant="danger"
+                  size={30}
+                  onClick={() => {
+                    setBookingError(false);
+                    setChosen(null);
+                    setStep("pick");
+                    setSlotTaken(true);
+                    void load(selected.year, selected.month, selected.day, timezone);
+                  }}
+                >
+                  Pick another time
+                </Button>
+              }
+            >
+              Someone booked it while you were deciding. Your meeting has not moved.
+            </Callout>
+          ) : null}
+
+          <div className="flex flex-col gap-[10px]">
+            <Button variant="accent" size={42} full busy={submitting} onClick={move}>
+              {submitting ? "Moving…" : "Move meeting"}
+            </Button>
+            <Button
+              variant="ghost"
+              size={36}
+              full
+              icon="chevron-left"
+              iconSize={10}
+              onClick={() => {
+                setStep("pick");
+                setBookingError(false);
+              }}
+            >
+              Back to times
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (step === "details" && chosenStart && chosenEnd && selected) {
     return (

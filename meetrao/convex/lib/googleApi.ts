@@ -207,6 +207,41 @@ export async function createEvent(
   return { eventId: json.id, meetUrl: meet, htmlLink: json.htmlLink ?? null };
 }
 
+/**
+ * Moves an existing event, keeping everything else about it.
+ *
+ * PATCH rather than delete-and-recreate, because recreating mints a new Meet
+ * link: the old one is already in the guest's calendar entry and in the
+ * confirmation email, and booking-changed.html promises it still works. A
+ * missing event (404/410) is reported rather than recreated here — the caller
+ * knows whether recreating is the right answer.
+ */
+export async function patchEventTime(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  when: { startMs: number; endMs: number; timeZone: string },
+): Promise<"patched" | "missing" | "failed"> {
+  const url =
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}` +
+    `/events/${encodeURIComponent(eventId)}?sendUpdates=all`;
+  try {
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        start: { dateTime: new Date(when.startMs).toISOString(), timeZone: when.timeZone },
+        end: { dateTime: new Date(when.endMs).toISOString(), timeZone: when.timeZone },
+      }),
+    });
+    if (response.ok) return "patched";
+    if (response.status === 404 || response.status === 410) return "missing";
+    return "failed";
+  } catch {
+    return "failed";
+  }
+}
+
 /** "Already gone" is success: the caller wanted the event not to exist. */
 export async function deleteEvent(
   accessToken: string,

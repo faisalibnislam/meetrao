@@ -1,32 +1,48 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { Field, Input } from "@/components/ui/controls";
+import { MenuSelect } from "@/components/ui/menu-select";
 import { DetailRow, Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/toast";
-import { cancelBooking } from "@/lib/actions/bookings";
+import { cancelBooking, rescheduleBooking } from "@/lib/actions/bookings";
+import { timeOptions } from "@/lib/booking/time";
 import type { BookingView } from "@/lib/data/bookings";
 
-/* Booking detail and its cancel confirmation. "Cancel meeting" moves to the
-   confirm; "Keep it" comes back here, so the destructive action always costs
-   two deliberate clicks. */
+/* Booking detail, its cancel confirmation, and moving it. "Cancel meeting"
+   moves to the confirm; "Keep it" comes back here, so the destructive action
+   always costs two deliberate clicks.
 
-export type DialogState = { booking: BookingView; view: "detail" | "cancel" } | null;
+   Moving is offered beside cancelling rather than behind it: a host who wants
+   a different time should not have to cancel — that mails the guest a
+   cancellation and throws away the Meet link to say "can we do Thursday?". */
+
+export type DialogState = { booking: BookingView; view: "detail" | "cancel" | "move" } | null;
 
 export function BookingDialogs({
   state,
   onClose,
   onOpenCancel,
+  onOpenMove,
   onBackToDetail,
+  timezoneLabel,
 }: {
   state: DialogState;
   onClose: () => void;
   onOpenCancel: () => void;
+  onOpenMove?: () => void;
   onBackToDetail: () => void;
+  /** The host's zone, named on the move dialog so the fields are unambiguous. */
+  timezoneLabel?: string;
 }) {
   const router = useRouter();
   const toast = useToast();
   const [cancelling, startCancel] = useTransition();
+  const [moving, startMove] = useTransition();
+  const [moveDate, setMoveDate] = useState("");
+  const [moveTime, setMoveTime] = useState("540");
 
   if (!state) return null;
   const { booking } = state;
@@ -68,6 +84,63 @@ export function BookingDialogs({
     );
   }
 
+  if (state.view === "move") {
+    return (
+      <Modal
+        open
+        onClose={onClose}
+        title="Move this meeting"
+        subtitle={timezoneLabel ? `Your time — ${timezoneLabel}.` : undefined}
+        primary={{
+          label: moving ? "Moving…" : "Move meeting",
+          busy: moving,
+          onClick: () =>
+            startMove(async () => {
+              if (!moveDate) {
+                toast({ tone: "bad", title: "Pick a date", text: "Choose the day it moves to." });
+                return;
+              }
+              const result = await rescheduleBooking(booking.id, moveDate, Number(moveTime));
+              if (result.error) {
+                toast({ tone: "bad", title: "Could not move", text: result.error });
+                return;
+              }
+              onClose();
+              toast({
+                tone: "ok",
+                title: "Meeting moved",
+                text: result.calendarWarning ?? `${guestFirst} has been emailed the new time.`,
+              });
+              router.refresh();
+            }),
+        }}
+        secondary={{ label: "Keep it", onClick: onBackToDetail }}
+      >
+        <div className="flex flex-col gap-[12px]">
+          <span className="text-[13.5px] leading-[1.55] text-pretty text-ink-2">
+            {booking.meetingName} with {booking.guest} is at {booking.dayLabel} · {booking.timeRange}. Moving
+            it emails everyone invited and updates both calendars; the Meet link stays the same.
+          </span>
+          <div className="flex flex-wrap gap-[12px]">
+            <Field label="New date" htmlFor="move-date" className="min-w-[150px] flex-1">
+              <Input
+                id="move-date"
+                type="date"
+                height={36}
+                value={moveDate}
+                onChange={(e) => setMoveDate(e.target.value)}
+              />
+            </Field>
+            <div className="flex min-w-[150px] flex-1 flex-col gap-[6px]">
+              <span className="text-[12.5px] font-semibold text-ink">Start</span>
+              <MenuSelect aria-label="Start time" options={timeOptions()} value={moveTime} onChange={setMoveTime} />
+            </div>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <Modal
       open
@@ -85,6 +158,18 @@ export function BookingDialogs({
       secondary={{ label: "Cancel meeting", onClick: onOpenCancel }}
     >
       <div className="flex flex-col gap-[9px]">
+        {/* Moving lives in the body, not the footer: the footer's two slots are
+            joining and cancelling, and a host looking for another time should
+            not have to reach for the destructive one. A meeting that has been
+            and gone, or one already cancelled, has nowhere to move to. */}
+        {onOpenMove && !booking.cancelled && !booking.past ? (
+          <div className="-mt-[2px] mb-[3px] flex">
+            <Button variant="secondary" size={28} icon="rotate-left" onClick={onOpenMove}>
+              Move to another time
+            </Button>
+          </div>
+        ) : null}
+
         {booking.invitees.length > 1 ? (
           // A meeting the host scheduled for several people. Listing them beats
           // showing the first one and calling it "Guest", which is what the row

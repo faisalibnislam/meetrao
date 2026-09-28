@@ -5,7 +5,7 @@ import { fail } from "./lib/errors";
 import { currentUserId } from "./lib/auth";
 import {
   exchangeCode, refreshAccessToken, revokeToken, fetchAccountEmail, hasCalendarWrite,
-  freeBusy, createEvent, deleteEvent, GoogleAuthError,
+  freeBusy, createEvent, deleteEvent, patchEventTime, GoogleAuthError,
 } from "./lib/googleApi";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -221,6 +221,63 @@ export const createEventForBooking = action({
         reference: a.reference, eventId: event.eventId, meetUrl: event.meetUrl,
       });
       return { ok: true, meetUrl: event.meetUrl };
+    } catch {
+      return { ok: false, reason: "api-unavailable" };
+    }
+  },
+});
+
+/**
+ * Moves the event for a booking that has already been moved in our own data.
+ *
+ * Patches the existing event rather than replacing it, so the Meet link the
+ * guest already holds keeps working — the promise booking-changed.html makes
+ * in as many words. An event that has vanished from the host's calendar is
+ * recreated instead, which is the one case where a new Meet link is the
+ * honest outcome: there is no old event left to keep.
+ *
+ * Returns a failure rather than throwing, like its siblings: the booking has
+ * already moved by the time this runs, and Google refusing does not un-move it.
+ */
+export const updateEventForBooking = action({
+  args: { reference: v.string() },
+  handler: async (
+    ctx,
+    a,
+  ): Promise<{ ok: true; meetUrl: string | null; recreated: boolean } | { ok: false; reason: string }> => {
+    const found = await ctx.runQuery(internal.google.bookingByReference, { reference: a.reference });
+    if (!found) return { ok: false, reason: "unknown-booking" };
+    const { booking, hostTimezone, invitees } = found;
+    // Nothing to move. The booking simply never had an event.
+    if (!booking.google_event_id) return { ok: false, reason: "no-event" };
+
+    const creds = await ctx.runAction(internal.google.accessTokenFor, { userId: booking.host_id });
+    if (!creds) return { ok: false, reason: "not-connected" };
+
+    const outcome = await patchEventTime(creds.token, creds.calendarId, booking.google_event_id, {
+      startMs: booking.starts_at,
+      endMs: booking.ends_at,
+      timeZone: hostTimezone,
+    });
+    if (outcome === "patched") return { ok: true, meetUrl: booking.meet_url, recreated: false };
+    if (outcome === "failed") return { ok: false, reason: "api-unavailable" };
+
+    // "missing": the host deleted the event in Google. Make a fresh one.
+    try {
+      const event = await createEvent(creds.token, creds.calendarId, {
+        summary: booking.host_created ? booking.meeting_name : `${booking.meeting_name} — ${booking.guest_name}`,
+        description: booking.guest_note
+          ? `Booked through Meetrao.\n\nNote from ${booking.guest_name}:\n${booking.guest_note}`
+          : "Booked through Meetrao.",
+        startMs: booking.starts_at,
+        endMs: booking.ends_at,
+        timeZone: hostTimezone,
+        attendees: [{ email: booking.guest_email, name: booking.guest_name }, ...invitees],
+      });
+      await ctx.runMutation(internal.google.attachEvent, {
+        reference: a.reference, eventId: event.eventId, meetUrl: event.meetUrl,
+      });
+      return { ok: true, meetUrl: event.meetUrl, recreated: true };
     } catch {
       return { ok: false, reason: "api-unavailable" };
     }

@@ -20,8 +20,15 @@ const PRIVATE_PAGE = { index: false, follow: false, nocache: true } as const;
 
 export const metadata: Metadata = { title: "You're booked", robots: PRIVATE_PAGE };
 
-export default async function ConfirmedPage({ params }: { params: Promise<{ reference: string }> }) {
+export default async function ConfirmedPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ reference: string }>;
+  searchParams: Promise<{ moved?: string }>;
+}) {
   const { reference } = await params;
+  const moved = (await searchParams).moved === "1";
   const booking = await getBookingByReference(reference);
   if (!booking) notFound();
   if (booking.status === "cancelled") redirect(`/booking/${reference}/cancelled`);
@@ -99,9 +106,19 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ refe
           <div className="flex gap-[11px] rounded-[8px] border border-accent-line bg-accent-soft px-[14px] py-[12px]">
             <Icon name="check" weight="solid" size={11} className="mt-[3px] flex-none text-accent" />
             <span className="text-[12.5px] leading-[1.6] text-ink-2">
-              This is already on your calendar. We sent an invitation to{" "}
-              <strong className="font-semibold text-ink">{booking.guestEmail}</strong> with the Meet link
-              attached.
+              {moved ? (
+                <>
+                  Moved. Both calendars now read the new time, and we emailed{" "}
+                  <strong className="font-semibold text-ink">{booking.guestEmail}</strong>. The same Meet link
+                  still works.
+                </>
+              ) : (
+                <>
+                  This is already on your calendar. We sent an invitation to{" "}
+                  <strong className="font-semibold text-ink">{booking.guestEmail}</strong> with the Meet link
+                  attached.
+                </>
+              )}
             </span>
           </div>
 
@@ -112,8 +129,11 @@ export default async function ConfirmedPage({ params }: { params: Promise<{ refe
             </ButtonLink>
           </div>
 
+          {/* Moving is offered before cancelling, and reads as the lighter of
+              the two, because a guest who can move a meeting usually would. */}
           <span className="text-[12.5px] leading-[1.5] text-ink-3">
-            Need to change plans? <Link href={`/booking/${reference}/cancel`}>Cancel this meeting</Link>.
+            Need to change plans? <Link href={`/booking/${reference}/reschedule`}>Move this meeting</Link> or{" "}
+            <Link href={`/booking/${reference}/cancel`}>cancel it</Link>.
           </span>
         </div>
       </div>
