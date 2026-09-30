@@ -163,11 +163,45 @@ export const bookingByReference = internalQuery({
     const host = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", b.host_id)).unique();
     const invitees = await ctx.db
       .query("booking_invitees").withIndex("by_booking", (q) => q.eq("booking_id", b.id)).collect();
+    const meeting = b.meeting_type_id
+      ? await ctx.db
+          .query("meeting_types")
+          .withIndex("by_uuid", (q) => q.eq("id", b.meeting_type_id as string))
+          .unique()
+      : null;
     return {
       booking: b,
       hostTimezone: host?.timezone ?? "UTC",
+      capacity: meeting?.capacity ?? 1,
       invitees: invitees.map((i) => ({ email: i.email, name: i.name })),
     };
+  },
+});
+
+/**
+ * The event a seatmate already made, if there is one.
+ *
+ * A group meeting is several bookings at one instant. One calendar event
+ * between them, not one each: twenty identical entries stacked on a host's
+ * Tuesday makes their own calendar unreadable, which is a strange way to
+ * thank them for running a workshop.
+ *
+ * The seats share the event and its Meet link. Guests are not each added to
+ * the event as attendees — they get the confirmation email and the .ics, which
+ * is what puts it in their own calendar.
+ */
+export const seatmateEvent = internalQuery({
+  args: { hostId: v.string(), meetingTypeId: v.string(), startsAt: v.number() },
+  handler: async (ctx, a) => {
+    const at = await ctx.db
+      .query("bookings")
+      .withIndex("by_host_starts", (q) => q.eq("host_id", a.hostId).eq("starts_at", a.startsAt))
+      .collect();
+
+    const sibling = at.find(
+      (b) => b.status === "confirmed" && b.meeting_type_id === a.meetingTypeId && b.google_event_id !== null,
+    );
+    return sibling ? { eventId: sibling.google_event_id as string, meetUrl: sibling.meet_url } : null;
   },
 });
 
@@ -200,8 +234,24 @@ export const createEventForBooking = action({
   ): Promise<{ ok: true; meetUrl: string | null } | { ok: false; reason: string }> => {
     const found = await ctx.runQuery(internal.google.bookingByReference, { reference: a.reference });
     if (!found) return { ok: false, reason: "unknown-booking" };
-    const { booking, hostTimezone, invitees } = found;
+    const { booking, hostTimezone, capacity, invitees } = found;
     if (booking.google_event_id) return { ok: false, reason: "already-attached" };
+
+    /* A seat in a group meeting joins the event its seatmates already have,
+       rather than stacking another copy on the host's calendar. */
+    if (capacity > 1 && booking.meeting_type_id) {
+      const sibling = await ctx.runQuery(internal.google.seatmateEvent, {
+        hostId: booking.host_id,
+        meetingTypeId: booking.meeting_type_id,
+        startsAt: booking.starts_at,
+      });
+      if (sibling) {
+        await ctx.runMutation(internal.google.attachEvent, {
+          reference: a.reference, eventId: sibling.eventId, meetUrl: sibling.meetUrl,
+        });
+        return { ok: true, meetUrl: sibling.meetUrl };
+      }
+    }
 
     const creds = await ctx.runAction(internal.google.accessTokenFor, { userId: booking.host_id });
     if (!creds) return { ok: false, reason: "not-connected" };
@@ -298,6 +348,24 @@ export const deleteEventForBooking = action({
   handler: async (ctx, a): Promise<{ ok: boolean; reason?: string }> => {
     const found = await ctx.runQuery(internal.google.bookingByReference, { reference: a.reference });
     if (!found?.booking.google_event_id) return { ok: true };
+
+    /* SEATS SHARE AN EVENT, so one guest leaving a workshop must not delete it
+       for the nineteen who are still coming. The booking lets go of the event;
+       Google keeps it until the last seat does. */
+    if (found.capacity > 1 && found.booking.meeting_type_id) {
+      const stillHeld = await ctx.runQuery(internal.google.seatmateEvent, {
+        hostId: found.booking.host_id,
+        meetingTypeId: found.booking.meeting_type_id,
+        startsAt: found.booking.starts_at,
+      });
+      // seatmateEvent skips cancelled rows, so a match here is another seat
+      // that is still coming — this booking has already been cancelled by the
+      // time the calendar is touched.
+      if (stillHeld) {
+        await ctx.runMutation(internal.google.attachEvent, { reference: a.reference, eventId: null, meetUrl: null });
+        return { ok: true };
+      }
+    }
 
     const creds = await ctx.runAction(internal.google.accessTokenFor, { userId: found.booking.host_id });
     if (!creds) return { ok: false, reason: "not-connected" };

@@ -64,7 +64,12 @@ export async function POST(request: NextRequest) {
 
   const availability = await getMeetingAvailability(meeting.id);
   const overrides = await getMeetingOverrides(meeting.id);
-  const { busy } = await getBusy(host.id, new Date(start.getTime() - DAY), new Date(start.getTime() + DAY));
+  const { busy } = await getBusy(
+    host.id,
+    new Date(start.getTime() - DAY),
+    new Date(start.getTime() + DAY),
+    meeting.capacity > 1 ? meeting.id : undefined,
+  );
 
   const guestTimezone = input.guestTimezone || host.timezone;
 
@@ -118,7 +123,7 @@ export async function POST(request: NextRequest) {
   } catch (cause) {
     // These are create_booking's own refusals, carried across as messages.
     const message = convexMessage(cause, "That booking could not be made.");
-    if (/slot taken|outside availability|minimum notice|booking window/i.test(message)) {
+    if (/slot taken|no seats left|outside availability|minimum notice|booking window/i.test(message)) {
       return NextResponse.json({ error: "slot-taken" }, { status: 409 });
     }
     if (/unknown host|unknown meeting/i.test(message)) {

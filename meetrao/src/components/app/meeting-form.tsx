@@ -61,6 +61,8 @@ export function MeetingForm({
 
   const questions = form.questions ?? [];
   const locationKind = form.location ?? "google_meet";
+  const capacity = form.capacity ?? 1;
+  const capacityInvalid = touched && capacity > 1 && (!Number.isInteger(capacity) || capacity < 2 || capacity > 100);
 
   function addQuestion() {
     // crypto.randomUUID is the id an answer is matched back by, so it has to
@@ -189,6 +191,54 @@ export function MeetingForm({
             <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
             <span className="text-[12.5px] leading-[1.6] text-ink-2">
               No Meet link is created. The booking still lands on both calendars, carrying this as its location.
+            </span>
+          </div>
+        ) : null}
+      </section>
+
+      {/* ── seats ────────────────────────────────────────────────────── */}
+      <section className="flex flex-col gap-[12px] border-b border-line py-[20px]">
+        <PanelHeading
+          title="Seats"
+          subtitle="One guest at a time, or several sharing the same slot — a class, a workshop, an office hour."
+        />
+
+        <div className="flex flex-wrap gap-[8px]">
+          <ChoiceChip selected={capacity === 1} onClick={() => set("capacity", 1)}>
+            One at a time
+          </ChoiceChip>
+          <ChoiceChip selected={capacity > 1} onClick={() => set("capacity", capacity > 1 ? capacity : 8)}>
+            Several together
+          </ChoiceChip>
+        </div>
+
+        {capacity > 1 ? (
+          <Field
+            label="Guests per slot"
+            htmlFor="meeting-capacity"
+            help="Each guest books their own seat. The slot closes when the last one goes."
+            error={capacityInvalid ? "Between 2 and 100." : undefined}
+          >
+            <Input
+              id="meeting-capacity"
+              type="number"
+              min={2}
+              max={100}
+              height={36}
+              className="max-w-[140px]"
+              value={String(capacity)}
+              invalid={capacityInvalid}
+              onChange={(e) => set("capacity", Number(e.target.value))}
+            />
+          </Field>
+        ) : null}
+
+        {capacity > 1 ? (
+          <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
+            <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
+            <span className="text-[12.5px] leading-[1.6] text-ink-2">
+              Everyone booked into a slot shares one calendar event and one Meet link, so your own calendar
+              shows the session once rather than once per guest.
             </span>
           </div>
         ) : null}

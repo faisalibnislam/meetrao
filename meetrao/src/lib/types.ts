@@ -46,6 +46,7 @@ export type MeetingType = {
   booking_window_days: number;
   location: string;
   location_detail?: string;
+  capacity?: number;
   is_active: boolean;
   /** null = the host's default schedule. See migration 0010. */
   schedule_id: string | null;

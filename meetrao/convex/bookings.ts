@@ -31,7 +31,20 @@ const LOOKBACK = 24 * 60 * MINUTE;
    ───────────────────────────────────────────────────────────────────────────── */
 export async function findOverlap(
   ctx: QueryCtx | MutationCtx,
-  args: { hostId: string; startsAt: number; endsAt: number; bufferMinutes: number; ignoreBookingId?: string },
+  args: {
+    hostId: string;
+    startsAt: number;
+    endsAt: number;
+    bufferMinutes: number;
+    ignoreBookingId?: string;
+    /* A group meeting's own seats are not clashes with each other. Passing
+       these two makes bookings of THAT meeting at THAT instant invisible to
+       this read — everything else, including the same meeting at a different
+       time, still refuses. The seat count is a separate question, asked by
+       seatsTaken below, because "is this slot free" and "is this slot full"
+       are different failures with different messages. */
+    seatmateOf?: string | null;
+  },
 ): Promise<Doc<"bookings"> | null> {
   const buffer = args.bufferMinutes * MINUTE;
   const near = await ctx.db
@@ -47,10 +60,31 @@ export async function findOverlap(
       (b) =>
         b.status === "confirmed" &&
         b.id !== args.ignoreBookingId &&
+        !(args.seatmateOf && b.meeting_type_id === args.seatmateOf && b.starts_at === args.startsAt) &&
         b.ends_at + buffer > args.startsAt &&
         b.starts_at - buffer < args.endsAt,
     ) ?? null
   );
+}
+
+/**
+ * How many seats of one group meeting are taken at one instant.
+ *
+ * Counted from the bookings themselves rather than held in a seat table: a
+ * cancellation frees a seat by existing less, and there is no second number to
+ * drift out of step with the first. The read is inside the same serializable
+ * mutation as the insert, which is what stops two guests taking the last seat.
+ */
+export async function seatsTaken(
+  ctx: QueryCtx | MutationCtx,
+  args: { hostId: string; meetingTypeId: string; startsAt: number },
+): Promise<number> {
+  const at = await ctx.db
+    .query("bookings")
+    .withIndex("by_host_starts", (q) => q.eq("host_id", args.hostId).eq("starts_at", args.startsAt))
+    .collect();
+
+  return at.filter((b) => b.status === "confirmed" && b.meeting_type_id === args.meetingTypeId).length;
 }
 
 /** Shared by the guest path and the host's own "schedule a meeting" screen. */
@@ -72,12 +106,36 @@ export async function insertBooking(
     answers?: { label: string; value: string }[];
     location?: string;
     locationDetail?: string;
+    /** Above 1 makes this a seat in a group meeting rather than a clash. */
+    capacity?: number;
   },
 ): Promise<Doc<"bookings">> {
   const endsAt = args.startsAt + args.durationMinutes * MINUTE;
+  const capacity = Math.max(1, args.capacity ?? 1);
+  const group = capacity > 1 && args.meetingTypeId !== null;
 
-  if (await findOverlap(ctx, { hostId: args.hostId, startsAt: args.startsAt, endsAt, bufferMinutes: args.bufferMinutes })) {
+  if (
+    await findOverlap(ctx, {
+      hostId: args.hostId,
+      startsAt: args.startsAt,
+      endsAt,
+      bufferMinutes: args.bufferMinutes,
+      seatmateOf: group ? args.meetingTypeId : null,
+    })
+  ) {
     fail("slot taken");
+  }
+
+  /* Read and insert in one serializable mutation, exactly as the overlap guard
+     is: two guests reaching for the last seat is the same race as two guests
+     reaching for the same slot, and it has the same answer. */
+  if (group) {
+    const taken = await seatsTaken(ctx, {
+      hostId: args.hostId,
+      meetingTypeId: args.meetingTypeId as string,
+      startsAt: args.startsAt,
+    });
+    if (taken >= capacity) fail("no seats left");
   }
 
   const guestEmail = args.guestEmail.trim().toLowerCase();

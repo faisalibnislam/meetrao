@@ -126,6 +126,15 @@ export default defineSchema({
     location: v.string(),
     /** The number to call, the address, or whatever "custom" means here. */
     location_detail: v.optional(v.string()),
+    /**
+     * How many guests may take the same slot. Absent or 1 is the one-to-one
+     * meeting this product started as; above 1 makes it a class, a workshop or
+     * an office hour, where several bookings share one time.
+     *
+     * The seats are counted from the bookings themselves — there is no seat
+     * table — so a cancellation frees one by existing less.
+     */
+    capacity: v.optional(v.number()),
     is_active: v.boolean(),
     /** null = the host's default schedule. See migration 0010. */
     schedule_id: nullableString,

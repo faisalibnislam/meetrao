@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
     })) as MovedRow;
   } catch (cause) {
     const message = convexMessage(cause, "That meeting could not be moved.");
-    if (/slot taken|outside availability|minimum notice|booking window|already at that time/i.test(message)) {
+    if (/slot taken|no seats left|outside availability|minimum notice|booking window|already at that time/i.test(message)) {
       return NextResponse.json({ error: "slot-taken" }, { status: 409 });
     }
     if (/unknown booking|unknown host/i.test(message)) {

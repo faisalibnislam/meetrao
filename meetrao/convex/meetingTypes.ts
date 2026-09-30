@@ -57,6 +57,21 @@ const MAX_QUESTIONS = 5;
  * the room yet, and the guest is told "details to follow" rather than being
  * refused a booking.
  */
+/**
+ * Seats, 1 to 100.
+ *
+ * One is the one-to-one meeting and the default. A hundred is not a technical
+ * limit — it is the point past which a booking page is the wrong tool and a
+ * webinar platform is the right one.
+ */
+const MAX_CAPACITY = 100;
+
+function validCapacity(value: number): number {
+  if (!Number.isInteger(value) || value < 1) fail("Seats must be a whole number, 1 or more.");
+  if (value > MAX_CAPACITY) fail(`A meeting can hold at most ${MAX_CAPACITY} guests.`);
+  return value;
+}
+
 function validLocation(kind: string, detail: string): { location: string; location_detail: string } {
   const location = isLocationKind(kind) ? kind : "google_meet";
   const trimmed = detail.trim().slice(0, 200);
@@ -87,6 +102,7 @@ export const create = mutation({
     duration_minutes: v.number(), buffer_minutes: v.optional(v.number()),
     minimum_notice_minutes: v.optional(v.number()), booking_window_days: v.optional(v.number()),
     location: v.optional(v.string()), location_detail: v.optional(v.string()),
+    capacity: v.optional(v.number()),
     schedule_id: v.optional(v.union(v.string(), v.null())),
     questions: v.optional(
       v.array(
@@ -120,6 +136,7 @@ export const create = mutation({
     await ctx.db.insert("meeting_types", {
       id, user_id: me.id, description: a.description ?? "",
       ...validLocation(a.location ?? "google_meet", a.location_detail ?? ""),
+      capacity: validCapacity(a.capacity ?? 1),
       is_active: true,
       questions: validQuestions(a.questions ?? []),
       schedule_id: a.schedule_id ?? null, created_at: now, updated_at: now, ...row,
@@ -169,6 +186,8 @@ export const update = mutation({
       patch.location = fixed.location;
       patch.location_detail = fixed.location_detail;
     }
+
+    if (patch.capacity !== undefined) patch.capacity = validCapacity(patch.capacity as number);
 
     if (patch.questions !== undefined) {
       patch.questions = validQuestions(patch.questions as { id: string; label: string; kind: "short" | "long"; required: boolean }[]);

@@ -272,3 +272,24 @@ export const resetRsvpFixture = internalMutation({
     return true;
   },
 });
+
+/** Sets a meeting's capacity, and reports what it was. A group booking page
+ *  cannot be exercised without a meeting that has seats. */
+export const seedCapacityFixture = internalMutation({
+  args: { username: v.string(), slug: v.string(), capacity: v.number() },
+  handler: async (ctx, a) => {
+    const host = await ctx.db
+      .query("profiles")
+      .withIndex("by_username_lower", (q) => q.eq("username_lower", a.username.trim().toLowerCase()))
+      .unique();
+    if (!host) return { ok: false as const, reason: "no such host" };
+    const meeting = await ctx.db
+      .query("meeting_types")
+      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
+      .unique();
+    if (!meeting) return { ok: false as const, reason: "no such meeting" };
+    const was = meeting.capacity ?? 1;
+    await ctx.db.patch(meeting._id, { capacity: a.capacity, updated_at: Date.now() });
+    return { ok: true as const, was, meetingId: meeting.id };
+  },
+});

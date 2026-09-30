@@ -96,6 +96,7 @@ export const getMeetingAvailability = query({
         minimum_notice_minutes: meeting.minimum_notice_minutes, booking_window_days: meeting.booking_window_days,
         location: meeting.location,
         location_detail: meeting.location_detail ?? "",
+        capacity: meeting.capacity ?? 1,
         /* The booking form has to know what to ask. Labels only — a question
            is written to be read by the guest it is put to. */
         questions: meeting.questions ?? [],
@@ -177,7 +178,14 @@ export const busyForHost = query({
 
     return rows
       .filter((b) => b.status === "confirmed" && b.ends_at > from && b.starts_at < to)
-      .map((b) => ({ starts_at: new Date(b.starts_at).toISOString(), ends_at: new Date(b.ends_at).toISOString() }));
+      /* The meeting id travels with each interval so a group meeting's own
+         seats can be told apart from a clash. It is an id a guest could read
+         off their own booking page anyway, and it says nothing about who. */
+      .map((b) => ({
+        starts_at: new Date(b.starts_at).toISOString(),
+        ends_at: new Date(b.ends_at).toISOString(),
+        meeting_type_id: b.meeting_type_id,
+      }));
   },
 });
 
@@ -210,6 +218,39 @@ export const recordPageView = mutation({
       id, host_id: a.hostId, meeting_type_id: a.meetingTypeId, opened_at: Date.now(),
     });
     return id;
+  },
+});
+
+/**
+ * How many seats are taken at each instant of one group meeting.
+ *
+ * Public, and it says only how many — never who. A guest choosing a time is
+ * entitled to know that four of six seats are gone; they are not entitled to
+ * the names of the four.
+ */
+export const seatsForMeeting = query({
+  args: { meetingId: v.string(), from: v.number(), to: v.number() },
+  handler: async (ctx, a) => {
+    const meeting = await ctx.db.query("meeting_types").withIndex("by_uuid", (q) => q.eq("id", a.meetingId)).unique();
+    if (!meeting || !meeting.is_active || (meeting.capacity ?? 1) <= 1) return [];
+
+    // Clamped like busyForHost, and for the same reason: a public function
+    // must not be a way to walk a host's whole calendar.
+    const from = Math.max(a.from, Date.now() - DAY);
+    const to = Math.min(a.to, from + 90 * DAY);
+
+    const rows = await ctx.db
+      .query("bookings")
+      .withIndex("by_host_starts", (q) => q.eq("host_id", meeting.user_id).gte("starts_at", from).lte("starts_at", to))
+      .collect();
+
+    const counts = new Map<number, number>();
+    for (const b of rows) {
+      if (b.status !== "confirmed" || b.meeting_type_id !== meeting.id) continue;
+      counts.set(b.starts_at, (counts.get(b.starts_at) ?? 0) + 1);
+    }
+
+    return [...counts].map(([startsAt, taken]) => ({ starts_at: startsAt, taken }));
   },
 });
 
@@ -324,6 +365,7 @@ export const createBooking = mutation({
       answers,
       location: meeting.location,
       locationDetail: meeting.location_detail ?? "",
+      capacity: meeting.capacity ?? 1,
     });
 
     return {

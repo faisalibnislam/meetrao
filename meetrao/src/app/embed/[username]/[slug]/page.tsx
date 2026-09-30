@@ -7,6 +7,7 @@ import {
   getBusy,
   getMeetingAvailability,
   getMeetingOverrides,
+  getSeatMap,
   getPublicHost,
   getPublicMeetings,
 } from "@/lib/data/public-booking";
@@ -61,7 +62,18 @@ export default async function EmbedPage({
     host.id,
     new Date(Date.UTC(year, month - 1, 1) - DAY),
     new Date(Date.UTC(year, month, 1) + DAY),
+    // A workshop's own seats are not conflicts with themselves.
+    meeting.capacity > 1 ? meeting.id : undefined,
   );
+
+  const seats =
+    meeting.capacity > 1
+      ? await getSeatMap(
+          meeting.id,
+          new Date(Date.UTC(year, month - 1, 1) - DAY),
+          new Date(Date.UTC(year, month, 1) + DAY),
+        )
+      : {};
 
   const shared = {
     guestTimezone: host.timezone,
@@ -79,9 +91,10 @@ export default async function EmbedPage({
     .filter((d) => d >= day)
     .sort((a, b) => a - b)[0];
 
-  const times = firstOpen
-    ? computeSlots({ ...shared, date: { year, month, day: firstOpen } }).map((d) => d.toISOString())
-    : [];
+  const times = (firstOpen ? computeSlots({ ...shared, date: { year, month, day: firstOpen } }) : [])
+    .map((d) => d.toISOString())
+    // A full slot is not on offer, however free the host's calendar looks.
+    .filter((iso) => meeting.capacity <= 1 || (seats[iso] ?? 0) < meeting.capacity);
 
   // The widget counts as an opening, the same as the hosted page: "Avg. reply
   // time" measures opened → booked, and a booking with no opening skews it.
@@ -107,6 +120,8 @@ export default async function EmbedPage({
         questions={meeting.questions}
         location={meeting.location}
         locationDetail={meeting.locationDetail}
+        capacity={meeting.capacity}
+        seats={seats}
         initial={{ year, month, openDates, day: firstOpen ?? null, times, timezone: host.timezone }}
         pageViewId={typeof pageViewId === "string" ? pageViewId : null}
       />

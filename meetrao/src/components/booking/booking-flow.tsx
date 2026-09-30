@@ -56,6 +56,10 @@ export type FlowProps = {
   /** How the meeting happens, and its detail: a number, an address, a note. */
   location?: string;
   locationDetail?: string;
+  /** Above 1 makes each time a seat several guests can take. */
+  capacity?: number;
+  /** Seats already taken, keyed by the slot's ISO instant. */
+  seats?: Record<string, number>;
   pageViewId: string | null;
   /** Present when this is an existing booking being moved, not a new one. */
   move?: { reference: string; currentStart: string };
@@ -76,6 +80,7 @@ export function BookingFlow(props: FlowProps) {
   const [selected, setSelected] = useState<PlainDate | null>(
     props.initial.day ? { year: props.initial.year, month: props.initial.month, day: props.initial.day } : null,
   );
+  const [seats, setSeats] = useState<Record<string, number>>(props.seats ?? {});
   const [slotState, setSlotState] = useState<SlotState>({
     openDates: new Set(props.initial.openDates),
     times: props.initial.times,
@@ -111,9 +116,14 @@ export function BookingFlow(props: FlowProps) {
 
         const response = await fetch(`/api/slots?${params}`, { cache: "no-store" });
         if (!response.ok) throw new Error("slots");
-        const json = (await response.json()) as { openDates: string[]; times: string[] };
+        const json = (await response.json()) as {
+          openDates: string[];
+          times: string[];
+          seats?: Record<string, number>;
+        };
         if (mine !== ticket.current) return;
         setSlotState({ openDates: new Set(json.openDates), times: json.times });
+        if (json.seats) setSeats(json.seats);
       } catch {
         if (mine === ticket.current) setSlotState({ openDates: new Set(), times: [] });
       } finally {
@@ -265,6 +275,8 @@ export function BookingFlow(props: FlowProps) {
         : props.location === "custom"
           ? props.locationDetail || "Details to follow"
           : "Google Meet";
+
+  const capacity = props.capacity ?? 1;
 
   const chosenStart = chosen ? new Date(chosen) : null;
   const chosenEnd = chosenStart ? new Date(chosenStart.getTime() + props.durationMinutes * 60_000) : null;
@@ -553,6 +565,12 @@ export function BookingFlow(props: FlowProps) {
               <Icon name="clock" size={13} className="w-[15px] flex-none text-ink-3" />
               <span className="text-[13px] text-ink">{props.durationMinutes} minutes</span>
             </div>
+            {capacity > 1 ? (
+              <div className="flex items-center gap-[10px]">
+                <Icon name="users" size={13} className="w-[15px] flex-none text-ink-3" />
+                <span className="text-[13px] text-ink">Up to {capacity} guests together</span>
+              </div>
+            ) : null}
             <div className="flex items-start gap-[10px]">
               <Icon
                 name={props.location === "in_person" ? "globe" : props.location === "phone" ? "user" : "video"}
@@ -661,6 +679,7 @@ export function BookingFlow(props: FlowProps) {
               <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-[6px]">
                 {slotState.times.map((iso) => {
                   const isChosen = chosen === iso;
+                  const left = capacity > 1 ? capacity - (seats[iso] ?? 0) : null;
                   return (
                     <button
                       key={iso}
@@ -671,7 +690,8 @@ export function BookingFlow(props: FlowProps) {
                         setStep("details");
                       }}
                       className={cx(
-                        "flex h-[38px] items-center justify-center rounded-[6px] border px-[10px] font-sans text-[13px] font-medium",
+                        "flex items-center justify-center rounded-[6px] border px-[10px] font-sans text-[13px] font-medium",
+                        left === null ? "h-[38px]" : "h-[44px] flex-col gap-[1px]",
                         "cursor-pointer transition-[background-color,border-color] duration-[120ms]",
                         isChosen
                           ? "border-accent bg-accent font-semibold text-white hover:bg-accent-2"
@@ -679,6 +699,14 @@ export function BookingFlow(props: FlowProps) {
                       )}
                     >
                       {formatTime(new Date(iso), timezone)}
+                      {/* Only when it is nearly gone. "6 seats left" on an
+                          empty workshop is noise; "1 seat left" is the reason
+                          somebody books now. */}
+                      {left !== null && left <= 3 ? (
+                        <span className={cx("text-[10.5px] font-medium", isChosen ? "text-white/80" : "text-ink-3")}>
+                          {left} left
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}

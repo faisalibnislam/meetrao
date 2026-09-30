@@ -27,6 +27,8 @@ export type MeetingInput = {
   /** "google_meet" · "phone" · "in_person" · "custom". */
   location?: string;
   locationDetail?: string;
+  /** 1 is one-to-one; above that, several guests share each slot. */
+  capacity?: number;
 };
 
 /** The design's number, and a kindness: a booking form asking eight questions
@@ -53,6 +55,10 @@ function invalid(input: MeetingInput): string | null {
   }
   if (new Set(questions.map((q) => q.id)).size !== questions.length) return "Two questions share an id.";
 
+  const capacity = input.capacity ?? 1;
+  if (!Number.isInteger(capacity) || capacity < 1) return "Seats must be a whole number, 1 or more.";
+  if (capacity > 100) return "A meeting can hold at most 100 guests.";
+
   if (input.location && !isLocationKind(input.location)) return "Pick one of the offered locations.";
   if ((input.locationDetail ?? "").length > 200) return "Keep the location under 200 characters.";
   return null;
@@ -73,6 +79,7 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
     minimum_notice_minutes: input.notice,
     booking_window_days: input.window,
     is_active: input.active,
+    capacity: input.capacity ?? 1,
     location: input.location ?? "google_meet",
     location_detail: (input.locationDetail ?? "").trim(),
     questions: (input.questions ?? [])

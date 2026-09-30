@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { bookableDatesInMonth, computeSlots, dateKey, type PlainDate } from "@/lib/booking/slots";
-import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getSeatMap, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 
 /* The slot query the booking page calls. Public, because the guest has no
    session — and read-only, so it exposes availability and nothing else about
@@ -37,7 +37,13 @@ export async function GET(request: NextRequest) {
   // host-local days is still covered.
   const from = new Date(Date.UTC(year, month - 1, 1) - DAY);
   const to = new Date(Date.UTC(year, month, 1) + DAY);
-  const { busy, calendarChecked } = await getBusy(host.id, from, to);
+  const { busy, calendarChecked } = await getBusy(
+    host.id,
+    from,
+    to,
+    meeting.capacity > 1 ? meeting.id : undefined,
+  );
+  const seats = meeting.capacity > 1 ? await getSeatMap(meeting.id, from, to) : {};
 
   const shared = {
     guestTimezone: timezone,
@@ -51,12 +57,13 @@ export async function GET(request: NextRequest) {
 
   const openDates = [...bookableDatesInMonth({ ...shared, year, month })];
 
-  const times = day
-    ? computeSlots({ ...shared, date: { year, month, day } as PlainDate }).map((d) => d.toISOString())
-    : [];
+  const times = (day ? computeSlots({ ...shared, date: { year, month, day } as PlainDate }) : [])
+    .map((d) => d.toISOString())
+    // A full slot is not on offer, however free the host's calendar looks.
+    .filter((iso) => meeting.capacity <= 1 || (seats[iso] ?? 0) < meeting.capacity);
 
   return NextResponse.json(
-    { openDates, times, selected: day ? dateKey({ year, month, day }) : null, calendarChecked },
+    { openDates, times, seats, selected: day ? dateKey({ year, month, day }) : null, calendarChecked },
     { headers: { "Cache-Control": "no-store" } },
   );
 }
