@@ -6,6 +6,7 @@ import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/panels";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { convexServer } from "@/lib/convex/server";
+import { siteUrl } from "@/lib/env";
 import { api } from "@/convex/_generated/api";
 import { bookingLink } from "@/lib/username";
 import type { MeetingType } from "@/lib/types";
@@ -47,7 +48,7 @@ export default async function MeetingsPage() {
       }
     >
       {rows.length ? (
-        <MeetingsTable meetings={rows} />
+        <MeetingsTable meetings={rows} siteUrl={siteUrl()} username={profile.username} />
       ) : (
         <EmptyState
           title="No meetings yet"
