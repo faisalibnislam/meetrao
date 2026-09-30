@@ -1,4 +1,6 @@
-import { internalMutation } from "./_generated/server";
+import { internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { hashApiKey, keyPrefix, newApiKey, newWebhookSecret } from "./lib/apiAuth";
 import { v } from "convex/values";
 
 /**
@@ -340,6 +342,71 @@ export const purgeTeamFixture = internalMutation({
       await ctx.db.delete(row._id);
     }
     await ctx.db.delete(team._id);
+    return true;
+  },
+});
+
+/** A key for a named host, returned once, and its removal. The API cannot be
+ *  exercised without a real key, and a key cannot be read back afterwards. */
+export const seedApiKeyFixture = internalAction({
+  args: { username: v.string() },
+  handler: async (ctx, a): Promise<{ ok: boolean; key?: string; id?: string; reason?: string }> => {
+    const userId: string | null = await ctx.runQuery(internal.testCleanup.hostIdFor, { username: a.username });
+    if (!userId) return { ok: false, reason: "no such host" };
+
+    const key = newApiKey();
+    const id: string = await ctx.runMutation(internal.apiKeys.store, {
+      userId,
+      name: "verification fixture",
+      prefix: keyPrefix(key),
+      hash: await hashApiKey(key),
+    });
+    return { ok: true, key, id };
+  },
+});
+
+export const hostIdFor = internalQuery({
+  args: { username: v.string() },
+  handler: async (ctx, a) => {
+    const p = await ctx.db
+      .query("profiles")
+      .withIndex("by_username_lower", (q) => q.eq("username_lower", a.username.trim().toLowerCase()))
+      .unique();
+    return p?.id ?? null;
+  },
+});
+
+/** A webhook endpoint for a named host, so a delivery can be watched. */
+export const seedWebhookFixture = internalMutation({
+  args: { username: v.string(), url: v.string() },
+  handler: async (ctx, a) => {
+    const host = await ctx.db
+      .query("profiles")
+      .withIndex("by_username_lower", (q) => q.eq("username_lower", a.username.trim().toLowerCase()))
+      .unique();
+    if (!host) return { ok: false as const, reason: "no such host" };
+
+    const id = crypto.randomUUID();
+    const secret = newWebhookSecret();
+    await ctx.db.insert("webhooks", {
+      id, user_id: host.id, url: a.url, secret, is_active: true,
+      last_status: null, last_error: null, last_attempt_at: null, created_at: Date.now(),
+    });
+    return { ok: true as const, id, secret };
+  },
+});
+
+export const purgeDeveloperFixtures = internalMutation({
+  args: { keyId: v.optional(v.string()), webhookId: v.optional(v.string()) },
+  handler: async (ctx, a) => {
+    if (a.keyId) {
+      const k = await ctx.db.query("api_keys").withIndex("by_uuid", (q) => q.eq("id", a.keyId as string)).unique();
+      if (k) await ctx.db.delete(k._id);
+    }
+    if (a.webhookId) {
+      const w = await ctx.db.query("webhooks").withIndex("by_uuid", (q) => q.eq("id", a.webhookId as string)).unique();
+      if (w) await ctx.db.delete(w._id);
+    }
     return true;
   },
 });

@@ -1,5 +1,6 @@
 import type { MutationCtx } from "../_generated/server";
 import type { Doc } from "../_generated/dataModel";
+import { internal } from "../_generated/api";
 import { uuid } from "./ids";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -42,6 +43,42 @@ export function localWhen(atMs: number, timezone: string): string {
   return `${get("weekday")} ${get("day")} ${get("month")}, ${get("hour")}:${get("minute")} ${ampm}`;
 }
 
+/**
+ * Posts one booking event to the host's registered endpoints.
+ *
+ * Scheduled rather than awaited: a mutation cannot make a network call, and
+ * a booking must not wait on somebody's server to be written. runAfter(0)
+ * means "once this transaction commits", which is also the guarantee a
+ * receiver needs — it can call the API the moment it hears, and the booking
+ * will be there.
+ *
+ * Raised from the same place the notification is written, so a path that
+ * forgets one forgets both. A silent webhook nobody notices is worse than a
+ * missing notification somebody does.
+ */
+async function emit(ctx: MutationCtx, booking: Doc<"bookings">, event: string): Promise<void> {
+  await ctx.scheduler.runAfter(0, internal.webhooks.deliver, {
+    userId: booking.host_id,
+    event,
+    payload: JSON.stringify({
+      id: booking.id,
+      reference: booking.reference,
+      meeting_name: booking.meeting_name,
+      duration_minutes: booking.duration_minutes,
+      starts_at: new Date(booking.starts_at).toISOString(),
+      ends_at: new Date(booking.ends_at).toISOString(),
+      status: booking.status,
+      guest_name: booking.guest_name,
+      guest_email: booking.guest_email,
+      guest_timezone: booking.guest_timezone,
+      location: booking.location ?? "google_meet",
+      location_detail: booking.location_detail ?? "",
+      meet_url: booking.meet_url,
+      answers: booking.answers ?? [],
+    }),
+  });
+}
+
 /** public.notify_host. */
 export async function notifyHost(
   ctx: MutationCtx,
@@ -75,6 +112,10 @@ async function timezoneOf(ctx: MutationCtx, userId: string): Promise<string> {
 
 /** bookings_notify_created. Host-created bookings are not news to the host. */
 export async function notifyBookingCreated(ctx: MutationCtx, booking: Doc<"bookings">): Promise<void> {
+  /* The webhook fires for a host-created booking too, unlike the
+     notification: the host knows they made it, but an integration watching
+     the account does not. */
+  await emit(ctx, booking, "booking.created");
   if (booking.host_created) return;
   await notifyHost(ctx, {
     userId: booking.host_id,
@@ -101,6 +142,7 @@ export async function notifyBookingChanged(
   booking: Doc<"bookings">,
   args: { oldStartsAt: number; byHost: boolean },
 ): Promise<void> {
+  await emit(ctx, booking, "booking.changed");
   if (args.byHost) return;
   const zone = await timezoneOf(ctx, booking.host_id);
   await notifyHost(ctx, {
@@ -114,6 +156,7 @@ export async function notifyBookingChanged(
 
 /** bookings_notify_changed — fires on a status change to cancelled. */
 export async function notifyBookingCancelled(ctx: MutationCtx, booking: Doc<"bookings">): Promise<void> {
+  await emit(ctx, booking, "booking.cancelled");
   await notifyHost(ctx, {
     userId: booking.host_id,
     kind: "booking_cancelled",

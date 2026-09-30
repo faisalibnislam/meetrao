@@ -10,6 +10,7 @@ export const SETTINGS_TABS = [
   { key: "calendar", label: "Calendar" },
   { key: "booking", label: "Booking" },
   { key: "team", label: "Team" },
+  { key: "developer", label: "Developer" },
   { key: "notifications", label: "Notifications" },
   { key: "account", label: "Account" },
 ] as const;

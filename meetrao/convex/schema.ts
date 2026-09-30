@@ -431,6 +431,49 @@ export default defineSchema({
     updated_at: v.number(),
   }),
 
+  /* An API key, stored as a HASH and never again as itself.
+  
+     The plaintext is shown once, at creation, and cannot be recovered: a
+     leaked database should not be a leaked set of live credentials, and a
+     support screen that can print somebody's key is a support screen that can
+     be social-engineered. `prefix` is the first few characters, kept so a host
+     can tell two keys apart in a list.
+
+     unique: hash — enforced by the CSPRNG that makes the key. */
+  api_keys: defineTable({
+    id: v.string(),
+    user_id: v.string(),
+    name: v.string(),
+    prefix: v.string(),
+    hash: v.string(),
+    last_used_at: nullableNumber,
+    revoked_at: nullableNumber,
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_user", ["user_id"])
+    .index("by_hash", ["hash"]),
+
+  /* Where to POST when something happens to this host's bookings.
+  
+     The secret is readable by the owner, unlike an API key: a receiver has to
+     hold the same secret to verify the signature, and one that cannot be read
+     back is one that has to be rotated the first time somebody redeploys. */
+  webhooks: defineTable({
+    id: v.string(),
+    user_id: v.string(),
+    url: v.string(),
+    secret: v.string(),
+    is_active: v.boolean(),
+    /** The outcome of the last attempt, so a broken endpoint is visible. */
+    last_status: nullableNumber,
+    last_error: nullableString,
+    last_attempt_at: nullableNumber,
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_user", ["user_id"]),
+
   /* Fixed-window counters for the guest path. Postgres had nothing like this
      because nothing enforced a limit there either — `create_booking` was
      granted to `anon` and the publishable key ships to every browser, so the
