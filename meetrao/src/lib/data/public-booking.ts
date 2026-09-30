@@ -21,6 +21,8 @@ export type PublicHost = {
   jobTitle: string;
   timezone: string;
   avatarUrl: string | null;
+  /** Pro: the "Powered by Meetrao" badge is not shown on their pages. */
+  unbranded: boolean;
 };
 
 export type PublicMeeting = {
@@ -42,6 +44,7 @@ export type PublicMeeting = {
 type HostRow = {
   id: string;
   username: string;
+  unbranded?: boolean;
   full_name: string;
   job_title: string;
   timezone: string;
@@ -56,6 +59,7 @@ function toHost(row: HostRow): PublicHost {
     jobTitle: row.job_title,
     timezone: row.timezone,
     avatarUrl: row.avatar_url ?? null,
+    unbranded: row.unbranded ?? false,
   };
 }
 

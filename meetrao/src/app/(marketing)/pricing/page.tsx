@@ -8,16 +8,17 @@ export const metadata: Metadata = {
   /* "Pricing" alone would render as "Pricing · Meetrao", which says nothing to
      somebody who has not heard of Meetrao. The query is "free scheduling app
      pricing" and the answer worth putting in a title is the number. */
-  title: "Pricing — free, no card required",
+  title: "Pricing — free to book, $10 a year for Pro",
   description:
-    "Meetrao is free: one tier, every feature, no credit card and no trial clock. What is " +
-    "included, what it cannot do, and why it costs nothing.",
+    "Taking bookings is free — no card, no trial clock, no booking limit. Pro is $10 a year for a " +
+    "custom domain, your own branding and team links.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     images: [OG_IMAGE],
     type: "website",
-    title: "Meetrao pricing — free, no card required",
-    description: "One tier, every feature, no credit card. What is included, what it cannot do, and why.",
+    title: "Meetrao pricing — free to book, $10 a year for Pro",
+    description:
+      "Taking bookings is free with no card. Pro adds a custom domain, your own branding, team links and the API.",
     url: "/pricing",
   },
 };

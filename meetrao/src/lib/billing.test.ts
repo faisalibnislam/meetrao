@@ -1,0 +1,152 @@
+import { createHmac } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
+import { describe, expect, it } from "vitest";
+import { isPro, planOf } from "@/convex/lib/plan";
+import { verifyPolarSignature } from "@/lib/polar";
+
+const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), "utf8");
+
+const HOUR = 3_600_000;
+
+describe("who is on Pro", () => {
+  it("is nobody, by default", () => {
+    expect(planOf({ plan: undefined, plan_until: undefined })).toBe("free");
+    expect(planOf({ plan: "free", plan_until: null })).toBe("free");
+  });
+
+  it("is anybody Polar says is paying", () => {
+    expect(planOf({ plan: "pro", plan_until: Date.now() + HOUR })).toBe("pro");
+  });
+
+  /* A subscription with no end date is a live one. Treating absent as expired
+     would turn Pro off for everybody the moment a payload shape changed. */
+  it("stays on when no end date is known", () => {
+    expect(isPro({ plan: "pro", plan_until: null })).toBe(true);
+    expect(isPro({ plan: "pro", plan_until: undefined })).toBe(true);
+  });
+
+  /* Somebody who cancels on day two of a year they paid for has not stopped
+     being a customer — they keep Pro until the period runs out. */
+  it("survives a cancellation until the period ends", () => {
+    expect(isPro({ plan: "pro", plan_until: Date.now() + HOUR })).toBe(true);
+    expect(isPro({ plan: "pro", plan_until: Date.now() - HOUR })).toBe(false);
+  });
+
+  it("cannot be granted by a value that is not the word pro", () => {
+    for (const value of ["PRO", "paid", "true", "", "premium"]) {
+      expect(planOf({ plan: value, plan_until: null }), `${value} bought Pro`).toBe("free");
+    }
+  });
+});
+
+describe("Polar deliveries", () => {
+  const SECRET = "whsec_" + Buffer.from("topsecret").toString("base64");
+  const BODY = JSON.stringify({ type: "subscription.active", data: { id: "sub_1", status: "active" } });
+  const ID = "msg_1";
+  const NOW = Date.parse("2026-09-30T12:00:00.000Z");
+  const TS = String(Math.floor(NOW / 1000));
+
+  function sign(secret: Buffer, body = BODY, id = ID, ts = TS): string {
+    return "v1," + createHmac("sha256", secret).update(`${id}.${ts}.${body}`).digest("base64");
+  }
+
+  const standardKey = Buffer.from(SECRET.replace(/^whsec_/, ""), "base64");
+  const legacyKey = Buffer.from(SECRET, "utf8");
+
+  it("accepts a signature under the current scheme", () => {
+    const signature = sign(standardKey);
+    expect(verifyPolarSignature({ secret: SECRET, body: BODY, headers: { id: ID, timestamp: TS, signature }, now: NOW })).toBe(true);
+  });
+
+  /* Polar changed scheme in September 2026 and their own SDK tries both keys.
+     A webhook that verifies only under the scheme you guessed fails silently
+     on the day the secret is rotated. */
+  it("accepts a signature under the older scheme too", () => {
+    const signature = sign(legacyKey);
+    expect(verifyPolarSignature({ secret: SECRET, body: BODY, headers: { id: ID, timestamp: TS, signature }, now: NOW })).toBe(true);
+  });
+
+  it("refuses a body that was altered after signing", () => {
+    const signature = sign(standardKey);
+    const tampered = BODY.replace("sub_1", "sub_2");
+    expect(verifyPolarSignature({ secret: SECRET, body: tampered, headers: { id: ID, timestamp: TS, signature }, now: NOW })).toBe(false);
+  });
+
+  it("refuses somebody else's secret", () => {
+    const signature = sign(Buffer.from("not-the-secret"));
+    expect(verifyPolarSignature({ secret: SECRET, body: BODY, headers: { id: ID, timestamp: TS, signature }, now: NOW })).toBe(false);
+  });
+
+  /* Without a freshness window a captured delivery replays forever — which is
+     the entire reason the timestamp is inside the signed string. */
+  it("refuses a delivery replayed hours later", () => {
+    const signature = sign(standardKey);
+    const later = NOW + 6 * HOUR;
+    expect(verifyPolarSignature({ secret: SECRET, body: BODY, headers: { id: ID, timestamp: TS, signature }, now: later })).toBe(false);
+  });
+
+  it("refuses when a header is missing", () => {
+    const signature = sign(standardKey);
+    expect(verifyPolarSignature({ secret: SECRET, body: BODY, headers: { id: null, timestamp: TS, signature }, now: NOW })).toBe(false);
+    expect(verifyPolarSignature({ secret: SECRET, body: BODY, headers: { id: ID, timestamp: null, signature }, now: NOW })).toBe(false);
+    expect(verifyPolarSignature({ secret: SECRET, body: BODY, headers: { id: ID, timestamp: TS, signature: null }, now: NOW })).toBe(false);
+  });
+});
+
+describe("only the webhook grants Pro", () => {
+  const billing = read("convex/billing.ts");
+  const route = read("src/app/api/polar/webhook/route.ts");
+
+  it("guards the guard", () => {
+    expect(billing).toContain("applyPolarSubscription");
+  });
+
+  /* A plan that any signed-in mutation can set is a plan anybody can set by
+     finding that mutation. One writer, and it is behind a signature check. */
+  it("has exactly one writer of the plan field", () => {
+    const writers = globWrites();
+    expect(writers, `plan is written in ${writers.join(", ")}`).toEqual(["convex/billing.ts"]);
+  });
+
+  it("verifies before it parses", () => {
+    // A signature over a re-serialised object is a signature over something
+    // else, so the raw text is what gets checked.
+    expect(route.indexOf("verifyPolarSignature")).toBeLessThan(route.indexOf("JSON.parse"));
+    expect(route).toContain("await request.text()");
+  });
+
+  it("refuses everything when no secret is configured", () => {
+    expect(route).toMatch(/if \(!secret\) return NextResponse\.json\([^)]*503/);
+  });
+
+  it("keeps Pro on while a payment is being retried", () => {
+    // Polar retries a failed renewal for days. Turning the product off
+    // mid-retry punishes an expired card rather than a departure.
+    expect(billing).toMatch(/PAID = \[.*past_due.*\]/);
+  });
+});
+
+/**
+ * Every file that writes a plan OTHER than "free", so a second writer shows up
+ * here rather than in production.
+ *
+ * Line by line rather than one regex over the file: `\s*` backtracks, so
+ * `plan:\s*(?!"free")` matches `plan: "free"` by consuming nothing and
+ * testing the space. Found by this test passing when it should not have.
+ */
+function globWrites(): string[] {
+  const files = ["convex/billing.ts", "convex/profiles.ts", "convex/admin.ts", "convex/teams.ts", "convex/apiKeys.ts"];
+  return files.filter((f) =>
+    read(f)
+      .split("\n")
+      .some((line) => {
+        const match = /\bplan:\s*(.+)$/.exec(line.trim());
+        if (!match) return false;
+        const value = match[1].trim();
+        // Creating a profile as free, and the schema's own declaration, are
+        // not grants.
+        return !value.startsWith('"free"') && !value.startsWith("v.");
+      }),
+  );
+}

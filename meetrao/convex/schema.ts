@@ -94,8 +94,38 @@ export default defineSchema({
     /** Optional: every profile written before reminders existed has none, and
         absent reads as ON — see convex/reminders.ts. */
     notify_reminders: v.optional(v.boolean()),
+    /**
+     * Minutes before a meeting that each reminder goes out — the long one and
+     * the short one. Absent is the free default, 1440 and 60.
+     *
+     * Two slots rather than a list, because the two claim columns on
+     * `bookings` are what make a reminder send once; a list would need a row
+     * per lead and a migration to match.
+     */
+    reminder_long_minutes: v.optional(v.number()),
+    reminder_short_minutes: v.optional(v.number()),
     notify_daily_agenda: v.boolean(),
     notify_product_news: v.boolean(),
+    /**
+     * "free" or "pro". Absent reads as free — every profile written before
+     * plans existed has none.
+     *
+     * Written ONLY by the Polar webhook. Nothing in the app sets it: a plan
+     * that can be set from a screen is one that can be set by anybody who
+     * finds the screen, and the payment processor is the only thing that
+     * knows whether money changed hands.
+     */
+    plan: v.optional(v.string()),
+    /* All optional, like every field added to a table that already holds
+       rows: a profile written before plans existed has none of them, and
+       absent has to be a legal state or the push is refused. */
+    /** When the current period ends. Pro survives to here after a cancel. */
+    plan_until: v.optional(nullableNumber),
+    polar_customer_id: v.optional(nullableString),
+    polar_subscription_id: v.optional(nullableString),
+    /** Their own domain for the booking page, once DNS points at us. */
+    custom_domain: v.optional(nullableString),
+    custom_domain_verified_at: v.optional(nullableNumber),
     onboarding_completed_at: nullableNumber,
     welcomed_at: nullableNumber,
     created_at: v.number(),
@@ -103,6 +133,8 @@ export default defineSchema({
   })
     .index("by_uuid", ["id"])
     .index("by_username_lower", ["username_lower"])
+    .index("by_custom_domain", ["custom_domain"])
+    .index("by_polar_customer", ["polar_customer_id"])
     .index("by_email", ["email"]),
 
   /* A team is a booking link several hosts answer, in turn.

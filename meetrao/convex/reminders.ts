@@ -3,7 +3,7 @@ import { internal } from "./_generated/api";
 import { renderReminder } from "./lib/reminderEmail";
 import { required } from "./lib/emails";
 import { localWhen } from "./lib/effects";
-import { GRACE, dayPhrase, verdictFor } from "./lib/reminderWindow";
+import { DEFAULT_LEADS, GRACE, dayPhrase, verdictFor } from "./lib/reminderWindow";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Reminders: one the day before, one an hour before.
@@ -86,11 +86,19 @@ export const claimDue = internalMutation({
       const guestZone = b.guest_timezone || hostZone;
       const hostName = host.full_name || host.username;
 
+      /* The host's own lead times, which Pro can change. Absent is the free
+         default, and a free account that was Pro keeps whatever it chose —
+         harmless, and better than silently moving somebody's reminders. */
+      const leads = {
+        long: host.reminder_long_minutes ?? DEFAULT_LEADS.long,
+        short: host.reminder_short_minutes ?? DEFAULT_LEADS.short,
+      };
+
       for (const lead of ["24h", "1h"] as const) {
         const claimed = lead === "24h" ? b.reminded_24h_at : b.reminded_1h_at;
         if (claimed) continue;
 
-        const verdict = verdictFor(lead, b.starts_at, now);
+        const verdict = verdictFor(lead, b.starts_at, now, leads);
         if (verdict === "wait") continue;
 
         // Claimed either way: "mark" exists so a moment that has passed is not

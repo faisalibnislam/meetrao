@@ -98,6 +98,32 @@ const serverSchema = z.object({
    * consent for nothing is a dark pattern in the other direction.
    */
   NEXT_PUBLIC_GA_MEASUREMENT_ID: optional(""),
+
+  /* ── Polar ────────────────────────────────────────────────────────────────
+     Billing. All optional, and the product is a working free tier without
+     them: an unset key means the upgrade button says billing is not
+     configured rather than the whole app refusing to boot. What must never
+     be optional is the webhook secret's USE — an unsigned delivery is
+     rejected whether or not a secret is set, in src/app/api/polar/webhook. */
+
+  /** polar_oat_… or polar_pat_…, with checkouts:write and customer_sessions:write. */
+  POLAR_ACCESS_TOKEN: optional(""),
+  /** The signing secret from the webhook endpoint, whsec_… */
+  POLAR_WEBHOOK_SECRET: optional(""),
+  /** Product ids, one per cadence. */
+  POLAR_PRODUCT_MONTHLY: optional(""),
+  POLAR_PRODUCT_YEARLY: optional(""),
+  /** "sandbox" while testing, anything else for production. */
+  POLAR_SERVER: optional("production"),
+
+  /* ── Vercel, for custom domains ───────────────────────────────────────────
+     A token with domain scope, and the project the domains attach to. Unset,
+     the custom-domain screen says the feature is unavailable rather than
+     failing: everything else works without it. */
+  VERCEL_API_TOKEN: optional(""),
+  VERCEL_PROJECT_ID: optional(""),
+  /** Only when the project lives under a team rather than a personal account. */
+  VERCEL_TEAM_ID: optional(""),
 });
 
 export type Env = z.infer<typeof serverSchema>;

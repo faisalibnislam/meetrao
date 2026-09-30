@@ -25,9 +25,26 @@ export type Lead = "24h" | "1h";
  */
 export type Verdict = "send" | "mark" | "wait";
 
-export function verdictFor(lead: Lead, startsAt: number, now: number): Verdict {
+/** The free defaults, and what Pro starts from. */
+export const DEFAULT_LEADS = { long: 24 * 60, short: 60 } as const;
+
+/** What a host may choose, in minutes. Anything else is refused. */
+export const LONG_CHOICES = [2880, 1440, 720, 240] as const;
+export const SHORT_CHOICES = [120, 60, 30, 15] as const;
+
+export function verdictFor(
+  lead: Lead,
+  startsAt: number,
+  now: number,
+  /* The host's own lead times. Defaulted here rather than at every call site:
+     a sweep that forgets them reminds everybody on the free schedule, which
+     looks like the feature silently not working. */
+  leads: { long: number; short: number } = { ...DEFAULT_LEADS },
+): Verdict {
   const until = startsAt - now;
-  const window = lead === "24h" ? DAY : HOUR;
+  const longMs = leads.long * MINUTE;
+  const shortMs = leads.short * MINUTE;
+  const window = lead === "24h" ? longMs : shortMs;
 
   if (until > window) return "wait";
 
@@ -37,10 +54,10 @@ export function verdictFor(lead: Lead, startsAt: number, now: number): Verdict {
     return until < -GRACE ? "mark" : "send";
   }
 
-  /* The day-before reminder inside the last hour would arrive beside the
-     one-hour reminder and say "tomorrow" about something starting now. That
-     is the case a booking made this morning for this afternoon hits. */
-  return until < HOUR ? "mark" : "send";
+  /* The long reminder inside the short one's window would arrive beside it and
+     describe a meeting that is about to start as if it were far off. That is
+     the case a booking made this morning for this afternoon hits. */
+  return until < shortMs ? "mark" : "send";
 }
 
 /**

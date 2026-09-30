@@ -4,6 +4,8 @@ import { v } from "convex/values";
 import { optionalProfile, requireProfile, AuthError } from "./lib/auth";
 import { profileOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
+import { requirePro } from "./lib/plan";
+import { LONG_CHOICES, SHORT_CHOICES } from "./lib/reminderWindow";
 import { purgeAccount } from "./admin";
 import { supportedZoneOrNull } from "./lib/zones";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
@@ -111,6 +113,8 @@ export const updateOwn = mutation({
     notify_booking_changed: v.optional(v.boolean()),
     notify_booking_cancelled: v.optional(v.boolean()),
     notify_reminders: v.optional(v.boolean()),
+    reminder_long_minutes: v.optional(v.number()),
+    reminder_short_minutes: v.optional(v.number()),
     notify_daily_agenda: v.optional(v.boolean()),
     notify_product_news: v.optional(v.boolean()),
     onboarding_completed_at: v.optional(v.union(v.string(), v.null())),
@@ -122,6 +126,20 @@ export const updateOwn = mutation({
       if (val === undefined) continue;
       patch[k] = k === "onboarding_completed_at" && typeof val === "string" ? Date.parse(val) : val;
     }
+    /* Choosing when a reminder lands is Pro. The values are checked against
+       the offered lists as well: a number nobody was offered is one somebody
+       typed into a request. */
+    if (patch.reminder_long_minutes !== undefined || patch.reminder_short_minutes !== undefined) {
+      requirePro(me, "Choosing when reminders go out");
+      const long = patch.reminder_long_minutes as number | undefined;
+      const short = patch.reminder_short_minutes as number | undefined;
+      if (long !== undefined && !(LONG_CHOICES as readonly number[]).includes(long)) fail("Pick one of the offered times.");
+      if (short !== undefined && !(SHORT_CHOICES as readonly number[]).includes(short)) fail("Pick one of the offered times.");
+      if (long !== undefined && short !== undefined && short >= long) {
+        fail("The second reminder has to be closer to the meeting than the first.");
+      }
+    }
+
     // CHECK constraints from migration 0001, which no longer have a database.
     const dur = patch.default_duration_minutes as number | undefined;
     if (dur !== undefined && (dur < 5 || dur > 480)) fail("Duration must be 5–480 minutes.");
@@ -270,6 +288,13 @@ export async function createProfileForNewUser(
     notify_product_news: false,
     onboarding_completed_at: null,
     welcomed_at: null,
+    // Everyone starts free. Only the Polar webhook ever writes "pro".
+    plan: "free",
+    plan_until: null,
+    polar_customer_id: null,
+    polar_subscription_id: null,
+    custom_domain: null,
+    custom_domain_verified_at: null,
     created_at: now,
     updated_at: now,
   });

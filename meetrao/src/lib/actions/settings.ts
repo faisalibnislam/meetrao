@@ -150,3 +150,20 @@ export async function deleteOwnAccount(): Promise<SettingsResult> {
      would be swallowed by the form's error handling. */
   return {};
 }
+
+/**
+ * When the two reminders go out. Pro only, and the server says so — the
+ * screen disabling a menu is a convenience.
+ */
+export async function saveReminderTiming(input: { long: number; short: number }): Promise<SettingsResult> {
+  await requireSession();
+  const { error } = await onConvex((c) =>
+    c.mutation(api.profiles.updateOwn, {
+      reminder_long_minutes: input.long,
+      reminder_short_minutes: input.short,
+    }),
+  );
+  if (error) return { error };
+  revalidatePath("/settings/billing");
+  return {};
+}

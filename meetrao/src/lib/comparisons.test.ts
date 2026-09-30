@@ -39,12 +39,13 @@ describe("competitor pricing", () => {
   });
 
   /* A per-seat price is two numbers, not one, and which one you quote changes
-     the comparison by 20%. Any figure has to say which it is. */
+     the comparison by 20%. Any figure has to say which it is — and that now
+     includes Meetrao's own price, which is quoted per YEAR. */
   it.each(claims().filter((c) => /\$\d/.test(c.text)))(
     "$where states the billing basis alongside the price",
     ({ text }) => {
       expect(text.toLowerCase(), `"${text}" quotes a price with no billing basis`).toMatch(
-        /annual|monthly|a month|per month|\/month/,
+        /annual|monthly|a month|per month|\/month|a year|per year|yearly|\/year/,
       );
     },
   );
