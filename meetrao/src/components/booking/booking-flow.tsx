@@ -9,10 +9,11 @@ import { Icon } from "@/components/ui/icon";
 import { Callout } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { addDays, dateKey, type PlainDate } from "@/lib/booking/slots";
-import { formatMonth, formatPlainLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
+import { formatLongDate, formatMonth, formatPlainLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
 import { detectTimezone, timezoneLabel } from "@/lib/timezones";
 import { useClientValue } from "@/lib/use-client-value";
 import { cx } from "@/lib/cx";
+import type { BookingQuestion } from "@/lib/types";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The guest path: pick a date, pick a time, confirm details.
@@ -21,6 +22,12 @@ import { cx } from "@/lib/cx";
    phone, from an email link — so it renders complete from the server and then
    corrects itself to the guest's real timezone once the browser can say what
    that is.
+
+   `move` turns the same screen into the reschedule flow. The calendar, the
+   timezone correction, the slot re-fetching and the taken-slot recovery are
+   identical work; only the last step differs, because a guest moving a meeting
+   has already told us who they are. A second copy of this picker would be a
+   second place for a timezone bug to live.
    ───────────────────────────────────────────────────────────────────────────── */
 
 const WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -44,7 +51,21 @@ export type FlowProps = {
     times: string[];
     timezone: string;
   };
+  /** What this meeting asks, besides name, email and the note. */
+  questions?: BookingQuestion[];
+  /** How the meeting happens, and its detail: a number, an address, a note. */
+  location?: string;
+  locationDetail?: string;
+  /** Above 1 makes each time a seat several guests can take. */
+  capacity?: number;
+  /** Seats already taken, keyed by the slot's ISO instant. */
+  seats?: Record<string, number>;
   pageViewId: string | null;
+  /** Present when this is an existing booking being moved, not a new one. */
+  move?: { reference: string; currentStart: string };
+  /** Present when the link belongs to a TEAM, and the host is decided by the
+      rotation at booking time rather than being known now. */
+  teamSlug?: string;
 };
 
 type SlotState = { openDates: Set<string>; times: string[] };
@@ -62,6 +83,7 @@ export function BookingFlow(props: FlowProps) {
   const [selected, setSelected] = useState<PlainDate | null>(
     props.initial.day ? { year: props.initial.year, month: props.initial.month, day: props.initial.day } : null,
   );
+  const [seats, setSeats] = useState<Record<string, number>>(props.seats ?? {});
   const [slotState, setSlotState] = useState<SlotState>({
     openDates: new Set(props.initial.openDates),
     times: props.initial.times,
@@ -74,6 +96,7 @@ export function BookingFlow(props: FlowProps) {
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestNote, setGuestNote] = useState("");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [bookingError, setBookingError] = useState(false);
@@ -92,20 +115,26 @@ export function BookingFlow(props: FlowProps) {
           month: String(m),
           tz,
         });
+        if (props.teamSlug) params.set("team", props.teamSlug);
         if (day) params.set("day", String(day));
 
         const response = await fetch(`/api/slots?${params}`, { cache: "no-store" });
         if (!response.ok) throw new Error("slots");
-        const json = (await response.json()) as { openDates: string[]; times: string[] };
+        const json = (await response.json()) as {
+          openDates: string[];
+          times: string[];
+          seats?: Record<string, number>;
+        };
         if (mine !== ticket.current) return;
         setSlotState({ openDates: new Set(json.openDates), times: json.times });
+        if (json.seats) setSeats(json.seats);
       } catch {
         if (mine === ticket.current) setSlotState({ openDates: new Set(), times: [] });
       } finally {
         if (mine === ticket.current) setLoading(false);
       }
     },
-    [props.username, props.slug],
+    [props.username, props.slug, props.teamSlug],
   );
 
   // Slots were computed in the host's zone; re-fetch them in the guest's the
@@ -146,9 +175,46 @@ export function BookingFlow(props: FlowProps) {
     void load(year, month, day, timezone);
   }
 
+  async function move() {
+    const target = props.move;
+    if (!chosen || !target) return;
+
+    setSubmitting(true);
+    setBookingError(false);
+
+    try {
+      const response = await fetch("/api/bookings/reschedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reference: target.reference, start: chosen, guestTimezone: timezone }),
+      });
+
+      if (response.status === 409) {
+        setBookingError(true);
+        setSubmitting(false);
+        toast({ tone: "bad", title: "Could not move", text: "That time went while you were deciding." });
+        return;
+      }
+
+      const json = (await response.json()) as { reference?: string; error?: string };
+      if (!response.ok || !json.reference) {
+        setSubmitting(false);
+        toast({ tone: "bad", title: "Could not move", text: json.error ?? "Try again in a moment." });
+        return;
+      }
+
+      // The confirmation screen reads the new time, and says so on arrival.
+      router.push(`/booking/${json.reference}?moved=1`);
+    } catch {
+      setSubmitting(false);
+      toast({ tone: "bad", title: "Could not move", text: "Check your connection and try again." });
+    }
+  }
+
   async function submit() {
     if (!chosen) return;
-    if (!guestName.trim() || !guestEmail.includes("@")) {
+    const missing = (props.questions ?? []).filter((q) => q.required && !(answers[q.id] ?? "").trim());
+    if (!guestName.trim() || !guestEmail.includes("@") || missing.length) {
       setTouched(true);
       setBookingError(false);
       return;
@@ -162,12 +228,14 @@ export function BookingFlow(props: FlowProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          team: props.teamSlug,
           username: props.username,
           slug: props.slug,
           start: chosen,
           guestName,
           guestEmail,
           guestNote,
+          answers: (props.questions ?? []).map((q) => ({ id: q.id, value: answers[q.id] ?? "" })),
           guestTimezone: timezone,
           pageViewId: props.pageViewId ?? undefined,
         }),
@@ -200,8 +268,104 @@ export function BookingFlow(props: FlowProps) {
     }
   }
 
+  /* Before a booking exists there is no Meet link to name, so this reads as
+     the KIND — "Google Meet" — and the confirmation carries the actual link. */
+  const locationLine =
+    props.location === "phone"
+      ? props.locationDetail
+        ? `Phone — ${props.locationDetail}`
+        : "Phone call"
+      : props.location === "in_person"
+        ? props.locationDetail || "In person"
+        : props.location === "custom"
+          ? props.locationDetail || "Details to follow"
+          : "Google Meet";
+
+  const capacity = props.capacity ?? 1;
+
   const chosenStart = chosen ? new Date(chosen) : null;
   const chosenEnd = chosenStart ? new Date(chosenStart.getTime() + props.durationMinutes * 60_000) : null;
+
+  if (step === "details" && chosenStart && chosenEnd && selected && props.move) {
+    const was = new Date(props.move.currentStart);
+    return (
+      <div className="m-auto flex w-full max-w-[520px] flex-col gap-[14px]">
+        <div className="flex flex-col gap-[22px] rounded-[12px] border border-line bg-surface p-[30px] max-[820px]:p-[22px]">
+          <div className="flex flex-col gap-[8px]">
+            <h1 className="m-0 font-serif text-[28px] leading-[1.1] font-normal tracking-[-0.01em] text-ink">
+              Move this meeting?
+            </h1>
+            <p className="m-0 text-[13.5px] leading-[1.55] text-ink-2">
+              {firstName(props.hostName)} is told, both calendars are updated, and your Google Meet link stays
+              the same.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-fill px-[14px] py-[13px]">
+            <span className="text-[13.5px] font-semibold text-ink">
+              {props.meetingName} · {props.durationMinutes} min
+            </span>
+            <div className="flex flex-col gap-[3px]">
+              <Eyebrow size={10}>Was</Eyebrow>
+              <span className="text-[12.5px] text-ink-3 line-through">
+                {formatLongDate(was, timezone)} · {formatTime(was, timezone)}
+              </span>
+            </div>
+            <div className="flex flex-col gap-[3px]">
+              <Eyebrow size={10}>Now</Eyebrow>
+              <span className="text-[13px] font-semibold text-ink">
+                {formatPlainLongDate(selected, timezone)} · {formatTimeRange(chosenStart, chosenEnd, timezone)}
+              </span>
+            </div>
+          </div>
+
+          {bookingError ? (
+            <Callout
+              tone="red"
+              title="That time is no longer available"
+              align="center"
+              action={
+                <Button
+                  variant="danger"
+                  size={30}
+                  onClick={() => {
+                    setBookingError(false);
+                    setChosen(null);
+                    setStep("pick");
+                    setSlotTaken(true);
+                    void load(selected.year, selected.month, selected.day, timezone);
+                  }}
+                >
+                  Pick another time
+                </Button>
+              }
+            >
+              Someone booked it while you were deciding. Your meeting has not moved.
+            </Callout>
+          ) : null}
+
+          <div className="flex flex-col gap-[10px]">
+            <Button variant="accent" size={42} full busy={submitting} onClick={move}>
+              {submitting ? "Moving…" : "Move meeting"}
+            </Button>
+            <Button
+              variant="ghost"
+              size={36}
+              full
+              icon="chevron-left"
+              iconSize={10}
+              onClick={() => {
+                setStep("pick");
+                setBookingError(false);
+              }}
+            >
+              Back to times
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (step === "details" && chosenStart && chosenEnd && selected) {
     return (
@@ -284,6 +448,47 @@ export function BookingFlow(props: FlowProps) {
               />
             </Field>
 
+            {(props.questions ?? []).map((q) => {
+              const value = answers[q.id] ?? "";
+              const missing = touched && q.required && !value.trim();
+              return (
+                <Field
+                  key={q.id}
+                  label={
+                    q.required ? (
+                      q.label
+                    ) : (
+                      <>
+                        {q.label} <span className="font-normal text-ink-3">(optional)</span>
+                      </>
+                    )
+                  }
+                  htmlFor={`q-${q.id}`}
+                  error={missing ? "This one is needed before you can book." : undefined}
+                >
+                  {q.kind === "long" ? (
+                    <Textarea
+                      id={`q-${q.id}`}
+                      rows={3}
+                      value={value}
+                      invalid={missing}
+                      maxLength={2000}
+                      onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                    />
+                  ) : (
+                    <Input
+                      id={`q-${q.id}`}
+                      height={38}
+                      value={value}
+                      invalid={missing}
+                      maxLength={2000}
+                      onChange={(e) => setAnswers((a) => ({ ...a, [q.id]: e.target.value }))}
+                    />
+                  )}
+                </Field>
+              );
+            })}
+
             <Field
               label={
                 <>
@@ -365,9 +570,19 @@ export function BookingFlow(props: FlowProps) {
               <Icon name="clock" size={13} className="w-[15px] flex-none text-ink-3" />
               <span className="text-[13px] text-ink">{props.durationMinutes} minutes</span>
             </div>
-            <div className="flex items-center gap-[10px]">
-              <Icon name="video" size={13} className="w-[15px] flex-none text-ink-3" />
-              <span className="text-[13px] text-ink">Google Meet</span>
+            {capacity > 1 ? (
+              <div className="flex items-center gap-[10px]">
+                <Icon name="users" size={13} className="w-[15px] flex-none text-ink-3" />
+                <span className="text-[13px] text-ink">Up to {capacity} guests together</span>
+              </div>
+            ) : null}
+            <div className="flex items-start gap-[10px]">
+              <Icon
+                name={props.location === "in_person" ? "globe" : props.location === "phone" ? "user" : "video"}
+                size={13}
+                className="mt-[1px] w-[15px] flex-none text-ink-3"
+              />
+              <span className="text-[13px] leading-[1.45] text-ink">{locationLine}</span>
             </div>
             <div className="flex items-start gap-[10px]">
               <Icon name="globe" size={13} className="mt-[1px] w-[15px] flex-none text-ink-3" />
@@ -469,6 +684,7 @@ export function BookingFlow(props: FlowProps) {
               <div className="grid grid-cols-[repeat(auto-fill,minmax(96px,1fr))] gap-[6px]">
                 {slotState.times.map((iso) => {
                   const isChosen = chosen === iso;
+                  const left = capacity > 1 ? capacity - (seats[iso] ?? 0) : null;
                   return (
                     <button
                       key={iso}
@@ -479,7 +695,8 @@ export function BookingFlow(props: FlowProps) {
                         setStep("details");
                       }}
                       className={cx(
-                        "flex h-[38px] items-center justify-center rounded-[6px] border px-[10px] font-sans text-[13px] font-medium",
+                        "flex items-center justify-center rounded-[6px] border px-[10px] font-sans text-[13px] font-medium",
+                        left === null ? "h-[38px]" : "h-[44px] flex-col gap-[1px]",
                         "cursor-pointer transition-[background-color,border-color] duration-[120ms]",
                         isChosen
                           ? "border-accent bg-accent font-semibold text-white hover:bg-accent-2"
@@ -487,6 +704,14 @@ export function BookingFlow(props: FlowProps) {
                       )}
                     >
                       {formatTime(new Date(iso), timezone)}
+                      {/* Only when it is nearly gone. "6 seats left" on an
+                          empty workshop is noise; "1 seat left" is the reason
+                          somebody books now. */}
+                      {left !== null && left <= 3 ? (
+                        <span className={cx("text-[10.5px] font-medium", isChosen ? "text-white/80" : "text-ink-3")}>
+                          {left} left
+                        </span>
+                      ) : null}
                     </button>
                   );
                 })}

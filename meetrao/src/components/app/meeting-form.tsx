@@ -9,6 +9,9 @@ import { MenuSelect } from "@/components/ui/menu-select";
 import { PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { saveMeeting, type MeetingInput } from "@/lib/actions/meetings";
+import type { BookingQuestion } from "@/lib/types";
+import { LOCATION_OPTIONS } from "@/lib/locations";
+import { cx } from "@/lib/cx";
 
 const DURATIONS = [15, 30, 45, 60];
 
@@ -37,6 +40,9 @@ const WINDOWS = [
 /** The host's named schedules, plus the "Default" entry that means null. */
 export type ScheduleOption = { value: string; label: string };
 
+/** Five, matching the cap the action and Convex both enforce. */
+const MAX_QUESTIONS = 5;
+
 export function MeetingForm({
   initial,
   schedules = [],
@@ -52,6 +58,34 @@ export function MeetingForm({
 
   const set = <K extends keyof MeetingInput>(key: K, value: MeetingInput[K]) =>
     setForm((f) => ({ ...f, [key]: value }));
+
+  const questions = form.questions ?? [];
+  const locationKind = form.location ?? "google_meet";
+  const capacity = form.capacity ?? 1;
+  const capacityInvalid = touched && capacity > 1 && (!Number.isInteger(capacity) || capacity < 2 || capacity > 100);
+
+  function addQuestion() {
+    // crypto.randomUUID is the id an answer is matched back by, so it has to
+    // outlive any edit to the label.
+    const next: BookingQuestion = {
+      id: crypto.randomUUID(),
+      label: "",
+      kind: "short",
+      required: false,
+    };
+    set("questions", [...questions, next]);
+  }
+
+  function editQuestion(id: string, patch: Partial<BookingQuestion>) {
+    set(
+      "questions",
+      questions.map((q) => (q.id === id ? { ...q, ...patch } : q)),
+    );
+  }
+
+  function setQuestions(next: BookingQuestion[]) {
+    set("questions", next);
+  }
 
   const nameInvalid = touched && !form.name.trim();
   const editing = Boolean(initial.id);
@@ -97,20 +131,193 @@ export function MeetingForm({
       </section>
 
       <section className="flex flex-col gap-[11px] border-b border-line py-[20px]">
-        <PanelHeading title="Location" subtitle="Every booking gets its own Google Meet link, on both calendars." />
+        <PanelHeading title="Location" subtitle="Where this one happens. Guests are told on the booking page." />
 
-        <div className="flex h-[36px] items-center gap-[9px] rounded-[6px] border border-line bg-fill px-[12px]">
-          <Icon name="video" size={13} className="text-ink-2" />
-          <span className="text-[13.5px] text-ink">Google Meet</span>
+        <div className="flex flex-wrap gap-[8px]">
+          {LOCATION_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={locationKind === o.value}
+              onClick={() => set("location", o.value)}
+              className={cx(
+                "inline-flex h-[32px] cursor-pointer items-center rounded-[6px] border px-[12px] text-[12.5px]",
+                "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
+                locationKind === o.value
+                  ? "border-accent bg-accent-soft font-semibold text-accent"
+                  : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
+              )}
+            >
+              {o.label}
+            </button>
+          ))}
         </div>
 
-        <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
-          <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-accent" />
-          <span className="text-[12.5px] leading-[1.6] text-ink-2">
-            Meetrao creates one calendar event and invites your guest to it, so the meeting, the description and
-            the Meet link land on both calendars. Changes and cancellations update both sides.
-          </span>
+        {locationKind === "google_meet" ? (
+          <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
+            <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-accent" />
+            <span className="text-[12.5px] leading-[1.6] text-ink-2">
+              Meetrao creates one calendar event and invites your guest to it, so the meeting, the description
+              and the Meet link land on both calendars. Changes and cancellations update both sides.
+            </span>
+          </div>
+        ) : (
+          <Field
+            label={
+              locationKind === "phone" ? "Number or arrangement" : locationKind === "in_person" ? "Address" : "Details"
+            }
+            htmlFor="meeting-location-detail"
+            help={LOCATION_OPTIONS.find((o) => o.value === locationKind)?.hint}
+          >
+            <Input
+              id="meeting-location-detail"
+              height={36}
+              maxLength={200}
+              placeholder={
+                locationKind === "phone"
+                  ? "+880 1XXX-XXXXXX, or “I’ll call you”"
+                  : locationKind === "in_person"
+                    ? "12 Example Road, Cumilla"
+                    : "Your Zoom link, or what guests should do"
+              }
+              value={form.locationDetail ?? ""}
+              onChange={(e) => set("locationDetail", e.target.value)}
+            />
+          </Field>
+        )}
+
+        {locationKind !== "google_meet" ? (
+          <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
+            <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
+            <span className="text-[12.5px] leading-[1.6] text-ink-2">
+              No Meet link is created. The booking still lands on both calendars, carrying this as its location.
+            </span>
+          </div>
+        ) : null}
+      </section>
+
+      {/* ── seats ────────────────────────────────────────────────────── */}
+      <section className="flex flex-col gap-[12px] border-b border-line py-[20px]">
+        <PanelHeading
+          title="Seats"
+          subtitle="One guest at a time, or several sharing the same slot — a class, a workshop, an office hour."
+        />
+
+        <div className="flex flex-wrap gap-[8px]">
+          <ChoiceChip selected={capacity === 1} onClick={() => set("capacity", 1)}>
+            One at a time
+          </ChoiceChip>
+          <ChoiceChip selected={capacity > 1} onClick={() => set("capacity", capacity > 1 ? capacity : 8)}>
+            Several together
+          </ChoiceChip>
         </div>
+
+        {capacity > 1 ? (
+          <Field
+            label="Guests per slot"
+            htmlFor="meeting-capacity"
+            help="Each guest books their own seat. The slot closes when the last one goes."
+            error={capacityInvalid ? "Between 2 and 100." : undefined}
+          >
+            <Input
+              id="meeting-capacity"
+              type="number"
+              min={2}
+              max={100}
+              height={36}
+              className="max-w-[140px]"
+              value={String(capacity)}
+              invalid={capacityInvalid}
+              onChange={(e) => set("capacity", Number(e.target.value))}
+            />
+          </Field>
+        ) : null}
+
+        {capacity > 1 ? (
+          <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
+            <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
+            <span className="text-[12.5px] leading-[1.6] text-ink-2">
+              Everyone booked into a slot shares one calendar event and one Meet link, so your own calendar
+              shows the session once rather than once per guest.
+            </span>
+          </div>
+        ) : null}
+      </section>
+
+      {/* ── questions ────────────────────────────────────────────────── */}
+      <section className="flex flex-col gap-[12px] border-b border-line py-[20px]">
+        <PanelHeading
+          title="Questions"
+          subtitle="Asked on the booking form, after name and email. The note field is always there."
+        />
+
+        {questions.length ? (
+          <div className="flex flex-col gap-[10px]">
+            {questions.map((q, i) => (
+              <div key={q.id} className="flex flex-col gap-[9px] rounded-[8px] border border-line bg-fill px-[13px] py-[11px]">
+                <div className="flex flex-wrap items-center gap-[9px]">
+                  <Input
+                    aria-label={`Question ${i + 1}`}
+                    height={34}
+                    maxLength={120}
+                    placeholder="What would you like to cover?"
+                    value={q.label}
+                    className="min-w-[180px] flex-1"
+                    onChange={(e) => editQuestion(q.id, { label: e.target.value })}
+                  />
+                  <Button
+                    variant="ghost"
+                    size={28}
+                    className="text-red hover:text-red"
+                    onClick={() => setQuestions(questions.filter((x) => x.id !== q.id))}
+                  >
+                    Remove
+                  </Button>
+                </div>
+                <div className="flex flex-wrap items-center gap-[14px]">
+                  <div className="flex min-w-[150px] flex-1 flex-col gap-[6px]">
+                    <span className="text-[12px] font-semibold text-ink">Answer</span>
+                    <MenuSelect
+                      size="sm"
+                      aria-label={`Answer length for question ${i + 1}`}
+                      options={[
+                        { value: "short", label: "One line" },
+                        { value: "long", label: "A paragraph" },
+                      ]}
+                      value={q.kind}
+                      onChange={(v) => editQuestion(q.id, { kind: v as "short" | "long" })}
+                    />
+                  </div>
+                  <label className="flex cursor-pointer items-center gap-[8px] text-[12.5px] text-ink">
+                    <Switch
+                      checked={q.required}
+                      label={`Question ${i + 1} is required`}
+                      onChange={(next) => editQuestion(q.id, { required: next })}
+                    />
+                    Required
+                  </label>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-[4px] rounded-[6px] border border-dashed border-line-strong px-[14px] py-[15px]">
+            <span className="text-[13px] font-semibold text-ink">No questions</span>
+            <span className="text-[12px] leading-[1.5] text-ink-3">
+              Guests give a name, an email and an optional note. Ask more only if you will read it.
+            </span>
+          </div>
+        )}
+
+        {questions.length < MAX_QUESTIONS ? (
+          <div>
+            <Button variant="secondary" size={30} icon="plus" onClick={addQuestion}>
+              Add question
+            </Button>
+          </div>
+        ) : (
+          <span className="text-[12px] text-ink-3">Five is the most a booking form should ask.</span>
+        )}
       </section>
 
       <section className="flex flex-col gap-[14px] border-b border-line py-[20px]">

@@ -64,10 +64,10 @@ export const INCLUDED: readonly string[] = [
  */
 export const LIMITS: readonly [string, string][] = [
   ["Google Calendar only", "No Outlook, no iCloud, no CalDAV. If your calendar lives elsewhere, Meetrao cannot see your conflicts and is the wrong tool."],
-  ["Google Meet only", "No Zoom, no Teams, no phone or in-person locations yet."],
   ["No payments", "You cannot charge for a booking. Nothing collects money."],
-  ["No team features", "No round-robin, no collective availability, no routing forms. One person, one calendar."],
-  ["No rescheduling yet", "A guest can cancel and book again from your link, which gets to the same place in two steps rather than one."],
+  ["No Zoom or Teams integration", "Meetrao creates Google Meet links itself. A meeting can be a phone call, an address or your own Zoom link — but that link is one you paste, not one it makes for you."],
+  ["Round-robin only", "A team link goes to whoever is free and least recently booked. There is no collective availability — several hosts in one meeting — and no routing forms."],
+  ["Reminders are email only", "One the day before and one an hour before, by email. No SMS, no WhatsApp, no push notifications."],
 ];
 
 /**
@@ -78,7 +78,7 @@ export const LIMITS: readonly [string, string][] = [
  */
 export const WHY: readonly string[] = [
   "Meetrao is built and run by one person. There is no sales team to fund, no investor expecting a return this quarter, and no growth target that a paywall would be the answer to.",
-  "It is not free because your data is worth something. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free — never what your meetings are about. The Privacy Policy names every permission it holds and why.",
+  "It is not free because your data is worth something. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free — never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
   "It is free because it is small. It does a narrow job, it costs little to run at this size, and charging for it today would buy a billing system nobody has asked for.",
 ];
 
@@ -103,12 +103,12 @@ export const PRICING_FAQ: readonly (readonly [string, string, string])[] = [
   [
     "catch",
     "So what is the catch?",
-    "The limits, and they are listed above rather than discovered later: Google Calendar only, Google Meet only, no payments, no team features, and no rescheduling yet. There is no paid tier to be upsold to, so nothing here is a trial — but if you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
+    "The limits, and they are listed above rather than discovered later: Google Calendar only, no payments, no Zoom or Teams integration, round-robin without collective availability, and email-only reminders. There is no paid tier to be upsold to, so nothing here is a trial — but if you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
   ],
   [
     "data",
     "Am I the product?",
-    "No. Meetrao does not sell data, does not run ads, and does not share your calendar with anyone. It asks Google only whether a period is busy or free — never event titles, guests, descriptions or attachments. Disconnecting from Settings revokes the permission with Google, not just with us.",
+    "No. Meetrao does not sell data, does not run ads, and does not share your calendar with anyone. It asks Google only whether a period is busy or free — never event titles, descriptions or attachments. For the events Meetrao creates itself it also reads whether your guest accepted or declined, which is how it can tell you. Disconnecting from Settings revokes the permission with Google, not just with us.",
   ],
   [
     "limits",

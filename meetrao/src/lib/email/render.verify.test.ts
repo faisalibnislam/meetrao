@@ -59,6 +59,7 @@ const mail = {
   hostTimezoneLabel: "Asia/Dhaka (GMT+6)",
   guestTimezoneLabel: "Europe/London (GMT+1)",
   durationLabel: "30 minutes",
+  where: "meet.google.com/abc-defg-hij",
   meetUrl: "https://meet.google.com/abc-defg-hij",
 };
 

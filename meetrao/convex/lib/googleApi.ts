@@ -173,9 +173,14 @@ export async function createEvent(
     endMs: number;
     timeZone: string;
     attendees: { email: string; name: string }[];
+    /** Ask Google for a Meet link. False for a phone call or an address. */
+    conference?: boolean;
+    /** Google's own "location" field — the address, the number, the note. */
+    location?: string;
   },
 ): Promise<CreatedEvent> {
   const requestId = crypto.randomUUID();
+  const wantsConference = event.conference !== false;
   const url =
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events` +
     `?conferenceDataVersion=1&sendUpdates=all`;
@@ -189,7 +194,10 @@ export async function createEvent(
       start: { dateTime: new Date(event.startMs).toISOString(), timeZone: event.timeZone },
       end: { dateTime: new Date(event.endMs).toISOString(), timeZone: event.timeZone },
       attendees: event.attendees.map((a) => ({ email: a.email, displayName: a.name || undefined })),
-      conferenceData: { createRequest: { requestId, conferenceSolutionKey: { type: "hangoutsMeet" } } },
+      ...(event.location ? { location: event.location } : {}),
+      ...(wantsConference
+        ? { conferenceData: { createRequest: { requestId, conferenceSolutionKey: { type: "hangoutsMeet" } } } }
+        : {}),
     }),
   });
 
@@ -205,6 +213,75 @@ export async function createEvent(
     json.conferenceData?.entryPoints?.find((e) => e.entryPointType === "video")?.uri ??
     null;
   return { eventId: json.id, meetUrl: meet, htmlLink: json.htmlLink ?? null };
+}
+
+/**
+ * Moves an existing event, keeping everything else about it.
+ *
+ * PATCH rather than delete-and-recreate, because recreating mints a new Meet
+ * link: the old one is already in the guest's calendar entry and in the
+ * confirmation email, and booking-changed.html promises it still works. A
+ * missing event (404/410) is reported rather than recreated here — the caller
+ * knows whether recreating is the right answer.
+ */
+export async function patchEventTime(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  when: { startMs: number; endMs: number; timeZone: string },
+): Promise<"patched" | "missing" | "failed"> {
+  const url =
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}` +
+    `/events/${encodeURIComponent(eventId)}?sendUpdates=all`;
+  try {
+    const response = await fetch(url, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        start: { dateTime: new Date(when.startMs).toISOString(), timeZone: when.timeZone },
+        end: { dateTime: new Date(when.endMs).toISOString(), timeZone: when.timeZone },
+      }),
+    });
+    if (response.ok) return "patched";
+    if (response.status === 404 || response.status === 410) return "missing";
+    return "failed";
+  } catch {
+    return "failed";
+  }
+}
+
+/**
+ * Whether one named attendee has answered one named event.
+ *
+ * SCOPED TO AN EVENT MEETRAO CREATED. The caller passes an event id read from
+ * a booking row, so this can only ever ask about an event this product wrote —
+ * never a listing, never a search, never anything else in the host's calendar.
+ * `fields` narrows the response to the attendee list, so even the title of the
+ * event we made does not come back.
+ *
+ * "missing" means the event is gone from Google; null means it is there and
+ * that address is not on it.
+ */
+export async function attendeeResponse(
+  accessToken: string,
+  calendarId: string,
+  eventId: string,
+  email: string,
+): Promise<{ status: string | null } | "missing" | "failed"> {
+  const url =
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}` +
+    `/events/${encodeURIComponent(eventId)}?fields=attendees(email,responseStatus)`;
+  try {
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+    if (response.status === 404 || response.status === 410) return "missing";
+    if (!response.ok) return "failed";
+    const json = (await response.json()) as { attendees?: { email?: string; responseStatus?: string }[] };
+    const wanted = email.trim().toLowerCase();
+    const found = (json.attendees ?? []).find((a) => (a.email ?? "").toLowerCase() === wanted);
+    return { status: found?.responseStatus ?? null };
+  } catch {
+    return "failed";
+  }
 }
 
 /** "Already gone" is success: the caller wanted the event not to exist. */

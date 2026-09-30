@@ -39,7 +39,14 @@ function byDay(rows: BookingView[]): Day[] {
 
 type Tab = "upcoming" | "past";
 
-export function BookingsScreen({ bookings }: { bookings: BookingView[] }) {
+export function BookingsScreen({
+  bookings,
+  timezoneLabel,
+}: {
+  bookings: BookingView[];
+  /** The host's own zone, named in the move dialog's fields. */
+  timezoneLabel?: string;
+}) {
   const [tab, setTab] = useState<Tab>("upcoming");
   const [query, setQuery] = useState("");
   const [dialog, setDialog] = useState<DialogState>(null);
@@ -194,7 +201,9 @@ export function BookingsScreen({ bookings }: { bookings: BookingView[] }) {
         state={dialog}
         onClose={() => setDialog(null)}
         onOpenCancel={() => setDialog((d) => (d ? { ...d, view: "cancel" } : null))}
+        onOpenMove={() => setDialog((d) => (d ? { ...d, view: "move" } : null))}
         onBackToDetail={() => setDialog((d) => (d ? { ...d, view: "detail" } : null))}
+        timezoneLabel={timezoneLabel}
       />
     </div>
   );

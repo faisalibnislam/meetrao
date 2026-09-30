@@ -42,6 +42,7 @@ describe("pages that must never be indexed", () => {
       "(public)/booking/[reference]/cancel/page.tsx",
       "(public)/booking/[reference]/cancelled/page.tsx",
       "(public)/booking/[reference]/page.tsx",
+      "(public)/booking/[reference]/reschedule/page.tsx",
     ]);
   });
 
@@ -226,8 +227,11 @@ describe("page titles", () => {
     // public route with its own canonical has to appear above.
     const canonical = pages("**/page.tsx")
       .filter((p) => /alternates:\s*\{\s*canonical/.test(p.text))
-      // Host booking pages are canonical but generated per user, not authored.
-      .filter((p) => !p.file.includes("[username]"))
+      /* Booking pages are canonical but generated per host and per team, not
+         authored — there is no fixed path to render and no fixed title to
+         assert, so they carry their canonical in generateMetadata and are
+         checked by the noindex block above instead. */
+      .filter((p) => !p.file.includes("[username]") && !p.file.includes("/team/"))
       .map((p) => p.file)
       .sort();
 

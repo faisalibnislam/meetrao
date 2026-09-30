@@ -147,7 +147,7 @@ export function humanExpiry(expires: Date, now: number = Date.now()): string {
   return `${hours} hour${hours === 1 ? "" : "s"}`;
 }
 
-function required(name: string): string {
+export function required(name: string): string {
   const value = process.env[name];
   if (!value) {
     /* Deliberately fatal. The alternative is sending a real person a real
@@ -160,7 +160,7 @@ function required(name: string): string {
 }
 
 /** Absolute, and a PNG: mail clients drop SVG, and a relative path has no page to be relative to. */
-function logoUrl(site: string): string {
+export function logoUrl(site: string): string {
   return `${site.replace(/\/$/, "")}/brand/meetrao-email-logo.png`;
 }
 

@@ -65,7 +65,7 @@ export const CALENDLY: Comparison = {
     "How Meetrao and Calendly compare for appointment booking: what each does, where Calendly's " +
     "free plan stops, and which one to pick.",
   summary: [
-    "Calendly is the tool most people mean when they say “send me your link”. It is mature, it has a free plan, and for teams that need payments, routing or round-robin it does things Meetrao does not.",
+    "Calendly is the tool most people mean when they say “send me your link”. It is mature, it has a free plan, and for teams that need payments, routing or collective scheduling it does things Meetrao does not.",
     "The difference that sends people looking is the free plan's shape. Calendly's free tier is limited to one active event type and one connected calendar — enough for a single repeated meeting, and the point at which most people either upgrade or go looking. Meetrao has no such line: every feature on this site is available on the free account, because there is no paid account to upsell you to.",
     "Meetrao is narrower on purpose. If what you need is a booking link that respects your real calendar and puts a Google Meet link on both sides, it does that and does not charge for it. If you need more than that, this page says so.",
   ],
@@ -80,12 +80,13 @@ export const CALENDLY: Comparison = {
     { feature: "Branding on your booking page", meetrao: "Meetrao wordmark", them: "Calendly badge on free; removable on paid", edge: "even" },
     { feature: "Reschedule flow", meetrao: "Not built — cancel and rebook", them: "Yes", edge: "them" },
     { feature: "Take payment at booking", meetrao: "No", them: "Yes, on paid plans", edge: "them" },
-    { feature: "Round-robin and team scheduling", meetrao: "No", them: "Yes, on team plans", edge: "them" },
+    { feature: "Round-robin team links", meetrao: "Yes, free", them: "Yes, on team plans", edge: "meetrao" },
+    { feature: "Collective availability and routing forms", meetrao: "No", them: "Yes, on team plans", edge: "them" },
     { feature: "CRM and automation integrations", meetrao: "None", them: "Many", edge: "them" },
     { feature: "Reads your event titles", meetrao: "Never — busy/free only", them: "See their privacy policy", edge: "meetrao" },
   ],
   theirWins: [
-    ["It does considerably more", "Payments at booking, round-robin and collective scheduling, routing forms, multiple video providers, and a long list of integrations. Meetrao has none of those and is not planning most of them."],
+    ["It does considerably more", "Payments at booking, collective scheduling, routing forms, multiple video providers, and a long list of integrations. Meetrao has round-robin team links and none of the rest, and is not planning most of them."],
     ["Rescheduling", "Calendly lets a guest move a booking. Meetrao does not yet — a guest cancels and books again, which works but is two steps where one would do."],
     ["Calendars beyond Google", "Outlook, iCloud and Exchange. Meetrao connects to Google Calendar and nothing else."],
     ["It is not one person", "Calendly has a support organisation, an uptime commitment and a company behind it. Meetrao is built and run by one person, and this page would be dishonest if it pretended otherwise."],
@@ -98,7 +99,7 @@ export const CALENDLY: Comparison = {
   ],
   chooseThem: [
     "You need to take payment when someone books",
-    "You schedule as a team — round-robin, collective availability, routing",
+    "You need collective availability or routing forms, not just round-robin",
     "You use Outlook, iCloud or Exchange rather than Google Calendar",
     "You need it to write into a CRM",
     "You need a vendor with a support contract",
@@ -113,11 +114,11 @@ export const CALENDLY: Comparison = {
   faq: [
     [
       "Is Meetrao a free alternative to Calendly?",
-      "Yes, for the core job: a booking link that checks your Google Calendar, converts timezones for guests, and puts a Google Meet link on both calendars. It does not replace Calendly's payments, team routing or CRM integrations.",
+      "Yes, for the core job: a booking link that checks your Google Calendar, converts timezones for guests, and puts a Google Meet link on both calendars — plus rescheduling, reminders, group sessions and round-robin team links. It does not replace Calendly's payments, routing forms or CRM integrations.",
     ],
     [
       "What is the catch?",
-      "There is no paid tier to be upsold to, so nothing here is a trial. The real limits are the ones on this page: Google Calendar only, Google Meet only, no payments, no team features, no rescheduling yet. The Terms are clear that Meetrao is free today and that if paid plans ever arrive you would be emailed first and have to opt in — a free account is never billed automatically.",
+      "There is no paid tier to be upsold to, so nothing here is a trial. The real limits are the ones on this page: Google Calendar only, no payments, no Zoom or Teams integration, round-robin without collective availability, email-only reminders. The Terms are clear that Meetrao is free today and that if paid plans ever arrive you would be emailed first and have to opt in — a free account is never billed automatically.",
     ],
     [
       "Can I move from Calendly to Meetrao?",
@@ -142,10 +143,10 @@ export const CAL_COM: Comparison = {
   ],
   rows: [
     { feature: "Price for one person", meetrao: "Free", them: "Free", edge: "even" },
-    { feature: "Price for a team", meetrao: "No team features", them: "Paid, per user", edge: "them" },
+    { feature: "Price for a team", meetrao: "Free, round-robin only", them: "Paid, per user", edge: "meetrao" },
     { feature: "Meeting types", meetrao: "Unlimited", them: "Unlimited", edge: "even" },
     { feature: "Calendars connected", meetrao: "One (Google)", them: "Unlimited, multiple providers", edge: "them" },
-    { feature: "Video providers", meetrao: "Google Meet only", them: "Cal Video, Meet, Zoom and others", edge: "them" },
+    { feature: "Video providers", meetrao: "Meet, or your own link pasted in", them: "Cal Video, Meet, Zoom and others", edge: "them" },
     { feature: "Guests need an account", meetrao: "No", them: "No", edge: "even" },
     { feature: "Timezone conversion for guests", meetrao: "Yes", them: "Yes", edge: "even" },
     { feature: "Buffers, notice period, booking window", meetrao: "Yes", them: "Yes", edge: "even" },
@@ -157,9 +158,9 @@ export const CAL_COM: Comparison = {
     { feature: "Settings to get through before your first link", meetrao: "Three screens", them: "More", edge: "meetrao" },
   ],
   theirWins: [
-    ["More of everything", "Routing forms, workflows, several calendar providers, several video providers, payments, teams. On features this is not close, and pretending otherwise would waste your time."],
+    ["More of everything", "Routing forms, workflows, several calendar providers, several video providers, payments, collective scheduling. On features this is not close, and pretending otherwise would waste your time."],
     ["Self-hosting", "You can run Cal.com on your own infrastructure. Meetrao has no self-hosted edition."],
-    ["Teams", "Cal.com has real team scheduling. Meetrao has one person per account and no concept of a team at all."],
+    ["Teams", "Cal.com has the full set — round-robin, collective availability, routing, per-team billing. Meetrao has a round-robin team link and stops there."],
     ["A company behind it", "Cal.com is a funded company with a roadmap and a support function. Meetrao is one person."],
   ],
   meetraoWins: [
@@ -169,7 +170,7 @@ export const CAL_COM: Comparison = {
     ["Explicit about what it reads", "The Privacy Policy names every Google permission requested, says plainly that calendar.events is broader than the use made of it, and carries the Limited Use disclosure."],
   ],
   chooseThem: [
-    "You need team scheduling, routing or workflows",
+    "You need collective scheduling, routing or workflows",
     "You want to self-host",
     "You use more than one calendar, or a provider other than Google",
     "You need to take payment at booking",
@@ -179,7 +180,7 @@ export const CAL_COM: Comparison = {
     "You want a booking link working in the next five minutes",
     "Google Calendar and Google Meet are what you already use",
     "You find most scheduling tools have more settings than you need",
-    "You are one person, not a team",
+    "You are one person, or a handful sharing one link",
   ],
   faq: [
     [

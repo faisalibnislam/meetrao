@@ -8,6 +8,8 @@ import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import {
   getBusy,
   getMeetingAvailability,
+  getMeetingOverrides,
+  getSeatMap,
   getPublicHost,
   getPublicMeetings,
 } from "@/lib/data/public-booking";
@@ -75,6 +77,7 @@ export default async function BookingPage({
   if (!meeting) notFound();
 
   const availability = await getMeetingAvailability(meeting.id);
+  const overrides = await getMeetingOverrides(meeting.id);
 
   // The first paint is rendered in the host's zone, because the server cannot
   // know the guest's. The client corrects it on mount.
@@ -95,12 +98,24 @@ export default async function BookingPage({
     host.id,
     new Date(Date.UTC(year, month - 1, 1) - DAY),
     new Date(Date.UTC(year, month, 1) + DAY),
+    // A workshop's own seats are not conflicts with themselves.
+    meeting.capacity > 1 ? meeting.id : undefined,
   );
+
+  const seats =
+    meeting.capacity > 1
+      ? await getSeatMap(
+          meeting.id,
+          new Date(Date.UTC(year, month - 1, 1) - DAY),
+          new Date(Date.UTC(year, month, 1) + DAY),
+        )
+      : {};
 
   const shared = {
     guestTimezone: host.timezone,
     hostTimezone: host.timezone,
     availability,
+    overrides,
     rules: meeting.rules,
     busy,
     now,
@@ -114,11 +129,10 @@ export default async function BookingPage({
     .filter((d) => d >= day)
     .sort((a, b) => a - b)[0];
 
-  const times = firstOpen
-    ? computeSlots({ ...shared, date: { year, month, day: firstOpen } }).map(
-        (d) => d.toISOString(),
-      )
-    : [];
+  const times = (firstOpen ? computeSlots({ ...shared, date: { year, month, day: firstOpen } }) : [])
+    .map((d) => d.toISOString())
+    // A full slot is not on offer, however free the host's calendar looks.
+    .filter((iso) => meeting.capacity <= 1 || (seats[iso] ?? 0) < meeting.capacity);
 
   // Records that the page was opened, which is what "Avg. reply time" measures.
   const pageViewId = await convexAnonymous().mutation(api.publicBooking.recordPageView, {
@@ -144,6 +158,11 @@ export default async function BookingPage({
         meetingDescription={meeting.description}
         durationMinutes={meeting.durationMinutes}
         bookingWindowDays={meeting.rules.bookingWindowDays}
+        questions={meeting.questions}
+        location={meeting.location}
+        locationDetail={meeting.locationDetail}
+        capacity={meeting.capacity}
+        seats={seats}
         initial={{
           year,
           month,

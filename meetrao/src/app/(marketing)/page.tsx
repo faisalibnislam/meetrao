@@ -86,9 +86,23 @@ const BENEFITS: [IconName, string, string][] = [
   ["calendar", "Never double-book", "Your calendar is checked before any time is offered."],
   ["link", "They book themselves", "Send the link. Stop negotiating over email."],
   ["globe", "Timezones handled", "Guests see your hours in their own timezone."],
-  ["video", "Meet links automatically", "Every booking creates the event and its Meet link."],
-  ["sliders", "Your hours protected", "Buffers, minimum notice, and a booking window."],
+  ["video", "Meet links automatically", "Every online booking creates the event and its Meet link."],
+  ["rotate-left", "Moving, not cancelling", "Guests pick a new time from their confirmation. Same booking, same Meet link."],
+  ["bolt", "Reminders that arrive", "The day before and an hour before — to both of you."],
+  ["sliders", "Your hours protected", "Buffers, minimum notice, a booking window, and days off."],
   ["tag", "Completely free", "No subscription. Everything here is included."],
+];
+
+/* The second row of the product section: the things that are not one-to-one
+   booking. Each one is a sentence about what it does, not what it is called —
+   "a team link" means nothing to somebody who has not met the idea. */
+const EXTRAS: [IconName, string, string][] = [
+  ["users", "One link for a team", "Bookings go to whoever is free and least recently booked. Everyone keeps their own hours and calendar."],
+  ["user-plus", "Sessions several people share", "A class, a workshop, an office hour. Seats count down and the slot closes when the last one goes."],
+  ["rectangle-list", "Ask what you need to know", "Up to five questions on the booking form. The answers arrive with the booking."],
+  ["address-card", "Phone, in person, or your own link", "Not everything is a video call. Say where it happens and guests are told."],
+  ["hashtag", "On your own site", "Paste one snippet and the booking form appears in your page, sized to fit."],
+  ["chart-line", "Read it from your own tools", "An API key reads your bookings, and a webhook tells you the moment one changes."],
 ];
 
 export default function LandingPage() {
@@ -404,7 +418,31 @@ export default function LandingPage() {
           ))}
         </div>
 
-        <Reveal className="mt-[16px]">
+        <Reveal className="mt-[34px]">
+          <div className="flex max-w-[620px] flex-col gap-[11px]">
+            <Kicker tone="dark">And when one link is not enough</Kicker>
+            <h2 className="m-0 font-serif text-[clamp(24px,3vw,34px)] leading-[1.06] font-normal tracking-[-0.02em] text-balance text-ink">
+              The parts you reach for later.
+            </h2>
+          </div>
+        </Reveal>
+
+        <div className="mt-[22px] grid grid-cols-[repeat(auto-fit,minmax(min(288px,100%),1fr))] gap-[18px]">
+          {EXTRAS.map(([glyph, title, text]) => (
+            <div
+              key={title}
+              className="flex flex-col gap-[10px] rounded-[14px] border border-line bg-fill px-[22px] pt-[22px] pb-[24px] transition-colors duration-[120ms] hover:border-accent-line"
+            >
+              <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[9px] bg-surface text-accent">
+                <Icon name={glyph} size={14} />
+              </span>
+              <span className="text-[14.5px] font-semibold tracking-[-0.005em] text-ink">{title}</span>
+              <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">{text}</span>
+            </div>
+          ))}
+        </div>
+
+        <Reveal className="mt-[30px]">
           <div className="flex flex-col gap-[16px]">
             <LiveMeetingsTable />
             <LiveBookingsTable />

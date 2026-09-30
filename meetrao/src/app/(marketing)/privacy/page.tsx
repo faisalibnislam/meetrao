@@ -65,7 +65,7 @@ const SCOPES: [string, string, string][] = [
   [
     "calendar.events",
     "See, edit and delete events on your calendar",
-    "Creating the event for each confirmed booking with its Google Meet link, inviting your guest so it reaches their calendar too, and updating or deleting that event when the booking changes or is cancelled.",
+    "Creating the event for each confirmed booking with its Google Meet link, inviting your guest so it reaches their calendar too, updating or deleting that event when the booking changes or is cancelled, and reading whether your guest accepted or declined THAT event — by its own identifier, never by listing or searching your calendar.",
   ],
   [
     "userinfo.email",

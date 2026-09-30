@@ -13,11 +13,26 @@ export type Profile = {
   notify_new_booking: boolean;
   notify_booking_changed: boolean;
   notify_booking_cancelled: boolean;
+  /** Absent on every profile written before reminders existed, and absent
+      reads as on — the server applies the same rule. */
+  notify_reminders?: boolean;
   notify_daily_agenda: boolean;
   notify_product_news: boolean;
   onboarding_completed_at: string | null;
   created_at: string;
 };
+
+/** One question a meeting asks its guests, besides name, email and the note. */
+export type BookingQuestion = {
+  id: string;
+  label: string;
+  kind: "short" | "long";
+  required: boolean;
+};
+
+/** A guest's answer, carrying the label it was asked under: a host rewording
+    a question must not rewrite what a past guest was asked. */
+export type BookingAnswer = { label: string; value: string };
 
 export type MeetingType = {
   id: string;
@@ -30,9 +45,12 @@ export type MeetingType = {
   minimum_notice_minutes: number;
   booking_window_days: number;
   location: string;
+  location_detail?: string;
+  capacity?: number;
   is_active: boolean;
   /** null = the host's default schedule. See migration 0010. */
   schedule_id: string | null;
+  questions?: BookingQuestion[];
   created_at: string;
 };
 
@@ -75,6 +93,11 @@ export type Booking = {
   google_event_id: string | null;
   meet_url: string | null;
   guest_rsvp: string | null;
+  /** Absent on every booking made before a meeting could ask questions. */
+  answers?: BookingAnswer[];
+  /** Where it happens, as it was when the booking was made. */
+  location?: string;
+  location_detail?: string;
   created_at: string;
 };
 
@@ -102,6 +125,7 @@ export const NOTIFICATION_KEYS = [
   "notify_new_booking",
   "notify_booking_changed",
   "notify_booking_cancelled",
+  "notify_reminders",
   "notify_daily_agenda",
   "notify_product_news",
 ] as const;

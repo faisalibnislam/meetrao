@@ -51,7 +51,7 @@ const STEPS: [string, string, string][] = [
   [
     "2",
     "Connect your calendar",
-    "One Google permission. Meetrao reads when you are busy, writes each booking to your calendar and invites your guest — it never reads what your meetings are about.",
+    "One Google permission. Meetrao reads when you are busy, writes each booking to your calendar and invites your guest. It never reads what your other meetings are about; for the events it creates itself it also reads whether your guest accepted.",
   ],
   [
     "3",
@@ -132,7 +132,7 @@ const FAQS: [string, string][] = [
   ],
   [
     "Does Meetrao read my meeting titles or notes?",
-    "No. It sees only whether a period is busy or free. Titles, guests, descriptions and attachments are never read. It does write the bookings you accept, and invites your guest to them.",
+    "Almost never. It sees only whether a period is busy or free — titles, descriptions and attachments are never read. It does write the bookings you accept and invite your guest to them, and for those events it reads one more thing: whether the guest accepted or declined, so it can tell you when somebody says no.",
   ],
   [
     "What if I disconnect my calendar?",
@@ -140,7 +140,7 @@ const FAQS: [string, string][] = [
   ],
   [
     "Can I use something other than Google Meet?",
-    "Not in this release. Every booking gets a Google Meet link. Other options may come later.",
+    "Yes. A meeting can be a Google Meet, a phone call, an address, or anything else you describe — your own Zoom or Teams link, for instance. Meetrao creates Meet links itself; for the others it passes on exactly what you wrote.",
   ],
   [
     "Can two people book the same slot?",

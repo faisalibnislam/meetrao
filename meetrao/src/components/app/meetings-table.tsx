@@ -9,6 +9,8 @@ import { Table, Td, Th, Tr } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
 import { CopyLinkChip } from "./copy-link";
 import { setMeetingActive } from "@/lib/actions/meetings";
+import { embedSnippet } from "@/lib/embed";
+import { Modal } from "@/components/ui/modal";
 import { cx } from "@/lib/cx";
 
 export type MeetingRow = {
@@ -24,13 +26,40 @@ export type MeetingRow = {
 
 /* Inactive meetings stay in the list but cannot be booked, so the name drops to
    --ink-2 rather than the row disappearing. */
-export function MeetingsTable({ meetings }: { meetings: MeetingRow[] }) {
+export function MeetingsTable({
+  meetings,
+  siteUrl,
+  username,
+}: {
+  meetings: MeetingRow[];
+  /** The origin the snippet points at — the deployed one, not the browser's. */
+  siteUrl: string;
+  username: string;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [pending, startToggle] = useTransition();
   const [optimistic, setOptimistic] = useState<Record<string, boolean>>({});
 
   const isActive = (m: MeetingRow) => optimistic[m.id] ?? m.active;
+  const [embedding, setEmbedding] = useState<MeetingRow | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const snippet = embedding
+    ? embedSnippet({ siteUrl, username, slug: embedding.slug })
+    : "";
+
+  async function copySnippet() {
+    try {
+      await navigator.clipboard.writeText(snippet);
+      setCopied(true);
+      toast({ tone: "ok", title: "Snippet copied", text: "Paste it where the booking form should appear." });
+    } catch {
+      // Clipboard permission is the host's to give; the textarea is right
+      // there and selectable, so this is a nudge rather than a failure.
+      toast({ tone: "warn", title: "Copy it by hand", text: "Your browser did not allow the clipboard." });
+    }
+  }
 
   const toggle = (m: MeetingRow) => {
     const next = !isActive(m);
@@ -92,6 +121,17 @@ export function MeetingsTable({ meetings }: { meetings: MeetingRow[] }) {
                     variant="ghost"
                     size={26}
                     className="mr-[4px] hover:bg-fill-2"
+                    onClick={() => {
+                      setCopied(false);
+                      setEmbedding(m);
+                    }}
+                  >
+                    Embed
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size={26}
+                    className="mr-[4px] hover:bg-fill-2"
                     onClick={() => window.open(m.previewHref, "_blank", "noopener,noreferrer")}
                   >
                     Preview
@@ -135,6 +175,16 @@ export function MeetingsTable({ meetings }: { meetings: MeetingRow[] }) {
               <Button
                 variant="ghost"
                 size={36}
+                onClick={() => {
+                  setCopied(false);
+                  setEmbedding(m);
+                }}
+              >
+                Embed
+              </Button>
+              <Button
+                variant="ghost"
+                size={36}
                 onClick={() => window.open(m.previewHref, "_blank", "noopener,noreferrer")}
               >
                 Preview
@@ -150,6 +200,37 @@ export function MeetingsTable({ meetings }: { meetings: MeetingRow[] }) {
       <span className="text-[12.5px] text-ink-3">
         Inactive meetings stay in this list but can&rsquo;t be booked from your link.
       </span>
+
+      <Modal
+        open={Boolean(embedding)}
+        wide
+        onClose={() => setEmbedding(null)}
+        title="Put this on your own site"
+        subtitle={embedding ? `${embedding.name} — the booking form, inside your page.` : undefined}
+        primary={{ label: copied ? "Copied" : "Copy snippet", onClick: copySnippet }}
+        secondary={{ label: "Close", onClick: () => setEmbedding(null) }}
+      >
+        <div className="flex flex-col gap-[11px]">
+          <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">
+            Paste this where the form should appear. It resizes itself as the guest moves through it, and it
+            books exactly what your link books — the same times, the same rules.
+          </span>
+          {/* Read-only and selectable rather than a styled block: a host who
+              cannot use the clipboard button can still select all of it. */}
+          <textarea
+            readOnly
+            rows={8}
+            value={snippet}
+            aria-label="Embed snippet"
+            onFocus={(e) => e.currentTarget.select()}
+            className="w-full resize-none rounded-[6px] border border-line bg-fill px-[12px] py-[10px] font-sans text-[12px] leading-[1.6] text-ink"
+          />
+          <span className="text-[12px] leading-[1.5] text-ink-3">
+            Works on any site that takes HTML — Webflow, WordPress, Framer, a plain page. Inactive meetings
+            show nothing, so switching one off takes it down everywhere at once.
+          </span>
+        </div>
+      </Modal>
     </div>
   );
 }

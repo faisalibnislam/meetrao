@@ -1,6 +1,7 @@
 import "server-only";
 
-import type { AvailabilityRule, Interval, SlotRules } from "@/lib/booking/slots";
+import type { AvailabilityRule, DateOverride, Interval, SlotRules } from "@/lib/booking/slots";
+import type { BookingQuestion } from "@/lib/types";
 import { busyPeriods } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
@@ -28,6 +29,13 @@ export type PublicMeeting = {
   description: string;
   slug: string;
   durationMinutes: number;
+  /** What this meeting asks the guest, besides name, email and the note. */
+  questions: BookingQuestion[];
+  /** How it happens: "google_meet", "phone", "in_person" or "custom". */
+  location: string;
+  locationDetail: string;
+  /** 1 is one-to-one; above that, several guests share each time. */
+  capacity: number;
   rules: SlotRules;
 };
 
@@ -66,6 +74,10 @@ type MeetingRow = {
   buffer_minutes: number;
   minimum_notice_minutes: number;
   booking_window_days: number;
+  questions?: BookingQuestion[];
+  location?: string;
+  location_detail?: string;
+  capacity?: number;
 };
 
 function toMeeting(row: MeetingRow): PublicMeeting {
@@ -75,6 +87,10 @@ function toMeeting(row: MeetingRow): PublicMeeting {
     description: row.description,
     slug: row.slug,
     durationMinutes: row.duration_minutes,
+    questions: row.questions ?? [],
+    location: row.location ?? "google_meet",
+    locationDetail: row.location_detail ?? "",
+    capacity: row.capacity ?? 1,
     rules: {
       durationMinutes: row.duration_minutes,
       bufferMinutes: row.buffer_minutes,
@@ -114,6 +130,36 @@ export async function getMeetingAvailability(meetingId: string): Promise<Availab
   }));
 }
 
+/**
+ * The days the meeting does not follow its weekly pattern on.
+ *
+ * Fetched beside the weekly rules and handed to the engine with them — a slot
+ * list built from one without the other offers a host's holiday as bookable.
+ */
+export async function getMeetingOverrides(meetingId: string): Promise<DateOverride[]> {
+  const rows = await convexAnonymous().query(api.publicBooking.overridesForMeetingPublic, { meetingId });
+  return rows.map((o) => ({
+    date: o.date,
+    ranges: o.ranges.map((r) => ({ startMinute: r.start_minute, endMinute: r.end_minute })),
+  }));
+}
+
+/** How many seats are taken at each instant of a group meeting. */
+export async function getSeatMap(
+  meetingId: string,
+  from: Date,
+  to: Date,
+): Promise<Record<string, number>> {
+  const rows = await convexAnonymous().query(api.publicBooking.seatsForMeeting, {
+    meetingId,
+    from: from.getTime(),
+    to: to.getTime(),
+  });
+  const out: Record<string, number> = {};
+  for (const r of rows) out[new Date(r.starts_at).toISOString()] = r.taken;
+  return out;
+}
+
 export type BusyResult = { busy: Interval[]; calendarChecked: boolean };
 
 /**
@@ -124,17 +170,27 @@ export type BusyResult = { busy: Interval[]; calendarChecked: boolean };
  * `calendarChecked` is false so the caller can say so rather than implying the
  * host's whole calendar was consulted.
  */
-export async function getBusy(hostId: string, from: Date, to: Date): Promise<BusyResult> {
+export async function getBusy(
+  hostId: string,
+  from: Date,
+  to: Date,
+  /* A group meeting's own bookings are not conflicts with themselves: they are
+     seats, and whether a seat is left is a count rather than an overlap. Left
+     in `busy`, the first booking of a workshop would close it. */
+  ignoreMeetingId?: string,
+): Promise<BusyResult> {
   const rows = await convexAnonymous().query(api.publicBooking.busyForHost, {
     hostId,
     from: from.getTime(),
     to: to.getTime(),
   });
 
-  const own: Interval[] = rows.map((r) => ({
-    start: new Date(r.starts_at),
-    end: new Date(r.ends_at),
-  }));
+  const own: Interval[] = rows
+    .filter((r) => !ignoreMeetingId || r.meeting_type_id !== ignoreMeetingId)
+    .map((r) => ({
+      start: new Date(r.starts_at),
+      end: new Date(r.ends_at),
+    }));
 
   try {
     const google = await busyPeriods(hostId, from, to);

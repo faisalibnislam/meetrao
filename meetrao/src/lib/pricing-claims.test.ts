@@ -124,10 +124,13 @@ describe("the pricing page argues in the right order", () => {
   });
 
   it("keeps the limits honest about the ones stated elsewhere", () => {
-    // These five are claimed on /vs/calendly too. If one is ever built, both
-    // pages have to change, and this fails until they do.
+    /* These five are claimed on /vs/calendly too. If one is ever built, both
+       pages have to change, and this fails until they do.
+
+       Three of the original five went this way — rescheduling, locations and
+       team scheduling were all built, and each one failed here first. */
     const all = LIMITS.map(([t]) => t.toLowerCase()).join(" | ");
-    for (const missing of ["google calendar only", "google meet only", "no payments", "no team", "reschedul"]) {
+    for (const missing of ["google calendar only", "no payments", "no zoom", "round-robin only", "email only"]) {
       expect(all, `${missing} is no longer listed as a limit`).toContain(missing);
     }
   });

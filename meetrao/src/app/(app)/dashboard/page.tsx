@@ -11,6 +11,7 @@ import { GoogleG } from "@/components/ui/logo";
 import { formatTime } from "@/lib/booking/time";
 import { listBookings } from "@/lib/data/bookings";
 import { requireOnboardedSession } from "@/lib/data/session";
+import { timezoneLabel } from "@/lib/timezones";
 import { connectionStatus } from "@/lib/google/connection";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
@@ -122,7 +123,7 @@ export default async function DashboardPage() {
         {today.length ? (
           <section className="flex flex-col gap-[9px]">
             <SectionHeading title="Today" meta={today.length === 1 ? "1 meeting" : `${today.length} meetings`} />
-            <DashboardRows rows={today} variant="today" />
+            <DashboardRows rows={today} variant="today" timezoneLabel={timezoneLabel(profile.timezone)} />
           </section>
         ) : null}
 
@@ -136,7 +137,7 @@ export default async function DashboardPage() {
             }
           />
           {later.length ? (
-            <DashboardRows rows={later} variant="later" />
+            <DashboardRows rows={later} variant="later" timezoneLabel={timezoneLabel(profile.timezone)} />
           ) : upcoming.length === 0 ? (
             <EmptyState
               title="No upcoming meetings"

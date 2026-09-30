@@ -19,9 +19,12 @@ import { cx } from "@/lib/cx";
 export function DashboardRows({
   rows,
   variant,
+  timezoneLabel,
 }: {
   rows: BookingView[];
   variant: "today" | "later";
+  /** The host's own zone, named in the move dialog's fields. */
+  timezoneLabel?: string;
 }) {
   const [dialog, setDialog] = useState<DialogState>(null);
 
@@ -85,7 +88,9 @@ export function DashboardRows({
         state={dialog}
         onClose={() => setDialog(null)}
         onOpenCancel={() => setDialog((d) => (d ? { ...d, view: "cancel" } : null))}
+        onOpenMove={() => setDialog((d) => (d ? { ...d, view: "move" } : null))}
         onBackToDetail={() => setDialog((d) => (d ? { ...d, view: "detail" } : null))}
+        timezoneLabel={timezoneLabel}
       />
     </>
   );

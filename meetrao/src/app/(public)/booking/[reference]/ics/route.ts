@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getBookingByReference } from "@/lib/data/guest-booking";
+import { whereText } from "@/lib/locations";
 import { SUPPORT_EMAIL } from "@/lib/contact";
 import { siteUrl } from "@/lib/env";
 
@@ -70,16 +71,16 @@ export async function GET(
     `DTEND:${stamp(end)}`,
     line("SUMMARY", `${booking.meetingName} — ${booking.hostName}`),
     line("DESCRIPTION", description),
-    booking.meetUrl
-      ? line("LOCATION", booking.meetUrl)
-      : line("LOCATION", "Google Meet"),
+    line("LOCATION", booking.meetUrl || whereText(booking.location, booking.locationDetail, null)),
     // Calendar apps show this address beside the host's name. It used to be
     // noreply@, which was honest when nothing on the domain was received; now
     // that support@ is forwarded to a real inbox, an address that reaches a
     // person is the better one to put in front of a guest.
     line("ORGANIZER;CN=" + booking.hostName, `mailto:${SUPPORT_EMAIL}`),
     `STATUS:${cancelled ? "CANCELLED" : "CONFIRMED"}`,
-    "SEQUENCE:0",
+    // Rises on every move. A client that already holds this UID treats a
+    // lower or equal sequence as stale and keeps the time it has.
+    `SEQUENCE:${booking.revision}`,
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");

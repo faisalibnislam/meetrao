@@ -91,6 +91,9 @@ export default defineSchema({
     notify_new_booking: v.boolean(),
     notify_booking_changed: v.boolean(),
     notify_booking_cancelled: v.boolean(),
+    /** Optional: every profile written before reminders existed has none, and
+        absent reads as ON — see convex/reminders.ts. */
+    notify_reminders: v.optional(v.boolean()),
     notify_daily_agenda: v.boolean(),
     notify_product_news: v.boolean(),
     onboarding_completed_at: nullableNumber,
@@ -101,6 +104,39 @@ export default defineSchema({
     .index("by_uuid", ["id"])
     .index("by_username_lower", ["username_lower"])
     .index("by_email", ["email"]),
+
+  /* A team is a booking link several hosts answer, in turn.
+  
+     The owner is a host like any other — there is no separate account type and
+     no seat to buy. Membership is by profile id, so a member's own hours,
+     timezone and calendar are the ones consulted when it is their turn.
+
+     unique: lower(slug) product-wide — enforced in convex/teams.ts, which is
+     also what keeps a team from taking a username that is already a host's. */
+  teams: defineTable({
+    id: v.string(),
+    owner_id: v.string(),
+    name: v.string(),
+    slug: v.string(),
+    slug_lower: v.string(),
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_owner", ["owner_id"])
+    .index("by_slug_lower", ["slug_lower"]),
+
+  /* unique: (team_id, user_id) — enforced in convex/teams.ts */
+  team_members: defineTable({
+    id: v.string(),
+    team_id: v.string(),
+    user_id: v.string(),
+    role: v.union(v.literal("owner"), v.literal("member")),
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_team", ["team_id"])
+    .index("by_user", ["user_id"]),
 
   /* unique: (user_id, slug) — enforced in convex/meetingTypes.ts */
   meeting_types: defineTable({
@@ -113,10 +149,53 @@ export default defineSchema({
     buffer_minutes: v.number(),
     minimum_notice_minutes: v.number(),
     booking_window_days: v.number(),
+    /**
+     * How the meeting happens: "google_meet", "phone", "in_person" or
+     * "custom". Kept as a plain string rather than a union because every row
+     * written before the other three existed holds "google_meet" and a union
+     * would have to be widened anyway; the allow-list lives in
+     * convex/meetingTypes.ts, which is the boundary.
+     */
     location: v.string(),
+    /** The number to call, the address, or whatever "custom" means here. */
+    location_detail: v.optional(v.string()),
+    /**
+     * How many guests may take the same slot. Absent or 1 is the one-to-one
+     * meeting this product started as; above 1 makes it a class, a workshop or
+     * an office hour, where several bookings share one time.
+     *
+     * The seats are counted from the bookings themselves — there is no seat
+     * table — so a cancellation frees one by existing less.
+     */
+    capacity: v.optional(v.number()),
     is_active: v.boolean(),
     /** null = the host's default schedule. See migration 0010. */
     schedule_id: nullableString,
+    /**
+     * Set when this meeting belongs to a TEAM rather than to one host. The
+     * row still carries a user_id — the owner, who can edit it — but bookings
+     * are assigned to whichever member is free and least recently booked.
+     */
+    team_id: v.optional(nullableString),
+    /**
+     * What the guest is asked besides name, email and the free-text note.
+     * Optional because every meeting written before questions existed has
+     * none, and none is the same as an empty list.
+     *
+     * `id` is stable across edits so an answer can be matched back to the
+     * question that was asked; the ANSWER still stores the label it was shown
+     * under, because a host rewording a question must not rewrite history.
+     */
+    questions: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          label: v.string(),
+          kind: v.union(v.literal("short"), v.literal("long")),
+          required: v.boolean(),
+        }),
+      ),
+    ),
     created_at: v.number(),
     updated_at: v.number(),
   })
@@ -177,13 +256,65 @@ export default defineSchema({
     guest_rsvp_notified_at: nullableNumber,
     host_created: v.boolean(),
     page_view_id: nullableString,
+    /** The guest's answers, each carrying the label it was asked under. */
+    answers: v.optional(v.array(v.object({ label: v.string(), value: v.string() }))),
+    /* Where this booking happens, snapshotted at booking time beside
+       meeting_name and duration_minutes — a host who switches a meeting from
+       Meet to a phone call next month has not moved last month's meeting. */
+    location: v.optional(v.string()),
+    location_detail: v.optional(v.string()),
+    /**
+     * How many times this booking has been moved. Optional because every row
+     * written before reschedule existed has no such field, and absent means 0.
+     * The .ics SEQUENCE is read from it: a calendar client ignores a re-import
+     * of the same UID unless the sequence has gone up.
+     */
+    revision: v.optional(v.number()),
+    /**
+     * When each reminder was claimed, not when Resend accepted it. Claiming
+     * before sending is the welcome email's rule: a reminder that goes missing
+     * is a small thing, one that arrives twice is why people turn them off.
+     * Optional because every row written before reminders existed has neither.
+     */
+    reminded_24h_at: v.optional(v.number()),
+    reminded_1h_at: v.optional(v.number()),
     created_at: v.number(),
     updated_at: v.number(),
   })
     .index("by_uuid", ["id"])
     .index("by_reference", ["reference"])
     .index("by_host_starts", ["host_id", "starts_at"])
+    /* The reminder sweep asks "what starts soon" across every host, which
+       by_host_starts cannot answer without a scan per host. Kept separate
+       rather than widened: by_host_starts is the double-booking guard's read
+       set and must stay narrow. */
+    .index("by_starts", ["starts_at"])
     .index("by_meeting_type", ["meeting_type_id"]),
+
+  /* ONE calendar day that does not follow the weekly pattern: a holiday, a
+     day off, or a day with different hours. Keyed by the DATE as the host
+     writes it ("2026-12-25"), not by an instant — "Christmas Day" is a day in
+     the host's calendar, and an instant would drift a timezone either way.
+
+     `ranges` empty means the day is closed. A day with ranges replaces the
+     weekly rules for that date rather than adding to them, which is what a
+     host means by "I work 14:00–17:00 that Friday".
+
+     unique: (schedule_id, date) — enforced in convex/availability.ts */
+  availability_overrides: defineTable({
+    id: v.string(),
+    user_id: v.string(),
+    schedule_id: v.string(),
+    /** "YYYY-MM-DD" in the host's own timezone. */
+    date: v.string(),
+    ranges: v.array(v.object({ start_minute: v.number(), end_minute: v.number() })),
+    note: v.string(),
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_schedule", ["schedule_id"])
+    .index("by_schedule_date", ["schedule_id", "date"])
+    .index("by_user", ["user_id"]),
 
   /* unique: (booking_id, email) — enforced in convex/bookings.ts */
   booking_invitees: defineTable({
@@ -216,7 +347,14 @@ export default defineSchema({
   notifications: defineTable({
     id: v.string(),
     user_id: v.string(),
-    kind: v.union(v.literal("booking_new"), v.literal("booking_cancelled"), v.literal("booking_changed")),
+    kind: v.union(
+      v.literal("booking_new"),
+      v.literal("booking_cancelled"),
+      v.literal("booking_changed"),
+      /* The guest answered the calendar invitation. Written only by the RSVP
+         sweep, which reads the events Meetrao itself created. */
+      v.literal("booking_declined"),
+    ),
     title: v.string(),
     body: v.string(),
     booking_id: nullableString,
@@ -292,6 +430,49 @@ export default defineSchema({
     support_email: v.string(),
     updated_at: v.number(),
   }),
+
+  /* An API key, stored as a HASH and never again as itself.
+  
+     The plaintext is shown once, at creation, and cannot be recovered: a
+     leaked database should not be a leaked set of live credentials, and a
+     support screen that can print somebody's key is a support screen that can
+     be social-engineered. `prefix` is the first few characters, kept so a host
+     can tell two keys apart in a list.
+
+     unique: hash — enforced by the CSPRNG that makes the key. */
+  api_keys: defineTable({
+    id: v.string(),
+    user_id: v.string(),
+    name: v.string(),
+    prefix: v.string(),
+    hash: v.string(),
+    last_used_at: nullableNumber,
+    revoked_at: nullableNumber,
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_user", ["user_id"])
+    .index("by_hash", ["hash"]),
+
+  /* Where to POST when something happens to this host's bookings.
+  
+     The secret is readable by the owner, unlike an API key: a receiver has to
+     hold the same secret to verify the signature, and one that cannot be read
+     back is one that has to be rotated the first time somebody redeploys. */
+  webhooks: defineTable({
+    id: v.string(),
+    user_id: v.string(),
+    url: v.string(),
+    secret: v.string(),
+    is_active: v.boolean(),
+    /** The outcome of the last attempt, so a broken endpoint is visible. */
+    last_status: nullableNumber,
+    last_error: nullableString,
+    last_attempt_at: nullableNumber,
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_user", ["user_id"]),
 
   /* Fixed-window counters for the guest path. Postgres had nothing like this
      because nothing enforced a limit there either — `create_booking` was

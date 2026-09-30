@@ -4,7 +4,7 @@ import { v } from "convex/values";
 import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
 import { bookingOut, inviteeOut } from "./lib/serialize";
 import { uuid, reference as newReference } from "./lib/ids";
-import { notifyBookingCreated, notifyBookingCancelled, upsertContact, logActivity } from "./lib/effects";
+import { notifyBookingCreated, notifyBookingCancelled, notifyBookingChanged, upsertContact, logActivity } from "./lib/effects";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 
@@ -31,7 +31,20 @@ const LOOKBACK = 24 * 60 * MINUTE;
    ───────────────────────────────────────────────────────────────────────────── */
 export async function findOverlap(
   ctx: QueryCtx | MutationCtx,
-  args: { hostId: string; startsAt: number; endsAt: number; bufferMinutes: number; ignoreBookingId?: string },
+  args: {
+    hostId: string;
+    startsAt: number;
+    endsAt: number;
+    bufferMinutes: number;
+    ignoreBookingId?: string;
+    /* A group meeting's own seats are not clashes with each other. Passing
+       these two makes bookings of THAT meeting at THAT instant invisible to
+       this read — everything else, including the same meeting at a different
+       time, still refuses. The seat count is a separate question, asked by
+       seatsTaken below, because "is this slot free" and "is this slot full"
+       are different failures with different messages. */
+    seatmateOf?: string | null;
+  },
 ): Promise<Doc<"bookings"> | null> {
   const buffer = args.bufferMinutes * MINUTE;
   const near = await ctx.db
@@ -47,10 +60,31 @@ export async function findOverlap(
       (b) =>
         b.status === "confirmed" &&
         b.id !== args.ignoreBookingId &&
+        !(args.seatmateOf && b.meeting_type_id === args.seatmateOf && b.starts_at === args.startsAt) &&
         b.ends_at + buffer > args.startsAt &&
         b.starts_at - buffer < args.endsAt,
     ) ?? null
   );
+}
+
+/**
+ * How many seats of one group meeting are taken at one instant.
+ *
+ * Counted from the bookings themselves rather than held in a seat table: a
+ * cancellation frees a seat by existing less, and there is no second number to
+ * drift out of step with the first. The read is inside the same serializable
+ * mutation as the insert, which is what stops two guests taking the last seat.
+ */
+export async function seatsTaken(
+  ctx: QueryCtx | MutationCtx,
+  args: { hostId: string; meetingTypeId: string; startsAt: number },
+): Promise<number> {
+  const at = await ctx.db
+    .query("bookings")
+    .withIndex("by_host_starts", (q) => q.eq("host_id", args.hostId).eq("starts_at", args.startsAt))
+    .collect();
+
+  return at.filter((b) => b.status === "confirmed" && b.meeting_type_id === args.meetingTypeId).length;
 }
 
 /** Shared by the guest path and the host's own "schedule a meeting" screen. */
@@ -69,12 +103,39 @@ export async function insertBooking(
     bufferMinutes: number;
     hostCreated: boolean;
     pageViewId?: string | null;
+    answers?: { label: string; value: string }[];
+    location?: string;
+    locationDetail?: string;
+    /** Above 1 makes this a seat in a group meeting rather than a clash. */
+    capacity?: number;
   },
 ): Promise<Doc<"bookings">> {
   const endsAt = args.startsAt + args.durationMinutes * MINUTE;
+  const capacity = Math.max(1, args.capacity ?? 1);
+  const group = capacity > 1 && args.meetingTypeId !== null;
 
-  if (await findOverlap(ctx, { hostId: args.hostId, startsAt: args.startsAt, endsAt, bufferMinutes: args.bufferMinutes })) {
+  if (
+    await findOverlap(ctx, {
+      hostId: args.hostId,
+      startsAt: args.startsAt,
+      endsAt,
+      bufferMinutes: args.bufferMinutes,
+      seatmateOf: group ? args.meetingTypeId : null,
+    })
+  ) {
     fail("slot taken");
+  }
+
+  /* Read and insert in one serializable mutation, exactly as the overlap guard
+     is: two guests reaching for the last seat is the same race as two guests
+     reaching for the same slot, and it has the same answer. */
+  if (group) {
+    const taken = await seatsTaken(ctx, {
+      hostId: args.hostId,
+      meetingTypeId: args.meetingTypeId as string,
+      startsAt: args.startsAt,
+    });
+    if (taken >= capacity) fail("no seats left");
   }
 
   const guestEmail = args.guestEmail.trim().toLowerCase();
@@ -107,6 +168,9 @@ export async function insertBooking(
     guest_rsvp_notified_at: null,
     host_created: args.hostCreated,
     page_view_id: args.pageViewId ?? null,
+    answers: args.answers ?? [],
+    location: args.location ?? "google_meet",
+    location_detail: args.locationDetail ?? "",
     created_at: now,
     updated_at: now,
   };
@@ -124,6 +188,96 @@ export async function insertBooking(
 
   return booking;
 }
+
+/**
+ * Moves a booking that already exists — shared by the guest's reschedule link
+ * and the host's own screen.
+ *
+ * The overlap read is the same guard `insertBooking` uses and carries the same
+ * two rules, with one addition: `ignoreBookingId`, so a booking does not
+ * collide with the slot it is currently occupying. That parameter has existed
+ * since the port for exactly this caller.
+ *
+ * The row keeps its id, its reference and its Google event. A moved booking is
+ * the same meeting at a different time — cancelling and re-creating would send
+ * a cancellation the guest did not ask for, and mint a new Meet link.
+ */
+export async function moveBooking(
+  ctx: MutationCtx,
+  args: { booking: Doc<"bookings">; startsAt: number; bufferMinutes: number; byHost: boolean },
+): Promise<Doc<"bookings">> {
+  const b = args.booking;
+  if (b.status !== "confirmed") fail("This meeting has been cancelled.");
+  if (args.startsAt === b.starts_at) fail("That is the time it is already at.");
+
+  const endsAt = args.startsAt + b.duration_minutes * MINUTE;
+  if (
+    await findOverlap(ctx, {
+      hostId: b.host_id,
+      startsAt: args.startsAt,
+      endsAt,
+      bufferMinutes: args.bufferMinutes,
+      ignoreBookingId: b.id,
+    })
+  ) {
+    fail("slot taken");
+  }
+
+  const now = Date.now();
+  await ctx.db.patch(b._id, {
+    starts_at: args.startsAt,
+    ends_at: endsAt,
+    // Absent means zero: every row written before reschedule existed.
+    revision: (b.revision ?? 0) + 1,
+    updated_at: now,
+  });
+  const after = (await ctx.db.get(b._id))!;
+
+  await notifyBookingChanged(ctx, after, { oldStartsAt: b.starts_at, byHost: args.byHost });
+  await logActivity(ctx, {
+    actorId: after.host_id,
+    kind: "booking_changed",
+    summary: `${args.byHost ? after.guest_name + "'s" : after.guest_name} ${after.meeting_name} moved`,
+  });
+  return after;
+}
+
+/**
+ * The host moving one of their own bookings.
+ *
+ * Their own hours are not consulted, for the reason `createAsHost` does not
+ * consult them either: a host rearranging their day has already decided they
+ * are free. A clash still refuses, because that is double-booking rather than
+ * a preference.
+ */
+export const rescheduleAsHost = mutation({
+  args: { id: v.string(), startsAt: v.number() },
+  handler: async (ctx, a) => {
+    const me = await requireProfile(ctx);
+    const b = await ctx.db
+      .query("bookings")
+      .withIndex("by_uuid", (q) => q.eq("id", a.id))
+      .unique();
+    if (!b) AuthError("No such booking.", "NOT_FOUND");
+    assertOwnerOrAdmin(me, b.host_id);
+
+    const meeting = b.meeting_type_id
+      ? await ctx.db
+          .query("meeting_types")
+          .withIndex("by_uuid", (q) => q.eq("id", b.meeting_type_id as string))
+          .unique()
+      : null;
+
+    const oldStartsAt = b.starts_at;
+    const after = await moveBooking(ctx, {
+      booking: b,
+      startsAt: a.startsAt,
+      bufferMinutes: meeting?.buffer_minutes ?? 0,
+      byHost: true,
+    });
+    return { booking: bookingOut(after), old_starts_at: new Date(oldStartsAt).toISOString() };
+  },
+});
 
 /* ── host-facing reads (RLS: bookings_select_own / _select_admin) ──────────── */
 

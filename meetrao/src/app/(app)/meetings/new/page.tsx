@@ -23,6 +23,10 @@ export default async function NewMeetingPage() {
           window: 30,
           active: true,
           scheduleId: null,
+          questions: [],
+          capacity: 1,
+          location: "google_meet",
+          locationDetail: "",
         }}
       />
     </AppScreen>

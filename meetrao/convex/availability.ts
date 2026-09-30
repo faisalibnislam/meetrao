@@ -22,6 +22,39 @@ export async function defaultScheduleFor(
 }
 
 /** The rules a given meeting books against — its schedule, or the default. */
+/** The schedule a meeting follows, resolved the one way — its own, or the
+ *  host's default. Shared by the rules and the overrides resolvers so the two
+ *  can never disagree about which schedule a booking is being checked against. */
+async function scheduleForMeeting(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+  scheduleId: string | null,
+): Promise<Doc<"availability_schedules"> | null> {
+  return scheduleId
+    ? ((await ctx.db.query("availability_schedules").withIndex("by_uuid", (q) => q.eq("id", scheduleId)).unique()) ??
+        null)
+    : await defaultScheduleFor(ctx, userId);
+}
+
+/** The days that do not follow the weekly pattern, from today onwards.
+ *
+ *  Past overrides are not returned: nothing can be booked in the past, and a
+ *  host who took last Christmas off should not carry that list forever. */
+export async function overridesForMeeting(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+  scheduleId: string | null,
+  fromDate: string,
+): Promise<Array<Doc<"availability_overrides">>> {
+  const schedule = await scheduleForMeeting(ctx, userId, scheduleId);
+  if (!schedule) return [];
+  const all = await ctx.db
+    .query("availability_overrides")
+    .withIndex("by_schedule", (q) => q.eq("schedule_id", schedule.id))
+    .collect();
+  return all.filter((o) => o.date >= fromDate).sort((a, b) => a.date.localeCompare(b.date));
+}
+
 export async function rulesForMeeting(
   ctx: QueryCtx | MutationCtx,
   userId: string,
@@ -280,6 +313,93 @@ export const saveWeek = mutation({
  * `listRules` answers for one schedule; this screen draws them all side by
  * side, so asking per schedule would be a query per row.
  */
+/* ── time off ─────────────────────────────────────────────────────────────── */
+
+/** "2026-12-25", and a real day: "2026-02-31" parses and is not one. */
+function validDate(date: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const [y, m, d] = date.split("-").map(Number);
+  const probe = new Date(Date.UTC(y, m - 1, d));
+  return probe.getUTCFullYear() === y && probe.getUTCMonth() === m - 1 && probe.getUTCDate() === d;
+}
+
+/**
+ * Closes a day, or gives it different hours.
+ *
+ * One row per (schedule, date): saving the same day twice replaces it rather
+ * than stacking two answers for one date, which the engine would have to pick
+ * between. Convex has no unique index, so the read-then-write is the rule —
+ * safe because the mutation is serializable.
+ *
+ * EXISTING BOOKINGS ARE NOT TOUCHED. Taking a Friday off closes it to new
+ * bookings; the meeting already in the diary stays, and the host cancels or
+ * moves it themselves. Deleting someone else's confirmed meeting as a side
+ * effect of editing a calendar is not something a screen should do quietly.
+ */
+export const saveOverride = mutation({
+  args: {
+    scheduleId: v.string(),
+    date: v.string(),
+    ranges: v.array(v.object({ start_minute: v.number(), end_minute: v.number() })),
+    note: v.optional(v.string()),
+  },
+  handler: async (ctx, a) => {
+    const me = await requireProfile(ctx);
+    const schedule = await ctx.db
+      .query("availability_schedules").withIndex("by_uuid", (q) => q.eq("id", a.scheduleId)).unique();
+    if (!schedule) fail("That schedule is gone. Reload the page.");
+    assertOwnerOrAdmin(me, schedule.user_id);
+
+    if (!validDate(a.date)) fail("That is not a date.");
+
+    const ranges = [...a.ranges].sort((x, y) => x.start_minute - y.start_minute);
+    for (const r of ranges) {
+      if (r.start_minute < 0 || r.start_minute > 1440 || r.end_minute < 0 || r.end_minute > 1440)
+        fail("Times must fall inside the day.");
+      if (r.end_minute <= r.start_minute) fail("A range must end after it starts.");
+    }
+    for (let i = 1; i < ranges.length; i++) {
+      if (ranges[i].start_minute < ranges[i - 1].end_minute) fail("Two ranges on that day overlap.");
+    }
+
+    const existing = await ctx.db
+      .query("availability_overrides")
+      .withIndex("by_schedule_date", (q) => q.eq("schedule_id", schedule.id).eq("date", a.date))
+      .unique();
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { ranges, note: a.note ?? existing.note });
+      return existing.id;
+    }
+
+    const id = uuid();
+    await ctx.db.insert("availability_overrides", {
+      id,
+      user_id: schedule.user_id,
+      schedule_id: schedule.id,
+      date: a.date,
+      ranges,
+      note: a.note ?? "",
+      created_at: Date.now(),
+    });
+    return id;
+  },
+});
+
+/** Puts a day back on the weekly pattern. */
+export const deleteOverride = mutation({
+  args: { id: v.string() },
+  handler: async (ctx, a) => {
+    const me = await requireProfile(ctx);
+    const row = await ctx.db
+      .query("availability_overrides").withIndex("by_uuid", (q) => q.eq("id", a.id)).unique();
+    if (!row) return false;
+    assertOwnerOrAdmin(me, row.user_id);
+    await ctx.db.delete(row._id);
+    return true;
+  },
+});
+
 export const screen = query({
   args: {},
   handler: async (ctx) => {
@@ -296,6 +416,18 @@ export const screen = query({
       .query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
     meetings.sort((a, b) => a.created_at - b.created_at);
 
+    /* Today onwards, in the host's own zone: a list of days already past is
+       not time off, it is history, and the screen has nothing to do with it. */
+    const today = new Intl.DateTimeFormat("en-CA", {
+      timeZone: me.timezone || "UTC", year: "numeric", month: "2-digit", day: "2-digit",
+    }).format(new Date());
+
+    const overrides = (
+      await ctx.db.query("availability_overrides").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect()
+    )
+      .filter((o) => o.date >= today)
+      .sort((x, y) => x.date.localeCompare(y.date));
+
     return {
       schedules: schedules.map((s) => ({
         id: s.id, name: s.name, is_default: s.is_default, created_at: new Date(s.created_at).toISOString(),
@@ -304,6 +436,9 @@ export const screen = query({
         schedule_id: r.schedule_id, weekday: r.weekday, start_minute: r.start_minute, end_minute: r.end_minute,
       })),
       meetings: meetings.map((m) => ({ name: m.name, schedule_id: m.schedule_id })),
+      overrides: overrides.map((o) => ({
+        id: o.id, schedule_id: o.schedule_id, date: o.date, ranges: o.ranges, note: o.note,
+      })),
     };
   },
 });

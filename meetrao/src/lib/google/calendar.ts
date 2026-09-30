@@ -96,6 +96,27 @@ export async function createEventForBooking(
   return { failure: map[r.reason] ?? "api-unavailable" };
 }
 
+/**
+ * Moves the event to match a booking that has already moved.
+ *
+ * "This booking never had an event" is not a failure worth telling anyone
+ * about — a host with no calendar connected books perfectly well without one —
+ * so it comes back as `ok` with no Meet link rather than as a warning.
+ */
+export async function updateEventForBooking(
+  reference: string,
+): Promise<{ meetUrl: string | null } | { failure: CalendarFailure }> {
+  const r = await convexAnonymous().action(api.google.updateEventForBooking, { reference });
+  if (r.ok) return { meetUrl: r.meetUrl };
+  if (r.reason === "no-event") return { meetUrl: null };
+  const map: Record<string, CalendarFailure> = {
+    "not-connected": "not-connected",
+    "api-unavailable": "api-unavailable",
+    "unknown-booking": "api-unavailable",
+  };
+  return { failure: map[r.reason] ?? "api-unavailable" };
+}
+
 export async function deleteEventForBooking(reference: string): Promise<"ok" | CalendarFailure> {
   const r = await convexAnonymous().action(api.google.deleteEventForBooking, { reference });
   if (r.ok) return "ok";

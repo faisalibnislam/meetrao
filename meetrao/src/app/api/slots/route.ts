@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { bookableDatesInMonth, computeSlots, dateKey, type PlainDate } from "@/lib/booking/slots";
-import { getBusy, getMeetingAvailability, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getPublicTeam, getTeamBusy, getTeamHours, teamOpenDates, teamSlotsForDay } from "@/lib/data/team-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getSeatMap, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 
 /* The slot query the booking page calls. Public, because the guest has no
    session — and read-only, so it exposes availability and nothing else about
@@ -10,7 +11,48 @@ export const dynamic = "force-dynamic";
 
 const DAY = 86_400_000;
 
+/**
+ * The same answer for a team link: the union of its members' times.
+ *
+ * Kept beside the solo path rather than in it, because almost nothing is
+ * shared — a team has no single host, no seat map and no meeting of its own
+ * to look up by username.
+ */
+async function teamSlots(request: NextRequest, teamSlug: string) {
+  const params = request.nextUrl.searchParams;
+  const slug = params.get("slug") ?? "";
+  const year = Number(params.get("year"));
+  const month = Number(params.get("month"));
+  const day = params.get("day") ? Number(params.get("day")) : null;
+  const timezone = params.get("tz") || "UTC";
+
+  const team = await getPublicTeam(teamSlug);
+  const meeting = team?.meetings.find((m) => m.slug === slug);
+  if (!team || !meeting) return NextResponse.json({ error: "Unknown meeting." }, { status: 404 });
+
+  const hours = await getTeamHours(team.slug, meeting.id);
+  if (hours.length === 0) return NextResponse.json({ openDates: [], times: [], calendarChecked: false });
+
+  const from = new Date(Date.UTC(year, month - 1, 1) - DAY);
+  const to = new Date(Date.UTC(year, month, 1) + DAY);
+  const busy = await getTeamBusy(hours, from, to);
+
+  const now = new Date();
+  const openDates = teamOpenDates({ hours, busy, meeting, year, month, guestTimezone: timezone, now });
+  const times = day
+    ? teamSlotsForDay({ hours, busy, meeting, date: { year, month, day }, guestTimezone: timezone, now })
+    : [];
+
+  return NextResponse.json(
+    { openDates, times, selected: day ? dateKey({ year, month, day }) : null, calendarChecked: true },
+    { headers: { "Cache-Control": "no-store" } },
+  );
+}
+
 export async function GET(request: NextRequest) {
+  const teamSlug = request.nextUrl.searchParams.get("team");
+  if (teamSlug) return teamSlots(request, teamSlug);
+
   const q = request.nextUrl.searchParams;
   const username = q.get("username");
   const slug = q.get("slug");
@@ -31,17 +73,25 @@ export async function GET(request: NextRequest) {
 
   // Per meeting, not per host: two meetings can sit on different schedules.
   const availability = await getMeetingAvailability(meeting.id);
+  const overrides = await getMeetingOverrides(meeting.id);
 
   // A month, with a day either side so a guest-local day that straddles two
   // host-local days is still covered.
   const from = new Date(Date.UTC(year, month - 1, 1) - DAY);
   const to = new Date(Date.UTC(year, month, 1) + DAY);
-  const { busy, calendarChecked } = await getBusy(host.id, from, to);
+  const { busy, calendarChecked } = await getBusy(
+    host.id,
+    from,
+    to,
+    meeting.capacity > 1 ? meeting.id : undefined,
+  );
+  const seats = meeting.capacity > 1 ? await getSeatMap(meeting.id, from, to) : {};
 
   const shared = {
     guestTimezone: timezone,
     hostTimezone: host.timezone,
     availability,
+    overrides,
     rules: meeting.rules,
     busy,
     now: new Date(),
@@ -49,12 +99,13 @@ export async function GET(request: NextRequest) {
 
   const openDates = [...bookableDatesInMonth({ ...shared, year, month })];
 
-  const times = day
-    ? computeSlots({ ...shared, date: { year, month, day } as PlainDate }).map((d) => d.toISOString())
-    : [];
+  const times = (day ? computeSlots({ ...shared, date: { year, month, day } as PlainDate }) : [])
+    .map((d) => d.toISOString())
+    // A full slot is not on offer, however free the host's calendar looks.
+    .filter((iso) => meeting.capacity <= 1 || (seats[iso] ?? 0) < meeting.capacity);
 
   return NextResponse.json(
-    { openDates, times, selected: day ? dateKey({ year, month, day }) : null, calendarChecked },
+    { openDates, times, seats, selected: day ? dateKey({ year, month, day }) : null, calendarChecked },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

@@ -27,6 +27,19 @@ export type AvailabilityRule = {
   endMinute: number;
 };
 
+/**
+ * One calendar day that does not follow the weekly pattern.
+ *
+ * `date` is a host-local "YYYY-MM-DD" — the same key `dateKey` produces — and
+ * an empty `ranges` closes the day. A day with ranges REPLACES the weekly
+ * rules for that date: a host who says "14:00-17:00 that Friday" means instead
+ * of, not as well as.
+ */
+export type DateOverride = {
+  date: string;
+  ranges: readonly { startMinute: number; endMinute: number }[];
+};
+
 export type SlotRules = {
   durationMinutes: number;
   bufferMinutes: number;
@@ -45,6 +58,8 @@ export type ComputeSlotsInput = {
   rules: SlotRules;
   /** Confirmed bookings plus Google Calendar busy periods, as UTC instants. */
   busy: readonly Interval[];
+  /** Days off and one-off hours, keyed by the host's own calendar date. */
+  overrides?: readonly DateOverride[];
   now: Date;
 };
 
@@ -105,9 +120,14 @@ export function expandAvailability(
   hostTimezone: string,
   windowStart: Date,
   windowEnd: Date,
+  overrides: readonly DateOverride[] = [],
 ): Interval[] {
-  if (availability.length === 0) return [];
+  /* An empty week is still worth walking when a date override might open a
+     day: a host with no weekly hours who opens one Saturday has exactly one
+     bookable day, and returning early here would hide it. */
+  if (availability.length === 0 && overrides.length === 0) return [];
 
+  const byDate = new Map(overrides.map((o) => [o.date, o]));
   const out: Interval[] = [];
   // One day either side: the guest's day can straddle up to two host days.
   let cursor = plainDateIn(new Date(windowStart.getTime() - DAY), hostTimezone);
@@ -117,8 +137,15 @@ export function expandAvailability(
     const midday = zonedInstant(cursor, 12 * 60, hostTimezone);
     const weekday = weekdayIn(midday, hostTimezone);
 
-    for (const rule of availability) {
-      if (rule.weekday !== weekday) continue;
+    /* A date the host has spoken about answers for itself. An override with
+       no ranges closes the day outright — which is why this replaces the
+       weekly rules rather than filtering them. */
+    const override = byDate.get(dateKey(cursor));
+    const ranges = override
+      ? override.ranges.map((r) => ({ startMinute: r.startMinute, endMinute: r.endMinute }))
+      : availability.filter((r) => r.weekday === weekday);
+
+    for (const rule of ranges) {
       const start = zonedInstant(cursor, rule.startMinute, hostTimezone);
       const end = zonedInstant(cursor, rule.endMinute, hostTimezone);
       if (end.getTime() <= start.getTime()) continue;
@@ -147,6 +174,7 @@ export function computeSlots({
   availability,
   rules,
   busy,
+  overrides = [],
   now,
 }: ComputeSlotsInput): Date[] {
   const { durationMinutes, bufferMinutes, minimumNoticeMinutes, bookingWindowDays } = rules;
@@ -159,12 +187,7 @@ export function computeSlots({
   const latest = now.getTime() + bookingWindowDays * DAY;
   if (dayEnd <= earliest || dayStart > latest) return [];
 
-  const ranges = expandAvailability(
-    availability,
-    hostTimezone,
-    new Date(dayStart),
-    new Date(dayEnd),
-  );
+  const ranges = expandAvailability(availability, hostTimezone, new Date(dayStart), new Date(dayEnd), overrides);
 
   const durationMs = durationMinutes * MINUTE;
   const bufferMs = bufferMinutes * MINUTE;

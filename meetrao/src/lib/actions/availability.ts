@@ -33,6 +33,8 @@ export type SaveResult = { error?: string };
 export type ScheduleResult = { error?: string; id?: string };
 
 type Rule = { weekday: number; start_minute: number; end_minute: number };
+/** A range on ONE date, which has no weekday of its own. */
+type Rule2 = { start_minute: number; end_minute: number };
 
 const MAX_NAME = 60;
 
@@ -153,5 +155,55 @@ export async function setDefaultSchedule(input: { id: string }): Promise<SaveRes
   if (r.error) return { error: r.error };
   revalidatePath("/availability");
   revalidatePath("/meetings");
+  return {};
+}
+
+/* ── time off ─────────────────────────────────────────────────────────────── */
+
+export type TimeOffResult = { error?: string; id?: string };
+
+/**
+ * Closes one day, or gives it different hours.
+ *
+ * Validated here as well as in Convex for the reason every other action in
+ * this file is: the form's checks are a convenience, and this is the boundary.
+ * An empty `ranges` is the "away all day" case and is the common one — the
+ * screen sends it whenever the host does not choose custom hours.
+ */
+export async function saveTimeOff(input: {
+  scheduleId: string;
+  date: string;
+  ranges: Rule2[];
+  note?: string;
+}): Promise<TimeOffResult> {
+  await requireSession();
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(input.date)) return { error: "Pick a date." };
+  for (const r of input.ranges) {
+    if (r.start_minute < 0 || r.end_minute > 1440) return { error: "Hours have to sit inside a single day." };
+    if (r.end_minute <= r.start_minute) return { error: "Each range has to end after it starts." };
+  }
+  if ((input.note ?? "").length > 80) return { error: "Keep the note under 80 characters." };
+
+  const { value, error } = await viaConvex((c) =>
+    c.mutation(api.availability.saveOverride, {
+      scheduleId: input.scheduleId,
+      date: input.date,
+      ranges: input.ranges,
+      note: input.note ?? "",
+    }),
+  );
+  if (error) return { error };
+
+  revalidatePath("/availability");
+  return { id: value };
+}
+
+/** Puts a day back on the weekly pattern. */
+export async function deleteTimeOff(id: string): Promise<SaveResult> {
+  await requireSession();
+  const { error } = await viaConvex((c) => c.mutation(api.availability.deleteOverride, { id }));
+  if (error) return { error };
+  revalidatePath("/availability");
   return {};
 }

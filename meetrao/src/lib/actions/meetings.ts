@@ -6,6 +6,8 @@ import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 import { slugify } from "@/lib/username";
+import type { BookingQuestion } from "@/lib/types";
+import { isLocationKind } from "@/lib/locations";
 
 export type MeetingResult = { error?: string; id?: string };
 
@@ -20,7 +22,18 @@ export type MeetingInput = {
   notice: number;
   window: number;
   active: boolean;
+  /** What the guest is asked besides name, email and the note. */
+  questions?: BookingQuestion[];
+  /** "google_meet" · "phone" · "in_person" · "custom". */
+  location?: string;
+  locationDetail?: string;
+  /** 1 is one-to-one; above that, several guests share each slot. */
+  capacity?: number;
 };
+
+/** The design's number, and a kindness: a booking form asking eight questions
+    is one guests abandon. Convex enforces the same cap. */
+const MAX_QUESTIONS = 5;
 
 const DURATIONS = [15, 30, 45, 60];
 const BUFFERS = [0, 5, 10, 15];
@@ -34,6 +47,20 @@ function invalid(input: MeetingInput): string | null {
   if (!BUFFERS.includes(input.buffer)) return "Pick a buffer from the list.";
   if (!NOTICES.includes(input.notice)) return "Pick a minimum notice from the list.";
   if (!WINDOWS.includes(input.window)) return "Pick a booking window from the list.";
+
+  const questions = (input.questions ?? []).filter((q) => q.label.trim());
+  if (questions.length > MAX_QUESTIONS) return `A meeting can ask at most ${MAX_QUESTIONS} questions.`;
+  for (const q of questions) {
+    if (q.label.trim().length > 120) return "Keep each question under 120 characters.";
+  }
+  if (new Set(questions.map((q) => q.id)).size !== questions.length) return "Two questions share an id.";
+
+  const capacity = input.capacity ?? 1;
+  if (!Number.isInteger(capacity) || capacity < 1) return "Seats must be a whole number, 1 or more.";
+  if (capacity > 100) return "A meeting can hold at most 100 guests.";
+
+  if (input.location && !isLocationKind(input.location)) return "Pick one of the offered locations.";
+  if ((input.locationDetail ?? "").length > 200) return "Keep the location under 200 characters.";
   return null;
 }
 
@@ -52,6 +79,12 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
     minimum_notice_minutes: input.notice,
     booking_window_days: input.window,
     is_active: input.active,
+    capacity: input.capacity ?? 1,
+    location: input.location ?? "google_meet",
+    location_detail: (input.locationDetail ?? "").trim(),
+    questions: (input.questions ?? [])
+      .filter((q) => q.label.trim())
+      .map((q) => ({ id: q.id, label: q.label.trim(), kind: q.kind, required: q.required })),
   };
   try {
     const convex = await convexServer();
