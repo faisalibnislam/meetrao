@@ -7,6 +7,7 @@ import { scheduleOptions } from "@/lib/data/schedules";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { MeetingType } from "@/lib/types";
+import { isProNow } from "@/lib/data/teams";
 
 export const metadata: Metadata = { title: "Edit meeting" };
 
@@ -24,6 +25,7 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
   return (
     <AppScreen title="Edit meeting" crumb={{ label: "Meetings", href: "/meetings" }} crumbCurrent="Edit">
       <MeetingForm
+        pro={await isProNow()}
         schedules={await scheduleOptions(profile.id)}
         initial={{
           id: meeting.id,

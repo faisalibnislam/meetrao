@@ -8,6 +8,7 @@ import { formatDuration, formatLongDate, formatTimeRange } from "@/lib/booking/t
 import { getBookingByReference } from "@/lib/data/guest-booking";
 import { whereText } from "@/lib/locations";
 import { cx } from "@/lib/cx";
+import { PublicFooter } from "@/components/booking/public-footer";
 
 export const dynamic = "force-dynamic";
 
@@ -51,6 +52,7 @@ export default async function ConfirmedPage({
   ];
 
   return (
+    <>
     <div className="animate-in m-auto flex w-full max-w-[520px] flex-col gap-[14px]">
       <LogoLink height={20} />
 
@@ -139,5 +141,7 @@ export default async function ConfirmedPage({
         </div>
       </div>
     </div>
+      <PublicFooter />
+    </>
   );
 }

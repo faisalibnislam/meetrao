@@ -6,6 +6,7 @@ import { LogoLink } from "@/components/ui/logo";
 import { formatLongDate, formatTimeRange } from "@/lib/booking/time";
 import { cancelAsGuest } from "@/lib/actions/guest-cancel";
 import { getBookingByReference } from "@/lib/data/guest-booking";
+import { PublicFooter } from "@/components/booking/public-footer";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +33,7 @@ export default async function CancelPage({ params }: { params: Promise<{ referen
   const end = new Date(booking.endsAt);
 
   return (
+    <>
     <div className="m-auto flex w-full max-w-[460px] flex-col gap-[14px]">
       <LogoLink height={20} />
 
@@ -65,5 +67,7 @@ export default async function CancelPage({ params }: { params: Promise<{ referen
         </form>
       </div>
     </div>
+      <PublicFooter />
+    </>
   );
 }

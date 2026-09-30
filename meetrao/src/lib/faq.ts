@@ -82,6 +82,6 @@ export const FAQS: [string, string, string][] = [
   [
     "compare",
     "How does it compare with paid tools?",
-    "Meetrao does the core job and does not charge for it. It is deliberately narrow: one calendar provider, no payments, no routing forms. If you need those, or collective availability rather than a round-robin, a paid tool will serve you better. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
+    "Taking bookings is free and always has been — the link, the calendar checks, reminders, rescheduling and time off, with no card. Pro is $10 a year for a custom domain, your own branding, team links, shared sessions and the API. It is still deliberately narrow: one calendar provider, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
   ],
 ];

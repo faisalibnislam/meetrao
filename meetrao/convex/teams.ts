@@ -4,6 +4,7 @@ import { fail } from "./lib/errors";
 import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
 import { uuid } from "./lib/ids";
 import { logActivity } from "./lib/effects";
+import { requirePro } from "./lib/plan";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ export const create = mutation({
   args: { name: v.string(), slug: v.string() },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
+    requirePro(me, "A team link");
 
     const name = a.name.trim();
     if (!name) fail("Give the team a name.");

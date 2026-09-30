@@ -5,6 +5,8 @@ import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
 import { meetingTypeOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
 import { isLocationKind } from "./lib/locations";
+import { requirePro } from "./lib/plan";
+import type { Doc } from "./_generated/dataModel";
 import { logActivity } from "./lib/effects";
 
 const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,78}[a-z0-9])?$/;
@@ -66,9 +68,12 @@ const MAX_QUESTIONS = 5;
  */
 const MAX_CAPACITY = 100;
 
-function validCapacity(value: number): number {
+function validCapacity(value: number, owner: Doc<"profiles">): number {
   if (!Number.isInteger(value) || value < 1) fail("Seats must be a whole number, 1 or more.");
   if (value > MAX_CAPACITY) fail(`A meeting can hold at most ${MAX_CAPACITY} guests.`);
+  // One seat is the ordinary meeting; more than one is a session several
+  // people share, which is Pro.
+  if (value > 1) requirePro(owner, "Group sessions");
   return value;
 }
 
@@ -136,7 +141,7 @@ export const create = mutation({
     await ctx.db.insert("meeting_types", {
       id, user_id: me.id, description: a.description ?? "",
       ...validLocation(a.location ?? "google_meet", a.location_detail ?? ""),
-      capacity: validCapacity(a.capacity ?? 1),
+      capacity: validCapacity(a.capacity ?? 1, me),
       is_active: true,
       questions: validQuestions(a.questions ?? []),
       schedule_id: a.schedule_id ?? null, created_at: now, updated_at: now, ...row,
@@ -188,7 +193,7 @@ export const update = mutation({
       patch.location_detail = fixed.location_detail;
     }
 
-    if (patch.capacity !== undefined) patch.capacity = validCapacity(patch.capacity as number);
+    if (patch.capacity !== undefined) patch.capacity = validCapacity(patch.capacity as number, me);
 
     /* Only a team you own, and only your own meeting — the ownership check
        above has already run, so this is the other half: a meeting cannot be

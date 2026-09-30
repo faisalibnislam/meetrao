@@ -13,6 +13,7 @@ import {
 } from "@/lib/data/public-booking";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
+import { siteUrl } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
 
@@ -125,6 +126,18 @@ export default async function EmbedPage({
         initial={{ year, month, openDates, day: firstOpen ?? null, times, timezone: host.timezone }}
         pageViewId={typeof pageViewId === "string" ? pageViewId : null}
       />
+
+      {/* Free accounts carry a line on somebody else's site; Pro does not.
+          Deliberately small and below the card — a widget a host paid to
+          embed should look like theirs, and one they did not should still
+          not shout. */}
+      {host.unbranded ? null : (
+        <p className="m-0 pt-[10px] text-center text-[11.5px] text-ink-3">
+          <a href={`${siteUrl()}/?via=embed`} target="_blank" rel="noopener noreferrer">
+            Powered by Meetrao
+          </a>
+        </p>
+      )}
     </>
   );
 }

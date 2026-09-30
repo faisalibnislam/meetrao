@@ -5,6 +5,7 @@ import { fail } from "./lib/errors";
 import { requireProfile, AuthError, assertOwnerOrAdmin } from "./lib/auth";
 import { uuid } from "./lib/ids";
 import { hashApiKey, keyPrefix, newApiKey } from "./lib/apiAuth";
+import { requirePro } from "./lib/plan";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    API keys: read-only, per host, hashed.
@@ -44,6 +45,12 @@ export const list = query({
 export const store = internalMutation({
   args: { userId: v.string(), name: v.string(), prefix: v.string(), hash: v.string() },
   handler: async (ctx, a) => {
+    /* Checked here rather than in `create`, because this is where the row is
+       written — a gate on the caller is a gate somebody can call around. */
+    const owner = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.userId)).unique();
+    if (!owner) fail("No such account.");
+    requirePro(owner, "The API");
+
     const mine = await ctx.db.query("api_keys").withIndex("by_user", (q) => q.eq("user_id", a.userId)).collect();
     if (mine.filter((k) => k.revoked_at === null).length >= MAX_KEYS) {
       fail(`You can hold ${MAX_KEYS} keys at a time. Revoke one first.`);

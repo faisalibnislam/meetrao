@@ -7,6 +7,7 @@ import { uuid } from "./lib/ids";
 import { findOverlap, insertBooking, moveBooking } from "./bookings";
 import { overridesForMeeting, rulesForMeeting } from "./availability";
 import { membersOf } from "./teams";
+import { planOf } from "./lib/plan";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
@@ -49,6 +50,9 @@ export const getHost = query({
       avatar_url: p.avatar_url,
       timezone: p.timezone,
       is_suspended: p.is_suspended,
+      /* Whether the "Powered by Meetrao" badge is shown. A boolean, not the
+         plan: a guest has no use for knowing which tier somebody is on. */
+      unbranded: planOf(p) === "pro",
     };
   },
 });
@@ -90,7 +94,13 @@ export const getMeetingAvailability = query({
 
     const rules = await rulesForMeeting(ctx, host.id, meeting.schedule_id);
     return {
-      host: { id: host.id, username: host.username, full_name: host.full_name, job_title: host.job_title, avatar_url: host.avatar_url, timezone: host.timezone },
+      host: {
+        id: host.id, username: host.username, full_name: host.full_name, job_title: host.job_title,
+        avatar_url: host.avatar_url, timezone: host.timezone,
+        /* Whether the badge is shown. A boolean, not the plan: a guest has no
+           use for knowing which tier somebody is on. */
+        unbranded: planOf(host) === "pro",
+      },
       meeting: {
         id: meeting.id, name: meeting.name, description: meeting.description, slug: meeting.slug,
         duration_minutes: meeting.duration_minutes, buffer_minutes: meeting.buffer_minutes,
@@ -271,6 +281,32 @@ export const getTeam = query({
         schedule_id: m.schedule_id,
       })),
     };
+  },
+});
+
+/**
+ * Which host a custom domain belongs to.
+ *
+ * Called by the proxy on every request to a hostname it does not recognise,
+ * so it is deliberately the narrowest query in the file: one indexed read,
+ * one field back. Only a VERIFIED domain resolves — an unverified one is a
+ * claim, and serving somebody's booking page on an unproven name is how a
+ * domain gets pointed somewhere it should not be.
+ */
+export const hostForDomain = query({
+  args: { domain: v.string() },
+  handler: async (ctx, a) => {
+    const domain = a.domain.trim().toLowerCase();
+    if (!domain) return null;
+
+    const p = await ctx.db
+      .query("profiles")
+      .withIndex("by_custom_domain", (q) => q.eq("custom_domain", domain))
+      .unique();
+
+    if (!p || !p.custom_domain_verified_at || p.is_suspended) return null;
+    if (planOf(p) !== "pro") return null;
+    return { username: p.username };
   },
 });
 

@@ -18,6 +18,7 @@ import {
   setMeetingTeam,
 } from "@/lib/actions/teams";
 import { cx } from "@/lib/cx";
+import Link from "next/link";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    One link several people answer.
@@ -43,11 +44,13 @@ export function TeamPanel({
   teams,
   meetings,
   siteUrl,
+  pro,
 }: {
   teams: TeamView[];
   /** The host's own meetings, any of which can be handed to a team. */
   meetings: AssignableMeeting[];
   siteUrl: string;
+  pro: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -91,11 +94,23 @@ export function TeamPanel({
               Make one when a meeting should go to whichever of you is free, rather than to you.
             </span>
           </div>
-          <div>
-            <Button variant="accent" size={34} icon="plus" onClick={() => setDialog("new")}>
-              Create a team
-            </Button>
-          </div>
+          {pro ? (
+            <div>
+              <Button variant="accent" size={34} icon="plus" onClick={() => setDialog("new")}>
+                Create a team
+              </Button>
+            </div>
+          ) : (
+            /* Locked, and it says what it costs. A disabled button with no
+               explanation is how a paywall reads as a bug. */
+            <Callout tone="accent" title="Team links are part of Pro">
+              One link the whole team answers, rotating to whoever is free.{" "}
+              <Link href="/settings/billing" className="font-semibold">
+                See Pro — $10 a year
+              </Link>
+              .
+            </Callout>
+          )}
         </>
       ) : null}
 

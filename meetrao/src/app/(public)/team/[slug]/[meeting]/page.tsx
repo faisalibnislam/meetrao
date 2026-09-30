@@ -4,6 +4,7 @@ import { BookingFlow } from "@/components/booking/booking-flow";
 import { Eyebrow } from "@/components/ui/badge";
 import { Logo } from "@/components/ui/logo";
 import { getPublicTeam, getTeamBusy, getTeamHours, teamOpenDates, teamSlotsForDay } from "@/lib/data/team-booking";
+import { PublicFooter } from "@/components/booking/public-footer";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +93,7 @@ export default async function TeamBookingPage({
     : [];
 
   return (
+    <>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
         <Logo height={20} />
@@ -117,5 +119,7 @@ export default async function TeamBookingPage({
         pageViewId={null}
       />
     </div>
+      <PublicFooter />
+    </>
   );
 }

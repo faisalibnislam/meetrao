@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ChoiceChip, Field, Input, Switch, Textarea } from "@/components/ui/controls";
 import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
-import { PanelHeading } from "@/components/ui/panels";
+import { Callout, PanelHeading } from "@/components/ui/panels";
+import Link from "next/link";
 import { useToast } from "@/components/ui/toast";
 import { saveMeeting, type MeetingInput } from "@/lib/actions/meetings";
 import type { BookingQuestion } from "@/lib/types";
@@ -46,9 +47,12 @@ const MAX_QUESTIONS = 5;
 export function MeetingForm({
   initial,
   schedules = [],
+  pro = false,
 }: {
   initial: MeetingInput;
   schedules?: ScheduleOption[];
+  /** Group sessions are Pro; the server enforces it either way. */
+  pro?: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -207,10 +211,22 @@ export function MeetingForm({
           <ChoiceChip selected={capacity === 1} onClick={() => set("capacity", 1)}>
             One at a time
           </ChoiceChip>
-          <ChoiceChip selected={capacity > 1} onClick={() => set("capacity", capacity > 1 ? capacity : 8)}>
-            Several together
-          </ChoiceChip>
+          {pro ? (
+            <ChoiceChip selected={capacity > 1} onClick={() => set("capacity", capacity > 1 ? capacity : 8)}>
+              Several together
+            </ChoiceChip>
+          ) : null}
         </div>
+
+        {pro ? null : (
+          <Callout tone="accent" title="Sessions several guests share are part of Pro">
+            A class, a workshop, an office hour — one slot, several seats.{" "}
+            <Link href="/settings/billing" className="font-semibold">
+              See Pro — $10 a year
+            </Link>
+            .
+          </Callout>
+        )}
 
         {capacity > 1 ? (
           <Field

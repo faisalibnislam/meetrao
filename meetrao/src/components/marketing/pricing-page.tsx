@@ -2,7 +2,17 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Kicker } from "./site-chrome";
 import { Reveal } from "./reveal";
-import { DENIALS, HEADLINE, INCLUDED, LIMITS, PRICING_FAQ, WHY } from "@/lib/pricing";
+import {
+  DENIALS,
+  HEADLINE,
+  INCLUDED,
+  LIMITS,
+  PRICING_FAQ,
+  PRO_ADDS,
+  PRO_MONTHLY,
+  PRO_YEARLY,
+  WHY,
+} from "@/lib/pricing";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The pricing page.
@@ -30,8 +40,9 @@ export function PricingPage() {
               {HEADLINE}
             </h1>
             <p className="m-0 text-[16px] leading-[1.6] text-pretty text-ink-2">
-              Meetrao has one tier and it costs nothing. Not a free plan sitting under three paid ones — the
-              whole product, on every account, with no card and nothing to cancel.
+              Taking bookings is free, and that is the whole booking product — not a sample of it. Pro is{" "}
+              {PRO_YEARLY} and adds the parts a business needs: your own domain, your own branding, a team
+              link, and the API.
             </p>
 
             <div className="mt-[6px] flex flex-wrap gap-[10px]">
@@ -75,7 +86,9 @@ export function PricingPage() {
               What you get
             </h2>
             <p className="mt-[10px] mb-[22px] max-w-[640px] text-[14px] leading-[1.6] text-ink-2">
-              All of it. There is no second column, because there is no second plan.
+              Everything below is free, with no card and no limit on bookings. Nothing your guests touch is
+              behind the paid plan — reminders, moving a meeting and timezone handling are theirs, not a
+              lever to charge you with.
             </p>
 
             <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] gap-x-[22px] gap-y-[11px] p-0">
@@ -92,6 +105,38 @@ export function PricingPage() {
                 </li>
               ))}
             </ul>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ── what Pro adds ─────────────────────────────────────────────────── */}
+      <section className="border-t border-line bg-surface">
+        <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
+          <Reveal>
+            <div className="flex flex-wrap items-end justify-between gap-[14px]">
+              <div className="max-w-[640px]">
+                <h2 className="m-0 font-serif text-[clamp(26px,3.2vw,38px)] leading-[1.06] font-normal tracking-[-0.02em] text-ink">
+                  Pro, {PRO_YEARLY}
+                </h2>
+                <p className="mt-[10px] text-[14px] leading-[1.6] text-ink-2">
+                  Or {PRO_MONTHLY} if you would rather pay monthly. One price for the account — not per
+                  person, not per booking. Cancel from the billing portal and it runs to the end of the
+                  period you paid for.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-[24px] grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] gap-[16px]">
+              {PRO_ADDS.map(([title, body]) => (
+                <div
+                  key={title}
+                  className="flex flex-col gap-[7px] rounded-[12px] border border-accent-line bg-accent-soft px-[18px] pt-[17px] pb-[19px]"
+                >
+                  <span className="text-[14px] font-semibold tracking-[-0.005em] text-ink">{title}</span>
+                  <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">{body}</span>
+                </div>
+              ))}
+            </div>
           </Reveal>
         </div>
       </section>
