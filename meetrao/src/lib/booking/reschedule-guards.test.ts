@@ -123,9 +123,19 @@ describe("time off is enforced at the booking door too", () => {
      the second implementation has to learn the same rules. Migration 0005
      exists because that check was once missing entirely — a date override
      that only the engine knew about would be the same hole, reopened. */
-  it("both doors use the one check", () => {
+  /* Three doors now: a guest booking, a guest moving one, and a team booking
+     testing each member in turn. A fourth added without this call would be a
+     fourth way past the rule. */
+  it("every booking door uses the one check", () => {
     const uses = publicBooking.match(/await fitsAvailability\(/g) ?? [];
-    expect(uses.length, "create and reschedule should both call it").toBe(2);
+    expect(uses.length, "a booking door is not calling it").toBe(3);
+
+    for (const door of ["createBooking", "rescheduleByReference", "createTeamBooking"]) {
+      const from = publicBooking.indexOf(`export const ${door}`);
+      expect(from, `${door} has moved or been renamed`).toBeGreaterThan(-1);
+      const body = publicBooking.slice(from, publicBooking.indexOf("\n});", from));
+      expect(body, `${door} skips the availability check`).toContain("fitsAvailability");
+    }
   });
 
   it("resolves the day in the host's zone and lets it replace the weekday", () => {

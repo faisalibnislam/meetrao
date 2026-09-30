@@ -4,8 +4,9 @@ import { fail } from "./lib/errors";
 import { v } from "convex/values";
 import { bookingOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
-import { insertBooking, moveBooking } from "./bookings";
+import { findOverlap, insertBooking, moveBooking } from "./bookings";
 import { overridesForMeeting, rulesForMeeting } from "./availability";
+import { membersOf } from "./teams";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
@@ -222,6 +223,95 @@ export const recordPageView = mutation({
 });
 
 /**
+ * A team's public face: who is in the rotation, and what they offer.
+ *
+ * Narrow in the same way `getHost` is — a name and a timezone per member, so
+ * the page can say "one of three" and compute their hours. No emails, no
+ * flags, nothing a guest has no use for.
+ */
+export const getTeam = query({
+  args: { slug: v.string() },
+  handler: async (ctx, a) => {
+    const team = await ctx.db
+      .query("teams")
+      .withIndex("by_slug_lower", (q) => q.eq("slug_lower", a.slug.trim().toLowerCase()))
+      .unique();
+    if (!team) return null;
+
+    const members = await membersOf(ctx, team.id);
+    if (members.length === 0) return null;
+
+    const meetings = (
+      await ctx.db.query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", team.owner_id)).collect()
+    ).filter((m) => m.team_id === team.id && m.is_active);
+
+    return {
+      id: team.id,
+      name: team.name,
+      slug: team.slug,
+      members: members.map(({ profile }) => ({
+        id: profile.id,
+        name: profile.full_name || profile.username,
+        timezone: profile.timezone,
+        avatar_url: profile.avatar_url,
+      })),
+      meetings: meetings.map((m) => ({
+        id: m.id,
+        name: m.name,
+        description: m.description,
+        slug: m.slug,
+        duration_minutes: m.duration_minutes,
+        buffer_minutes: m.buffer_minutes,
+        minimum_notice_minutes: m.minimum_notice_minutes,
+        booking_window_days: m.booking_window_days,
+        location: m.location,
+        location_detail: m.location_detail ?? "",
+        capacity: m.capacity ?? 1,
+        questions: m.questions ?? [],
+        schedule_id: m.schedule_id,
+      })),
+    };
+  },
+});
+
+/** One member's hours for a team meeting — their own schedule, their own zone. */
+export const teamMemberAvailability = query({
+  args: { teamSlug: v.string(), meetingId: v.string() },
+  handler: async (ctx, a) => {
+    const team = await ctx.db
+      .query("teams")
+      .withIndex("by_slug_lower", (q) => q.eq("slug_lower", a.teamSlug.trim().toLowerCase()))
+      .unique();
+    if (!team) return [];
+
+    const meeting = await ctx.db.query("meeting_types").withIndex("by_uuid", (q) => q.eq("id", a.meetingId)).unique();
+    if (!meeting || meeting.team_id !== team.id || !meeting.is_active) return [];
+
+    const members = await membersOf(ctx, team.id);
+    const out = [];
+
+    for (const { profile } of members) {
+      /* Each member's OWN default schedule. The meeting's schedule_id belongs
+         to the owner and means nothing to anybody else — pointing a member at
+         it would offer their colleague's hours in their name. */
+      const rules = await rulesForMeeting(ctx, profile.id, null);
+      const from = zonedDateKey(Date.now() - DAY, profile.timezone);
+      const overrides = await overridesForMeeting(ctx, profile.id, null, from);
+
+      out.push({
+        user_id: profile.id,
+        name: profile.full_name || profile.username,
+        timezone: profile.timezone,
+        rules: rules.map((r) => ({ weekday: r.weekday, start_minute: r.start_minute, end_minute: r.end_minute })),
+        overrides: overrides.map((o) => ({ date: o.date, ranges: o.ranges })),
+      });
+    }
+
+    return out;
+  },
+});
+
+/**
  * How many seats are taken at each instant of one group meeting.
  *
  * Public, and it says only how many — never who. A guest choosing a time is
@@ -285,6 +375,143 @@ async function fitsAvailability(
 
   return ranges.some((r) => minute >= r.start_minute && minute + args.durationMinutes <= r.end_minute);
 }
+
+/**
+ * A booking on a team link, assigned to whoever's turn it is.
+ *
+ * FAIRNESS IS A COUNT, NOT A CURSOR. The member with the fewest bookings of
+ * this meeting in the last thirty days goes next, ties broken by whoever was
+ * booked longest ago. A stored "next member" pointer would be one more thing
+ * to keep true, and it drifts the moment somebody joins, leaves or cancels —
+ * a count re-derives the right answer from what actually happened.
+ *
+ * AVAILABILITY IS EACH MEMBER'S OWN. Their hours, their timezone, their days
+ * off, their existing bookings. A member who is not free at that instant is
+ * not eligible, however few bookings they have: fairness never outranks being
+ * free, or a guest ends up with a meeting nobody can attend.
+ *
+ * Every guard create_booking applies applies here too, per member.
+ */
+export const createTeamBooking = mutation({
+  args: {
+    teamSlug: v.string(), slug: v.string(), startsAt: v.number(),
+    guestName: v.string(), guestEmail: v.string(),
+    guestNote: v.optional(v.string()), guestTimezone: v.optional(v.union(v.string(), v.null())),
+    answers: v.optional(v.array(v.object({ id: v.string(), value: v.string() }))),
+    pageViewId: v.optional(v.union(v.string(), v.null())),
+    callerKey: v.optional(v.string()),
+  },
+  handler: async (ctx, a) => {
+    const team = await ctx.db
+      .query("teams")
+      .withIndex("by_slug_lower", (q) => q.eq("slug_lower", a.teamSlug.trim().toLowerCase()))
+      .unique();
+    if (!team) fail("unknown host");
+
+    const meeting = await ctx.db
+      .query("meeting_types")
+      .withIndex("by_user_slug", (q) => q.eq("user_id", team.owner_id).eq("slug", a.slug.trim().toLowerCase()))
+      .unique();
+    if (!meeting || !meeting.is_active || meeting.team_id !== team.id) fail("unknown meeting");
+
+    const now = Date.now();
+    if (a.startsAt < now + meeting.minimum_notice_minutes * MINUTE) fail("inside minimum notice");
+    if (a.startsAt > now + meeting.booking_window_days * DAY) fail("beyond booking window");
+
+    const members = await membersOf(ctx, team.id);
+    if (members.length === 0) fail("unknown host");
+
+    const endsAt = a.startsAt + meeting.duration_minutes * MINUTE;
+    const since = now - 30 * DAY;
+
+    type Candidate = { userId: string; recent: number; lastAt: number };
+    const eligible: Candidate[] = [];
+
+    for (const { profile } of members) {
+      // Their own hours, read the same way a solo booking reads the host's.
+      const fits = await fitsAvailability(ctx, {
+        hostId: profile.id,
+        hostTimezone: profile.timezone,
+        scheduleId: null,
+        startsAt: a.startsAt,
+        durationMinutes: meeting.duration_minutes,
+      });
+      if (!fits) continue;
+
+      if (
+        await findOverlap(ctx, {
+          hostId: profile.id,
+          startsAt: a.startsAt,
+          endsAt,
+          bufferMinutes: meeting.buffer_minutes,
+        })
+      ) {
+        continue;
+      }
+
+      const theirs = await ctx.db
+        .query("bookings")
+        .withIndex("by_host_starts", (q) => q.eq("host_id", profile.id).gte("starts_at", since))
+        .collect();
+      const mine = theirs.filter((b) => b.meeting_type_id === meeting.id && b.status === "confirmed");
+
+      eligible.push({
+        userId: profile.id,
+        recent: mine.length,
+        lastAt: mine.reduce((max, b) => Math.max(max, b.created_at), 0),
+      });
+    }
+
+    // Nobody free is the same answer a solo host gives, in the same words, so
+    // the route maps it to the same 409 the guest's screen already handles.
+    if (eligible.length === 0) fail("slot taken");
+
+    eligible.sort((x, y) => x.recent - y.recent || x.lastAt - y.lastAt);
+    const chosen = eligible[0];
+
+    const guestKey = a.guestEmail.trim().toLowerCase();
+    await consume(ctx, [
+      { key: `host:${chosen.userId}`, limit: 30, windowMs: 60 * 60_000, message: "This team has taken too many bookings just now. Try again shortly." },
+      { key: `guest:${guestKey}`, limit: 5, windowMs: 60 * 60_000, message: "You have made several bookings just now. Try again shortly." },
+      ...(a.callerKey ? [{ key: `caller:${a.callerKey}`, limit: 20, windowMs: 60 * 60_000, message: "Too many requests. Try again shortly." }] : []),
+    ]);
+
+    const asked = meeting.questions ?? [];
+    const given = new Map((a.answers ?? []).map((x) => [x.id, x.value.trim()]));
+    const answers: { label: string; value: string }[] = [];
+    for (const q of asked) {
+      const value = (given.get(q.id) ?? "").slice(0, 2000);
+      if (q.required && !value) fail(`${q.label} is required.`);
+      if (value) answers.push({ label: q.label, value });
+    }
+
+    const booking = await insertBooking(ctx, {
+      hostId: chosen.userId,
+      meetingTypeId: meeting.id,
+      meetingName: meeting.name,
+      durationMinutes: meeting.duration_minutes,
+      guestName: a.guestName,
+      guestEmail: a.guestEmail,
+      guestNote: a.guestNote ?? "",
+      guestTimezone: a.guestTimezone ?? null,
+      startsAt: a.startsAt,
+      bufferMinutes: meeting.buffer_minutes,
+      hostCreated: false,
+      pageViewId: a.pageViewId ?? null,
+      answers,
+      location: meeting.location,
+      locationDetail: meeting.location_detail ?? "",
+      capacity: meeting.capacity ?? 1,
+    });
+
+    return {
+      reference: booking.reference, id: booking.id, answers,
+      starts_at: new Date(booking.starts_at).toISOString(),
+      ends_at: new Date(booking.ends_at).toISOString(),
+      meeting_name: booking.meeting_name, duration: booking.duration_minutes, host_id: booking.host_id,
+    };
+  },
+});
 
 /** public.create_booking. Every guard from migration 0005, in order. */
 export const createBooking = mutation({

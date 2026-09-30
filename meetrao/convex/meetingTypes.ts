@@ -155,6 +155,7 @@ export const update = mutation({
     buffer_minutes: v.optional(v.number()), minimum_notice_minutes: v.optional(v.number()),
     booking_window_days: v.optional(v.number()), location: v.optional(v.string()),
     is_active: v.optional(v.boolean()), schedule_id: v.optional(v.union(v.string(), v.null())),
+    team_id: v.optional(v.union(v.string(), v.null())),
     questions: v.optional(
       v.array(
         v.object({
@@ -188,6 +189,14 @@ export const update = mutation({
     }
 
     if (patch.capacity !== undefined) patch.capacity = validCapacity(patch.capacity as number);
+
+    /* Only a team you own, and only your own meeting — the ownership check
+       above has already run, so this is the other half: a meeting cannot be
+       handed to somebody else's rotation. */
+    if (patch.team_id) {
+      const team = await ctx.db.query("teams").withIndex("by_uuid", (q) => q.eq("id", patch.team_id as string)).unique();
+      if (!team || team.owner_id !== m.user_id) fail("That is not your team.");
+    }
 
     if (patch.questions !== undefined) {
       patch.questions = validQuestions(patch.questions as { id: string; label: string; kind: "short" | "long"; required: boolean }[]);

@@ -293,3 +293,53 @@ export const seedCapacityFixture = internalMutation({
     return { ok: true as const, was, meetingId: meeting.id };
   },
 });
+
+/** A team with two named hosts and one meeting pointed at it, and its removal.
+ *  The rotation cannot be exercised without two people in it. */
+export const seedTeamFixture = internalMutation({
+  args: { ownerUsername: v.string(), memberUsername: v.string(), slug: v.string(), meetingSlug: v.string() },
+  handler: async (ctx, a) => {
+    const find = async (u: string) =>
+      await ctx.db
+        .query("profiles")
+        .withIndex("by_username_lower", (q) => q.eq("username_lower", u.trim().toLowerCase()))
+        .unique();
+
+    const owner = await find(a.ownerUsername);
+    const member = await find(a.memberUsername);
+    if (!owner || !member) return { ok: false as const, reason: "missing host" };
+
+    const meeting = await ctx.db
+      .query("meeting_types")
+      .withIndex("by_user_slug", (q) => q.eq("user_id", owner.id).eq("slug", a.meetingSlug.trim().toLowerCase()))
+      .unique();
+    if (!meeting) return { ok: false as const, reason: "no such meeting" };
+
+    const id = crypto.randomUUID();
+    const now = Date.now();
+    await ctx.db.insert("teams", {
+      id, owner_id: owner.id, name: "Verification Team", slug: a.slug, slug_lower: a.slug, created_at: now, updated_at: now,
+    });
+    await ctx.db.insert("team_members", { id: crypto.randomUUID(), team_id: id, user_id: owner.id, role: "owner", created_at: now });
+    await ctx.db.insert("team_members", { id: crypto.randomUUID(), team_id: id, user_id: member.id, role: "member", created_at: now + 1 });
+    await ctx.db.patch(meeting._id, { team_id: id, updated_at: now });
+
+    return { ok: true as const, teamId: id, meetingId: meeting.id, owner: owner.id, member: member.id };
+  },
+});
+
+export const purgeTeamFixture = internalMutation({
+  args: { teamId: v.string() },
+  handler: async (ctx, a) => {
+    const team = await ctx.db.query("teams").withIndex("by_uuid", (q) => q.eq("id", a.teamId)).unique();
+    if (!team) return false;
+    for (const m of await ctx.db.query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", team.owner_id)).collect()) {
+      if (m.team_id === a.teamId) await ctx.db.patch(m._id, { team_id: null, updated_at: Date.now() });
+    }
+    for (const row of await ctx.db.query("team_members").withIndex("by_team", (q) => q.eq("team_id", a.teamId)).collect()) {
+      await ctx.db.delete(row._id);
+    }
+    await ctx.db.delete(team._id);
+    return true;
+  },
+});

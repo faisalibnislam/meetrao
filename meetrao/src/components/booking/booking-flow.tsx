@@ -63,6 +63,9 @@ export type FlowProps = {
   pageViewId: string | null;
   /** Present when this is an existing booking being moved, not a new one. */
   move?: { reference: string; currentStart: string };
+  /** Present when the link belongs to a TEAM, and the host is decided by the
+      rotation at booking time rather than being known now. */
+  teamSlug?: string;
 };
 
 type SlotState = { openDates: Set<string>; times: string[] };
@@ -112,6 +115,7 @@ export function BookingFlow(props: FlowProps) {
           month: String(m),
           tz,
         });
+        if (props.teamSlug) params.set("team", props.teamSlug);
         if (day) params.set("day", String(day));
 
         const response = await fetch(`/api/slots?${params}`, { cache: "no-store" });
@@ -130,7 +134,7 @@ export function BookingFlow(props: FlowProps) {
         if (mine === ticket.current) setLoading(false);
       }
     },
-    [props.username, props.slug],
+    [props.username, props.slug, props.teamSlug],
   );
 
   // Slots were computed in the host's zone; re-fetch them in the guest's the
@@ -224,6 +228,7 @@ export function BookingFlow(props: FlowProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          team: props.teamSlug,
           username: props.username,
           slug: props.slug,
           start: chosen,

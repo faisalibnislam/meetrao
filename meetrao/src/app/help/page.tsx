@@ -140,7 +140,7 @@ const FAQS: [string, string][] = [
   ],
   [
     "Can I use something other than Google Meet?",
-    "Not in this release. Every booking gets a Google Meet link. Other options may come later.",
+    "Yes. A meeting can be a Google Meet, a phone call, an address, or anything else you describe — your own Zoom or Teams link, for instance. Meetrao creates Meet links itself; for the others it passes on exactly what you wrote.",
   ],
   [
     "Can two people book the same slot?",

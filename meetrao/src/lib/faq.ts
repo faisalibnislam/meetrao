@@ -67,7 +67,7 @@ export const FAQS: [string, string, string][] = [
   [
     "cancel",
     "Can people cancel or reschedule?",
-    "Both sides can cancel, and the other party is notified with the event removed and the slot reopened. Rescheduling is not built yet — cancel and book a new time.",
+    "Both. Cancelling notifies the other side, removes the calendar event and reopens the slot. Moving a meeting keeps the same booking and the same Google Meet link — the guest picks a new time from the link in their confirmation, and both calendars follow.",
   ],
   [
     "private",
@@ -82,6 +82,6 @@ export const FAQS: [string, string, string][] = [
   [
     "compare",
     "How does it compare with paid tools?",
-    "Meetrao does the core job and does not charge for it. It is deliberately narrow: one calendar provider, one meeting location, one weekly schedule. If you need payments, round-robin booking or CRM integrations, a paid tool will serve you better. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
+    "Meetrao does the core job and does not charge for it. It is deliberately narrow: one calendar provider, no payments, no routing forms. If you need those, or collective availability rather than a round-robin, a paid tool will serve you better. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
   ],
 ];

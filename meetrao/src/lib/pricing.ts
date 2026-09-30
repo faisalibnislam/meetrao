@@ -64,10 +64,10 @@ export const INCLUDED: readonly string[] = [
  */
 export const LIMITS: readonly [string, string][] = [
   ["Google Calendar only", "No Outlook, no iCloud, no CalDAV. If your calendar lives elsewhere, Meetrao cannot see your conflicts and is the wrong tool."],
-  ["Google Meet only", "No Zoom, no Teams, no phone or in-person locations yet."],
   ["No payments", "You cannot charge for a booking. Nothing collects money."],
-  ["No team features", "No round-robin, no collective availability, no routing forms. One person, one calendar."],
-  ["No rescheduling yet", "A guest can cancel and book again from your link, which gets to the same place in two steps rather than one."],
+  ["No Zoom or Teams integration", "Meetrao creates Google Meet links itself. A meeting can be a phone call, an address or your own Zoom link — but that link is one you paste, not one it makes for you."],
+  ["Round-robin only", "A team link goes to whoever is free and least recently booked. There is no collective availability — several hosts in one meeting — and no routing forms."],
+  ["Reminders are email only", "One the day before and one an hour before, by email. No SMS, no WhatsApp, no push notifications."],
 ];
 
 /**
@@ -103,7 +103,7 @@ export const PRICING_FAQ: readonly (readonly [string, string, string])[] = [
   [
     "catch",
     "So what is the catch?",
-    "The limits, and they are listed above rather than discovered later: Google Calendar only, Google Meet only, no payments, no team features, and no rescheduling yet. There is no paid tier to be upsold to, so nothing here is a trial — but if you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
+    "The limits, and they are listed above rather than discovered later: Google Calendar only, no payments, no Zoom or Teams integration, round-robin without collective availability, and email-only reminders. There is no paid tier to be upsold to, so nothing here is a trial — but if you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
   ],
   [
     "data",

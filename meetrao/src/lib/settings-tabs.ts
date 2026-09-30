@@ -9,6 +9,7 @@ export const SETTINGS_TABS = [
   { key: "profile", label: "Profile" },
   { key: "calendar", label: "Calendar" },
   { key: "booking", label: "Booking" },
+  { key: "team", label: "Team" },
   { key: "notifications", label: "Notifications" },
   { key: "account", label: "Account" },
 ] as const;

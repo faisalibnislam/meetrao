@@ -14,6 +14,9 @@ import { signOut } from "@/lib/actions/auth";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { connectionStatus } from "@/lib/google/connection";
 import { timezoneOptions } from "@/lib/timezones";
+import { TeamPanel } from "@/components/app/team-panel";
+import { teamPanelData } from "@/lib/data/teams";
+import { siteUrl } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -46,7 +49,10 @@ export default async function SettingsPage({
         <SettingsNav current={tab} />
 
         <div className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
-          {tab === "profile" ? <ProfilePanel profile={session.profile} /> : null}
+          {tab === "team" ? (
+          <TeamPanel {...(await teamPanelData(session.profile.id))} siteUrl={siteUrl()} />
+        ) : null}
+        {tab === "profile" ? <ProfilePanel profile={session.profile} /> : null}
 
           {tab === "calendar" ? (
             <CalendarPanel

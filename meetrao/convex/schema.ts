@@ -105,6 +105,39 @@ export default defineSchema({
     .index("by_username_lower", ["username_lower"])
     .index("by_email", ["email"]),
 
+  /* A team is a booking link several hosts answer, in turn.
+  
+     The owner is a host like any other — there is no separate account type and
+     no seat to buy. Membership is by profile id, so a member's own hours,
+     timezone and calendar are the ones consulted when it is their turn.
+
+     unique: lower(slug) product-wide — enforced in convex/teams.ts, which is
+     also what keeps a team from taking a username that is already a host's. */
+  teams: defineTable({
+    id: v.string(),
+    owner_id: v.string(),
+    name: v.string(),
+    slug: v.string(),
+    slug_lower: v.string(),
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_owner", ["owner_id"])
+    .index("by_slug_lower", ["slug_lower"]),
+
+  /* unique: (team_id, user_id) — enforced in convex/teams.ts */
+  team_members: defineTable({
+    id: v.string(),
+    team_id: v.string(),
+    user_id: v.string(),
+    role: v.union(v.literal("owner"), v.literal("member")),
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_team", ["team_id"])
+    .index("by_user", ["user_id"]),
+
   /* unique: (user_id, slug) — enforced in convex/meetingTypes.ts */
   meeting_types: defineTable({
     id: v.string(),
@@ -138,6 +171,12 @@ export default defineSchema({
     is_active: v.boolean(),
     /** null = the host's default schedule. See migration 0010. */
     schedule_id: nullableString,
+    /**
+     * Set when this meeting belongs to a TEAM rather than to one host. The
+     * row still carries a user_id — the owner, who can edit it — but bookings
+     * are assigned to whichever member is free and least recently booked.
+     */
+    team_id: v.optional(nullableString),
     /**
      * What the guest is asked besides name, email and the free-text note.
      * Optional because every meeting written before questions existed has
