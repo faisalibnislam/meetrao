@@ -22,9 +22,13 @@ export async function startCheckout(cadence: Cadence): Promise<BillingResult> {
     return { error: "Billing is not configured yet." };
   }
 
+  const convex = await convexServer();
+  const products = await convex.query(api.platformSettings.productsForCheckout, {});
+
   try {
     const checkout = await createCheckout({
       cadence,
+      productId: cadence === "yearly" ? products.yearly : products.monthly,
       profileId: session.profile.id,
       email: session.profile.email,
       // Pro is granted by the webhook, not by arriving here — this page just
