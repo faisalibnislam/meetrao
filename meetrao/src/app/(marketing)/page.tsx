@@ -6,9 +6,11 @@ import { Hero } from "@/components/marketing/hero";
 import { ImageFrame } from "@/components/marketing/image-frame";
 import { LiveBookingsTable, LiveMeetingsTable } from "@/components/marketing/live-tables";
 import { Reveal } from "@/components/marketing/reveal";
+import { PlanComparison } from "@/components/marketing/plan-comparison";
 import { Kicker } from "@/components/marketing/site-chrome";
 import { UseCases } from "@/components/marketing/use-cases";
 import { Walkthrough } from "@/components/marketing/walkthrough";
+import { ButtonLink } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 import { DESCRIPTION, OG_IMAGE, faqLd, graph } from "@/lib/seo";
@@ -90,7 +92,7 @@ const BENEFITS: [IconName, string, string][] = [
   ["rotate-left", "Moving, not cancelling", "Guests pick a new time from their confirmation. Same booking, same Meet link."],
   ["bolt", "Reminders that arrive", "The day before and an hour before — to both of you."],
   ["sliders", "Your hours protected", "Buffers, minimum notice, a booking window, and days off."],
-  ["tag", "Completely free", "No subscription. Everything here is included."],
+  ["tag", "Free to use, Pro when you need it", "Taking bookings costs nothing. $10 a year adds your domain, your branding and a team."],
 ];
 
 /* The second row of the product section: the things that are not one-to-one
@@ -458,6 +460,36 @@ export default function LandingPage() {
         <Reveal>
           <UseCases />
         </Reveal>
+      </section>
+
+      {/* ── pricing ───────────────────────────────────────────────────────── */}
+      <section id="pricing" className="border-t border-line bg-surface">
+        <div className="mx-auto max-w-[1200px] px-[26px] py-[72px] max-[560px]:px-[18px]">
+          <Reveal>
+            <div className="flex max-w-[640px] flex-col gap-[11px]">
+              <Kicker tone="dark">Pricing</Kicker>
+              <h2 className="m-0 font-serif text-[clamp(28px,3.8vw,44px)] leading-[1.04] font-normal tracking-[-0.02em] text-balance text-ink">
+                Free to take bookings. $10 a year to make it yours.
+              </h2>
+              <p className="m-0 text-[14.5px] leading-[1.6] text-pretty text-ink-2">
+                The whole booking product is free — link, calendar, reminders, rescheduling. Pro is for
+                running a business on it.
+              </p>
+            </div>
+          </Reveal>
+
+          <Reveal className="mt-[26px]">
+            <PlanComparison footnote={false} />
+            <div className="mt-[18px] flex flex-wrap items-center gap-[12px]">
+              <ButtonLink variant="accent" size={40} href="/signup">
+                Start free
+              </ButtonLink>
+              <ButtonLink variant="secondary" size={40} href="/pricing">
+                Compare in full
+              </ButtonLink>
+            </div>
+          </Reveal>
+        </div>
       </section>
 
       {/* ── FAQ ─────────────────────────────────────────────────────────── */}

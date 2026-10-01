@@ -21,13 +21,13 @@ export const FAQS: [string, string, string][] = [
   ],
   [
     "free",
-    "Is Meetrao really free?",
-    "Yes. Every feature on this page is free to use, with no card required and no subscription.",
+    "What is free, and what costs money?",
+    "Taking bookings is free: your link, your meeting types, calendar conflict checks, Meet links, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is $10 a year — or $3 a month — and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API.",
   ],
   [
     "forever",
-    "Is it free forever?",
-    'We cannot honestly promise "forever". What we do commit to: Meetrao is free today, and if paid plans ever arrive we will email you before anything becomes chargeable and you would have to opt in. A free account is never billed automatically.',
+    "Will the free plan stay free?",
+    'We cannot honestly promise "forever", and the Terms say so rather than burying it. What we do commit to: a free account is never billed automatically. Pro begins only when you choose it, and if you cancel it runs to the end of the period you paid for.',
   ],
   [
     "account",

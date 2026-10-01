@@ -8,7 +8,7 @@ import { cx } from "@/lib/cx";
 
 /* The marketing nav, for someone who is already signed in.
 
-   "Log in" and "Get started — Free" are the wrong two buttons to show a host
+   "Log in" and "Get started" are the wrong two buttons to show a host
    who reached the Help centre from inside the product. This replaces them with
    the way back: their dashboard, support, and a way out.
 

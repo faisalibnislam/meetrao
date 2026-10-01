@@ -11,8 +11,11 @@ import { DemoMonthGrid, DemoSlot, demoDayLabel } from "./demo-calendar";
    booking card — not a screenshot of one.
    ───────────────────────────────────────────────────────────────────────────── */
 
+/* "Free" appears once here, not three times. The product has a paid tier now,
+   and a hero that shouts free in every chip sets up a visitor to feel misled
+   when they meet it — the price belongs in the pricing section, stated once. */
 const PROOF = [
-  "Completely free",
+  "Free to take bookings",
   "No double bookings",
   "Every timezone converted",
   "Guests never sign up",
@@ -105,7 +108,7 @@ export function Hero() {
         </h1>
 
         <p className="m-0 max-w-[56ch] text-[clamp(15.5px,1.5vw,18px)] leading-[1.55] text-pretty text-white/80">
-          Free meeting scheduling and appointment booking. Your availability becomes one link, so clients
+          Meeting scheduling and appointment booking. Your availability becomes one link, so clients
           and teammates pick a time that works — without the back-and-forth.
         </p>
 
@@ -114,7 +117,7 @@ export function Hero() {
             href="/signup"
             className="unlink inline-flex h-[50px] items-center justify-center gap-[10px] rounded-[8px] bg-white px-[24px] text-[15px] font-semibold text-accent-2 transition-opacity duration-[120ms] hover:text-accent-2 hover:opacity-90"
           >
-            Create your free booking link
+            Create your booking link
             <Icon name="arrow-right" size={12} />
           </Link>
           <a
@@ -143,7 +146,7 @@ export function Hero() {
         <div className="mx-auto mt-[6px] flex w-full max-w-[1019px] flex-wrap items-center justify-center gap-x-[16px] gap-y-[12px] border-t border-white/20 pt-[20px]">
           <span className="inline-flex items-center gap-[9px] text-[15.5px] font-semibold tracking-[-0.008em] text-white">
             <Icon name="check" weight="solid" size={12} className="text-[#7FD8C4]" />
-            Free. No card, no subscription.
+            Free to start. Pro is $10 a year.
           </span>
           <span aria-hidden="true" className="h-[20px] w-[1px] flex-none bg-white/20" />
           <span className="inline-flex items-baseline gap-[8px] text-[13.5px] text-white/75">

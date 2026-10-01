@@ -2,17 +2,8 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Kicker } from "./site-chrome";
 import { Reveal } from "./reveal";
-import {
-  DENIALS,
-  HEADLINE,
-  INCLUDED,
-  LIMITS,
-  PRICING_FAQ,
-  PRO_ADDS,
-  PRO_MONTHLY,
-  PRO_YEARLY,
-  WHY,
-} from "@/lib/pricing";
+import { DENIALS, HEADLINE, PRICING_FAQ, PRO_MONTHLY, PRO_YEARLY } from "@/lib/pricing";
+import { PlanComparison } from "./plan-comparison";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The pricing page.
@@ -78,119 +69,30 @@ export function PricingPage() {
         </div>
       </section>
 
-      {/* ── what is included, which is all of it ──────────────────────────── */}
+      {/* ── the two plans, side by side ───────────────────────────────────── */}
       <section className="border-t border-line bg-surface">
         <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
           <Reveal>
             <h2 className="m-0 font-serif text-[clamp(26px,3.2vw,38px)] leading-[1.06] font-normal tracking-[-0.02em] text-ink">
-              What you get
+              Free and Pro, side by side
             </h2>
-            <p className="mt-[10px] mb-[22px] max-w-[640px] text-[14px] leading-[1.6] text-ink-2">
-              Everything below is free, with no card and no limit on bookings. Nothing your guests touch is
-              behind the paid plan — reminders, moving a meeting and timezone handling are theirs, not a
-              lever to charge you with.
+            <p className="mt-[10px] mb-[26px] max-w-[660px] text-[14px] leading-[1.6] text-ink-2">
+              Free is the whole booking product, not a trial of it. Pro is for people running a business on
+              it — their own domain, their own branding, a team. Nothing your guests touch is behind the paid
+              plan.
             </p>
 
-            <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(min(320px,100%),1fr))] gap-x-[22px] gap-y-[11px] p-0">
-              {INCLUDED.map((item) => (
-                <li key={item} className="flex items-start gap-[9px]">
-                  <Icon
-                    name="check"
-                    weight="solid"
-                    size={11}
-                    className="mt-[5px] flex-none text-accent"
-                    aria-hidden="true"
-                  />
-                  <span className="text-[14px] leading-[1.55] text-pretty text-ink-2">{item}</span>
-                </li>
-              ))}
-            </ul>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── what Pro adds ─────────────────────────────────────────────────── */}
-      <section className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
-          <Reveal>
-            <div className="flex flex-wrap items-end justify-between gap-[14px]">
-              <div className="max-w-[640px]">
-                <h2 className="m-0 font-serif text-[clamp(26px,3.2vw,38px)] leading-[1.06] font-normal tracking-[-0.02em] text-ink">
-                  Pro, {PRO_YEARLY}
-                </h2>
-                <p className="mt-[10px] text-[14px] leading-[1.6] text-ink-2">
-                  Or {PRO_MONTHLY} if you would rather pay monthly. One price for the account — not per
-                  person, not per booking. Cancel from the billing portal and it runs to the end of the
-                  period you paid for.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-[24px] grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] gap-[16px]">
-              {PRO_ADDS.map(([title, body]) => (
-                <div
-                  key={title}
-                  className="flex flex-col gap-[7px] rounded-[12px] border border-accent-line bg-accent-soft px-[18px] pt-[17px] pb-[19px]"
-                >
-                  <span className="text-[14px] font-semibold tracking-[-0.005em] text-ink">{title}</span>
-                  <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">{body}</span>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── what it cannot do, before the ask ─────────────────────────────── */}
-      <section className="border-t border-line bg-[#F4F3ED]">
-        <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
-          <Reveal>
-            <h2 className="m-0 font-serif text-[clamp(26px,3.2vw,38px)] leading-[1.06] font-normal tracking-[-0.02em] text-ink">
-              What it does not do
-            </h2>
-            <p className="mt-[10px] mb-[22px] max-w-[640px] text-[14px] leading-[1.6] text-ink-2">
-              This section is here rather than in small print, and above the sign-up button rather than below it.
-              If you need one of these, Meetrao is the wrong tool and you should know that now.
-            </p>
-
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(280px,100%),1fr))] gap-[14px]">
-              {LIMITS.map(([title, body]) => (
-                <div key={title} className="flex flex-col gap-[7px] rounded-[10px] border border-line bg-fill px-[16px] py-[15px]">
-                  <span className="flex items-center gap-[8px] text-[14px] font-semibold text-ink">
-                    <Icon name="xmark" weight="solid" size={10} className="flex-none text-ink-3" aria-hidden="true" />
-                    {title}
-                  </span>
-                  <span className="text-[13.5px] leading-[1.55] text-pretty text-ink-2">{body}</span>
-                </div>
-              ))}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* ── why ───────────────────────────────────────────────────────────── */}
-      <section className="border-t border-line bg-surface">
-        <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
-          <Reveal>
-            <h2 className="m-0 mb-[16px] font-serif text-[clamp(26px,3.2vw,38px)] leading-[1.06] font-normal tracking-[-0.02em] text-ink">
-              Why is it free?
-            </h2>
-            <div className="flex max-w-[760px] flex-col gap-[12px]">
-              {WHY.map((paragraph) => (
-                <p key={paragraph} className="m-0 text-[15px] leading-[1.65] text-pretty text-ink-2">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-
-            <div className="mt-[26px] max-w-[760px] rounded-[10px] border border-line bg-fill px-[18px] py-[16px]">
-              <p className="m-0 text-[13.5px] leading-[1.6] text-pretty text-ink-2">
-                <span className="font-semibold text-ink">And if that changes.</span> Meetrao is free while it is
-                in beta, and paid plans are intended later — that is written into{" "}
-                <Link href="/terms#t-price">the Terms</Link>, not buried. If they arrive, you would be emailed
-                before anything became chargeable and would have to opt in. A free account is never billed
-                automatically, and if you chose not to pay you could export your data and close it.
-              </p>
+            <PlanComparison />
+            <div className="mt-[26px] flex flex-wrap items-center gap-[12px]">
+              <Link
+                href="/signup"
+                className="unlink inline-flex h-[44px] items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-white no-underline hover:bg-accent-2 hover:text-white"
+              >
+                Start free
+              </Link>
+              <span className="text-[13px] text-ink-3">
+                Upgrade to Pro whenever you need it — {PRO_YEARLY}, or {PRO_MONTHLY}.
+              </span>
             </div>
           </Reveal>
         </div>
@@ -229,3 +131,4 @@ export function PricingPage() {
     </>
   );
 }
+
