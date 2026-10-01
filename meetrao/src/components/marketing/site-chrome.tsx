@@ -177,7 +177,7 @@ export function SiteFooter() {
               href="/signup"
               className="unlink inline-flex h-[52px] items-center justify-center gap-[10px] rounded-[8px] bg-white px-[24px] text-[15px] font-semibold text-accent-2 transition-opacity duration-[120ms] hover:text-accent-2 hover:opacity-90"
             >
-              Create your free booking link
+              Create your booking link
               <Icon name="arrow-right" size={12} />
             </Link>
             <Link

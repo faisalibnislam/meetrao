@@ -42,7 +42,7 @@ export const TAGLINE = "Free appointment booking and meeting scheduling";
  * read "… · Meetrao · Meetrao", which is how a brand ends up in a title twice
  * and is checked in seo-invariants.test.ts rather than remembered.
  */
-export const TITLE = "Free Meeting Scheduling App & Appointment Booking · Meetrao";
+export const TITLE = "Free Meeting Scheduling & Appointment Booking · Meetrao";
 export const TITLE_TEMPLATE = "%s · Meetrao";
 
 /**
@@ -60,8 +60,8 @@ export const TITLE_TEMPLATE = "%s · Meetrao";
  * paid plans possible later, existing accounts told first.
  */
 export const DESCRIPTION =
-  "Free meeting scheduling app. Share one link, guests pick a time you're free, every booking " +
-  "gets a Google Meet link. No card, no trial, no locked features.";
+  "Share one link, guests pick a time you're free, every booking gets a Google Meet link. " +
+  "Free to use; Pro is $10 a year for your own domain and a team link.";
 
 /**
  * The social card, spelled out on every page that declares its own openGraph.

@@ -66,6 +66,36 @@ export const INCLUDED: readonly string[] = [
 ];
 
 /**
+ * The two plans, line by line.
+ *
+ * A column each, because "what you get" and "what it adds" as separate
+ * sections made a reader hold one list in their head while reading the other.
+ * `true` is a tick, `false` is a dash, and a string says what differs rather
+ * than pretending a difference is a presence.
+ */
+export type PlanCell = boolean | string;
+
+export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCell }[] = [
+  { feature: "Your booking link — meetrao.com/your-name", free: true, pro: true },
+  { feature: "Unlimited meeting types and weekly schedules", free: true, pro: true },
+  { feature: "Unlimited bookings", free: true, pro: true },
+  { feature: "Google Calendar checked before a slot is offered", free: true, pro: true },
+  { feature: "Google Meet link on every online booking", free: true, pro: true },
+  { feature: "Phone, in person, or your own meeting link", free: true, pro: true },
+  { feature: "Guests move a booking themselves", free: true, pro: true },
+  { feature: "Days off and one-off hours", free: true, pro: true },
+  { feature: "Up to five questions on the booking form", free: true, pro: true },
+  { feature: "Contacts, filled from your bookings, with CSV export", free: true, pro: true },
+  { feature: "Reminders before a meeting", free: "A day and an hour before", pro: "Times you choose" },
+  { feature: "Embed on your own site", free: "With a small badge", pro: "No badge" },
+  { feature: "“Powered by Meetrao” on your booking page", free: "Shown", pro: "Removed" },
+  { feature: "Your own domain — book.yourcompany.com", free: false, pro: true },
+  { feature: "Team link, rotating to whoever is free", free: false, pro: true },
+  { feature: "Sessions several guests share", free: false, pro: true },
+  { feature: "API keys and webhooks", free: false, pro: true },
+];
+
+/**
  * What Pro adds, and why each one is on this side of the line.
  *
  * Two themes only: looking like your own business, and working as more than

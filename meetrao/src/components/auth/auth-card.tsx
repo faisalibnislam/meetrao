@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Eyebrow } from "@/components/ui/badge";
 import { LogoLink } from "@/components/ui/logo";
@@ -53,6 +54,20 @@ export function AuthCard({
                 <span className="text-[13px] leading-[1.5] text-ink-2">{text}</span>
               </div>
             ))}
+          </div>
+
+          {/* The plan shape, where somebody is deciding whether to sign up at
+              all. A visitor who finds out about a paid tier after investing an
+              afternoon feels misled, even when nothing was hidden. */}
+          <div className="mt-[6px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px]">
+            <span className="text-[12.5px] leading-[1.55] text-ink-2">
+              <strong className="font-semibold text-ink">Free to take bookings.</strong> Pro is $10 a year
+              when you want your own domain, your own branding or a team link.{" "}
+              <Link href="/pricing" className="font-semibold">
+                Compare
+              </Link>
+              .
+            </span>
           </div>
         </aside>
       </div>

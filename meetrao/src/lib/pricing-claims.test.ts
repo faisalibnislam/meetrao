@@ -76,9 +76,14 @@ describe("nothing promises what the Terms do not", () => {
      "free" six times and never links to the clause governing it is the shape
      of the problem, not an example of it. */
   it("sends the reader to the clause that governs the price", () => {
+    /* The link lives in the comparison now, which both /pricing and the
+       landing page render — so it is checked where it actually is rather
+       than where it used to be. */
     const page = COPY.find((f) => f.file.endsWith("marketing/pricing-page.tsx"));
+    const comparison = COPY.find((f) => f.file.endsWith("marketing/plan-comparison.tsx"));
     expect(page, "the pricing page is missing").toBeDefined();
-    expect(page!.text).toContain("/terms#t-price");
+    expect(comparison, "the plan comparison is missing").toBeDefined();
+    expect(`${page!.text} ${comparison!.text}`).toContain("/terms#t-price");
   });
 
   it("has a §5 for that link to land on", () => {
@@ -98,16 +103,27 @@ describe("nothing promises what the Terms do not", () => {
 
 describe("the pricing page argues in the right order", () => {
   /* The limits are the reason the rest is believable. Rendering them after the
-     call to action turns the page into the thing it is trying not to be. */
-  it("puts what it cannot do above the sign-up invitation", () => {
+     call to action turns the page into the thing it is trying not to be.
+
+     They used to be a section of their own, headed "What it does not do". The
+     page now compares Free and Pro line by line and carries the limits as one
+     sentence under the table — smaller, but it must still come BEFORE the
+     invitation to sign up, which is the part this has always been about. */
+  it("puts what neither plan does above the sign-up invitation", () => {
+    const comparison = readFileSync(
+      path.join(SRC, "components", "marketing", "plan-comparison.tsx"),
+      "utf8",
+    );
+    expect(comparison, "the limits sentence is gone").toContain("Neither plan does");
+
     const page = readFileSync(
       path.join(SRC, "components", "marketing", "pricing-page.tsx"),
       "utf8",
     );
-    const limits = page.indexOf("What it does not do");
+    const table = page.indexOf("<PlanComparison");
     const lastCta = page.lastIndexOf("Create a free account");
-    expect(limits).toBeGreaterThan(0);
-    expect(limits).toBeLessThan(lastCta);
+    expect(table, "the comparison is not on the pricing page").toBeGreaterThan(0);
+    expect(table).toBeLessThan(lastCta);
   });
 
   it("names limits, not just features", () => {

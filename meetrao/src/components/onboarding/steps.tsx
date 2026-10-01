@@ -18,6 +18,7 @@ import { saveAvailability } from "@/lib/actions/availability";
 import { completeOnboarding, saveFirstMeeting } from "@/lib/actions/onboarding";
 import type { TimezoneOption } from "@/lib/timezones";
 import { bookingLink } from "@/lib/username";
+import Link from "next/link";
 
 const REASONS = [
   "See when you are busy, so guests are never offered a time you cannot make.",
@@ -359,6 +360,20 @@ export function StepReady({
               <span className="text-[13px] text-ink-2">{row.text}</span>
             </div>
           ))}
+        </div>
+
+        {/* The one upsell in onboarding, and it is at the END — after the
+            link works. Asking somebody to consider paying before they have
+            seen the thing work is how a setup flow loses people. */}
+        <div className="flex flex-col gap-[7px] rounded-[8px] border border-accent-line bg-accent-soft px-[15px] py-[13px]">
+          <span className="text-[13px] font-semibold text-ink">Everything here is free</span>
+          <span className="text-[12.5px] leading-[1.55] text-ink-2">
+            Pro is $10 a year when you want your booking page on your own domain, the Meetrao badge gone, or
+            one link your whole team answers.{" "}
+            <Link href="/settings/billing" className="font-semibold">
+              See Pro
+            </Link>
+          </span>
         </div>
 
         {!connected ? (
