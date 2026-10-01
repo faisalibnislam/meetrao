@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createProduct } from "@/lib/polar";
+import { env } from "@/lib/env";
 import { requireAdmin } from "@/lib/data/session";
 import { disconnect } from "@/lib/google/connection";
 import { convexServer } from "@/lib/convex/server";
@@ -345,4 +347,57 @@ export async function saveAdminAccount(input: { fullName: string }): Promise<Adm
   revalidatePath("/admin/settings");
   return {};
 
+}
+
+/* ── billing products ──────────────────────────────────────────────────────── */
+
+export type ProductResult = { error?: string; monthly?: string | null; yearly?: string | null };
+
+/**
+ * Creates the two Pro products in Polar and records their ids.
+ *
+ * Admin-only, and idempotent in the way that matters: a cadence that already
+ * has an id is left alone rather than creating a second product at the same
+ * price. Two live products for one plan is how a customer ends up subscribed
+ * to the one nobody is watching.
+ */
+export async function createPolarProducts(): Promise<ProductResult> {
+  await requireAdmin();
+
+  if (!env().POLAR_ACCESS_TOKEN) return { error: "No Polar access token is set on this deployment." };
+
+  const convex = await convexServer();
+  const existing = await convex.query(api.platformSettings.products, {});
+
+  const made: { monthly?: string; yearly?: string } = {};
+  try {
+    if (!existing.monthly) made.monthly = (await createProduct("monthly")).id;
+    if (!existing.yearly) made.yearly = (await createProduct("yearly")).id;
+  } catch (cause) {
+    return { error: cause instanceof Error ? cause.message : "Polar refused the product." };
+  }
+
+  if (made.monthly || made.yearly) {
+    await convex.mutation(api.platformSettings.update, {
+      ...(made.monthly ? { polar_product_monthly: made.monthly } : {}),
+      ...(made.yearly ? { polar_product_yearly: made.yearly } : {}),
+    });
+  }
+
+  revalidatePath("/admin/settings");
+  return { monthly: made.monthly ?? existing.monthly, yearly: made.yearly ?? existing.yearly };
+}
+
+/** Records ids for products made in Polar's own dashboard. */
+export async function savePolarProducts(input: { monthly: string; yearly: string }): Promise<ProductResult> {
+  await requireAdmin();
+  const convex = await convexServer();
+
+  await convex.mutation(api.platformSettings.update, {
+    polar_product_monthly: input.monthly.trim(),
+    polar_product_yearly: input.yearly.trim(),
+  });
+
+  revalidatePath("/admin/settings");
+  return { monthly: input.monthly.trim(), yearly: input.yearly.trim() };
 }

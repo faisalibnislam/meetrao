@@ -460,6 +460,14 @@ export default defineSchema({
   platform_settings: defineTable({
     app_name: v.string(),
     support_email: v.string(),
+    /* The Polar products Pro is sold as.
+    
+       Here rather than in the environment because an operator creating them
+       from the admin console cannot set an env var, and a redeploy to record
+       two ids somebody just generated is a strange way to sell a plan. The
+       TOKEN stays in the environment — a credential is not configuration. */
+    polar_product_monthly: v.optional(nullableString),
+    polar_product_yearly: v.optional(nullableString),
     updated_at: v.number(),
   }),
 
