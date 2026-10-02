@@ -201,7 +201,7 @@ export function BookingLinkPanel({
             </span>
             <span className="text-[12.5px] leading-[1.5] text-ink-2">
               Hold <span className="font-semibold text-ink">/{username}</span> back so nobody can register it
-              again — {name} included.
+              again, {name} included.
             </span>
           </button>
         ) : null}
@@ -256,7 +256,7 @@ export function BookingLinkPanel({
         secondary={{ label: "Leave it", onClick: () => setConfirm(null) }}
       >
         <span className="text-[13.5px] leading-[1.55] text-pretty text-ink-2">
-          {bookingLink(username)} stops working immediately and anyone who saved it sees a page-not-found —
+          {bookingLink(username)} stops working immediately and anyone who saved it sees a page-not-found,
           including any link {name} has already shared. Existing bookings are unaffected.{" "}
           {retireOld
             ? `/${username} will be held back, so it cannot be registered again.`
@@ -293,7 +293,7 @@ export function BookingLinkPanel({
         <span className="text-[13.5px] leading-[1.55] text-pretty text-ink-2">
           {bookingLink(username)} stops working and is held back, so neither {name} nor anyone else can register
           it again. They are moved to a neutral placeholder and can pick a new link themselves from Settings.
-          This does not suspend the account or cancel any bookings — suspend it separately if the page should go
+          This does not suspend the account or cancel any bookings, suspend it separately if the page should go
           dark.
         </span>
       </Modal>

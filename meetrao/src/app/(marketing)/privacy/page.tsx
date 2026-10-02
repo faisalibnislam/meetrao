@@ -28,8 +28,8 @@ const TOC: TocEntry[] = [
   /* Sub-entries, indented in the rail. A verification reviewer should be able
      to reach either disclosure in one click from the top of the page rather
      than by scrolling section 3. */
-  { id: "p-google-share", label: "— Who we share it with" },
-  { id: "p-google-protect", label: "— How we protect it" },
+  { id: "p-google-share", label: "· Who we share it with" },
+  { id: "p-google-protect", label: "· How we protect it" },
   { id: "p-limited-use", label: "4. Google Limited Use" },
   { id: "p-not", label: "5. What we don't do" },
   { id: "p-why", label: "6. Why we use it" },
@@ -45,7 +45,7 @@ const TOC: TocEntry[] = [
 ];
 
 const SHORT_VERSION = [
-  "We read whether you are busy — never what your meetings are about.",
+  "We read whether you are busy: never what your meetings are about.",
   "We do not sell your data, or your guests' data, to anyone.",
   "We never use your data or your guests' data to train machine-learning models.",
   "Delete your account and it goes immediately. There is no grace-period copy.",
@@ -65,7 +65,7 @@ const SCOPES: [string, string, string][] = [
   [
     "calendar.events",
     "See, edit and delete events on your calendar",
-    "Creating the event for each confirmed booking with its Google Meet link, inviting your guest so it reaches their calendar too, updating or deleting that event when the booking changes or is cancelled, and reading whether your guest accepted or declined THAT event — by its own identifier, never by listing or searching your calendar.",
+    "Creating the event for each confirmed booking with its Google Meet link, inviting your guest so it reaches their calendar too, updating or deleting that event when the booking changes or is cancelled, and reading whether your guest accepted or declined THAT event, by its own identifier, never by listing or searching your calendar.",
   ],
   [
     "userinfo.email",
@@ -99,11 +99,11 @@ const PURPOSES: [string, string][] = [
 const GOOGLE_DATA_RECIPIENTS: [string, string][] = [
   [
     "Convex (database and authentication, N. Virginia)",
-    "Stores the Google refresh and access tokens, the connected account's email address, and the calendar identifier. Also stores the booking records that produce calendar events, and runs the code that calls Google — the tokens are used where they are stored and are never returned to the website. The only provider that holds Google user data at rest.",
+    "Stores the Google refresh and access tokens, the connected account's email address, and the calendar identifier. Also stores the booking records that produce calendar events, and runs the code that calls Google. The tokens are used where they are stored and are never returned to the website. The only provider that holds Google user data at rest.",
   ],
   [
     "Vercel (hosting, functions in Tokyo)",
-    "Processes it in memory while a request is being served — for example while creating an event. Stores none of it.",
+    "Processes it in memory while a request is being served, for example while creating an event. Stores none of it.",
   ],
   [
     "Resend (email, United States)",
@@ -155,7 +155,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           We are the data controller for the personal data described here, except for the data your guests give
-          you when they book — see <a href="#p-rights">section 10</a>. The one address to reach us at is{" "}
+          you when they book, see <a href="#p-rights">section 10</a>. The one address to reach us at is{" "}
           <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
         </p>
 
@@ -165,19 +165,19 @@ export default function PrivacyPage() {
         <h3>From you, the host</h3>
         <ul>
           <li>
-            <strong>Account details</strong> — your name, email address, password (stored hashed, never in
+            <strong>Account details</strong>, your name, email address, password (stored hashed, never in
             readable form), and whether your email is confirmed.
           </li>
           <li>
-            <strong>Profile</strong> — job title, username and profile photo if you add one. Your name, title
+            <strong>Profile</strong>, job title, username and profile photo if you add one. Your name, title
             and photo are shown publicly on your booking page.
           </li>
           <li>
-            <strong>Your setup</strong> — meeting names and descriptions, durations, booking rules, weekly
+            <strong>Your setup</strong>, meeting names and descriptions, durations, booking rules, weekly
             availability and your timezone. We detect your timezone from your browser and you can change it.
           </li>
           <li>
-            <strong>Notification preferences</strong> — the switches in Settings that decide which emails we
+            <strong>Notification preferences</strong>, the switches in Settings that decide which emails we
             send you.
           </li>
         </ul>
@@ -185,20 +185,20 @@ export default function PrivacyPage() {
         <h3>From your guests</h3>
         <ul>
           <li>
-            <strong>Name and email</strong> — required to confirm a booking and send the invitation.
+            <strong>Name and email</strong>, required to confirm a booking and send the invitation.
           </li>
           <li>
-            <strong>An optional note</strong> — whatever they choose to type. It is passed to you and included
+            <strong>An optional note</strong>, whatever they choose to type. It is passed to you and included
             in your notification email.
           </li>
           <li>
-            <strong>Their timezone</strong> — detected in the browser so times display correctly for them.
+            <strong>Their timezone</strong>, detected in the browser so times display correctly for them.
           </li>
         </ul>
 
         <p>
           Guests do not create accounts and do not get passwords. For guest data, the host is the one who decides
-          how it is used — we handle it on their instructions.
+          how it is used. We handle it on their instructions.
         </p>
         <p>
           Because Meetrao invites the guest to the host&rsquo;s calendar event, the guest&rsquo;s name and email
@@ -208,13 +208,13 @@ export default function PrivacyPage() {
 
         <h3>Automatically, when you visit the website</h3>
         <p>
-          We count page views on the public pages — the home page, this one, the Terms, Help, Support, the
+          We count page views on the public pages, the home page, this one, the Terms, Help, Support, the
           sign-in pages and public booking pages. It works without cookies and without storing anything on your
           device. For each page view we record:
         </p>
         <ul>
           <li>the path of the page, with the query string removed before it is stored;</li>
-          <li>the host of the site you arrived from, if any — &ldquo;google.com&rdquo;, never the full address;</li>
+          <li>the host of the site you arrived from, if any, &ldquo;google.com&rdquo;, never the full address;</li>
           <li>a country, and sometimes a region and city, derived by our host from your IP address;</li>
           <li>whether you are on a phone, a tablet or a desktop, and which browser and operating system family;</li>
           <li>
@@ -226,7 +226,7 @@ export default function PrivacyPage() {
           <strong>We do not store your IP address.</strong> It is used to compute that hash and to look up a
           country, and is not written anywhere. The hash includes today&rsquo;s date, so it changes at midnight
           UTC: we can tell how many people visited today, and we cannot tell whether any of them came back next
-          week. The signed-in product — your dashboard, bookings, meetings, contacts and settings — is not
+          week. The signed-in product (your dashboard, bookings, meetings, contacts and settings) is not
           counted at all.
         </p>
         <p>
@@ -240,7 +240,7 @@ export default function PrivacyPage() {
 
         <h2 id="p-google">3. Google user data</h2>
         <p>
-          Connecting Google Calendar is optional — Meetrao works without it, it just cannot then see your
+          Connecting Google Calendar is optional. Meetrao works without it, it just cannot then see your
           conflicts. If you do connect it, here is exactly what we ask Google for and what each permission is
           used for.
         </p>
@@ -263,7 +263,7 @@ export default function PrivacyPage() {
         <p>
           <strong>What the permission would allow.</strong> We want to be straight about this, because
           Google&rsquo;s consent screen is. Creating an event with your guest as an attendee requires the
-          calendar.events permission, and that permission is read as well as write — there is no narrower
+          calendar.events permission, and that permission is read as well as write. There is no narrower
           permission that can add an attendee. So the access you grant is broader than the use we make of it.
           Google&rsquo;s screen will tell you it lets us &ldquo;see, edit and delete&rdquo; your events; the
           limit on what we do with it is the commitment below, and our code.
@@ -272,7 +272,7 @@ export default function PrivacyPage() {
           <strong>What we store.</strong> A refresh token and a short-lived access token, so we do not have to
           ask you again; the email address of the connected Google account; and the identifier of the calendar to
           use. Busy times are read when they are needed and are not stored. The events Meetrao creates live on
-          your calendar, not in our database — we keep only the booking record.
+          your calendar, not in our database. We keep only the booking record.
         </p>
         <p>
           <strong>How to take it back.</strong> Disconnect at any time in Settings → Calendar. Two things happen,
@@ -287,7 +287,7 @@ export default function PrivacyPage() {
           <a href="https://myaccount.google.com/permissions" rel="noreferrer" target="_blank">
             myaccount.google.com/permissions
           </a>
-          , which is also where you can confirm at any time that Meetrao is gone. Events Meetrao already put on
+         , which is also where you can confirm at any time that Meetrao is gone. Events Meetrao already put on
           your calendar stay there for you to keep or delete; disconnecting does not cancel your existing
           bookings, but it does stop us checking for conflicts, so guests may be offered times you are not
           actually free.
@@ -321,7 +321,7 @@ export default function PrivacyPage() {
         </div>
         <p>
           <strong>Nobody else.</strong> Google user data is not sold, rented or traded. It is not shared with
-          advertisers, ad networks, data brokers or analytics providers — Google Analytics receives none of it.
+          advertisers, ad networks, data brokers or analytics providers, Google Analytics receives none of it.
           It is not used to develop, improve or train generalised or general-purpose artificial intelligence or
           machine-learning models, by us or by any provider above. The only disclosures outside this list are
           where the law compels us, or where it is strictly necessary to protect the service or someone&rsquo;s
@@ -335,8 +335,8 @@ export default function PrivacyPage() {
         </p>
         <ul>
           <li>
-            <strong>Encrypted in transit.</strong> Every connection — browser to Meetrao, Meetrao to Google,
-            Meetrao to its database — uses TLS. The site is served over HTTPS only.
+            <strong>Encrypted in transit.</strong> Every connection, browser to Meetrao, Meetrao to Google,
+            Meetrao to its database, uses TLS. The site is served over HTTPS only.
           </li>
           <li>
             <strong>Encrypted at rest.</strong> Our database provider encrypts stored data at rest with AES-256.
@@ -344,7 +344,7 @@ export default function PrivacyPage() {
           <li>
             <strong>Tokens are unreachable from any browser, and from our own website.</strong> Google refresh
             and access tokens are readable only by <em>internal</em> database functions, which no client can
-            call at all — not a signed-in session, not our website, not a request carrying any key we publish.
+            call at all, not a signed-in session, not our website, not a request carrying any key we publish.
             Nothing anywhere returns a token. The code that talks to Google runs inside the database alongside
             the tokens, so the credential is used where it is stored and never travels.
           </li>
@@ -377,7 +377,7 @@ export default function PrivacyPage() {
           <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noreferrer" target="_blank">
             Google API Services User Data Policy
           </a>
-          , including the Limited Use requirements.
+         , including the Limited Use requirements.
         </p>
         <p>In plain terms, and specifically:</p>
         <ul>
@@ -437,7 +437,7 @@ export default function PrivacyPage() {
         <p>
           Google Analytics is the one item on that list that does not run unless you allow it, and it is the only
           one that receives anything about you before you have an account. It receives no Google user data at
-          all — <a href="#p-google-share">who receives that, and what each one gets</a>, is set out in section 3.
+          all, <a href="#p-google-share">who receives that, and what each one gets</a>, is set out in section 3.
         </p>
         <p>
           The people you meet with also see things: your guest sees your name, title, photo, meeting details and
@@ -446,7 +446,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           We will disclose data if the law requires it, and to protect the service or someone&rsquo;s safety. If
-          Meetrao is ever sold or merged, your data may transfer with it — we will tell you first.
+          Meetrao is ever sold or merged, your data may transfer with it. We will tell you first.
         </p>
 
         <h2 id="p-where">8. Where it is stored</h2>
@@ -465,8 +465,8 @@ export default function PrivacyPage() {
 
         <h2 id="p-keep">9. How long we keep it</h2>
         <p>
-          While your account is open, we keep your data so the service works. When your account is deleted — by
-          you, or by us for a breach of the terms — we delete it immediately. Profile, booking link, meetings,
+          While your account is open, we keep your data so the service works. When your account is deleted (by
+          you, or by us for a breach of the terms), we delete it immediately. Profile, booking link, meetings,
           availability, booking history and calendar tokens all go. We do not keep a grace-period copy, so export
           anything you want to keep first.
         </p>
@@ -493,11 +493,11 @@ export default function PrivacyPage() {
         <p>
           <strong>If you are in the EU or UK</strong>, you also have the right to object to processing, to
           restrict it, to data portability, and to withdraw consent at any time. You can complain to your
-          national data protection authority — for the UK, the ICO.
+          national data protection authority, for the UK, the ICO.
         </p>
         <p>
           <strong>If you are in California</strong>, you have the right to know what we collect, to delete it, to
-          correct it, and to opt out of sale or sharing — although we do not sell or share personal information
+          correct it, and to opt out of sale or sharing, although we do not sell or share personal information
           as those terms are defined, so there is nothing to opt out of.
         </p>
         <p>
@@ -509,7 +509,7 @@ export default function PrivacyPage() {
         <p>
           Traffic is encrypted in transit with TLS, and our database provider encrypts its storage at rest.
           Passwords are hashed and never stored readably. Google tokens are readable only by
-          internal database functions that no client can call, and nothing returns one — the code that uses them runs
+          internal database functions that no client can call, and nothing returns one. The code that uses them runs
           inside the database beside them. Every request is authorised against the signed-in account before it
           reads a single row, so one person&rsquo;s bookings are not reachable from another&rsquo;s session.
           Email addresses have to be confirmed before an account works, which keeps someone from signing up as
@@ -520,7 +520,7 @@ export default function PrivacyPage() {
           not to read your bookings.
         </p>
         <p>
-          The mechanisms protecting Google user data in particular — a sensitive scope — are listed in full under{" "}
+          The mechanisms protecting Google user data in particular (a sensitive scope) are listed in full under{" "}
           <a href="#p-google-protect">how we protect Google user data</a>.
         </p>
         <p>
@@ -541,7 +541,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           <strong>Google Analytics.</strong> We may run Google Analytics to understand which pages get read.
-          Google Analytics does set cookies, so it loads <em>only</em> if you press Accept on the banner — before
+          Google Analytics does set cookies, so it loads <em>only</em> if you press Accept on the banner, before
           that, no script from Google is on the page and no request reaches Google at all. Pressing &ldquo;No
           thanks&rdquo; keeps it off, and costs you nothing: the site behaves identically. If Google Analytics is
           not switched on for this site, no banner appears, because there is nothing to consent to.

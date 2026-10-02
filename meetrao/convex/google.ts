@@ -90,7 +90,7 @@ export const accessTokenFor = internalAction({
     }
     if (!row.refresh_token) {
       await ctx.runMutation(internal.google.flagReconnect, {
-        userId: a.userId, message: "No refresh token — reconnect Google Calendar.",
+        userId: a.userId, message: "No refresh token: reconnect Google Calendar.",
       });
       return null;
     }
@@ -259,7 +259,7 @@ export const createEventForBooking = action({
     const attendees = [{ email: booking.guest_email, name: booking.guest_name }, ...invitees];
     try {
       const event = await createEvent(creds.token, creds.calendarId, {
-        summary: booking.host_created ? booking.meeting_name : `${booking.meeting_name} — ${booking.guest_name}`,
+        summary: booking.host_created ? booking.meeting_name : `${booking.meeting_name}: ${booking.guest_name}`,
         description: booking.guest_note
           ? `Booked through Meetrao.\n\nNote from ${booking.guest_name}:\n${booking.guest_note}`
           : "Booked through Meetrao.",
@@ -321,7 +321,7 @@ export const updateEventForBooking = action({
     // "missing": the host deleted the event in Google. Make a fresh one.
     try {
       const event = await createEvent(creds.token, creds.calendarId, {
-        summary: booking.host_created ? booking.meeting_name : `${booking.meeting_name} — ${booking.guest_name}`,
+        summary: booking.host_created ? booking.meeting_name : `${booking.meeting_name}: ${booking.guest_name}`,
         description: booking.guest_note
           ? `Booked through Meetrao.\n\nNote from ${booking.guest_name}:\n${booking.guest_note}`
           : "Booked through Meetrao.",

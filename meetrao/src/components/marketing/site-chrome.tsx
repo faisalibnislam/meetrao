@@ -93,7 +93,7 @@ const FOOTER_TRUST: { glyph: IconName; title: string; text: string }[] = [
   {
     glyph: "eye-slash",
     title: "Your calendar stays private",
-    text: "Meetrao reads busy or free — never what your meetings are about.",
+    text: "Meetrao reads busy or free: never what your meetings are about.",
   },
   {
     glyph: "xmark",
@@ -162,7 +162,7 @@ export function SiteFooter() {
               Your calendar already knows when you&rsquo;re free.
             </h2>
             <p className="m-0 max-w-[46ch] text-[15.5px] leading-[1.6] text-pretty text-white/75">
-              Let Meetrao handle the scheduling. It&rsquo;s completely free to use — no card, no subscription.
+              Let Meetrao handle the scheduling. It&rsquo;s completely free to use, no card, no subscription.
             </p>
           </div>
           {/* flex-initial, not flex-none. The design file says `flex:none` here, which

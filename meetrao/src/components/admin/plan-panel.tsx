@@ -38,7 +38,7 @@ const LENGTHS = [
 ];
 
 function when(iso: string | null): string {
-  if (!iso) return "—";
+  if (!iso) return "–";
   const date = new Date(iso);
   // A hundred years out is the "forever" grant; printing the date would be
   // technically true and useless.
@@ -193,7 +193,7 @@ export function PlanPanel({ userId, name, info }: { userId: string; name: string
         secondary={{ label: "Keep it", onClick: () => setDialog(null) }}
       >
         <span className="text-[13.5px] leading-[1.55] text-pretty text-ink-2">
-          {name} loses the Pro features immediately — a custom domain stops resolving, team links stop
+          {name} loses the Pro features immediately, a custom domain stops resolving, team links stop
           answering, and API keys stop working. Nothing they have made is deleted.
         </span>
       </Modal>

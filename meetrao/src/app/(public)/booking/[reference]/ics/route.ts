@@ -53,7 +53,7 @@ export async function GET(
   const description = [
     booking.meetUrl ? `Google Meet: ${booking.meetUrl}` : null,
     booking.guestNote ? `Note: ${booking.guestNote}` : null,
-    `Booked through Meetrao — ${siteUrl()}/booking/${reference}`,
+    `Booked through Meetrao, ${siteUrl()}/booking/${reference}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -69,7 +69,7 @@ export async function GET(
     `DTSTAMP:${stamp(new Date())}`,
     `DTSTART:${stamp(start)}`,
     `DTEND:${stamp(end)}`,
-    line("SUMMARY", `${booking.meetingName} — ${booking.hostName}`),
+    line("SUMMARY", `${booking.meetingName}: ${booking.hostName}`),
     line("DESCRIPTION", description),
     line("LOCATION", booking.meetUrl || whereText(booking.location, booking.locationDetail, null)),
     // Calendar apps show this address beside the host's name. It used to be

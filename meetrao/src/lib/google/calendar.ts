@@ -46,7 +46,7 @@ export const FAILURE_COPY: Record<CalendarFailure, { title: string; text: string
   },
   "token-expired": {
     title: "Google Calendar needs reconnecting",
-    text: "Google stopped accepting our access. Reconnect from Settings — bookings still work in the meantime.",
+    text: "Google stopped accepting our access. Reconnect from Settings, bookings still work in the meantime.",
   },
   "scope-insufficient": {
     title: "Calendar permission is missing",
@@ -58,7 +58,7 @@ export const FAILURE_COPY: Record<CalendarFailure, { title: string; text: string
   },
   "already-deleted": {
     title: "That event is already gone",
-    text: "Nothing to remove from the calendar — the booking is cancelled either way.",
+    text: "Nothing to remove from the calendar: the booking is cancelled either way.",
   },
   "rate-limited": {
     title: "Google is rate-limiting us",

@@ -97,7 +97,7 @@ export default async function DashboardPage() {
           <MetricCard
             icon="clock"
             tone="slate"
-            value={nextTime ? nextTime.replace(/\s?[AP]M$/, "") : "—"}
+            value={nextTime ? nextTime.replace(/\s?[AP]M$/, "") : "–"}
             label="Next meeting"
             note={next ? `with ${next.guest}` : "Free for the rest of today"}
             trend={nextTime ? (nextTime.match(/[AP]M$/)?.[0] ?? undefined) : undefined}
@@ -113,7 +113,7 @@ export default async function DashboardPage() {
           <MetricCard
             icon="bolt"
             tone="amber"
-            value={hours ?? "—"}
+            value={hours ?? "–"}
             unit={hours ? "hrs" : undefined}
             label="Avg. reply time"
             note={hours ? "From link opened to booked" : "No booking-page views recorded yet"}

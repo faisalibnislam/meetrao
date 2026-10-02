@@ -33,7 +33,7 @@ import Link from "next/link";
    Keep this list true. It is the same claim /help and /privacy make, and the
    three have to agree. */
 const READS: string[] = [
-  "When you are busy — the times, not the titles. Guests are never offered a slot you already have something in.",
+  "When you are busy: the times, not the titles. Guests are never offered a slot you already have something in.",
   "Whether your guest accepted the invitation to a meeting Meetrao itself created, so you are told if they decline.",
 ];
 
@@ -44,7 +44,7 @@ const WRITES: string[] = [
 
 const NEVER: string[] = [
   "The titles, descriptions, locations, attachments or guests of your other meetings.",
-  "Anything at all when you disconnect — the permission is revoked with Google, not just with us.",
+  "Anything at all when you disconnect: the permission is revoked with Google, not just with us.",
 ];
 
 /* ── Step 2 · Calendar ────────────────────────────────────────────────────── */
@@ -63,7 +63,7 @@ export function StepCalendar({
   return (
     <OnboardingCard
       title="Connect your calendar"
-      blurb="Without it, Meetrao cannot see your conflicts — so guests could book a time you are already busy. Here is exactly what the permission covers before you grant it."
+      blurb="Without it, Meetrao cannot see your conflicts, so guests could book a time you are already busy. Here is exactly what the permission covers before you grant it."
       actions={
         <>
           {connected ? (
@@ -109,7 +109,7 @@ export function StepCalendar({
           <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
           <span className="text-[12.5px] leading-[1.6] text-ink-2">
             Google will ask for “See, edit and delete events on your calendar”. That is the narrowest
-            permission that can put a booking on your calendar and invite your guest to it — Google does not
+            permission that can put a booking on your calendar and invite your guest to it. Google does not
             offer a write-only one. What Meetrao does with it is the list above.{" "}
             <Link href="/help#calendar">The full explanation is in the help centre</Link>.
           </span>
@@ -438,8 +438,8 @@ export function StepReady({
         <div className="flex flex-col gap-[7px] rounded-[8px] border border-accent-line bg-accent-soft px-[15px] py-[13px]">
           <span className="text-[13px] font-semibold text-ink">Everything here is free</span>
           <span className="text-[12.5px] leading-[1.55] text-ink-2">
-            Pro is $10 a year when you want the page to look like yours — your logo, your colour, and your
-            own domain at meeting.yourcompany.com/your-name — or one link your whole team answers.{" "}
+            Pro is $10 a year when you want the page to look like yours, your logo, your colour, and your
+            own domain at meeting.yourcompany.com/your-name, or one link your whole team answers.{" "}
             <Link href="/settings/billing" className="font-semibold">
               See Pro
             </Link>

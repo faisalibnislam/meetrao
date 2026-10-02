@@ -82,7 +82,7 @@ export function BillingPanel({
       <PanelHeading title="Plan" subtitle="Meetrao is free. Pro adds the parts a business needs." />
 
       {welcome && !pro ? (
-        <Callout tone="amber" title="Payment received — just finishing up">
+        <Callout tone="amber" title="Payment received: just finishing up">
           Polar confirms subscriptions in the background. Reload in a moment and Pro will be on.
         </Callout>
       ) : null}

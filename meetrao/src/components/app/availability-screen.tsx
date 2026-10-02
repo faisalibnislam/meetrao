@@ -239,7 +239,7 @@ export function AvailabilityScreen({
           />
         </div>
         <p className="m-0 min-w-[200px] flex-1 text-[12.5px] leading-[1.5] text-pretty text-ink-3">
-          One timezone for every schedule — guests always see these hours converted into their own.
+          One timezone for every schedule, guests always see these hours converted into their own.
         </p>
       </div>
 
@@ -301,7 +301,7 @@ export function AvailabilityScreen({
             <span className="text-[12px] leading-[1.5] text-ink-3">
               {active.usedBy.length
                 ? `Used by ${active.usedBy.join(", ")}`
-                : "No meetings use this yet — pick it on a meeting to put it to work."}
+                : "No meetings use this yet: pick it on a meeting to put it to work."}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-[6px]">
@@ -500,7 +500,7 @@ export function AvailabilityScreen({
           <Icon name="circle-info" weight="solid" size={13} className="mt-[2px] flex-none text-accent-ink" />
           <span>
             {active.usedBy.length
-              ? `${active.usedBy.length} meeting${active.usedBy.length === 1 ? "" : "s"} — ${active.usedBy.join(", ")} — will move to your default schedule.`
+              ? `${active.usedBy.length} meeting${active.usedBy.length === 1 ? "" : "s"} (${active.usedBy.join(", ")}) will move to your default schedule.`
               : "No meetings use this schedule, so nothing else changes."}
           </span>
         </div>

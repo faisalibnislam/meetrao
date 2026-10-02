@@ -22,7 +22,7 @@ export const FAQS: [string, string, string][] = [
   [
     "free",
     "What is free, and what costs money?",
-    "Taking bookings is free: your link, your meeting types, calendar conflict checks, Meet links, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is $10 a year — or $3 a month — and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API.",
+    "Taking bookings is free: your link, your meeting types, calendar conflict checks, Meet links, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is $10 a year (or $3 a month) and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API.",
   ],
   [
     "forever",
@@ -37,7 +37,7 @@ export const FAQS: [string, string, string][] = [
   [
     "google",
     "Does it work with Google Calendar?",
-    "Yes — it is the integration Meetrao is built on, and currently the only calendar it connects to.",
+    "Yes: it is the integration Meetrao is built on, and currently the only calendar it connects to.",
   ],
   [
     "meet",
@@ -62,26 +62,26 @@ export const FAQS: [string, string, string][] = [
   [
     "buffer",
     "Can I add buffer time?",
-    "Yes — a buffer either side, a minimum notice period so nobody grabs the next ten minutes, and a booking window limiting how far ahead people can book.",
+    "Yes: a buffer either side, a minimum notice period so nobody grabs the next ten minutes, and a booking window limiting how far ahead people can book.",
   ],
   [
     "cancel",
     "Can people cancel or reschedule?",
-    "Both. Cancelling notifies the other side, removes the calendar event and reopens the slot. Moving a meeting keeps the same booking and the same Google Meet link — the guest picks a new time from the link in their confirmation, and both calendars follow.",
+    "Both. Cancelling notifies the other side, removes the calendar event and reopens the slot. Moving a meeting keeps the same booking and the same Google Meet link. The guest picks a new time from the link in their confirmation, and both calendars follow.",
   ],
   [
     "private",
     "Is my calendar private?",
-    "Meetrao reads only whether a period is busy or free — never event titles, descriptions, locations or attachments. The one exception is the events it creates itself: for those, and only those, it reads whether your guest accepted or declined, so you are told before you sit in an empty Meet. Disconnect any time from Settings.",
+    "Meetrao reads only whether a period is busy or free, never event titles, descriptions, locations or attachments. The one exception is the events it creates itself: for those, and only those, it reads whether your guest accepted or declined, so you are told before you sit in an empty Meet. Disconnect any time from Settings.",
   ],
   [
     "who",
     "Who is Meetrao for?",
-    "Anyone whose work starts with a conversation — freelancers, consultants, agencies, sales teams, coaches and remote teams.",
+    "Anyone whose work starts with a conversation, freelancers, consultants, agencies, sales teams, coaches and remote teams.",
   ],
   [
     "compare",
     "How does it compare with paid tools?",
-    "Taking bookings is free and always has been — the link, the calendar checks, reminders, rescheduling and time off, with no card. Pro is $10 a year for a custom domain, your own branding, team links, shared sessions and the API. It is still deliberately narrow: one calendar provider, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
+    "Taking bookings is free and always has been, the link, the calendar checks, reminders, rescheduling and time off, with no card. Pro is $10 a year for a custom domain, your own branding, team links, shared sessions and the API. It is still deliberately narrow: one calendar provider, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
   ],
 ];

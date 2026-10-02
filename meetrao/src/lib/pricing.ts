@@ -51,11 +51,11 @@ export const PRO_MONTHLY = "$3 a month";
  * letting their guests down is the wrong business.
  */
 export const INCLUDED: readonly string[] = [
-  "One public booking link — meetrao.com/your-name",
+  "One public booking link: meetrao.com/your-name",
   "Unlimited meeting types and weekly schedules",
   "Unlimited bookings a month",
   "Google Calendar connected, and checked for conflicts before a slot is offered",
-  "A Google Meet link created on every confirmed booking — or a phone call, an address, your own link",
+  "A Google Meet link created on every confirmed booking, or a phone call, an address, your own link",
   "Guests book without an account, in their own timezone",
   "Reminders the day before and an hour before, to both of you",
   "Guests move a meeting themselves, keeping the same Meet link",
@@ -76,7 +76,7 @@ export const INCLUDED: readonly string[] = [
 export type PlanCell = boolean | string;
 
 export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCell }[] = [
-  { feature: "Your booking link — meetrao.com/your-name", free: true, pro: true },
+  { feature: "Your booking link: meetrao.com/your-name", free: true, pro: true },
   { feature: "Unlimited meeting types and weekly schedules", free: true, pro: true },
   { feature: "Unlimited bookings", free: true, pro: true },
   { feature: "Google Calendar checked before a slot is offered", free: true, pro: true },
@@ -90,9 +90,9 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
   { feature: "Embed on your own site", free: "With a small badge", pro: "No badge" },
   { feature: "“Powered by Meetrao” on your booking page", free: "Shown", pro: "Removed" },
   { feature: "Your own logo on your booking page", free: false, pro: true },
-  { feature: "Your own colours — accent and page background", free: false, pro: true },
+  { feature: "Your own colours: accent and page background", free: false, pro: true },
   { feature: "No Meetrao colours anywhere a guest looks", free: false, pro: true },
-  { feature: "Your own domain — meeting.yourcompany.com/your-name", free: false, pro: true },
+  { feature: "Your own domain: meeting.yourcompany.com/your-name", free: false, pro: true },
   { feature: "Team link, rotating to whoever is free", free: false, pro: true },
   { feature: "Sessions several guests share", free: false, pro: true },
   { feature: "API keys and webhooks", free: false, pro: true },
@@ -107,7 +107,7 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
 export const PRO_ADDS: readonly [string, string][] = [
   [
     "Your logo and your colours",
-    "Your mark in place of ours, and two colours — an accent and a page background — that carry through the calendar, the buttons, the panels and the confirmation. Nothing of our palette is left. We work out the readable shades, so a guest can always read the page, dark backgrounds included.",
+    "Your mark in place of ours, and two colours (an accent and a page background) that carry through the calendar, the buttons, the panels and the confirmation. Nothing of our palette is left. We work out the readable shades, so a guest can always read the page, dark backgrounds included.",
   ],
   [
     "Your own domain",
@@ -115,7 +115,7 @@ export const PRO_ADDS: readonly [string, string][] = [
   ],
   ["No Meetrao badge", "Your booking page and your embed stop mentioning us."],
   ["Team links", "One link several people answer, rotating to whoever is free and least recently booked."],
-  ["Sessions several guests share", "A class, a workshop, an office hour — one slot, several seats, counting down."],
+  ["Sessions several guests share", "A class, a workshop, an office hour: one slot, several seats, counting down."],
   ["API keys and webhooks", "Read your bookings from your own tools, and get a signed POST when one changes."],
   ["Reminder timing", "Choose when both reminders land, instead of a day and an hour before."],
 ];
@@ -134,8 +134,8 @@ export const PRO_ADDS: readonly [string, string][] = [
 export const LIMITS: readonly [string, string][] = [
   ["Google Calendar only", "No Outlook, no iCloud, no CalDAV. If your calendar lives elsewhere, Meetrao cannot see your conflicts and is the wrong tool."],
   ["No payments", "You cannot charge for a booking. Nothing collects money."],
-  ["No Zoom or Teams integration", "Meetrao creates Google Meet links itself. A meeting can be a phone call, an address or your own Zoom link — but that link is one you paste, not one it makes for you."],
-  ["Round-robin only", "A team link goes to whoever is free and least recently booked. There is no collective availability — several hosts in one meeting — and no routing forms."],
+  ["No Zoom or Teams integration", "Meetrao creates Google Meet links itself. A meeting can be a phone call, an address or your own Zoom link, but that link is one you paste, not one it makes for you."],
+  ["Round-robin only", "A team link goes to whoever is free and least recently booked. There is no collective availability (several hosts in one meeting) and no routing forms."],
   ["Reminders are email only", "One the day before and one an hour before, by email. No SMS, no WhatsApp, no push notifications."],
 ];
 
@@ -147,7 +147,7 @@ export const LIMITS: readonly [string, string][] = [
  */
 export const WHY: readonly string[] = [
   "Meetrao is built and run by one person. There is no sales team to fund and no investor expecting a return this quarter, which is why the free plan is the real product rather than a demonstration of one.",
-  "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free — never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
+  "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free, never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
   "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; hosting a logo means storage and bandwidth on every page view; a team link means several calendars checked on every page load. Ten dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
 ];
 
@@ -167,22 +167,22 @@ export const PRICING_FAQ: readonly (readonly [string, string, string])[] = [
   [
     "forever",
     "Is it free forever?",
-    'We will not promise "forever" — nobody can, and a promise that cannot be kept is worth less than none. What the Terms commit to instead: Meetrao is free today, and if paid plans ever arrive you would be emailed before anything became chargeable and would have to opt in. A free account is never billed automatically. If you chose not to pay, you could export your data and close the account.',
+    'We will not promise "forever". Nobody can, and a promise that cannot be kept is worth less than none. What the Terms commit to instead: Meetrao is free today, and if paid plans ever arrive you would be emailed before anything became chargeable and would have to opt in. A free account is never billed automatically. If you chose not to pay, you could export your data and close the account.',
   ],
   [
     "catch",
     "So what is the catch?",
-    "The limits, and they are listed above rather than discovered later: Google Calendar only, no payments, no Zoom or Teams integration, round-robin without collective availability, and email-only reminders. There is no paid tier to be upsold to, so nothing here is a trial — but if you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
+    "The limits, and they are listed above rather than discovered later: Google Calendar only, no payments, no Zoom or Teams integration, round-robin without collective availability, and email-only reminders. There is no paid tier to be upsold to, so nothing here is a trial, but if you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
   ],
   [
     "data",
     "Am I the product?",
-    "No. Meetrao does not sell data, does not run ads, and does not share your calendar with anyone. It asks Google only whether a period is busy or free — never event titles, descriptions or attachments. For the events Meetrao creates itself it also reads whether your guest accepted or declined, which is how it can tell you. Disconnecting from Settings revokes the permission with Google, not just with us.",
+    "No. Meetrao does not sell data, does not run ads, and does not share your calendar with anyone. It asks Google only whether a period is busy or free, never event titles, descriptions or attachments. For the events Meetrao creates itself it also reads whether your guest accepted or declined, which is how it can tell you. Disconnecting from Settings revokes the permission with Google, not just with us.",
   ],
   [
     "limits",
     "Are there usage limits?",
-    "No published caps on bookings, meeting types or guests. Because this is a beta, the Terms do reserve the right to set limits on usage — that clause exists so an abusive account can be stopped, and it will not be used in a way designed to break bookings you already have.",
+    "No published caps on bookings, meeting types or guests. Because this is a beta, the Terms do reserve the right to set limits on usage. That clause exists so an abusive account can be stopped, and it will not be used in a way designed to break bookings you already have.",
   ],
   [
     "card",

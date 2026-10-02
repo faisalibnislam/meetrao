@@ -141,7 +141,7 @@ export function validateBrandColor(value: string): { color: string } | { error: 
      in other hues. Refused with the way out, not just a no. */
   if (contrast(color, onBrand(color)) < MIN_LABEL) {
     return {
-      error: "No text can be read on that colour — it sits midway between light and dark. Pick a deeper or a lighter shade.",
+      error: "No text can be read on that colour: it sits midway between light and dark. Pick a deeper or a lighter shade.",
     };
   }
 

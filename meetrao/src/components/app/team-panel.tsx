@@ -106,7 +106,7 @@ export function TeamPanel({
             <Callout tone="accent" title="Team links are part of Pro">
               One link the whole team answers, rotating to whoever is free.{" "}
               <Link href="/settings/billing" className="font-semibold">
-                See Pro — $10 a year
+                See Pro, $10 a year
               </Link>
               .
             </Callout>
@@ -171,7 +171,7 @@ export function TeamPanel({
               </div>
             ) : (
               <Callout tone="amber" title="No meeting points here yet">
-                Pick one below and its link becomes a team link — the same meeting, answered by whoever is
+                Pick one below and its link becomes a team link, the same meeting, answered by whoever is
                 free.
               </Callout>
             )}
@@ -281,7 +281,7 @@ export function TeamPanel({
         open={dialog === "invite"}
         onClose={() => setDialog(null)}
         title="Add someone to the rotation"
-        subtitle="They need a Meetrao account already — their own hours and calendar are what gets offered."
+        subtitle="They need a Meetrao account already: their own hours and calendar are what gets offered."
         primary={{
           label: "Add",
           busy,
@@ -327,7 +327,7 @@ export function TeamPanel({
       >
         <span className="text-[13.5px] leading-[1.55] text-pretty text-ink-2">
           The team link stops working. Meetings it answered go back to you, and bookings already made are
-          untouched — they belong to whoever took them.
+          untouched: they belong to whoever took them.
         </span>
       </Modal>
     </div>

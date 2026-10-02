@@ -54,8 +54,8 @@ export type Cadence = "monthly" | "yearly";
 
 /** What Pro is sold as. One place, so the page and the product agree. */
 export const PRICES: Record<Cadence, { name: string; amount: number; interval: "month" | "year" }> = {
-  monthly: { name: "Meetrao Pro — Monthly", amount: 300, interval: "month" },
-  yearly: { name: "Meetrao Pro — Yearly", amount: 1000, interval: "year" },
+  monthly: { name: "Meetrao Pro: Monthly", amount: 300, interval: "month" },
+  yearly: { name: "Meetrao Pro: Yearly", amount: 1000, interval: "year" },
 };
 
 /**

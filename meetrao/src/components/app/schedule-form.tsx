@@ -139,7 +139,7 @@ export function ScheduleForm({
       </section>
 
       <section className="flex flex-col gap-[14px] border-b border-line py-[20px]">
-        <PanelHeading title="When" subtitle={`Your time — ${timezoneLabel}.`} />
+        <PanelHeading title="When" subtitle={`Your time, ${timezoneLabel}.`} />
 
         <div className="flex flex-wrap gap-[12px]">
           <Field label="Date" htmlFor="schedule-date" className="min-w-[190px] flex-1">
@@ -159,7 +159,7 @@ export function ScheduleForm({
         </div>
 
         <Callout tone="info">
-          Your availability does not apply here — you have already decided you are free. A clash with an
+          Your availability does not apply here. You have already decided you are free. A clash with an
           existing booking is still refused.
         </Callout>
       </section>

@@ -43,7 +43,7 @@ const WALK: { key: StageKey; n: string; title: string; text: string; outcome: st
     title: "Your guest picks",
     text: "A name, an email, done. No account, no download, no timezone maths.",
     outcome: "Your guest sees your hours in their own timezone.",
-    url: "meetrao.com/adam — confirm",
+    url: "meetrao.com/adam, confirm",
   },
   {
     key: "confirm",
@@ -51,7 +51,7 @@ const WALK: { key: StageKey; n: string; title: string; text: string; outcome: st
     title: "Booked, both sides",
     text: "One calendar event with a Google Meet link, and your guest invited to the same event.",
     outcome: "On both calendars, with a Meet link, automatically.",
-    url: "meetrao.com/adam — booked",
+    url: "meetrao.com/adam, booked",
   },
 ];
 
@@ -116,7 +116,7 @@ export function Walkthrough() {
               <button
                 key={step.key}
                 type="button"
-                aria-label={`Step ${step.n} — ${step.title}`}
+                aria-label={`Step ${step.n}: ${step.title}`}
                 onClick={() => pick(step.key)}
                 className={cx(
                   "relative box-border block cursor-pointer overflow-hidden rounded-[14px] border border-line bg-fill p-0 font-sans",
@@ -299,8 +299,8 @@ export function Walkthrough() {
 
                           <span className="text-[12px] text-ink-3">
                             {openDays === 0
-                              ? "No days selected — your link would show no times at all."
-                              : `${openDays} ${openDays === 1 ? "day" : "days"} a week. Tick a day off and watch it grey out — it is live.`}
+                              ? "No days selected: your link would show no times at all."
+                              : `${openDays} ${openDays === 1 ? "day" : "days"} a week. Tick a day off and watch it grey out. It is live.`}
                           </span>
                         </div>
                       ) : null}
@@ -381,7 +381,7 @@ export function Walkthrough() {
                             }}
                             className="inline-flex h-[40px] cursor-pointer items-center justify-center gap-[9px] rounded-[7px] border border-accent bg-accent font-sans text-[13.5px] font-semibold text-on-accent transition-colors duration-[120ms] hover:bg-accent-2"
                           >
-                            {booked ? "Scheduled — go to step 04" : "Schedule meeting"}
+                            {booked ? "Scheduled: go to step 04" : "Schedule meeting"}
                           </button>
                         </div>
                       ) : null}

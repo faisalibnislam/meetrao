@@ -143,7 +143,7 @@ function firstName(full: string): string {
 export async function sendWelcome(profile: Profile): Promise<SendResult> {
   return deliver({
     to: profile.email,
-    subject: "Welcome to Meetrao — your link is ready",
+    subject: "Welcome to Meetrao: your link is ready",
     marketing: true,
     idempotencyKey: `welcome:${profile.id}`,
     html: render("welcome", {
@@ -208,7 +208,7 @@ export async function sendBookingNewToHost(
 
   return deliver({
     to: mail.hostEmail,
-    subject: `New booking: ${mail.guestName} — ${mail.meetingName}`,
+    subject: `New booking: ${mail.guestName}: ${mail.meetingName}`,
     idempotencyKey: `booking-new-host:${mail.bookingId}`,
     html: render("booking-new-host", {
       ...chrome(),
@@ -233,7 +233,7 @@ export async function sendBookingNewToHost(
 export async function sendBookingNewToGuest(mail: BookingMail): Promise<SendResult> {
   return deliver({
     to: mail.guestEmail,
-    subject: `You're booked with ${mail.hostName} — ${mail.startShort}`,
+    subject: `You're booked with ${mail.hostName}: ${mail.startShort}`,
     idempotencyKey: `booking-new-guest:${mail.bookingId}`,
     html: render("booking-new-guest", {
       ...chrome(),

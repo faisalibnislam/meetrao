@@ -52,7 +52,7 @@ export default async function VerifyPage({
             </h1>
             <p className="m-0 text-[14px] leading-[1.6] text-pretty text-ink-2">
               We sent a verification link to <strong className="font-semibold text-ink">{pending}</strong>. Open
-              it to activate your account — you can&rsquo;t use Meetrao until you do.
+              it to activate your account. You can&rsquo;t use Meetrao until you do.
             </p>
           </div>
 

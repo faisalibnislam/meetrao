@@ -204,7 +204,7 @@ export function MeetingForm({
       <section className="flex flex-col gap-[12px] border-b border-line py-[20px]">
         <PanelHeading
           title="Seats"
-          subtitle="One guest at a time, or several sharing the same slot — a class, a workshop, an office hour."
+          subtitle="One guest at a time, or several sharing the same slot, a class, a workshop, an office hour."
         />
 
         <div className="flex flex-wrap gap-[8px]">
@@ -220,9 +220,9 @@ export function MeetingForm({
 
         {pro ? null : (
           <Callout tone="accent" title="Sessions several guests share are part of Pro">
-            A class, a workshop, an office hour — one slot, several seats.{" "}
+            A class, a workshop, an office hour, one slot, several seats.{" "}
             <Link href="/settings/billing" className="font-semibold">
-              See Pro — $10 a year
+              See Pro, $10 a year
             </Link>
             .
           </Callout>

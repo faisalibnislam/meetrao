@@ -41,7 +41,7 @@ describe("the Where line", () => {
   });
 
   it("names the number, the room, or the arrangement", () => {
-    expect(whereText("phone", "+880 1711-000000", null)).toBe("Phone — +880 1711-000000");
+    expect(whereText("phone", "+880 1711-000000", null)).toBe("Phone: +880 1711-000000");
     expect(whereText("in_person", "12 Example Road", null)).toBe("12 Example Road");
     expect(whereText("custom", "Zoom link in the invite", null)).toBe("Zoom link in the invite");
   });

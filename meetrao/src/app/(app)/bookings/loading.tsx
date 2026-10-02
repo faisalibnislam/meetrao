@@ -8,7 +8,7 @@ export default function Loading() {
   return (
     <AppScreen
       title="Bookings"
-      subtitle="Everyone who has booked time with you — and everything you scheduled yourself."
+      subtitle="Everyone who has booked time with you, and everything you scheduled yourself."
     >
       <BodySkeleton>
         <TabsSkeleton />

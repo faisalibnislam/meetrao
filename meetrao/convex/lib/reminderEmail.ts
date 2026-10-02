@@ -134,7 +134,7 @@ export function renderReminder(input: ReminderInput): Rendered {
 </body>
 </html>`
     .split("{{preheader}}")
-    .join(escapeHtml(`${input.meetingName} ${phrase} — ${input.whenLong}`))
+    .join(escapeHtml(`${input.meetingName} ${phrase}: ${input.whenLong}`))
     .split("{{heading}}")
     .join(escapeHtml(input.lead === "1h" ? "Starting in an hour" : `This is ${input.dayPhrase}`))
     .split("{{body}}")
@@ -142,7 +142,7 @@ export function renderReminder(input: ReminderInput): Rendered {
       escapeHtml(
         input.to === "host"
           ? `${input.otherParty} is expecting you ${phrase}.`
-          : `${input.otherParty} is expecting you ${phrase}. Nothing to do — this is just a nudge.`,
+          : `${input.otherParty} is expecting you ${phrase}. Nothing to do. This is just a nudge.`,
       ),
     )
     .split("{{details}}")

@@ -23,7 +23,7 @@ export async function applyDetectedTimezone(userId: string, detected: string | n
   if (!detected) return;
 
   const timezone = supportedTimezone(detected);
-  if (timezone === "UTC") return; // nothing learned — that is already the default
+  if (timezone === "UTC") return; // nothing learned. That is already the default
 
   try {
     const convex = await convexServer();

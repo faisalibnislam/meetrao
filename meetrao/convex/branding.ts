@@ -68,7 +68,7 @@ export const saveLogo = mutation({
 
     if (meta.size > MAX_LOGO_BYTES) {
       await ctx.storage.delete(a.storageId);
-      fail("That image is over 1 MB. A booking page logo is small — export it smaller.", "TOO_LARGE");
+      fail("That image is over 1 MB. A booking page logo is small, export it smaller.", "TOO_LARGE");
     }
     if (!meta.contentType || !LOGO_TYPES.includes(meta.contentType)) {
       await ctx.storage.delete(a.storageId);

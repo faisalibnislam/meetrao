@@ -60,13 +60,13 @@ export const CALENDLY: Comparison = {
   competitor: "Calendly",
   competitorUrl: "https://calendly.com/pricing",
   checkedOn: CHECKED,
-  title: "Free Calendly Alternative — Meetrao vs Calendly",
+  title: "Free Calendly Alternative: Meetrao vs Calendly",
   description:
     "How Meetrao and Calendly compare for appointment booking: what each does, where Calendly's " +
     "free plan stops, and which one to pick.",
   summary: [
     "Calendly is the tool most people mean when they say “send me your link”. It is mature, it has a free plan, and for teams that need payments, routing or collective scheduling it does things Meetrao does not.",
-    "The difference that sends people looking is the free plan's shape. Calendly's free tier is limited to one active event type and one connected calendar — enough for a single repeated meeting, and the point at which most people either upgrade or go looking. Meetrao has no such line: every feature on this site is available on the free account, because there is no paid account to upsell you to.",
+    "The difference that sends people looking is the free plan's shape. Calendly's free tier is limited to one active event type and one connected calendar, enough for a single repeated meeting, and the point at which most people either upgrade or go looking. Meetrao has no such line: every feature on this site is available on the free account, because there is no paid account to upsell you to.",
     "Meetrao is narrower on purpose. If what you need is a booking link that respects your real calendar and puts a Google Meet link on both sides, it does that and does not charge for it. If you need more than that, this page says so.",
   ],
   rows: [
@@ -78,23 +78,23 @@ export const CALENDLY: Comparison = {
     { feature: "Timezone conversion for guests", meetrao: "Yes", them: "Yes", edge: "even" },
     { feature: "Buffers, notice period, booking window", meetrao: "Yes", them: "Yes", edge: "even" },
     { feature: "Branding on your booking page", meetrao: "Meetrao wordmark", them: "Calendly badge on free; removable on paid", edge: "even" },
-    { feature: "Reschedule flow", meetrao: "Not built — cancel and rebook", them: "Yes", edge: "them" },
+    { feature: "Reschedule flow", meetrao: "Not built: cancel and rebook", them: "Yes", edge: "them" },
     { feature: "Take payment at booking", meetrao: "No", them: "Yes, on paid plans", edge: "them" },
     { feature: "Round-robin team links", meetrao: "Yes, free", them: "Yes, on team plans", edge: "meetrao" },
     { feature: "Collective availability and routing forms", meetrao: "No", them: "Yes, on team plans", edge: "them" },
     { feature: "CRM and automation integrations", meetrao: "None", them: "Many", edge: "them" },
-    { feature: "Reads your event titles", meetrao: "Never — busy/free only", them: "See their privacy policy", edge: "meetrao" },
+    { feature: "Reads your event titles", meetrao: "Never: busy/free only", them: "See their privacy policy", edge: "meetrao" },
   ],
   theirWins: [
     ["It does considerably more", "Payments at booking, collective scheduling, routing forms, multiple video providers, and a long list of integrations. Meetrao has round-robin team links and none of the rest, and is not planning most of them."],
-    ["Rescheduling", "Calendly lets a guest move a booking. Meetrao does not yet — a guest cancels and books again, which works but is two steps where one would do."],
+    ["Rescheduling", "Calendly lets a guest move a booking. Meetrao does not yet, a guest cancels and books again, which works but is two steps where one would do."],
     ["Calendars beyond Google", "Outlook, iCloud and Exchange. Meetrao connects to Google Calendar and nothing else."],
     ["It is not one person", "Calendly has a support organisation, an uptime commitment and a company behind it. Meetrao is built and run by one person, and this page would be dishonest if it pretended otherwise."],
   ],
   meetraoWins: [
     ["No limit that exists to sell you something", "Every feature on this site is on the free account. There is no second tier whose absence is the product."],
     ["Unlimited meeting types, free", "Calendly's free plan allows one. If you run a 15-minute intro and a 60-minute deep dive, that is the wall most people hit first."],
-    ["It reads busy and free, never what your meetings are", "Meetrao asks Google which periods are busy. It never requests event titles, guests, descriptions or attachments — see the Privacy Policy, which names every permission."],
+    ["It reads busy and free, never what your meetings are", "Meetrao asks Google which periods are busy. It never requests event titles, guests, descriptions or attachments, see the Privacy Policy, which names every permission."],
     ["No card, no trial countdown", "Nothing expires, and there is no card on file to forget about."],
   ],
   chooseThem: [
@@ -114,7 +114,7 @@ export const CALENDLY: Comparison = {
   faq: [
     [
       "Is Meetrao a free alternative to Calendly?",
-      "Yes, for the core job: a booking link that checks your Google Calendar, converts timezones for guests, and puts a Google Meet link on both calendars — plus rescheduling, reminders, group sessions and round-robin team links. It does not replace Calendly's payments, routing forms or CRM integrations.",
+      "Yes, for the core job: a booking link that checks your Google Calendar, converts timezones for guests, and puts a Google Meet link on both calendars, plus rescheduling, reminders, group sessions and round-robin team links. It does not replace Calendly's payments, routing forms or CRM integrations.",
     ],
     [
       "What is the catch?",
@@ -122,7 +122,7 @@ export const CALENDLY: Comparison = {
     ],
     [
       "Can I move from Calendly to Meetrao?",
-      "There is no import. You create your meeting types again — a name, a duration and a description each — set your hours, and share the new link. For one or two meeting types it takes a few minutes.",
+      "There is no import. You create your meeting types again (a name, a duration and a description each), set your hours, and share the new link. For one or two meeting types it takes a few minutes.",
     ],
   ],
 };
@@ -132,12 +132,12 @@ export const CAL_COM: Comparison = {
   competitor: "Cal.com",
   competitorUrl: "https://cal.com/pricing",
   checkedOn: CHECKED,
-  title: "Free Cal.com Alternative — Meetrao vs Cal.com",
+  title: "Free Cal.com Alternative: Meetrao vs Cal.com",
   description:
     "How Meetrao and Cal.com compare for meeting scheduling: what each does, where Cal.com is the " +
     "stronger product, and which one to pick.",
   summary: [
-    "Cal.com is the most capable free scheduler most people can name. Its individual plan is genuinely generous — unlimited event types and unlimited calendar connections — and on a feature count it beats Meetrao comfortably.",
+    "Cal.com is the most capable free scheduler most people can name. Its individual plan is genuinely generous (unlimited event types and unlimited calendar connections), and on a feature count it beats Meetrao comfortably.",
     "So this page is not going to claim Meetrao does more. It does less, deliberately: one calendar provider, one meeting location, one weekly schedule, and a single screen for each of them. Cal.com's power comes with the surface area that power needs.",
     "Pick Meetrao if the shortest path from “I need a booking link” to having one matters more to you than what the tool could do later. Pick Cal.com if you want room to grow into it.",
   ],
@@ -153,20 +153,20 @@ export const CAL_COM: Comparison = {
     { feature: "Workflows and reminders", meetrao: "Booking emails only", them: "Yes", edge: "them" },
     { feature: "Routing forms", meetrao: "No", them: "Yes", edge: "them" },
     { feature: "Take payment at booking", meetrao: "No", them: "Yes", edge: "them" },
-    { feature: "Reschedule flow", meetrao: "Not built — cancel and rebook", them: "Yes", edge: "them" },
+    { feature: "Reschedule flow", meetrao: "Not built: cancel and rebook", them: "Yes", edge: "them" },
     { feature: "Self-hosting", meetrao: "No", them: "Yes", edge: "them" },
     { feature: "Settings to get through before your first link", meetrao: "Three screens", them: "More", edge: "meetrao" },
   ],
   theirWins: [
     ["More of everything", "Routing forms, workflows, several calendar providers, several video providers, payments, collective scheduling. On features this is not close, and pretending otherwise would waste your time."],
     ["Self-hosting", "You can run Cal.com on your own infrastructure. Meetrao has no self-hosted edition."],
-    ["Teams", "Cal.com has the full set — round-robin, collective availability, routing, per-team billing. Meetrao has a round-robin team link and stops there."],
+    ["Teams", "Cal.com has the full set: round-robin, collective availability, routing, per-team billing. Meetrao has a round-robin team link and stops there."],
     ["A company behind it", "Cal.com is a funded company with a roadmap and a support function. Meetrao is one person."],
   ],
   meetraoWins: [
     ["Less to set up", "Connect Google, describe one meeting, tick your hours. Three screens and the link works."],
     ["One obvious way to do each thing", "There is one weekly schedule, one meeting location and one calendar. Fewer choices is the feature, and it is the wrong feature for some people."],
-    ["The free plan is not a demo", "Taking bookings — link, calendar, reminders, rescheduling, time off — costs nothing and always has. Pro is $10 a year for branding, a domain, team links and the API."],
+    ["The free plan is not a demo", "Taking bookings (link, calendar, reminders, rescheduling, time off) costs nothing and always has. Pro is $10 a year for branding, a domain, team links and the API."],
     ["Explicit about what it reads", "The Privacy Policy names every Google permission requested, says plainly that calendar.events is broader than the use made of it, and carries the Limited Use disclosure."],
   ],
   chooseThem: [
@@ -185,7 +185,7 @@ export const CAL_COM: Comparison = {
   faq: [
     [
       "Is Cal.com not already free?",
-      "For an individual, yes, and generously so. This page does not argue that Meetrao is cheaper — it argues that it is smaller. If Cal.com's free plan suits you, it is an excellent choice and you should use it.",
+      "For an individual, yes, and generously so. This page does not argue that Meetrao is cheaper. It argues that it is smaller. If Cal.com's free plan suits you, it is an excellent choice and you should use it.",
     ],
     [
       "What does Meetrao do that Cal.com does not?",

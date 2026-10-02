@@ -82,7 +82,7 @@ function Cell({ value, label, accent = false }: { value: PlanCell; label: string
       ) : value === false ? (
         <>
           <span aria-hidden="true" className="text-ink-3">
-            —
+            –
           </span>
           <span className="sr-only">{label}: no</span>
         </>

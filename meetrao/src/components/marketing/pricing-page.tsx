@@ -31,7 +31,7 @@ export function PricingPage() {
               {HEADLINE}
             </h1>
             <p className="m-0 text-[16px] leading-[1.6] text-pretty text-ink-2">
-              Taking bookings is free, and that is the whole booking product — not a sample of it. Pro is{" "}
+              Taking bookings is free, and that is the whole booking product, not a sample of it. Pro is{" "}
               {PRO_YEARLY} and adds the parts a business needs: your own domain, your own branding, a team
               link, and the API.
             </p>
@@ -78,7 +78,7 @@ export function PricingPage() {
             </h2>
             <p className="mt-[10px] mb-[26px] max-w-[660px] text-[14px] leading-[1.6] text-ink-2">
               Free is the whole booking product, not a trial of it. Pro is for people running a business on
-              it — their own domain, their own branding, a team. Nothing your guests touch is behind the paid
+              it, their own domain, their own branding, a team. Nothing your guests touch is behind the paid
               plan.
             </p>
 
@@ -91,7 +91,7 @@ export function PricingPage() {
                 Start free
               </Link>
               <span className="text-[13px] text-ink-3">
-                Upgrade to Pro whenever you need it — {PRO_YEARLY}, or {PRO_MONTHLY}.
+                Upgrade to Pro whenever you need it, {PRO_YEARLY}, or {PRO_MONTHLY}.
               </span>
             </div>
           </Reveal>

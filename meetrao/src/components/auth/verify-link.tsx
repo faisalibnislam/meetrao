@@ -54,7 +54,7 @@ export function VerifyLink({ email, code }: { email: string; code: string }) {
 
   return (
     <Callout tone="amber" title="Confirming your email">
-      One moment — we are checking the link you opened.
+      One moment. We are checking the link you opened.
     </Callout>
   );
 }

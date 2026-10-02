@@ -54,7 +54,7 @@ export default function TermsPage() {
         <h2 id="t-who">1. Who we are</h2>
         <p>
           Meetrao is built and run by one person, trading as a sole proprietor under the name Meetrao, from{" "}
-          {POSTAL_ADDRESS}. There is no company behind it and no team — which is why this page says what it says
+          {POSTAL_ADDRESS}. There is no company behind it and no team, which is why this page says what it says
           about support times and about liability, rather than implying an organisation that does not exist.
         </p>
         <p>
@@ -67,7 +67,7 @@ export default function TermsPage() {
         </p>
 
         <h2 id="t-account">2. Your account</h2>
-        <p>You need an account to host meetings. Your guests do not — they book without signing up.</p>
+        <p>You need an account to host meetings. Your guests do not: they book without signing up.</p>
         <p>
           If you sign up with an email address, you must confirm that address before you can use Meetrao. The
           confirmation link expires after 24 hours; you can ask for a new one. If you sign up with Google, your
@@ -75,11 +75,11 @@ export default function TermsPage() {
         </p>
         <p>
           You are responsible for keeping your password to yourself and for everything that happens under your
-          account. Tell us promptly if you think someone else has access. One account is for one person — do not
+          account. Tell us promptly if you think someone else has access. One account is for one person. Do not
           share logins.
         </p>
         <p>
-          You choose a username, and it becomes your public booking link — for example{" "}
+          You choose a username, and it becomes your public booking link, for example{" "}
           <code>meetrao.com/adam</code>. We may reclaim a username that impersonates someone, infringes a
           trademark, or is being held without use.
         </p>
@@ -90,27 +90,27 @@ export default function TermsPage() {
 
         <h2 id="t-google">3. Connecting Google Calendar</h2>
         <p>
-          Connecting Google Calendar is optional. Without it Meetrao still works — it simply cannot see your
+          Connecting Google Calendar is optional. Without it Meetrao still works. It simply cannot see your
           conflicts, so it will offer every time your availability allows.
         </p>
         <p>
           When you connect it, you give us permission to see when you are busy and to create events on your
           behalf. We use that permission for two things only: avoiding times you already have something in, and
-          creating the event for each confirmed booking — with its own Google Meet link, and your guest invited
+          creating the event for each confirmed booking, with its own Google Meet link, and your guest invited
           so it appears on their calendar too.
         </p>
         <p>
           We do not read the contents of your existing events. Titles, guests, notes and attachments are none of
           our business; we ask Google only which periods are busy. The permission Google asks you for is broader
-          than that, because adding your guest as an attendee requires a permission that also allows reading —
-          the <Link href="/privacy#p-google">Privacy Policy</Link> sets out exactly what we request and what we
+          than that, because adding your guest as an attendee requires a permission that also allows reading.
+          The <Link href="/privacy#p-google">Privacy Policy</Link> sets out exactly what we request and what we
           do with it.
         </p>
         <p>
           You can disconnect at any time from Settings. Doing so revokes the grant with Google as well as deleting
           our copy of it, and it stops us checking for conflicts, which means guests may be offered times you are
           not actually free. Google
-          Calendar and Google Meet are Google&rsquo;s services, governed by Google&rsquo;s own terms — we cannot
+          Calendar and Google Meet are Google&rsquo;s services, governed by Google&rsquo;s own terms. We cannot
           control their availability or behaviour.
         </p>
 
@@ -131,15 +131,15 @@ export default function TermsPage() {
 
         <h2 id="t-price">5. What it costs</h2>
         <p>
-          There are two plans. <strong>Free</strong> covers taking bookings — your link, your meeting types,
-          your calendar, reminders, rescheduling and cancellation — with no card and no limit on how many
+          There are two plans. <strong>Free</strong> covers taking bookings, your link, your meeting types,
+          your calendar, reminders, rescheduling and cancellation, with no card and no limit on how many
           bookings you take. <strong>Pro</strong> is $10 a year, or $3 a month, and adds a custom domain,
           removal of Meetrao branding, team links, shared sessions, the API and control over reminder timing.
         </p>
         <p>
           <strong>A free account is never billed automatically.</strong> Pro begins only when you choose it and
           complete a payment, and it ends when you cancel. If you cancel, Pro runs to the end of the period you
-          have already paid for and then the account returns to Free — your bookings, your link and your data
+          have already paid for and then the account returns to Free, your bookings, your link and your data
           stay where they are.
         </p>
         <p>
@@ -156,7 +156,7 @@ export default function TermsPage() {
         <h2 id="t-ip">6. Who owns what</h2>
         <p>
           You own your content: your profile, your meeting descriptions, your availability, and the booking
-          records that belong to you. You give us only the permission we need to run the service — to store that
+          records that belong to you. You give us only the permission we need to run the service, to store that
           content, show it on your booking page, and send it in the emails Meetrao sends on your behalf.
         </p>
         <p>
@@ -175,7 +175,7 @@ export default function TermsPage() {
         </p>
         <p>
           We can suspend or remove an account that breaks these terms. Suspension blocks sign-in and stops new
-          bookings, but leaves existing bookings on the calendar; it can be reversed. Removal is permanent —
+          bookings, but leaves existing bookings on the calendar; it can be reversed. Removal is permanent:
           profile, booking link, meetings, availability and booking history are deleted, upcoming meetings
           cancelled, guests notified, and you would have to sign up again from scratch. Where it is reasonable
           and lawful to do so, we will warn you first.
@@ -193,7 +193,7 @@ export default function TermsPage() {
         <p>
           Meetrao is provided as it is, without warranties of any kind, express or implied, to the fullest extent
           the law allows. We work to keep it accurate and available, but we cannot promise it will never be down,
-          never show a wrong time, or never miss a conflict — particularly when the cause is Google&rsquo;s side,
+          never show a wrong time, or never miss a conflict, particularly when the cause is Google&rsquo;s side,
           your calendar settings, or a disconnected integration.
         </p>
         <p>
@@ -209,12 +209,12 @@ export default function TermsPage() {
         <p>
           Where we are liable despite the above, our total liability to you for all claims taken together is
           limited to whichever is greater of: the fees you paid us in the twelve months before the event giving
-          rise to the claim, or US$50. While Meetrao is free, that figure is US$50 — stated as a real number
+          rise to the claim, or US$50. While Meetrao is free, that figure is US$50, stated as a real number
           rather than left blank, because a cap that resolves to nothing is not a cap.
         </p>
         <p>
-          Nothing in these terms limits liability that cannot be limited by law — including for fraud, or for
-          death or personal injury caused by negligence — and nothing here takes away rights your local consumer
+          Nothing in these terms limits liability that cannot be limited by law, including for fraud, or for
+          death or personal injury caused by negligence, and nothing here takes away rights your local consumer
           law gives you that cannot be waived by agreement.
         </p>
 
@@ -233,7 +233,7 @@ export default function TermsPage() {
           your local law gives you that cannot be waived by agreement, or your right to bring a claim in your own
           country where your law allows it.
         </p>
-        <p>Before going to court, please email us — most things are quicker to sort out directly.</p>
+        <p>Before going to court, please email us. Most things are quicker to sort out directly.</p>
 
         <DocFooterNote title="Questions about these terms">
           Email <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>. A person reads it. You can also{" "}

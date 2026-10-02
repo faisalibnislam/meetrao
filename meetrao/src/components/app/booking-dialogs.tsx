@@ -91,7 +91,7 @@ export function BookingDialogs({
         open
         onClose={onClose}
         title="Move this meeting"
-        subtitle={timezoneLabel ? `Your time — ${timezoneLabel}.` : undefined}
+        subtitle={timezoneLabel ? `Your time, ${timezoneLabel}.` : undefined}
         primary={{
           label: moving ? "Moving…" : "Move meeting",
           busy: moving,

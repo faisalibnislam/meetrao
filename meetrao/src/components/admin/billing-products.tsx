@@ -49,7 +49,7 @@ export function BillingProducts({
       />
 
       <span className="text-[12.5px] leading-[1.55] text-ink-2">
-        Pro is sold as two Polar products — $3 a month and $10 a year. Create them here, or paste the ids of
+        Pro is sold as two Polar products, $3 a month and $10 a year. Create them here, or paste the ids of
         products you made in Polar.
       </span>
 
@@ -62,11 +62,11 @@ export function BillingProducts({
       <div className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
         <div className="flex flex-wrap items-center gap-[10px]">
           <span className="min-w-[90px] text-[12.5px] text-ink-3">Monthly</span>
-          <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">{monthly ?? "—"}</span>
+          <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">{monthly ?? "–"}</span>
         </div>
         <div className="flex flex-wrap items-center gap-[10px] border-t border-line-soft pt-[9px]">
           <span className="min-w-[90px] text-[12.5px] text-ink-3">Yearly</span>
-          <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">{yearly ?? "—"}</span>
+          <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">{yearly ?? "–"}</span>
         </div>
       </div>
 

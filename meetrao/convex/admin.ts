@@ -113,7 +113,7 @@ export const grantPro = mutation({
     await logActivity(ctx, {
       actorId: admin.id,
       kind: "pro_granted",
-      summary: `${p.full_name || p.email} was given Pro (${a.length}) — ${reason}`,
+      summary: `${p.full_name || p.email} was given Pro (${a.length}), ${reason}`,
     });
 
     return { until: new Date(until).toISOString() };
@@ -134,7 +134,7 @@ export const revokePro = mutation({
       kind: "pro_revoked",
       /* Names what it was for, so the pair of lines reads as a story rather
          than as two unrelated events. */
-      summary: `${p.full_name || p.email} lost granted Pro — was: ${p.comp_reason || "no reason given"}`,
+      summary: `${p.full_name || p.email} lost granted Pro, was: ${p.comp_reason || "no reason given"}`,
     });
 
     return { revoked: true };

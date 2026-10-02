@@ -127,7 +127,7 @@ async function stepContent(step: number, session: Session, convex: Client, calen
       meetingName={meeting?.name ?? "Your first meeting"}
       duration={meeting?.duration_minutes ?? session.profile.default_duration_minutes}
       openDays={open.length}
-      firstStart={open.length ? minutesToLabel(open[0].ranges[0].start) : "—"}
+      firstStart={open.length ? minutesToLabel(open[0].ranges[0].start) : "–"}
       connected={status.connected}
     />
   );

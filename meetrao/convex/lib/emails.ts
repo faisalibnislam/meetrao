@@ -248,7 +248,7 @@ export function renderReset(input: {
       ctaLabel: "Set a new password",
       actionUrl: url,
       disclaimer:
-        "You received this because someone asked to reset the password for this address. If it was not you, ignore this email — nothing has changed and your password is unaffected.",
+        "You received this because someone asked to reset the password for this address. If it was not you, ignore this email. Nothing has changed and your password is unaffected.",
       expiresIn,
       logoUrl: logoUrl(site),
       postalAddress: input.postalAddress,

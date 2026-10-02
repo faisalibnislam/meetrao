@@ -270,7 +270,7 @@ export function ContactsScreen({ contacts }: { contacts: ContactView[] }) {
                       <span className="flex items-center gap-[10px]">
                         <Avatar name={c.name || c.email} size={26} tone={c.source === "manual" ? "neutral" : "accent"} />
                         <StackedCell
-                          primary={c.name || "—"}
+                          primary={c.name || "–"}
                           secondary={c.meetings ? `${c.meetings} meeting${c.meetings === 1 ? "" : "s"}` : undefined}
                         />
                       </span>
@@ -279,18 +279,18 @@ export function ContactsScreen({ contacts }: { contacts: ContactView[] }) {
                       <span className="text-[12px] text-ink-2">{c.email}</span>
                     </Td>
                     <Td>
-                      <span className="text-[13px] text-ink-2">{c.phone || "—"}</span>
+                      <span className="text-[13px] text-ink-2">{c.phone || "–"}</span>
                     </Td>
                     <Td>
-                      <span className="text-[13px] whitespace-nowrap text-ink-2">{c.lastMeeting ?? "—"}</span>
+                      <span className="text-[13px] whitespace-nowrap text-ink-2">{c.lastMeeting ?? "–"}</span>
                     </Td>
                     <Td>
                       <span className={cx("text-[13px] whitespace-nowrap", c.nextMeeting ? "font-semibold text-ink" : "text-ink-2")}>
-                        {c.nextMeeting ?? "—"}
+                        {c.nextMeeting ?? "–"}
                       </span>
                     </Td>
                     <Td>
-                      <span className="text-[13px] text-ink-2">{c.company || "—"}</span>
+                      <span className="text-[13px] text-ink-2">{c.company || "–"}</span>
                     </Td>
                     <Td className="text-right">
                       <span className="inline-flex gap-[4px]">
@@ -360,7 +360,7 @@ export function ContactsScreen({ contacts }: { contacts: ContactView[] }) {
         open={editing !== null}
         onClose={() => setEditing(null)}
         title={editing?.id ? "Edit contact" : "Add contact"}
-        subtitle={editing?.id ? undefined : "Email is how a contact is recognised — an address you already have updates that person."}
+        subtitle={editing?.id ? undefined : "Email is how a contact is recognised, an address you already have updates that person."}
         primary={{ label: editing?.id ? "Save" : "Add contact", onClick: save, busy }}
         secondary={{ label: "Cancel", onClick: () => setEditing(null) }}
         wide
@@ -419,7 +419,7 @@ export function ContactsScreen({ contacts }: { contacts: ContactView[] }) {
         open={confirmDelete !== null}
         onClose={() => setConfirmDelete(null)}
         title="Delete this contact?"
-        subtitle="Their meetings are not affected — only the contact record goes."
+        subtitle="Their meetings are not affected: only the contact record goes."
         primary={{
           label: "Delete contact",
           variant: "danger",

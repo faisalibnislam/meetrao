@@ -14,7 +14,7 @@ export default async function BookingsPage() {
   return (
     <AppScreen
       title="Bookings"
-      subtitle="Everyone who has booked time with you — and everything you scheduled yourself."
+      subtitle="Everyone who has booked time with you, and everything you scheduled yourself."
     >
       <BookingsScreen bookings={bookings} timezoneLabel={timezoneLabel(profile.timezone)} />
     </AppScreen>

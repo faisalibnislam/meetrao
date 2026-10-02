@@ -106,7 +106,7 @@ export default async function TeamBookingPage({
         slug={meeting.slug}
         hostName={team.name}
         hostAvatarUrl={null}
-        hostJobTitle={`${team.members.length} ${team.members.length === 1 ? "person" : "people"} — whoever is free`}
+        hostJobTitle={`${team.members.length} ${team.members.length === 1 ? "person" : "people"}, whoever is free`}
         hostTimezone={paintZone}
         meetingName={meeting.name}
         meetingDescription={meeting.description}

@@ -161,7 +161,7 @@ export function BrandingPanel({
 
       {!pro ? (
         <Callout tone="amber" title="Branding is part of Pro">
-          Everything on this screen is set up and ready — it shows on your pages once you are on Pro.{" "}
+          Everything on this screen is set up and ready. It shows on your pages once you are on Pro.{" "}
           <Link href="/settings/billing">See the plans</Link>.
         </Callout>
       ) : null}
@@ -173,8 +173,7 @@ export function BrandingPanel({
           {!pro ? <Badge tone="off" dot={false}>Pro</Badge> : null}
         </div>
         <Help>
-          Shown at the top of your booking page in place of the Meetrao mark. PNG, JPG or WEBP, under 1 MB —
-          a wide logo reads better than a tall one.
+          Shown at the top of your booking page in place of the Meetrao mark. PNG, JPG or WEBP, under 1 MB. A wide logo reads better than a tall one.
         </Help>
 
         <div className="flex flex-wrap items-center gap-[14px]">
@@ -317,7 +316,7 @@ export function BrandingPanel({
           {!pro ? <Badge tone="off" dot={false}>Pro</Badge> : null}
         </div>
         <Help>
-          The page behind the booking card. Leave it alone and we use a pale wash of your colour — either
+          The page behind the booking card. Leave it alone and we use a pale wash of your colour, either
           way, none of Meetrao&rsquo;s own palette is left on the page. Dark backgrounds work: the few
           pieces of text drawn on the page flip to suit.
         </Help>
@@ -396,7 +395,7 @@ export function BrandingPanel({
 
         <Help>
           Point a name you own at us and your booking page answers there. Add the record below and we will
-          check it — DNS usually takes a few minutes.
+          check it, DNS usually takes a few minutes.
         </Help>
 
         {/* What the link actually becomes, both ways round. Written out
@@ -473,7 +472,7 @@ export function BrandingPanel({
           <div className="flex flex-wrap items-center gap-[8px]">
             <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">
               {domain.domain}
-              {domain.verifiedAt ? "" : " — waiting for DNS"}
+              {domain.verifiedAt ? "" : ", waiting for DNS"}
             </span>
             <Button
               variant="ghost"
