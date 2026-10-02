@@ -65,6 +65,18 @@ export async function removeLogo(): Promise<{ error?: string }> {
 }
 
 /** An empty string clears it. The contrast rules live in convex/lib/brand.ts. */
+/** The page background. Empty clears it, back to a wash of the accent. */
+export async function setBrandBackground(color: string): Promise<{ color?: string | null; error?: string }> {
+  try {
+    const convex = await convexServer();
+    const saved = await convex.mutation(api.branding.setBackground, { color });
+    refreshBookingPages();
+    return { color: saved };
+  } catch (cause) {
+    return { error: convexMessage(cause, "That background could not be saved.") };
+  }
+}
+
 export async function setBrandColor(color: string): Promise<{ color?: string | null; error?: string }> {
   try {
     const convex = await convexServer();

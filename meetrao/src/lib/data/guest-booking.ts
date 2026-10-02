@@ -65,7 +65,7 @@ type Row = {
   host_username: string;
   host_timezone: string;
   host_unbranded: boolean;
-  host_brand: { logo_url: string | null; color: string | null } | null;
+  host_brand: { logo_url: string | null; color: string | null; background: string | null } | null;
 };
 
 async function fetchRow(reference: string): Promise<Row | null> {
@@ -120,6 +120,8 @@ export async function getBookingByReference(reference: string): Promise<GuestBoo
     hostUsername: row.host_username,
     hostTimezone: row.host_timezone,
     hostUnbranded: row.host_unbranded,
-    hostBrand: row.host_brand ? { logoUrl: row.host_brand.logo_url, color: row.host_brand.color } : null,
+    hostBrand: row.host_brand
+      ? { logoUrl: row.host_brand.logo_url, color: row.host_brand.color, background: row.host_brand.background }
+      : null,
   };
 }

@@ -23,6 +23,11 @@
   --ink: #1a1917;
   --ink-2: #575550;
   --ink-3: #66635c;
+  /* Text drawn directly on --ground rather than on a card: the public footer's
+     legal links and the "Booking page" eyebrow. Its own token because a Pro
+     host can set the background, and a dark one makes --ink-3 invisible —
+     while --ink-3 itself must not move, since it is also read on white. */
+  --on-ground: var(--ink-3);
 
   /* Accent */
   --accent: #14554a;
@@ -95,6 +100,7 @@
   --color-accent-line: var(--accent-line);
   --color-on-accent: var(--on-accent);
   --color-accent-ink: var(--accent-ink);
+  --color-on-ground: var(--on-ground);
   --color-red: var(--red);
   --color-red-soft: var(--red-soft);
   --color-red-line: var(--red-line);

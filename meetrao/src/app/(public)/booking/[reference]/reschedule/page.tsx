@@ -48,7 +48,7 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
       <div className="m-auto flex w-full max-w-[520px] flex-col gap-[14px]">
         <div className="flex items-center justify-between gap-[12px] px-[2px]">
           <BrandMark brand={booking.hostBrand} hostName={booking.hostName} height={20} />
-          <Eyebrow size={10.5}>Move this meeting</Eyebrow>
+          <Eyebrow size={10.5} className="text-on-ground">Move this meeting</Eyebrow>
         </div>
         <div className="flex flex-col gap-[16px] rounded-[12px] border border-line bg-surface p-[30px] max-[820px]:p-[22px]">
           <h1 className="m-0 font-serif text-[28px] leading-[1.1] font-normal tracking-[-0.01em] text-ink">
@@ -122,7 +122,7 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
         <BrandMark brand={host.brand} hostName={host.fullName || host.username} height={20} />
-        <Eyebrow size={10.5}>Move this meeting</Eyebrow>
+        <Eyebrow size={10.5} className="text-on-ground">Move this meeting</Eyebrow>
       </div>
 
       <BookingFlow

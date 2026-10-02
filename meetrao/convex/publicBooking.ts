@@ -46,11 +46,14 @@ const DAY = 24 * 60 * MINUTE;
  * Returned as one nullable object rather than two loose fields so a caller
  * cannot accidentally render half of it.
  */
-function publicBrand(p: Doc<"profiles">): { logo_url: string | null; color: string | null } | null {
+function publicBrand(
+  p: Doc<"profiles">,
+): { logo_url: string | null; color: string | null; background: string | null } | null {
   if (planOf(p) !== "pro") return null;
   const logo = p.brand_logo_url ?? null;
   const color = p.brand_color ?? null;
-  return logo || color ? { logo_url: logo, color } : null;
+  const background = p.brand_bg ?? null;
+  return logo || color || background ? { logo_url: logo, color, background } : null;
 }
 
 export const getHost = query({

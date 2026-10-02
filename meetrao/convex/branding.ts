@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { fail } from "./lib/errors";
 import { requireProfile } from "./lib/auth";
 import { isPro, requirePro } from "./lib/plan";
-import { validateBrandColor } from "./lib/brand";
+import { normaliseHex, validateBrandColor } from "./lib/brand";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    A host's own logo and colour on their booking page.
@@ -36,6 +36,7 @@ export const mine = query({
     return {
       logo_url: me.brand_logo_url ?? null,
       color: me.brand_color ?? null,
+      background: me.brand_bg ?? null,
       /* So the panel can say "this is live" or "this is saved and will show
          again when you are on Pro" rather than showing a lie either way. */
       live: isPro(me),
@@ -104,6 +105,36 @@ export const removeLogo = mutation({
       updated_at: Date.now(),
     });
     if (previous) await ctx.storage.delete(previous);
+  },
+});
+
+/**
+ * The page background.
+ *
+ * Shares validateBrandColor with the accent, which refuses the near-whites and
+ * the unlabelable mid-tones. BOTH of those are fine as a background — a white
+ * page is a page, and a grey one is a grey page — so only the "is it a colour"
+ * half applies here, and the rest of the safety comes from deriving the text
+ * drawn on it rather than from restricting the choice.
+ */
+export const setBackground = mutation({
+  args: { color: v.string() },
+  handler: async (ctx, a) => {
+    const me = await requireProfile(ctx);
+
+    // Empty clears it, and clearing is never gated — see removeLogo.
+    if (a.color.trim() === "") {
+      await ctx.db.patch(me._id, { brand_bg: null, updated_at: Date.now() });
+      return null;
+    }
+
+    requirePro(me, "Your own background");
+
+    const color = normaliseHex(a.color);
+    if (!color) fail("That is not a colour. Use a hex value like #F2F6FF.", "BAD_REQUEST");
+
+    await ctx.db.patch(me._id, { brand_bg: color, updated_at: Date.now() });
+    return color;
   },
 });
 

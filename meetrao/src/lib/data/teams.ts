@@ -57,6 +57,7 @@ export async function brandingPanelData(): Promise<{
   pro: boolean;
   logoUrl: string | null;
   color: string | null;
+  background: string | null;
   domain: DomainView;
 }> {
   const convex = await convexServer();
@@ -69,6 +70,7 @@ export async function brandingPanelData(): Promise<{
     pro: brand.live,
     logoUrl: brand.logo_url,
     color: brand.color,
+    background: brand.background,
     domain: { domain: domain.domain, verifiedAt: domain.verified_at },
   };
 }

@@ -633,7 +633,7 @@ export default async function HelpPage() {
           </section>
 
           <section>
-            <h2 id="branding">Your logo and your colour</h2>
+            <h2 id="branding">Your logo and your colours</h2>
             <p>
               A booking page is often the first thing somebody sees of your business, and by default it
               carries our mark and our green. On Pro you can replace both, under{" "}
@@ -643,17 +643,37 @@ export default async function HelpPage() {
             <h3>Your logo</h3>
             <p>
               Upload a PNG, JPG or WEBP under 1&nbsp;MB and it appears at the top of your booking page in
-              place of the Meetrao mark. It is shown at about 20&nbsp;pixels tall, so a wide logo reads
-              better than a tall one — the same file you would put in an email signature usually works. SVG
+              place of the Meetrao mark. It is shown about a third larger than our own mark — ours is a
+              wordmark drawn to sit quietly, and most logos are square or near-square, which reads as half
+              the size at the same height. A wide logo still works better than a tall one, and the file you
+              would put in an email signature is usually the right one. SVG
               is not accepted: an SVG can contain a script, and one served from our storage would run on our
               domain. Export a PNG at two or three times the size you need and it will stay crisp.
             </p>
 
-            <h3>Your colour</h3>
+            <h3>Your colours</h3>
             <p>
-              You pick one colour. Everything else is worked out from it — the chosen date in the calendar,
-              the confirm button, the highlights, the links and the focus rings. You do not set them
-              individually, and there is no way to end up with a page where five shades disagree.
+              You pick two: an accent and a page background. Everything else is worked out from them — the
+              chosen date in the calendar, the confirm button, the highlights, the links, the focus rings,
+              the panels and every border. You do not set those individually, and there is no way to end up
+              with a page where five shades disagree.
+            </p>
+            <p>
+              <strong>The accent</strong> is the colour things are made of: buttons, the selected date, the
+              badges.
+            </p>
+            <p>
+              <strong>The background</strong> is the page behind the booking card. Leave it alone and we use
+              a pale wash of your accent, which is usually what you want — the point is that none of
+              Meetrao&rsquo;s own palette is left on the page either way. Our warm grey, our cream panels and
+              our green are all replaced the moment you choose anything at all, including on the cookie
+              notice.
+            </p>
+            <p>
+              Dark backgrounds work. The booking card itself stays white, because that is what a form is
+              read on, and the few pieces of text that sit directly on the page — the legal links in the
+              footer, the small label beside your logo — switch to a light colour to suit. You do not have
+              to think about it.
             </p>
             <p>
               <strong>The text on top is chosen for you, by measurement.</strong> A yellow button gets dark
@@ -677,7 +697,8 @@ export default async function HelpPage() {
             <p>
               Your booking page, the page for each meeting, the confirmation, the reschedule and cancel
               screens, and the embed widget on your own site. Your logo is not repeated inside the embed —
-              your site already has it at the top of the page — but your colour is. Emails to guests stay in
+              your site already has it at the top of the page — and nor is your background, since the widget
+              sits on whatever colour your own page already has. Your accent carries through it. Emails to guests stay in
               the plain format they are in today.
             </p>
             <p>

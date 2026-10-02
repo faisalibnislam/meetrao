@@ -23,6 +23,20 @@
    · as TEXT, the colour is darkened until it clears 4.5:1 on white, because a
      host who picks yellow still needs their links to be readable.
 
+   A HOST PICKS TWO COLOURS: the accent and the page background. The second
+   exists because the first was not enough — a booking page with a blue brand
+   still sat on Meetrao's warm grey, in Meetrao's cream panel, which read as
+   our page wearing somebody's logo. So the whole neutral ramp is derived here
+   too, and a branded page keeps none of our palette.
+
+   The background is only ever a BACKGROUND. The card stays white whatever is
+   chosen, because every contrast figure below is computed against white and
+   because a card is what the booking form is read on. What the background does
+   change is the ground behind that card, the quiet panel inside it, the
+   borders, and the colour of the few pieces of text that sit directly on the
+   ground — which is the part that makes a dark background safe rather than
+   unreadable.
+
    Two things are still refused, and only two:
 
    · the near-white — #FFF9E6, #EAF6FF, a sand or a mint taken straight out of
@@ -153,29 +167,160 @@ export type BrandTokens = {
   soft: string;
   /** A border that belongs to the brand without shouting. */
   line: string;
+
+  /* ── The page around the card, derived from the background colour ──────── */
+
+  /** The page itself, behind everything. */
+  ground: string;
+  /**
+   * Text that sits directly ON the ground — the footer's legal links and the
+   * "Booking page" eyebrow. Derived, not fixed, because a host may choose a
+   * background darker than our ink, and `--ink-3` would then be invisible.
+   */
+  onGround: string;
+  /** The card. White, always — see the note at the top of this file. */
+  surface: string;
+  /** The quiet panel inside the card, a step from the card toward the ground. */
+  fill: string;
+  fill2: string;
+  /* The NEUTRAL borders, hue-matched to the ground. Distinct from `line`
+     above, which is the brand's own border — two different jobs that were one
+     word for an uncomfortable minute. */
+  borderBase: string;
+  borderSoft: string;
+  borderStrong: string;
 };
 
-export function brandTokens(color: string | null): BrandTokens | null {
+export function brandTokens(
+  color: string | null,
+  /**
+   * The page background. Null means "derive one from the accent" rather than
+   * "use Meetrao's" — a host who picks one colour should not be left with our
+   * warm grey around their blue card. Only a host who sets no colour at all
+   * keeps our palette, and then this function returns null and nothing is
+   * overridden.
+   */
+  background: string | null = null,
+): BrandTokens | null {
   const normalised = color ? normaliseHex(color) : null;
-  if (!normalised) return null;
+  const bg = background ? normaliseHex(background) : null;
+  if (!normalised && !bg) return null;
+
+  /* An accent is needed for the accent half. With a background and no accent,
+     the background's own readable shade stands in, so the two halves agree
+     rather than leaving our green on somebody else's page. */
+  const accent = normalised ?? readableOn(bg!, PAGE);
 
   /* Built by blending toward white rather than by lowering opacity, so it does
      not change with whatever happens to be behind it. */
-  const soft = blendToWhite(normalised, 0.88);
+  const soft = blendToWhite(accent, 0.88);
+
+  /* The ground: the host's choice, or a pale wash of their accent. 0.86 rather
+     than `soft`'s 0.88 so the card still separates from the page behind it. */
+  const ground = bg ?? blendToWhite(accent, 0.86);
 
   return {
-    accent: normalised,
-    accentHover: darken(normalised),
-    onAccent: onBrand(normalised),
+    accent,
+    accentHover: darken(accent),
+    onAccent: onBrand(accent),
     /* Measured against the SOFT tint rather than the page, because that is the
        darker of the two backgrounds this colour is set on. Checking it against
        white passes at 4.5 and then renders at 4.1 on the tint — which is how
        the first version of this shipped a highlight that failed AA. */
-    accentText: readableOn(normalised, soft),
+    accentText: readableOn(accent, soft),
     soft,
-    line: blendToWhite(normalised, 0.62),
+    line: blendToWhite(accent, 0.62),
+
+    ground,
+    onGround: readableOnGround(ground),
+    /* NOT derived. Every contrast figure above is computed against white, and
+       the booking form is read on this. A tinted card would quietly invalidate
+       all of it. */
+    surface: PAGE,
+    /* The quiet panel and its stronger sibling. PINNED TO A LIGHT WEIGHT, not
+       mixed from the ground: these sit INSIDE the white card and carry `--ink`
+       text, so tracking the ground's lightness turned the booking card's left
+       half into a mid-slate panel with near-black text on it the moment a host
+       chose a dark background. They take the ground's hue and nothing else. */
+    fill: tintFrom(ground, accent, 1.06),
+    fill2: tintFrom(ground, accent, 1.14),
+    /* Borders are drawn on the CARD, not on the ground, so they are pinned to
+       a weight that works on white and merely take the ground's hue. Deriving
+       them from the ground's lightness instead put a near-black rule around
+       every input on a dark-backgrounded page. */
+    borderBase: tintFrom(ground, accent, 1.25),
+    borderSoft: tintFrom(ground, accent, 1.12),
+    borderStrong: tintFrom(ground, accent, 1.5),
   };
 }
+
+/**
+ * Text that can be read on the ground, keeping the ground's own hue.
+ *
+ * Darkening is tried first, because a tonal dark-on-light page is what most
+ * brands want. A ground too dark to darken further — a navy, a near-black —
+ * cannot reach 4.5:1 that way at all, and the first version of this returned
+ * our ink for those, which is invisible on navy. So lightening is tried next,
+ * and plain white or ink is the floor.
+ */
+export function readableOnGround(ground: string): string {
+  const dark = readableOn(ground, ground);
+  if (contrast(dark, ground) >= MIN_TEXT) return dark;
+
+  let light = normaliseHex(ground) ?? PAGE;
+  for (let i = 0; i < 40 && contrast(light, ground) < MIN_TEXT; i++) {
+    const next = blendToWhite(light, 0.12);
+    if (next === light) break;
+    light = next;
+  }
+  if (contrast(light, ground) >= MIN_TEXT) return light;
+
+  // A mid-tone ground, where neither direction reaches the bar. Take the
+  // better of the two absolutes rather than returning something unreadable.
+  return onBrand(ground);
+}
+
+/**
+ * The ground's hue at a fixed weight — for everything drawn ON the white card.
+ *
+ * Panels and borders alike are read against the card, never against the page,
+ * so what they must inherit from the background is its COLOUR and not its
+ * lightness. `target` is the contrast each one should have with the card; the
+ * design's own values measure 1.06 and 1.14 for the panels and 1.12, 1.25 and
+ * 1.45 for the borders, so those are what is aimed at.
+ *
+ * BIDIRECTIONAL, because the ground can be on either side of the target. A
+ * dark ground has to be lightened toward it; a white one has to be darkened,
+ * and the first version only lightened — so a host who chose a white
+ * background got white borders and a card with no edge at all.
+ *
+ * `hue` is the fallback to take colour from when the ground has none left to
+ * give. Darkening white produces grey; darkening the accent instead keeps the
+ * result part of the brand.
+ */
+function tintFrom(ground: string, hue: string, target: number): string {
+  const start = normaliseHex(ground) ?? "#e0ddd4";
+
+  // Within a whisker of white there is no hue to carry, so borrow the accent's.
+  const seed = contrast(start, PAGE) < 1.02 ? blendToWhite(normaliseHex(hue) ?? start, 0.9) : start;
+
+  let current = seed;
+  if (contrast(current, PAGE) > target) {
+    for (let i = 0; i < 60 && contrast(current, PAGE) > target; i++) {
+      const next = blendToWhite(current, 0.1);
+      if (next === current) break;
+      current = next;
+    }
+  } else {
+    for (let i = 0; i < 60 && contrast(current, PAGE) < target; i++) {
+      const next = darken(current, 0.06);
+      if (next === current) break;
+      current = next;
+    }
+  }
+  return current;
+}
+
 
 /**
  * The colour, darkened just enough to be read as text on `background`.

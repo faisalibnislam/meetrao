@@ -90,7 +90,8 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
   { feature: "Embed on your own site", free: "With a small badge", pro: "No badge" },
   { feature: "“Powered by Meetrao” on your booking page", free: "Shown", pro: "Removed" },
   { feature: "Your own logo on your booking page", free: false, pro: true },
-  { feature: "Your own colour, through every page a guest sees", free: false, pro: true },
+  { feature: "Your own colours — accent and page background", free: false, pro: true },
+  { feature: "No Meetrao colours anywhere a guest looks", free: false, pro: true },
   { feature: "Your own domain — meeting.yourcompany.com/your-name", free: false, pro: true },
   { feature: "Team link, rotating to whoever is free", free: false, pro: true },
   { feature: "Sessions several guests share", free: false, pro: true },
@@ -105,8 +106,8 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
  */
 export const PRO_ADDS: readonly [string, string][] = [
   [
-    "Your logo and your colour",
-    "Your mark in place of ours, and one colour that carries through the calendar, the buttons and the confirmation. We work out the readable shades, so a guest can always read the page.",
+    "Your logo and your colours",
+    "Your mark in place of ours, and two colours — an accent and a page background — that carry through the calendar, the buttons, the panels and the confirmation. Nothing of our palette is left. We work out the readable shades, so a guest can always read the page, dark backgrounds included.",
   ],
   [
     "Your own domain",

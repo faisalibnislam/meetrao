@@ -158,8 +158,16 @@ export default defineSchema({
      */
     brand_logo_url: v.optional(nullableString),
     brand_logo_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
-    /** One hex colour. Everything else on the page is derived from it. */
+    /**
+     * The two colours a host picks: the accent, and the page background.
+     *
+     * `brand_bg` absent is NOT "use Meetrao's grey" — convex/lib/brand.ts
+     * derives a pale wash of the accent instead, so one colour is enough to
+     * clear our palette off the page. It is stored only when the host wants
+     * something other than that.
+     */
     brand_color: v.optional(nullableString),
+    brand_bg: v.optional(nullableString),
     onboarding_completed_at: nullableNumber,
     welcomed_at: nullableNumber,
     created_at: v.number(),
