@@ -71,6 +71,27 @@ async function render(step: string): Promise<string> {
 describe("onboarding renders every step", () => {
   it("1 · claim your link", async () => expect(await render("1")).toContain("meetrao.com/"));
   it("2 · connect a calendar", async () => expect(await render("2")).toMatch(/calendar/i));
+
+  /* The permission is the step people hesitate over, and Google's own consent
+     screen says "See, edit and delete events on your calendar" — accurate and
+     alarming. The step has to answer the three questions that provokes BEFORE
+     the button, or the honest answer only exists in a policy nobody opens.
+     
+     This is also the in-product disclosure Google's own verification looks
+     for, so losing it costs more than a confused host. */
+  it("2 · says what the Google permission does before asking for it", async () => {
+    const html = await render("2");
+    expect(html, "does not say what is read").toMatch(/What Meetrao reads/i);
+    expect(html, "does not say what is written").toMatch(/What it writes/i);
+    expect(html, "does not say what it never does").toMatch(/What it never does/i);
+
+    // The two claims that matter most, and that /help and /privacy repeat.
+    expect(html, "does not promise titles are not read").toMatch(/titles/i);
+    expect(html, "does not say disconnecting revokes with Google").toMatch(/revoked with Google/i);
+
+    // And it points at the long version rather than trying to be it.
+    expect(html).toContain("/help#calendar");
+  });
   it("3 · first meeting", async () => expect(await render("3")).toMatch(/meeting/i));
   it("4 · availability", async () => expect(await render("4")).toContain("When are you free?"));
   it("5 · ready", async () => expect(await render("5")).toMatch(/ready|link/i));
