@@ -10,6 +10,7 @@ import { Callout, PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { logoUploadUrl, removeLogo, saveLogo, setBrandBackground, setBrandColor } from "@/lib/actions/branding";
 import { claimDomain, removeDomain, verifyDomain } from "@/lib/actions/billing";
+import type { DomainState } from "@/lib/vercel-domains";
 import { brandTokens, normaliseHex, validateBrandColor } from "@/convex/lib/brand";
 import { Logo } from "@/components/ui/logo";
 import type { DomainView } from "./billing-panel";
@@ -42,6 +43,72 @@ const SUGGESTED = ["#14554a", "#1f3d7a", "#7a2048", "#8a4b1f", "#2f6d3a", "#1a19
    ground flips to suit, so neither is a trap. */
 const SUGGESTED_BG = ["#f4f6fb", "#fbf7f1", "#f3f7f4", "#eef0f4", "#15213a", "#141414"];
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   What a DomainState means, in one place.
+
+   THIS EXISTS BECAUSE THE TWO HANDLERS DISAGREED. Claim checked for
+   `unconfigured` and `pending` and let everything else fall through to a
+   cheerful "Domain claimed", so a domain Vercel had refused looked accepted.
+   Check DNS checked for `verified` and `pending` and collapsed the other two
+   into "Could not check. Try again shortly."
+
+   The effect was that "custom domains are not set up on this deployment" and
+   "Vercel refused this name, and here is why" were the same sentence, and the
+   one piece of information that would have told them apart, Vercel's own
+   message, was fetched and then dropped. A host could not tell whether to call
+   their DNS provider or the operator, and neither could I.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+type Reading = {
+  tone: "ok" | "warn" | "bad";
+  title: string;
+  text: string;
+  /** Kept on screen under the domain, because a toast is gone in four seconds
+      and this is the sentence somebody needs while they go and fix it. */
+  persist: boolean;
+};
+
+function readDomainState(state: DomainState | undefined, error: string | undefined): Reading {
+  // The Convex mutation refused it: already claimed, not a domain, ours.
+  if (error) return { tone: "bad", title: "Could not claim", text: error, persist: true };
+
+  switch (state?.status) {
+    case "verified":
+      return { tone: "ok", title: "Domain is live", text: "Your booking page now answers there.", persist: false };
+
+    case "pending":
+      return {
+        tone: "warn",
+        title: "Waiting for DNS",
+        text: "Add the record below at your DNS provider, then check again. It usually takes a few minutes.",
+        persist: false,
+      };
+
+    case "unconfigured":
+      return {
+        tone: "warn",
+        title: "Custom domains are not set up here",
+        text:
+          "This deployment has no Vercel credentials, so the name cannot be attached. Nothing you can fix from " +
+          "this screen: it needs the operator.",
+        persist: true,
+      };
+
+    case "error":
+      return {
+        tone: "bad",
+        title: "Vercel refused that domain",
+        // Verbatim. It names the actual problem, which is usually the TLD, a
+        // domain already in use, or a token without permission to add one.
+        text: state.message,
+        persist: true,
+      };
+
+    default:
+      return { tone: "bad", title: "Could not reach Vercel", text: "Try again in a moment.", persist: true };
+  }
+}
+
 export function BrandingPanel({
   pro,
   logoUrl,
@@ -73,6 +140,17 @@ export function BrandingPanel({
 
   const [draftDomain, setDraftDomain] = useState(domain.domain ?? "");
   const [records, setRecords] = useState<{ type: string; name: string; value: string }[]>([]);
+  /* The last thing the domain told us, kept on screen. A toast is gone before
+     somebody has finished reading a DNS error. */
+  const [domainNote, setDomainNote] = useState<Reading | null>(null);
+
+  function reportDomain(state: DomainState | undefined, error: string | undefined) {
+    const reading = readDomainState(state, error);
+    toast({ tone: reading.tone, title: reading.title, text: reading.text });
+    setDomainNote(reading.persist ? reading : null);
+    if (state?.status === "pending") setRecords(state.records);
+    return reading;
+  }
 
   /* The preview follows what is TYPED, not what is saved, and falls back to
      the saved colour while a half-typed hex is not yet a colour. */
@@ -213,6 +291,7 @@ export function BrandingPanel({
               variant="ghost"
               size={32}
               disabled={busy}
+              aria-label="Remove your logo"
               onClick={() =>
                 startBusy(async () => {
                   const result = await removeLogo();
@@ -435,20 +514,7 @@ export function BrandingPanel({
             onClick={() =>
               startBusy(async () => {
                 const result = await claimDomain(draftDomain);
-                if (result.error) {
-                  toast({ tone: "bad", title: "Could not claim", text: result.error });
-                  return;
-                }
-                if (result.state?.status === "unconfigured") {
-                  toast({
-                    tone: "warn",
-                    title: "Not available yet",
-                    text: "Custom domains are not configured on this deployment.",
-                  });
-                  return;
-                }
-                if (result.state?.status === "pending") setRecords(result.state.records);
-                toast({ tone: "ok", title: "Domain claimed", text: "Add the DNS record, then check it." });
+                reportDomain(result.state, result.error);
                 router.refresh();
               })
             }
@@ -456,6 +522,36 @@ export function BrandingPanel({
             Claim
           </Button>
         </div>
+
+        {domainNote ? (
+          <div
+            role="status"
+            className={
+              domainNote.tone === "bad"
+                ? "flex flex-col gap-[3px] rounded-[6px] border border-red-line bg-red-soft px-[12px] py-[10px]"
+                : "flex flex-col gap-[3px] rounded-[6px] border border-amber-line bg-amber-soft px-[12px] py-[10px]"
+            }
+          >
+            <span
+              className={
+                domainNote.tone === "bad"
+                  ? "text-[12px] font-semibold text-red"
+                  : "text-[12px] font-semibold text-amber-ink"
+              }
+            >
+              {domainNote.title}
+            </span>
+            <span
+              className={
+                domainNote.tone === "bad"
+                  ? "text-[12px] leading-[1.5] text-pretty text-red-ink"
+                  : "text-[12px] leading-[1.5] text-pretty text-amber-ink"
+              }
+            >
+              {domainNote.text}
+            </span>
+          </div>
+        ) : null}
 
         {records.length ? (
           <div className="flex flex-col gap-[6px] rounded-[6px] border border-line bg-fill px-[12px] py-[10px]">
@@ -481,14 +577,7 @@ export function BrandingPanel({
               onClick={() =>
                 startBusy(async () => {
                   const result = await verifyDomain(domain.domain as string);
-                  if (result.state?.status === "verified") {
-                    toast({ tone: "ok", title: "Domain is live", text: "Your booking page now answers there." });
-                  } else if (result.state?.status === "pending") {
-                    setRecords(result.state.records);
-                    toast({ tone: "warn", title: "Not visible yet", text: "DNS can take a few minutes." });
-                  } else {
-                    toast({ tone: "bad", title: "Could not check", text: result.error ?? "Try again shortly." });
-                  }
+                  reportDomain(result.state, result.error);
                   router.refresh();
                 })
               }
@@ -499,12 +588,14 @@ export function BrandingPanel({
               variant="ghost"
               size={28}
               busy={busy}
+              aria-label={`Remove the domain ${domain.domain ?? ""}`}
               className="text-red hover:text-red"
               onClick={() =>
                 startBusy(async () => {
                   await removeDomain();
                   setRecords([]);
                   setDraftDomain("");
+                  setDomainNote(null);
                   toast({ tone: "ok", title: "Domain removed", text: `Your ${siteHost} link keeps working.` });
                   router.refresh();
                 })
