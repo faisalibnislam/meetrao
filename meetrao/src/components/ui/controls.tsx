@@ -217,7 +217,7 @@ export function CheckBox({ checked }: { checked: boolean }) {
       className={cx(
         "inline-flex h-[16px] w-[16px] flex-none items-center justify-center rounded-[4px] border",
         "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
-        checked ? "border-accent bg-accent text-white" : "border-line-strong bg-surface",
+        checked ? "border-accent bg-accent text-on-accent" : "border-line-strong bg-surface",
       )}
     >
       {checked ? <Icon name="check" weight="solid" size={9} /> : null}
@@ -244,7 +244,7 @@ export function ChoiceChip({
         "inline-flex h-[32px] cursor-pointer items-center rounded-[6px] border px-[13px] font-sans text-[13px]",
         "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
         selected
-          ? "border-accent bg-accent font-semibold text-white"
+          ? "border-accent bg-accent font-semibold text-on-accent"
           : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
       )}
     >

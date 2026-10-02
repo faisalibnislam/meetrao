@@ -16,16 +16,38 @@ import type { Doc } from "../_generated/dataModel";
 
 export type Plan = "free" | "pro";
 
-export function planOf(profile: Pick<Doc<"profiles">, "plan" | "plan_until">): Plan {
-  if (profile.plan !== "pro") return "free";
-  // Absent means "no end date known", which a live subscription has.
-  if (profile.plan_until !== null && profile.plan_until !== undefined && profile.plan_until < Date.now()) {
-    return "free";
-  }
-  return "pro";
+/** Everything the plan is decided from. */
+type PlanFields = Pick<Doc<"profiles">, "plan" | "plan_until" | "comp_until">;
+
+/** Whether a complimentary grant is live. Absent is none; a past date is spent. */
+export function hasComp(profile: Pick<Doc<"profiles">, "comp_until">): boolean {
+  const until = profile.comp_until;
+  if (until === null || until === undefined) return false;
+  return until > Date.now();
 }
 
-export function isPro(profile: Pick<Doc<"profiles">, "plan" | "plan_until">): boolean {
+/** Whether a SUBSCRIPTION is live, ignoring any grant. */
+export function hasSubscription(profile: Pick<Doc<"profiles">, "plan" | "plan_until">): boolean {
+  if (profile.plan !== "pro") return false;
+  // Absent means "no end date known", which a live subscription has.
+  if (profile.plan_until !== null && profile.plan_until !== undefined && profile.plan_until < Date.now()) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Pro if either is true, and the two are read separately on purpose.
+ *
+ * A granted account and a paying one get the same product; they are not the
+ * same thing to anybody looking at the books, and conflating them in storage
+ * is how a free grant eventually gets counted as revenue.
+ */
+export function planOf(profile: PlanFields): Plan {
+  return hasSubscription(profile) || hasComp(profile) ? "pro" : "free";
+}
+
+export function isPro(profile: PlanFields): boolean {
   return planOf(profile) === "pro";
 }
 
@@ -36,7 +58,7 @@ export function isPro(profile: Pick<Doc<"profiles">, "plan" | "plan_until">): bo
  * detection depends on prose breaks the first time somebody improves the
  * prose.
  */
-export function requirePro(profile: Pick<Doc<"profiles">, "plan" | "plan_until">, what: string): void {
+export function requirePro(profile: PlanFields, what: string): void {
   if (isPro(profile)) return;
   fail(`${what} is part of Pro.`, "PRO_REQUIRED");
 }

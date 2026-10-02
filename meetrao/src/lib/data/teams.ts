@@ -33,6 +33,8 @@ export async function billingPanelData(): Promise<{
       plan: plan.plan,
       planUntil: plan.plan_until,
       hasSubscription: plan.has_subscription,
+      complimentary: plan.complimentary,
+      compUntil: plan.comp_until,
     },
     domain: { domain: domain.domain, verifiedAt: domain.verified_at },
     timing: {
@@ -40,6 +42,34 @@ export async function billingPanelData(): Promise<{
       long: profile?.reminder_long_minutes ?? 1440,
       short: profile?.reminder_short_minutes ?? 60,
     },
+  };
+}
+
+/**
+ * The Branding panel: logo, colour and the domain.
+ *
+ * The domain is read here as well as in billingPanelData — it is one row and
+ * two screens used to show it. The Plan screen now only links across, but the
+ * query is cheap and keeping both shapes means neither screen has to know
+ * about the other.
+ */
+export async function brandingPanelData(): Promise<{
+  pro: boolean;
+  logoUrl: string | null;
+  color: string | null;
+  domain: DomainView;
+}> {
+  const convex = await convexServer();
+  const [brand, domain] = await Promise.all([
+    convex.query(api.branding.mine, {}),
+    convex.query(api.domains.mine, {}),
+  ]);
+
+  return {
+    pro: brand.live,
+    logoUrl: brand.logo_url,
+    color: brand.color,
+    domain: { domain: domain.domain, verifiedAt: domain.verified_at },
   };
 }
 

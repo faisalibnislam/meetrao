@@ -4,11 +4,11 @@ import { notFound, redirect } from "next/navigation";
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { Eyebrow } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/panels";
-import { LogoLink } from "@/components/ui/logo";
 import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import { getBookingByReference } from "@/lib/data/guest-booking";
 import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 import { PublicFooter } from "@/components/booking/public-footer";
+import { BrandMark, BrandScope } from "@/components/booking/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -44,9 +44,10 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
      themselves, so this is a dead end rather than a 404. */
   if (!host || !meeting) {
     return (
+      <BrandScope brand={booking.hostBrand}>
       <div className="m-auto flex w-full max-w-[520px] flex-col gap-[14px]">
         <div className="flex items-center justify-between gap-[12px] px-[2px]">
-          <LogoLink height={20} />
+          <BrandMark brand={booking.hostBrand} hostName={booking.hostName} height={20} />
           <Eyebrow size={10.5}>Move this meeting</Eyebrow>
         </div>
         <div className="flex flex-col gap-[16px] rounded-[12px] border border-line bg-surface p-[30px] max-[820px]:p-[22px]">
@@ -57,11 +58,13 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
             {booking.hostName} has taken this meeting down, so there are no times to move it to. Email them to
             arrange another, or cancel if you no longer need it.
           </Callout>
-          <Link href={`/booking/${reference}`} className="text-[13.5px] font-semibold text-accent">
+          <Link href={`/booking/${reference}`} className="text-[13.5px] font-semibold text-accent-ink">
             Back to your booking
           </Link>
         </div>
       </div>
+      <PublicFooter badge={!booking.hostUnbranded} />
+      </BrandScope>
     );
   }
 
@@ -115,10 +118,10 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
     : [];
 
   return (
-    <>
+    <BrandScope brand={host.brand}>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
-        <LogoLink height={20} />
+        <BrandMark brand={host.brand} hostName={host.fullName || host.username} height={20} />
         <Eyebrow size={10.5}>Move this meeting</Eyebrow>
       </div>
 
@@ -138,7 +141,7 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
         move={{ reference: booking.reference, currentStart: booking.startsAt }}
       />
     </div>
-      <PublicFooter />
-    </>
+      <PublicFooter badge={!host.unbranded} />
+    </BrandScope>
   );
 }

@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
+import { rewriteForDomain } from "@/lib/custom-domain";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Proxy (Middleware, renamed in Next.js 16).
@@ -143,10 +144,15 @@ async function convexProxyOnce() {
 /* ─────────────────────────────────────────────────────────────────────────────
    Custom domains.
 
-   A Pro host can point book.acme.com at us. The request arrives with their
-   host header and no path to say whose page it is, so the path is supplied
-   here: "/" becomes "/<their username>", and "/30-minute" becomes
-   "/<their username>/30-minute".
+   A Pro host can point meeting.acme.com at us. The request arrives with their
+   host header and a path that may or may not already name them, so what the
+   path means is decided by rewriteForDomain in src/lib/custom-domain.ts —
+   which is pure and tested, and which this file only has to call.
+
+   The short of it: `meeting.acme.com/alex` and the bare domain both serve
+   Alex's page, `/intro` is read as one of Alex's meeting slugs, and the shared
+   paths — a guest's /booking/<ref> link, the legal pages, the plumbing —
+   are served unchanged.
 
    REWRITE, NEVER REDIRECT. A redirect would bounce the guest to
    meetrao.com/<username>, which is the opposite of what the host paid for.
@@ -210,9 +216,15 @@ export async function proxy(request: NextRequest, event?: NextFetchEvent): Promi
   if (!isOwnHost(hostname)) {
     const username = await usernameForDomain(hostname);
     if (username) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/${username}${request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname}`;
-      return NextResponse.rewrite(url);
+      const to = rewriteForDomain(request.nextUrl.pathname, username);
+      if (to) {
+        const url = request.nextUrl.clone();
+        url.pathname = to;
+        return NextResponse.rewrite(url);
+      }
+      /* null means the path already says what it means on this domain — the
+         advertised /<username> shape, a guest's booking link, a legal page.
+         It falls through to the session refresh like any other request. */
     }
   }
 

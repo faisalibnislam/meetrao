@@ -42,7 +42,7 @@ export default async function VerifyPage({
         <Logo height={21} className="self-start" />
 
         <div className="flex flex-col gap-[20px] rounded-[12px] border border-line bg-surface p-[32px]">
-          <span className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] bg-accent-soft text-accent">
+          <span className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[10px] bg-accent-soft text-accent-ink">
             <Icon name="envelope" size={16} />
           </span>
 

@@ -2,6 +2,7 @@ import "server-only";
 
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
+import type { PublicBrand } from "@/components/booking/brand";
 
 /* The guest's own view of their booking, reached by reference. The reference is
    32 hex characters of CSPRNG and is the only credential the guest has — it
@@ -31,6 +32,17 @@ export type GuestBooking = {
   hostName: string;
   hostUsername: string;
   hostTimezone: string;
+  /** Pro: no "Powered by Meetrao" badge on the host's pages. */
+  hostUnbranded: boolean;
+  /**
+   * Pro: the host's own logo and colour.
+   *
+   * Carried on the BOOKING, not looked up separately, because these screens
+   * are reached by reference with no username in the URL — and a guest who
+   * booked through a branded page and then lands on our green confirmation has
+   * been handed off to a stranger halfway through.
+   */
+  hostBrand: PublicBrand;
 };
 
 type Row = {
@@ -52,6 +64,8 @@ type Row = {
   host_name: string;
   host_username: string;
   host_timezone: string;
+  host_unbranded: boolean;
+  host_brand: { logo_url: string | null; color: string | null } | null;
 };
 
 async function fetchRow(reference: string): Promise<Row | null> {
@@ -77,6 +91,8 @@ async function fetchRow(reference: string): Promise<Row | null> {
     host_name: b.host?.full_name ?? "",
     host_username: b.host?.username ?? "",
     host_timezone: b.host?.timezone ?? "UTC",
+    host_unbranded: b.host?.unbranded ?? false,
+    host_brand: b.host?.brand ?? null,
   };
 }
 
@@ -103,5 +119,7 @@ export async function getBookingByReference(reference: string): Promise<GuestBoo
     hostName: row.host_name || row.host_username,
     hostUsername: row.host_username,
     hostTimezone: row.host_timezone,
+    hostUnbranded: row.host_unbranded,
+    hostBrand: row.host_brand ? { logoUrl: row.host_brand.logo_url, color: row.host_brand.color } : null,
   };
 }

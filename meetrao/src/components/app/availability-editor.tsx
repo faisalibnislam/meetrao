@@ -101,7 +101,7 @@ export function AvailabilityEditor({ days, onChange }: { days: Day[]; onChange: 
                     const start = last ? Math.min(last.end + 60, 1380) : 840;
                     patch(di, { ranges: [...day.ranges, { start, end: Math.min(start + 180, 1440) }] });
                   }}
-                  className="inline-flex h-[24px] cursor-pointer items-center gap-[6px] self-start rounded-[5px] border border-transparent bg-transparent px-[7px] font-sans text-[12.5px] font-semibold text-accent hover:bg-accent-soft"
+                  className="inline-flex h-[24px] cursor-pointer items-center gap-[6px] self-start rounded-[5px] border border-transparent bg-transparent px-[7px] font-sans text-[12.5px] font-semibold text-accent-ink hover:bg-accent-soft"
                 >
                   <Icon name="plus" size={10} />
                   Add hours

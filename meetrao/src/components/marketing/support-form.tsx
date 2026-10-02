@@ -51,7 +51,7 @@ export function SupportForm({
     return (
       <div className="flex flex-col gap-[18px] rounded-[14px] border border-line bg-surface p-[26px]">
         <div className="flex items-center gap-[12px]">
-          <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-full bg-accent text-white">
+          <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-full bg-accent text-on-accent">
             <Icon name="check" weight="solid" size={13} />
           </span>
           <h2 className="m-0 font-serif text-[28px] leading-[1.05] font-normal text-ink">Message sent</h2>
@@ -101,7 +101,7 @@ export function SupportForm({
 
       {signedIn ? (
         <div className="flex flex-wrap items-center gap-[12px] rounded-[10px] border border-line bg-fill px-[14px] py-[12px]">
-          <span className="inline-flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[12px] font-bold text-accent">
+          <span className="inline-flex h-[34px] w-[34px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[12px] font-bold text-accent-ink">
             {accountName
               .split(" ")
               .slice(0, 2)
@@ -164,7 +164,7 @@ export function SupportForm({
                   "inline-flex h-[32px] cursor-pointer items-center rounded-[6px] border px-[13px] font-sans text-[13px]",
                   "transition-[background-color,border-color] duration-[120ms]",
                   on
-                    ? "border-accent bg-accent font-semibold text-white"
+                    ? "border-accent bg-accent font-semibold text-on-accent"
                     : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
                 )}
               >

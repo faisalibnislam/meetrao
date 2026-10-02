@@ -123,9 +123,43 @@ export default defineSchema({
     plan_until: v.optional(nullableNumber),
     polar_customer_id: v.optional(nullableString),
     polar_subscription_id: v.optional(nullableString),
+    /**
+     * Pro given by an operator rather than bought — a friend, a refund in
+     * kind, an early user, a charity.
+     *
+     * SEPARATE FROM `plan` ON PURPOSE. `plan` has exactly one writer, Polar's
+     * webhook, and that is what makes it trustworthy: nothing inside the app
+     * can grant itself a paid plan. A complimentary grant that wrote `plan`
+     * would destroy that, and would also be erased by the next subscription
+     * event to arrive. This field is read ALONGSIDE the plan, never instead.
+     *
+     * A date rather than a flag, so "three months on the house" is expressible
+     * and expires by itself. Far-future means indefinite.
+     */
+    comp_until: v.optional(nullableNumber),
+    /** Why, in the operator's words. Shown on the admin screen, never to the host. */
+    comp_reason: v.optional(v.string()),
+    comp_granted_by: v.optional(nullableString),
+    comp_granted_at: v.optional(nullableNumber),
     /** Their own domain for the booking page, once DNS points at us. */
     custom_domain: v.optional(nullableString),
     custom_domain_verified_at: v.optional(nullableNumber),
+    /**
+     * Their own logo and colour on the booking page, in place of Meetrao's.
+     *
+     * Stored whatever the plan, and SERVED only while the plan is Pro — see
+     * the projection in convex/publicBooking.ts. Keeping the rows means a host
+     * who lapses and comes back does not have to upload anything again, and
+     * one who lapses does not keep a paid-for feature by having set it once.
+     *
+     * `brand_logo_url` is what pages render; `brand_logo_storage_id` is what
+     * deletion needs. Same split as avatar_url / avatar_storage_id above, for
+     * the same reason.
+     */
+    brand_logo_url: v.optional(nullableString),
+    brand_logo_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
+    /** One hex colour. Everything else on the page is derived from it. */
+    brand_color: v.optional(nullableString),
     onboarding_completed_at: nullableNumber,
     welcomed_at: nullableNumber,
     created_at: v.number(),

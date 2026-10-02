@@ -4,7 +4,7 @@ import { cx } from "@/lib/cx";
 export type Tone = "ok" | "bad" | "warn" | "off";
 
 const TONE: Record<Tone, string> = {
-  ok: "border-accent-line bg-accent-soft text-accent",
+  ok: "border-accent-line bg-accent-soft text-accent-ink",
   bad: "border-red-line bg-red-soft text-red",
   warn: "border-amber-line bg-amber-soft text-amber",
   off: "border-line bg-fill text-ink-2",
@@ -104,7 +104,7 @@ export function Avatar({
       aria-hidden="true"
       className={cx(
         "inline-flex flex-none items-center justify-center font-bold",
-        tone === "accent" ? "bg-accent-soft text-accent" : "bg-fill-2 text-ink-2",
+        tone === "accent" ? "bg-accent-soft text-accent-ink" : "bg-fill-2 text-ink-2",
       )}
       style={{ width: size, height: size, borderRadius: radius, fontSize }}
     >

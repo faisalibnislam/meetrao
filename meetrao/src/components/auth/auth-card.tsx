@@ -50,7 +50,7 @@ export function AuthCard({
           <div className="mt-[2px] flex flex-col gap-[12px]">
             {POINTS.map((text) => (
               <div key={text} className="flex items-start gap-[10px]">
-                <Icon name="check" weight="solid" size={10} className="mt-[4px] flex-none text-accent" />
+                <Icon name="check" weight="solid" size={10} className="mt-[4px] flex-none text-accent-ink" />
                 <span className="text-[13px] leading-[1.5] text-ink-2">{text}</span>
               </div>
             ))}

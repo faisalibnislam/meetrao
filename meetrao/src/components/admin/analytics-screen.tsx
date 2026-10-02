@@ -120,7 +120,7 @@ function Headline({ data }: { data: SiteAnalytics }) {
               <span
                 className={cx(
                   "text-[11.5px] font-semibold",
-                  cell.change.up ? "text-accent" : cell.change.flat ? "text-ink-3" : "text-red",
+                  cell.change.up ? "text-accent-ink" : cell.change.flat ? "text-ink-3" : "text-red",
                 )}
               >
                 {cell.change.text}

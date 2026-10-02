@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { LogoLink } from "@/components/ui/logo";
 import { formatLongDate } from "@/lib/booking/time";
 import { getBookingByReference } from "@/lib/data/guest-booking";
 import { PublicFooter } from "@/components/booking/public-footer";
+import { BrandMark, BrandScope } from "@/components/booking/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -28,9 +28,9 @@ export default async function CancelledPage({ params }: { params: Promise<{ refe
   const when = formatLongDate(new Date(booking.startsAt), zone);
 
   return (
-    <>
+    <BrandScope brand={booking.hostBrand}>
     <div className="m-auto flex w-full max-w-[460px] flex-col gap-[14px]">
-      <LogoLink height={20} />
+      <BrandMark brand={booking.hostBrand} hostName={booking.hostName} height={20} />
 
       <div className="flex flex-col gap-[16px] rounded-[12px] border border-line bg-surface p-[30px] max-[820px]:p-[22px]">
         <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-full border border-red-line bg-red-soft text-red">
@@ -53,7 +53,7 @@ export default async function CancelledPage({ params }: { params: Promise<{ refe
         </div>
       </div>
     </div>
-      <PublicFooter />
-    </>
+      <PublicFooter badge={!booking.hostUnbranded} />
+    </BrandScope>
   );
 }

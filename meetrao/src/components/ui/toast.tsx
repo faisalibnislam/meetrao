@@ -11,7 +11,7 @@ export type ToastTone = "ok" | "bad" | "warn" | "neutral";
 export type Toast = { tone: ToastTone; title: string; text?: string };
 
 const GLYPH: Record<ToastTone, { icon: IconName; className: string }> = {
-  ok: { icon: "circle-check", className: "text-accent" },
+  ok: { icon: "circle-check", className: "text-accent-ink" },
   bad: { icon: "circle-exclamation", className: "text-red" },
   warn: { icon: "triangle-exclamation", className: "text-amber" },
   neutral: { icon: "circle-info", className: "text-ink-3" },

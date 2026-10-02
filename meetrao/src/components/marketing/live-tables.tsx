@@ -121,7 +121,7 @@ export function LiveMeetingsTable() {
                           name={copied === id ? "check" : "copy"}
                           weight={copied === id ? "solid" : "light"}
                           size={10.5}
-                          className={cx("flex-none", copied === id ? "text-accent" : "text-ink-3")}
+                          className={cx("flex-none", copied === id ? "text-accent-ink" : "text-ink-3")}
                         />
                       </button>
                     </span>
@@ -197,7 +197,7 @@ export function LiveMeetingsTable() {
                     name={copied === id ? "check" : "copy"}
                     weight={copied === id ? "solid" : "light"}
                     size={11}
-                    className={cx("flex-none", copied === id ? "text-accent" : "text-ink-3")}
+                    className={cx("flex-none", copied === id ? "text-accent-ink" : "text-ink-3")}
                   />
                 </button>
               </div>
@@ -209,7 +209,7 @@ export function LiveMeetingsTable() {
       <span
         role="status"
         aria-live="polite"
-        className={cx("block min-h-[18px] text-[12px] leading-[1.5]", hint ? "text-accent" : "text-ink-3")}
+        className={cx("block min-h-[18px] text-[12px] leading-[1.5]", hint ? "text-accent-ink" : "text-ink-3")}
       >
         {hint || "Toggle a meeting or copy a link — the table is live. Nothing is saved."}
       </span>
@@ -323,7 +323,7 @@ export function LiveBookingsTable() {
                           "inline-flex h-[20px] items-center gap-[6px] rounded-[4px] border px-[8px] text-[11.5px] font-semibold whitespace-nowrap",
                           cancelled
                             ? "border-red-line bg-red-soft text-red"
-                            : "border-accent-line bg-accent-soft text-accent",
+                            : "border-accent-line bg-accent-soft text-accent-ink",
                         )}
                       >
                         <span
@@ -337,7 +337,7 @@ export function LiveBookingsTable() {
                       {joinable === true ? (
                         <Link
                           href="/signup"
-                          className="unlink inline-flex h-[27px] items-center gap-[6px] rounded-[5px] border border-accent bg-accent px-[10px] text-[12px] font-semibold text-white hover:bg-accent-2 hover:text-white"
+                          className="unlink inline-flex h-[27px] items-center gap-[6px] rounded-[5px] border border-accent bg-accent px-[10px] text-[12px] font-semibold text-on-accent hover:bg-accent-2 hover:text-on-accent"
                         >
                           <Icon name="video" size={10} />
                           Join
@@ -381,7 +381,7 @@ export function LiveBookingsTable() {
                     <span
                       className={cx(
                         "inline-flex h-[20px] items-center gap-[6px] rounded-[4px] border px-[8px] text-[11.5px] font-semibold whitespace-nowrap",
-                        cancelled ? "border-red-line bg-red-soft text-red" : "border-accent-line bg-accent-soft text-accent",
+                        cancelled ? "border-red-line bg-red-soft text-red" : "border-accent-line bg-accent-soft text-accent-ink",
                       )}
                     >
                       <span

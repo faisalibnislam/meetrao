@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/seo";
+import { publicUrl } from "@/lib/public-origin";
 import { notFound } from "next/navigation";
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { Eyebrow } from "@/components/ui/badge";
-import { Logo } from "@/components/ui/logo";
 import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import {
   getBusy,
@@ -16,6 +16,7 @@ import {
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { PublicFooter } from "@/components/booking/public-footer";
+import { BrandMark, BrandScope } from "@/components/booking/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,10 @@ export async function generateMetadata({
 
   const name = host.fullName || host.username;
   const title = `${meeting.name} with ${name}`;
+  /* Absolute, and built from the domain this request arrived on. A Pro host's
+     page on their own domain must not canonicalise to meetrao.com — see
+     src/lib/public-origin.ts. */
+  const here = await publicUrl(`/${host.username}/${meeting.slug}`);
   /* The host's own description when they wrote one, and a generated sentence
      when they did not — an empty description leaves the search result to be
      filled in from whatever text the crawler happens to find first, which on
@@ -51,13 +56,13 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: `/${host.username}/${meeting.slug}` },
+    alternates: { canonical: here },
     openGraph: {
       images: [OG_IMAGE],
       type: "website",
       title,
       description,
-      url: `/${host.username}/${meeting.slug}`,
+      url: here,
     },
   };
 }
@@ -142,10 +147,10 @@ export default async function BookingPage({
   });
 
   return (
-    <>
+    <BrandScope brand={host.brand}>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
-        <Logo height={20} />
+        <BrandMark brand={host.brand} hostName={host.fullName || host.username} height={20} />
         <Eyebrow size={10.5}>Booking page</Eyebrow>
       </div>
 
@@ -177,6 +182,6 @@ export default async function BookingPage({
       />
     </div>
       <PublicFooter badge={!host.unbranded} />
-    </>
+    </BrandScope>
   );
 }

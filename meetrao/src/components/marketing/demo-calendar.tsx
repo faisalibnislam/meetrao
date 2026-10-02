@@ -71,8 +71,8 @@ export function DemoMonthGrid({
               "flex items-center justify-center rounded-[6px] border font-sans text-[12.5px] font-medium",
               "transition-[background-color,border-color] duration-[120ms]",
               cell.closed && "cursor-not-allowed border-transparent bg-transparent text-ink-3 opacity-[0.42]",
-              !cell.closed && on && "cursor-pointer border-accent bg-accent font-semibold text-white hover:bg-accent-2",
-              !cell.closed && !on && cell.today && "cursor-pointer border-accent bg-surface font-semibold text-accent hover:bg-accent-soft",
+              !cell.closed && on && "cursor-pointer border-accent bg-accent font-semibold text-on-accent hover:bg-accent-2",
+              !cell.closed && !on && cell.today && "cursor-pointer border-accent bg-surface font-semibold text-accent-ink hover:bg-accent-soft",
               !cell.closed && !on && !cell.today && "cursor-pointer border-line bg-surface text-ink hover:border-line-strong hover:bg-fill",
             )}
           >
@@ -102,7 +102,7 @@ export function DemoSlot({
         "flex h-[32px] cursor-pointer items-center justify-center rounded-[6px] border font-sans text-[12.5px] font-medium",
         "transition-[background-color,border-color] duration-[120ms]",
         on
-          ? "border-accent bg-accent font-semibold text-white hover:bg-accent-2"
+          ? "border-accent bg-accent font-semibold text-on-accent hover:bg-accent-2"
           : "border-line-strong bg-surface text-ink hover:border-accent hover:bg-fill",
       )}
     >

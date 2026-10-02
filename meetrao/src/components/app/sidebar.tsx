@@ -157,7 +157,7 @@ export function Sidebar({
           Hidden on the mobile bar; the drawer below carries its own row. */}
       <Link
         href="/bookings/new"
-        className="unlink mb-[12px] box-border inline-flex h-[32px] w-full items-center justify-center gap-[7px] rounded-[6px] border border-accent bg-accent px-[11px] text-[12.5px] font-semibold text-white transition-colors duration-[120ms] hover:border-accent-2 hover:bg-accent-2 hover:text-white max-[820px]:hidden"
+        className="unlink mb-[12px] box-border inline-flex h-[32px] w-full items-center justify-center gap-[7px] rounded-[6px] border border-accent bg-accent px-[11px] text-[12.5px] font-semibold text-on-accent transition-colors duration-[120ms] hover:border-accent-2 hover:bg-accent-2 hover:text-on-accent max-[820px]:hidden"
       >
         <Icon name="user-plus" size={12} />
         Invite to Meet
@@ -242,7 +242,7 @@ export function Sidebar({
             {avatarUrl ? (
               <Avatar name={name} size={32} src={avatarUrl} />
             ) : (
-              <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[12px] font-bold text-accent">
+              <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[12px] font-bold text-accent-ink">
                 {initials}
               </span>
             )}
@@ -295,7 +295,7 @@ export function Sidebar({
                   name={copied === row.id ? "check" : "copy"}
                   weight={copied === row.id ? "solid" : "light"}
                   size={10}
-                  className={cx("flex-none", copied === row.id ? "text-accent" : "text-ink-3")}
+                  className={cx("flex-none", copied === row.id ? "text-accent-ink" : "text-ink-3")}
                 />
               </button>
             ))}
@@ -327,7 +327,7 @@ export function Sidebar({
             {avatarUrl ? (
               <Avatar name={name} size={26} src={avatarUrl} />
             ) : (
-              <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[11px] font-bold text-accent">
+              <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[11px] font-bold text-accent-ink">
                 {initials}
               </span>
             )}
@@ -390,7 +390,7 @@ function NavIcon({ name, active }: { name: IconName; active: boolean }) {
   const { pending } = useLinkStatus();
   return (
     <span data-pending={pending} className="nav-hint-slot flex w-[15px] flex-none items-center justify-center">
-      <Icon name={name} size={13} className={cx(active ? "text-accent" : "text-ink-3")} />
+      <Icon name={name} size={13} className={cx(active ? "text-accent-ink" : "text-ink-3")} />
     </span>
   );
 }

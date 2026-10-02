@@ -37,7 +37,7 @@ export function DocContextStrip({
     <div className="border-b border-line bg-ground">
       <div className="mx-auto flex max-w-[1148px] flex-wrap items-center justify-between gap-[12px] px-[26px] py-[14px] max-[560px]:px-[18px]">
         <span className="text-[13.5px] font-semibold text-ink">{title}</span>
-        <Link href={otherHref} className="unlink inline-flex items-center gap-[8px] text-[13px] text-ink-2 hover:text-accent">
+        <Link href={otherHref} className="unlink inline-flex items-center gap-[8px] text-[13px] text-ink-2 hover:text-accent-ink">
           {otherLabel}
           <Icon name="chevron-right" size={9} />
         </Link>
@@ -67,7 +67,7 @@ export function DocLayout({
             <a
               key={entry.id}
               href={`#${entry.id}`}
-              className="unlink rounded-[6px] px-[9px] py-[6px] text-[12.5px] leading-[1.4] text-ink-2 hover:bg-accent-soft hover:text-accent"
+              className="unlink rounded-[6px] px-[9px] py-[6px] text-[12.5px] leading-[1.4] text-ink-2 hover:bg-accent-soft hover:text-accent-ink"
             >
               {entry.label}
             </a>

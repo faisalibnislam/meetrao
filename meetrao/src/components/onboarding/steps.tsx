@@ -83,7 +83,7 @@ export function StepCalendar({
     >
       <div className="flex flex-col gap-[14px]">
         <div className="flex items-center gap-[13px] rounded-[8px] border border-line bg-fill px-[15px] py-[13px]">
-          <Icon name="calendar" size={17} className="flex-none text-accent" />
+          <Icon name="calendar" size={17} className="flex-none text-accent-ink" />
           <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
             <span className="text-[13.5px] font-semibold text-ink">Google Calendar</span>
             <span className="text-[12.5px] text-ink-3">
@@ -139,7 +139,7 @@ function PermissionGroup({
         <Icon
           name={icon}
           size={12}
-          className={tone === "accent" ? "flex-none text-accent" : "flex-none text-ink-3"}
+          className={tone === "accent" ? "flex-none text-accent-ink" : "flex-none text-ink-3"}
         />
         {title}
       </span>
@@ -425,7 +425,7 @@ export function StepReady({
                 name={row.ok ? "check" : "triangle-exclamation"}
                 weight="solid"
                 size={10}
-                className={`w-[14px] flex-none ${row.ok ? "text-accent" : "text-amber"}`}
+                className={`w-[14px] flex-none ${row.ok ? "text-accent-ink" : "text-amber"}`}
               />
               <span className="text-[13px] text-ink-2">{row.text}</span>
             </div>
@@ -438,8 +438,8 @@ export function StepReady({
         <div className="flex flex-col gap-[7px] rounded-[8px] border border-accent-line bg-accent-soft px-[15px] py-[13px]">
           <span className="text-[13px] font-semibold text-ink">Everything here is free</span>
           <span className="text-[12.5px] leading-[1.55] text-ink-2">
-            Pro is $10 a year when you want your booking page on your own domain, the Meetrao badge gone, or
-            one link your whole team answers.{" "}
+            Pro is $10 a year when you want the page to look like yours — your logo, your colour, and your
+            own domain at meeting.yourcompany.com/your-name — or one link your whole team answers.{" "}
             <Link href="/settings/billing" className="font-semibold">
               See Pro
             </Link>

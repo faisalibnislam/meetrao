@@ -3,12 +3,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { ButtonLink } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
-import { LogoLink } from "@/components/ui/logo";
 import { formatDuration, formatLongDate, formatTimeRange } from "@/lib/booking/time";
 import { getBookingByReference } from "@/lib/data/guest-booking";
 import { whereText } from "@/lib/locations";
 import { cx } from "@/lib/cx";
 import { PublicFooter } from "@/components/booking/public-footer";
+import { BrandMark, BrandScope } from "@/components/booking/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -52,14 +52,14 @@ export default async function ConfirmedPage({
   ];
 
   return (
-    <>
+    <BrandScope brand={booking.hostBrand}>
     <div className="animate-in m-auto flex w-full max-w-[520px] flex-col gap-[14px]">
-      <LogoLink height={20} />
+      <BrandMark brand={booking.hostBrand} hostName={booking.hostName} height={20} />
 
       <div className="overflow-hidden rounded-[12px] border border-line bg-surface">
         <div className="flex flex-col gap-[18px] px-[30px] pt-[30px] pb-[24px] max-[820px]:px-[22px]">
           <div className="flex items-center gap-[12px]">
-            <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-full bg-accent text-white">
+            <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-full bg-accent text-on-accent">
               <Icon name="check" weight="solid" size={13} />
             </span>
             <h1 className="m-0 font-serif text-[30px] leading-[1.05] font-normal tracking-[-0.01em] text-ink">
@@ -99,7 +99,7 @@ export default async function ConfirmedPage({
               href={booking.meetUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="unlink box-border inline-flex h-[42px] w-full cursor-pointer items-center justify-center gap-[9px] rounded-[6px] border border-accent bg-accent font-sans text-[14px] font-semibold text-white no-underline hover:bg-accent-2"
+              className="unlink box-border inline-flex h-[42px] w-full cursor-pointer items-center justify-center gap-[9px] rounded-[6px] border border-accent bg-accent font-sans text-[14px] font-semibold text-on-accent no-underline hover:bg-accent-2"
             >
               <Icon name="video" size={13} />
               Join Google Meet
@@ -107,7 +107,7 @@ export default async function ConfirmedPage({
           ) : null}
 
           <div className="flex gap-[11px] rounded-[8px] border border-accent-line bg-accent-soft px-[14px] py-[12px]">
-            <Icon name="check" weight="solid" size={11} className="mt-[3px] flex-none text-accent" />
+            <Icon name="check" weight="solid" size={11} className="mt-[3px] flex-none text-accent-ink" />
             <span className="text-[12.5px] leading-[1.6] text-ink-2">
               {moved ? (
                 <>
@@ -141,7 +141,7 @@ export default async function ConfirmedPage({
         </div>
       </div>
     </div>
-      <PublicFooter />
-    </>
+      <PublicFooter badge={!booking.hostUnbranded} />
+    </BrandScope>
   );
 }

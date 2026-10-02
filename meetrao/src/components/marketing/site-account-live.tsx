@@ -108,7 +108,7 @@ export function SignedOutActions() {
       </Link>
       <Link
         href="/signup"
-        className="unlink inline-flex h-[38px] items-center gap-[8px] rounded-[7px] bg-accent px-[15px] text-[13px] font-semibold whitespace-nowrap text-white transition-colors duration-[120ms] hover:bg-accent-2 hover:text-white max-[400px]:px-[12px]"
+        className="unlink inline-flex h-[38px] items-center gap-[8px] rounded-[7px] bg-accent px-[15px] text-[13px] font-semibold whitespace-nowrap text-on-accent transition-colors duration-[120ms] hover:bg-accent-2 hover:text-on-accent max-[400px]:px-[12px]"
       >
         {/* On a 320px screen the full label put this button 21px past the right
             edge, where it could not be tapped at all. The label shortens rather

@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { isPro, planOf } from "@/convex/lib/plan";
+import { hasComp, hasSubscription, isPro, planOf } from "@/convex/lib/plan";
 import { verifyPolarSignature } from "@/lib/polar";
 
 const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), "utf8");
@@ -128,25 +128,87 @@ describe("only the webhook grants Pro", () => {
 });
 
 /**
- * Every file that writes a plan OTHER than "free", so a second writer shows up
+ * Every file that WRITES a plan other than "free", so a second writer shows up
  * here rather than in production.
  *
- * Line by line rather than one regex over the file: `\s*` backtracks, so
- * `plan:\s*(?!"free")` matches `plan: "free"` by consuming nothing and
- * testing the space. Found by this test passing when it should not have.
+ * Looks inside db.patch and db.insert calls rather than scanning for the word
+ * `plan:` anywhere. Two near-misses taught this: the first version used one
+ * regex over the file and `\s*` backtracked, so `plan: "free"` matched the
+ * exemption it was meant to escape; the second flagged convex/admin.ts, where
+ * a QUERY returns `plan: planOf(p)` — a read, reported as a grant.
  */
 function globWrites(): string[] {
   const files = ["convex/billing.ts", "convex/profiles.ts", "convex/admin.ts", "convex/teams.ts", "convex/apiKeys.ts"];
-  return files.filter((f) =>
-    read(f)
-      .split("\n")
-      .some((line) => {
-        const match = /\bplan:\s*(.+)$/.exec(line.trim());
-        if (!match) return false;
-        const value = match[1].trim();
-        // Creating a profile as free, and the schema's own declaration, are
-        // not grants.
-        return !value.startsWith('"free"') && !value.startsWith("v.");
-      }),
-  );
+
+  return files.filter((f) => {
+    const text = read(f);
+    const writes = [...text.matchAll(/ctx\.db\.(patch|insert)\(/g)];
+
+    return writes.some((match) => {
+      // The call's arguments, up to the end of the statement.
+      const from = match.index ?? 0;
+      const body = text.slice(from, from + 600);
+      /* Both forms: `plan: something` and the shorthand `plan,`. billing.ts
+         uses the shorthand, so a pattern that only knew the first found
+         nothing anywhere and passed by being blind. */
+      const assignment = /\bplan\s*(?::\s*([^,\n]+)|,)/.exec(body);
+      if (!assignment) return false;
+
+      const value = (assignment[1] ?? "shorthand").trim();
+      // Creating a profile as free is not a grant.
+      return !value.startsWith('"free"');
+    });
+  });
 }
+
+describe("Pro given away", () => {
+  const admin = read("convex/admin.ts");
+  const HOUR = 3_600_000;
+
+  /* A grant is read BESIDE the subscription, never instead of it. The whole
+     point of the separation is that nothing inside the app can write `plan`,
+     so a granted account and a paying one stay distinguishable — to the
+     product, and to anybody counting revenue. */
+  it("makes somebody Pro without touching the plan field", () => {
+    const granted = { plan: "free", plan_until: null, comp_until: Date.now() + HOUR };
+    expect(isPro(granted)).toBe(true);
+    expect(hasSubscription(granted), "a grant must not read as a subscription").toBe(false);
+    expect(hasComp(granted)).toBe(true);
+  });
+
+  it("expires by itself", () => {
+    expect(isPro({ plan: "free", plan_until: null, comp_until: Date.now() - HOUR })).toBe(false);
+    expect(isPro({ plan: "free", plan_until: null, comp_until: null })).toBe(false);
+    expect(isPro({ plan: "free", plan_until: null, comp_until: undefined })).toBe(false);
+  });
+
+  /* Somebody granted Pro who then subscribes has both. Removing the grant must
+     leave them Pro — the admin screen says so, and this is why. */
+  it("does not take Pro away from somebody who also pays", () => {
+    const both = { plan: "pro", plan_until: Date.now() + HOUR, comp_until: Date.now() - HOUR };
+    expect(isPro(both)).toBe(true);
+  });
+
+  it("is written only by an admin-gated mutation, and always logged", () => {
+    for (const fn of ["grantPro", "revokePro"]) {
+      const from = admin.indexOf(`export const ${fn}`);
+      expect(from, `${fn} has moved or been renamed`).toBeGreaterThan(-1);
+      const body = admin.slice(from, admin.indexOf("\n});", from));
+      expect(body, `${fn} does not check for an admin`).toContain("requireAdmin(ctx)");
+      expect(body, `${fn} does not write an activity row`).toContain("logActivity");
+    }
+  });
+
+  /* "Who gave this account Pro, and why" is asked months later, by which time
+     the operator has forgotten. A grant with no reason is one nobody can
+     review, so the mutation refuses it. */
+  it("refuses a grant with no reason", () => {
+    const body = admin.slice(admin.indexOf("export const grantPro"));
+    expect(body).toContain("Say why this account is getting Pro.");
+  });
+
+  it("offers only the lengths it knows", () => {
+    expect(admin).toMatch(/COMP_DAYS: Record<string, number \| null>/);
+    expect(admin).toContain("Pick one of the offered lengths.");
+  });
+});

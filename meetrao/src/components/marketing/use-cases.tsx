@@ -48,7 +48,7 @@ const NOTES: readonly (readonly [string, string])[] = [
 
 export function UseCases() {
   return (
-    <div className="overflow-hidden bg-accent-2 pt-[52px] pb-[56px] text-white">
+    <div className="overflow-hidden bg-accent-2 pt-[52px] pb-[56px] text-on-accent">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-[13px] px-[26px] pb-[34px] max-[560px]:px-[18px]">
         {/* Default tone, which is the teal — the same #7FD8C4 as the marquee
             dots and the eyebrows below, and what "The problem" band already

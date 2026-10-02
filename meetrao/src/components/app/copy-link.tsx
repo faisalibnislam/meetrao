@@ -98,7 +98,7 @@ export function CopyLinkControl({ accountLink, meetings }: { accountLink: string
                   name={copied === row.id ? "check" : "copy"}
                   weight={copied === row.id ? "solid" : "light"}
                   size={11}
-                  className={cx("flex-none", copied === row.id ? "text-accent" : "text-ink-3")}
+                  className={cx("flex-none", copied === row.id ? "text-accent-ink" : "text-ink-3")}
                 />
               </button>
             ))}

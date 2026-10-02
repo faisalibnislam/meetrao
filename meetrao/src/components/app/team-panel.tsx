@@ -125,7 +125,7 @@ export function TeamPanel({
               className={cx(
                 "inline-flex h-[30px] cursor-pointer items-center rounded-[6px] border px-[11px] text-[12.5px]",
                 t.id === team?.id
-                  ? "border-accent bg-accent font-semibold text-white"
+                  ? "border-accent bg-accent font-semibold text-on-accent"
                   : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
               )}
             >

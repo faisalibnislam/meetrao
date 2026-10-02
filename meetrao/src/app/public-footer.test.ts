@@ -41,6 +41,33 @@ describe("the layout", () => {
   });
 });
 
+describe("the layout stacks what the pages return", () => {
+  const layout = readFileSync(path.join(APP, "(public)", "layout.tsx"), "utf8");
+
+  /* Moving the footer into the pages made every page return TWO elements. The
+     layout centred a single child in a row, so the card and the footer became
+     siblings in that row: the card stopped being centred and the footer
+     climbed to the top-right corner. It shipped, and it looked like a CSS
+     mystery rather than a consequence of the refactor.
+     
+     A column stacks them. Both classes matter — flex-col to stack,
+     items-center to centre each one horizontally. */
+  it("is a column, because pages return a card and a footer", () => {
+    expect(layout, "a row puts the footer beside the card").toContain("flex-col");
+    expect(layout, "without items-center the card hugs the left edge").toContain("items-center");
+  });
+
+  it.each(pages)("%s returns its content and the footer as siblings", (file) => {
+    const text = readFileSync(path.join(APP, file), "utf8");
+    /* A fragment, or <BrandScope> — which is a fragment with CSS variables on
+       it. BrandScope renders `display: contents`, so it introduces no box and
+       the card and footer are still the layout column's own children, exactly
+       as a fragment leaves them. Anything else here would wrap them in a box
+       and re-break the centring this file exists to guard. */
+    expect(text).toMatch(/(<>\s|<BrandScope)/);
+  });
+});
+
 describe("the badge", () => {
   const footer = readFileSync(path.join(process.cwd(), "src/components/booking/public-footer.tsx"), "utf8");
 
@@ -53,13 +80,30 @@ describe("the badge", () => {
     }
   });
 
-  /* The pages that know a host pass its plan; the ones reached by booking
-     reference do not, and keep the badge. That is deliberate — a guest
-     following a link from an email is not on anybody's branded page. */
-  it("is hidden only where a host is resolved", () => {
-    const withHost = ["(public)/[username]/page.tsx", "(public)/[username]/[slug]/page.tsx"];
-    for (const file of withHost) {
+  /* EVERY guest-facing page hides it for a Pro host now, including the ones
+     reached by booking reference.
+
+     This file used to say the opposite — that the reference pages keep the
+     badge because "a guest following a link from an email is not on anybody's
+     branded page". That was a rationalisation of a limitation: those pages had
+     no username in the URL and so could not tell whose booking it was. They
+     can now, because convex/publicBooking.ts returns the host's plan and brand
+     on the booking itself. A guest who books through a host's own branded page
+     and then lands on our green confirmation has been handed to a stranger
+     halfway through, and the email link is the MOST likely way they get there. */
+  it("is hidden wherever a host is known, which is everywhere", () => {
+    const byUsername = ["(public)/[username]/page.tsx", "(public)/[username]/[slug]/page.tsx"];
+    for (const file of byUsername) {
       expect(readFileSync(path.join(APP, file), "utf8")).toContain("badge={!host.unbranded}");
+    }
+
+    const byReference = globSync("(public)/booking/**/page.tsx", { cwd: APP });
+    expect(byReference.length).toBeGreaterThanOrEqual(4);
+    for (const file of byReference) {
+      expect(
+        readFileSync(path.join(APP, file), "utf8"),
+        `${file} shows "Powered by Meetrao" on a Pro host's page`,
+      ).toContain("badge={!booking.hostUnbranded}");
     }
   });
 });

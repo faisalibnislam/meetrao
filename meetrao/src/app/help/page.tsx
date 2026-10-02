@@ -43,6 +43,8 @@ const TOC: { id: string; icon: IconName; label: string }[] = [
   { id: "bookings", icon: "calendar", label: "Bookings" },
   { id: "emails", icon: "envelope", label: "Emails" },
   { id: "guests", icon: "users", label: "What guests see" },
+  { id: "branding", icon: "palette", label: "Your branding" },
+  { id: "domain", icon: "globe", label: "Your own domain" },
   { id: "settings", icon: "gear", label: "Settings" },
   { id: "faq", icon: "circle-question", label: "Common questions" },
 ];
@@ -185,6 +187,11 @@ const PANELS: { icon: IconName; title: string; text: string }[] = [
     text: "Defaults applied to every new meeting you create — a starting duration and minimum notice, so you are not setting them each time.",
   },
   {
+    icon: "palette",
+    title: "Branding",
+    text: "Your logo, your colour and your own domain on the pages guests see. Part of Pro — the controls are there on Free, with a note saying so.",
+  },
+  {
     icon: "envelope",
     title: "Notifications",
     text: "The five switches covering which emails Meetrao sends you.",
@@ -243,7 +250,7 @@ const FAQS: [string, string][] = [
 function Tip({ children }: { children: React.ReactNode }) {
   return (
     <div className="my-[16px] flex gap-[11px] rounded-[8px] border border-line bg-fill px-[15px] py-[13px]">
-      <Icon name="circle-info" weight="solid" size={12} className="mt-[3px] flex-none text-accent" />
+      <Icon name="circle-info" weight="solid" size={12} className="mt-[3px] flex-none text-accent-ink" />
       <span className="text-[13px] leading-[1.6] text-pretty text-ink-2">{children}</span>
     </div>
   );
@@ -282,7 +289,7 @@ export default async function HelpPage() {
             key={pillar.title}
             className="flex flex-col gap-[10px] rounded-[14px] border border-line bg-surface px-[20px] pt-[20px] pb-[22px]"
           >
-            <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-accent">
+            <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-accent-ink">
               <Icon name={pillar.icon} size={14} />
             </span>
             <span className="text-[14.5px] font-semibold text-ink">{pillar.title}</span>
@@ -302,7 +309,7 @@ export default async function HelpPage() {
               <a
                 key={entry.id}
                 href={`#${entry.id}`}
-                className="unlink flex items-center gap-[10px] rounded-[6px] px-[9px] py-[7px] text-[12.5px] text-ink-2 hover:bg-accent-soft hover:text-accent"
+                className="unlink flex items-center gap-[10px] rounded-[6px] px-[9px] py-[7px] text-[12.5px] text-ink-2 hover:bg-accent-soft hover:text-accent-ink"
               >
                 <Icon name={entry.icon} size={12} className="w-[15px] flex-none text-ink-3" />
                 {entry.label}
@@ -350,7 +357,7 @@ export default async function HelpPage() {
             <div className="mb-[16px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
               {STEPS.map(([n, title, text]) => (
                 <div key={n} className="flex gap-[14px] bg-surface px-[15px] py-[13px]">
-                  <span className="inline-flex h-[24px] w-[24px] flex-none items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent">
+                  <span className="inline-flex h-[24px] w-[24px] flex-none items-center justify-center rounded-full bg-accent-soft text-[11px] font-medium text-accent-ink">
                     {n}
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
@@ -390,7 +397,7 @@ export default async function HelpPage() {
               {CALENDAR_FACTS.map((fact) => (
                 <div key={fact.title} className="flex flex-col gap-[7px] rounded-[10px] border border-line bg-fill px-[15px] py-[14px]">
                   <span className="flex items-center gap-[8px] text-[13.5px] font-semibold text-ink">
-                    <Icon name={fact.icon} size={12} className="flex-none text-accent" />
+                    <Icon name={fact.icon} size={12} className="flex-none text-accent-ink" />
                     {fact.title}
                   </span>
                   <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">{fact.text}</span>
@@ -585,7 +592,7 @@ export default async function HelpPage() {
                     className={cx(
                       "inline-flex h-[20px] flex-none items-center rounded-[4px] border px-[8px] text-[10.5px] whitespace-nowrap",
                       def === "On"
-                        ? "border-accent-line bg-accent-soft text-accent"
+                        ? "border-accent-line bg-accent-soft text-accent-ink"
                         : "border-line bg-fill text-ink-3",
                     )}
                   >
@@ -626,16 +633,133 @@ export default async function HelpPage() {
           </section>
 
           <section>
+            <h2 id="branding">Your logo and your colour</h2>
+            <p>
+              A booking page is often the first thing somebody sees of your business, and by default it
+              carries our mark and our green. On Pro you can replace both, under{" "}
+              <strong>Settings → Branding</strong>.
+            </p>
+
+            <h3>Your logo</h3>
+            <p>
+              Upload a PNG, JPG or WEBP under 1&nbsp;MB and it appears at the top of your booking page in
+              place of the Meetrao mark. It is shown at about 20&nbsp;pixels tall, so a wide logo reads
+              better than a tall one — the same file you would put in an email signature usually works. SVG
+              is not accepted: an SVG can contain a script, and one served from our storage would run on our
+              domain. Export a PNG at two or three times the size you need and it will stay crisp.
+            </p>
+
+            <h3>Your colour</h3>
+            <p>
+              You pick one colour. Everything else is worked out from it — the chosen date in the calendar,
+              the confirm button, the highlights, the links and the focus rings. You do not set them
+              individually, and there is no way to end up with a page where five shades disagree.
+            </p>
+            <p>
+              <strong>The text on top is chosen for you, by measurement.</strong> A yellow button gets dark
+              text and a navy one gets white, because a readable page matters more than a consistent one.
+              The same colour used as text — a link, say — is darkened until it is readable on white, which
+              is why a bright brand looks slightly deeper where it appears as words than where it appears as
+              a button. That is deliberate, and it is what keeps the page legible for everyone.
+            </p>
+            <p>
+              Two kinds of colour are refused, each with a reason shown. A colour too close to white
+              (#FFF9E6, a pale mint) makes a button nobody recognises as a button. A colour exactly midway
+              between light and dark — around #7A7A7A — has no readable label at all, in either white or
+              black. In both cases, pick a deeper or lighter shade of the same hue.
+            </p>
+            <p>
+              The preview on the Branding screen is built from the same code as the real page, so what it
+              shows is what your guests get. You do not need to save to see it.
+            </p>
+
+            <h3>Where it shows</h3>
+            <p>
+              Your booking page, the page for each meeting, the confirmation, the reschedule and cancel
+              screens, and the embed widget on your own site. Your logo is not repeated inside the embed —
+              your site already has it at the top of the page — but your colour is. Emails to guests stay in
+              the plain format they are in today.
+            </p>
+            <p>
+              The “Powered by Meetrao” line comes off every one of those pages while you are on Pro. If a
+              subscription lapses, your logo and colour stay saved but your pages go back to ours, and
+              everything returns the moment Pro does — you do not upload anything again.
+            </p>
+          </section>
+
+          <section>
+            <h2 id="domain">Your own domain</h2>
+            <p>
+              On Pro you can serve your booking page from a name you own, so the link you hand out is{" "}
+              <strong>meeting.yourcompany.com/your-name</strong> rather than ours. Set it up under{" "}
+              <strong>Settings → Branding</strong>.
+            </p>
+
+            <h3>Three steps</h3>
+            <p>
+              <strong>One.</strong> Type the name you want to use — a subdomain such as{" "}
+              <code>meeting.yourcompany.com</code> or <code>book.yourcompany.com</code> — and press{" "}
+              <strong>Claim</strong>. A domain can belong to one Meetrao account, so claiming it holds it
+              for you.
+            </p>
+            <p>
+              <strong>Two.</strong> Add the CNAME record we show you at whoever manages your DNS — your
+              registrar, Cloudflare, your hosting provider. It points the subdomain at us.
+            </p>
+            <p>
+              <strong>Three.</strong> Press <strong>Check DNS</strong>. DNS usually takes a few minutes and
+              occasionally an hour. Once it resolves, the certificate is issued automatically and the page is
+              live. There is nothing to install and nothing to renew.
+            </p>
+
+            <h3>What the links look like</h3>
+            <p>
+              All of these work once the domain is live:
+            </p>
+            <ul>
+              <li>
+                <code>meeting.yourcompany.com/your-name</code> — your booking page. This is the one to put in
+                a signature.
+              </li>
+              <li>
+                <code>meeting.yourcompany.com</code> — the same page. Someone who half-remembers the link
+                still arrives.
+              </li>
+              <li>
+                <code>meeting.yourcompany.com/intro</code> — straight to one meeting, using its own short
+                name.
+              </li>
+            </ul>
+            <p>
+              Your meetrao.com link keeps working the whole time, so anything already shared or printed is
+              safe. Search engines are told your domain is the real address, which is the point of having
+              one. Confirmation links in emails to guests, and the legal pages, are served unchanged on your
+              domain.
+            </p>
+            <p>
+              A custom domain serves your account only. A link on your domain that names somebody else is
+              read as one of your meetings and shows nothing if you have no meeting by that name.
+            </p>
+
+            <h3>Taking it back</h3>
+            <p>
+              <strong>Remove</strong> releases the domain immediately and your meetrao.com link carries on.
+              Remember to delete the CNAME record at your DNS provider afterwards, or the name will point at
+              a page that no longer answers.
+            </p>
+          </section>
+
+          <section>
             <h2 id="settings">Settings and your account</h2>
             <p>
               Settings live behind your profile at the bottom of the sidebar. Click it and choose{" "}
-              <strong>Settings</strong> — or <strong>Log out</strong>. There are five panels.
+              <strong>Settings</strong> — or <strong>Log out</strong>. Each panel has its own address, so you can link straight to one.
             </p>
 
             <div className="mb-[16px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
               {PANELS.map((panel) => (
                 <div key={panel.title} className="flex gap-[14px] bg-surface px-[15px] py-[13px]">
-                  <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-accent">
+                  <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-accent-ink">
                     <Icon name={panel.icon} size={14} />
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
@@ -679,7 +803,7 @@ export default async function HelpPage() {
             </div>
             <Link
               href="/support"
-              className="unlink inline-flex h-[38px] flex-none items-center gap-[9px] rounded-[7px] border border-accent bg-accent px-[15px] text-[13.5px] font-semibold text-white hover:bg-accent-2 hover:text-white"
+              className="unlink inline-flex h-[38px] flex-none items-center gap-[9px] rounded-[7px] border border-accent bg-accent px-[15px] text-[13.5px] font-semibold text-on-accent hover:bg-accent-2 hover:text-on-accent"
             >
               <Icon name="envelope" size={12} />
               Contact support

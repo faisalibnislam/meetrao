@@ -37,7 +37,7 @@ export function Faq() {
                     size={12}
                     className={cx(
                       "flex-none transition-transform duration-[180ms] ease-[cubic-bezier(.22,1,.36,1)]",
-                      isOpen ? "rotate-45 text-accent" : "text-ink-3",
+                      isOpen ? "rotate-45 text-accent-ink" : "text-ink-3",
                     )}
                   />
                 </button>

@@ -401,3 +401,52 @@ export async function savePolarProducts(input: { monthly: string; yearly: string
   revalidatePath("/admin/settings");
   return { monthly: input.monthly.trim(), yearly: input.yearly.trim() };
 }
+
+/* ── complimentary Pro ─────────────────────────────────────────────────────── */
+
+export type GrantResult = { error?: string };
+
+/**
+ * Gives an account Pro without a payment.
+ *
+ * The length and the reason are both checked in Convex as well — this is the
+ * form's side of a rule whose boundary is the mutation, like every other
+ * admin action here.
+ */
+export async function grantProToUser(input: {
+  userId: string;
+  length: string;
+  reason: string;
+}): Promise<GrantResult> {
+  await requireAdmin();
+  if (!input.reason.trim()) return { error: "Say why this account is getting Pro." };
+
+  const convex = await convexServer();
+  try {
+    await convex.mutation(api.admin.grantPro, {
+      userId: input.userId,
+      length: input.length,
+      reason: input.reason.trim(),
+    });
+  } catch (cause) {
+    return { error: convexMessage(cause, "That grant could not be saved.") };
+  }
+
+  revalidatePath(`/admin/users/${input.userId}`);
+  revalidatePath("/admin/users");
+  return {};
+}
+
+export async function revokeProFromUser(userId: string): Promise<GrantResult> {
+  await requireAdmin();
+  const convex = await convexServer();
+  try {
+    await convex.mutation(api.admin.revokePro, { userId });
+  } catch (cause) {
+    return { error: convexMessage(cause, "That grant could not be removed.") };
+  }
+
+  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath("/admin/users");
+  return {};
+}

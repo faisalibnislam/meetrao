@@ -136,11 +136,11 @@ export default function PrivacyPage() {
         />
 
         <div className="mb-[26px] flex flex-col gap-[11px] rounded-[10px] border border-accent-line bg-accent-soft px-[16px] py-[15px]">
-          <span className="text-[13.5px] font-semibold text-accent">The short version</span>
+          <span className="text-[13.5px] font-semibold text-accent-ink">The short version</span>
           <div className="flex flex-col gap-[8px]">
             {SHORT_VERSION.map((text) => (
               <div key={text} className="flex items-start gap-[10px]">
-                <Icon name="check" weight="solid" size={10} className="mt-[4px] flex-none text-accent" />
+                <Icon name="check" weight="solid" size={10} className="mt-[4px] flex-none text-accent-ink" />
                 <span className="text-[13px] leading-[1.55] text-ink-2">{text}</span>
               </div>
             ))}

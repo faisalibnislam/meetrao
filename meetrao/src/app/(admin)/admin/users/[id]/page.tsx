@@ -5,8 +5,9 @@ import { BookingLinkPanel } from "@/components/admin/booking-link";
 import { RemoveAccountPanel, SuspendButton } from "@/components/admin/user-actions";
 import { Avatar, Badge, Eyebrow } from "@/components/ui/badge";
 import { Card, SectionHeading } from "@/components/ui/panels";
-import { getUserDetail } from "@/lib/data/admin";
+import { getUserDetail, getUserPlan } from "@/lib/data/admin";
 import { cx } from "@/lib/cx";
+import { PlanPanel } from "@/components/admin/plan-panel";
 
 export const metadata: Metadata = { title: "User" };
 
@@ -14,6 +15,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
   const { id } = await params;
   const detail = await getUserDetail(id);
   if (!detail) notFound();
+  const plan = await getUserPlan(id);
 
   const { user, meetings, bookings } = detail;
   const first = user.name.split(" ")[0] || user.name;
@@ -45,6 +47,20 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
         {/* Keyed on the link: a change remounts the panel, which is how its
             typed value, status and alternatives are reset after a save. */}
         <BookingLinkPanel key={user.username} userId={user.id} name={first} username={user.username} />
+
+        <PlanPanel
+          userId={user.id}
+          name={first}
+          info={{
+            plan: plan?.plan ?? "free",
+            subscribed: plan?.subscribed ?? false,
+            comp: plan?.comp ?? false,
+            compUntil: plan?.comp_until ?? null,
+            compReason: plan?.comp_reason ?? "",
+            compGrantedBy: plan?.comp_granted_by ?? null,
+            planUntil: plan?.plan_until ?? null,
+          }}
+        />
 
         <RemoveAccountPanel userId={user.id} name={user.name} />
 

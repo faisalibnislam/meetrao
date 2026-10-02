@@ -80,8 +80,8 @@ export function StepRail({
                   className={cx(
                     "box-border inline-flex flex-none items-center justify-center rounded-full border font-semibold transition-all duration-[160ms]",
                     current ? "h-[22px] w-[22px] text-[11px]" : "h-[18px] w-[18px] text-[10px]",
-                    done && "border-accent bg-accent text-white",
-                    current && "border-accent bg-accent text-white shadow-[0_0_0_3px_var(--accent-soft)]",
+                    done && "border-accent bg-accent text-on-accent",
+                    current && "border-accent bg-accent text-on-accent shadow-[0_0_0_3px_var(--accent-soft)]",
                     !done && !current && "border-line-strong bg-surface text-ink-3",
                   )}
                 >
@@ -112,7 +112,7 @@ export function StepRail({
               open ? "border-line-strong" : "border-line hover:border-line-strong",
             )}
           >
-            <span className="inline-flex h-[24px] w-[24px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[10.5px] font-bold text-accent">
+            <span className="inline-flex h-[24px] w-[24px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[10.5px] font-bold text-accent-ink">
               {initials}
             </span>
             <Icon
