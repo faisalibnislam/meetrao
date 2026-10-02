@@ -14,7 +14,7 @@ import { cx } from "@/lib/cx";
    Notifications.
 
    Every row is written by a database trigger, so this screen only ever changes
-   one thing: whether something has been seen. That keeps it honest — there is
+   one thing: whether something has been seen. That keeps it honest. There is
    no state here that can disagree with what actually happened.
 
    Unread is the default view, because the question this screen answers is
@@ -26,7 +26,7 @@ const LOOK: Record<NotificationKind, { icon: IconName; ring: string; tint: strin
   booking_new: { icon: "calendar", ring: "border-accent-line bg-accent-soft", tint: "text-accent-ink", label: "New booking" },
   booking_cancelled: { icon: "circle-xmark", ring: "border-red-line bg-red-soft", tint: "text-red", label: "Cancelled" },
   booking_changed: { icon: "rotate-left", ring: "border-amber-line bg-amber-soft", tint: "text-amber", label: "Moved" },
-  /* Amber, not red: the guest said no in their calendar, which is news — but
+  /* Amber, not red: the guest said no in their calendar, which is news, but
      the meeting is still in the diary until somebody cancels it. */
   booking_declined: { icon: "circle-exclamation", ring: "border-amber-line bg-amber-soft", tint: "text-amber", label: "Declined" },
 };

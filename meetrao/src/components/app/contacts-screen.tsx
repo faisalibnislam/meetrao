@@ -21,7 +21,7 @@ import { cx } from "@/lib/cx";
    every booking and every invitee, so the list fills itself in. The host adds,
    corrects and imports on top of that.
 
-   The views are the four questions a host actually asks of this list — everyone,
+   The views are the four questions a host actually asks of this list, everyone,
    who did I meet through Meetrao, who did I add myself, and who has nothing in
    the diary. Filtering happens in the browser because the whole list is already
    here; a host with more contacts than fit in memory is a problem worth having

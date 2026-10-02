@@ -16,7 +16,7 @@ import path from "node:path";
    Three functions were left that way until 0003; four trigger functions until
    0019.
 
-   What this file can and cannot do. It cannot tell you what IS granted —
+   What this file can and cannot do. It cannot tell you what IS granted,
    grant state is not derivable from the migrations, and admin_remove_account
    proves it: no revoke in any file here, locked in the live database anyway.
    Read pg_proc.proacl for state. What it does is pin the INTENT: a new definer
@@ -48,7 +48,7 @@ const GUEST_FACING = [
 
 /* Functions that predate the rule: all nine are declared in 0001, none has a
    revoke in any migration, and all nine are nonetheless locked against `anon`
-   in the live database — verified with has_function_privilege against project
+   in the live database, verified with has_function_privilege against project
    gpighkgvdiphdtpqpsfr on 2026-09-12. They are listed by name rather than
    exempted by migration number so that the list has to be maintained: a rename
    or a removal fails the "still exist" assertion below.
@@ -149,21 +149,21 @@ describe("no definer function is reachable by anon by accident", () => {
 
     const unaccounted = [...DEFINERS.values()]
       .filter(({ name }) => !allowed.has(name) && !REVOKED.has(name))
-      .map(({ name, returns, files }) => `${name}() returns ${returns} — ${files.join(", ")}`);
+      .map(({ name, returns, files }) => `${name}() returns ${returns}, ${files.join(", ")}`);
 
     expect(
       unaccounted,
       "SECURITY DEFINER with no revoke naming anon, and not a guest-facing door.\n" +
         "Supabase granted EXECUTE to anon directly when it was created, so it is\n" +
         "reachable over /rest/v1/rpc right now. Either add a revoke in the same\n" +
-        "migration as the definition, or — if it belongs on the public booking\n" +
-        "page — add it to GUEST_FACING above and say why.\n",
+        "migration as the definition, or, if it belongs on the public booking\n" +
+        "page, add it to GUEST_FACING above and say why.\n",
     ).toEqual([]);
   });
 
   /* Trigger functions are the easy ones to miss, because they look harmless:
      Postgres refuses to call one directly, so the grant is inert and nothing
-     ever breaks. That is exactly why they accumulate — 0003 caught one, 0019
+     ever breaks. That is exactly why they accumulate, 0003 caught one, 0019
      caught four more. They are named here so the next one is caught by a test
      rather than by somebody reading a privilege listing. */
   it("revokes every trigger function, inert grant or not", () => {
@@ -172,14 +172,14 @@ describe("no definer function is reachable by anon by accident", () => {
 
     const open = triggers
       .filter(({ name }) => !REVOKED.has(name) && !LOCKED_WITHOUT_A_REVOKE.includes(name as never))
-      .map(({ name, files }) => `${name}() — ${files.join(", ")}`);
+      .map(({ name, files }) => `${name}(), ${files.join(", ")}`);
 
     expect(open, "definer trigger function with no revoke naming anon").toEqual([]);
   });
 });
 
 describe("the two lists stay honest", () => {
-  /* A typo in either list is an exemption that silently covers nothing — or,
+  /* A typo in either list is an exemption that silently covers nothing, or,
      worse, covers a function that no longer exists while the real one goes
      unchecked. Both lists must name functions the migrations actually declare. */
   it.each([...GUEST_FACING, ...LOCKED_WITHOUT_A_REVOKE])(
@@ -191,7 +191,7 @@ describe("the two lists stay honest", () => {
 
   /* The negative control, in the form the repo can check: the guest-facing
      doors must NOT be revoked from anon. get_public_host is the clearest case
-     — the booking page is a stranger reading a stranger's profile, and if a
+    . The booking page is a stranger reading a stranger's profile, and if a
      future migration tidies it up "for consistency" the public page 404s for
      everyone. The migrations revoke these from PUBLIC only, never from anon. */
   it.each(GUEST_FACING)("%s is left reachable by anon", (fn) => {

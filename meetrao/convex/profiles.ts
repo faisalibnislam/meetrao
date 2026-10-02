@@ -11,14 +11,14 @@ import { supportedZoneOrNull } from "./lib/zones";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 
-/* profiles — and the auth trigger that used to create them.
+/* profiles, and the auth trigger that used to create them.
 
    `handle_new_user()` was an AFTER INSERT trigger on auth.users. Supabase still
    issues the identity, but nothing downstream of it fires now, so profile
    creation is an explicit mutation called on first sign-in. Every path that can
    produce a new user must reach `ensureProfile`. */
 
-/** public.generate_username(seed) — same normalisation, same collision loop. */
+/** public.generate_username(seed), same normalisation, same collision loop. */
 export async function generateUsername(ctx: QueryCtx | MutationCtx, seed: string | null): Promise<string> {
   let base = (seed ?? "").toLowerCase();
   base = base.replace(/@.*$/, "");
@@ -61,7 +61,7 @@ export const usernameAvailable = query({
   handler: async (ctx, a) => await isFree(ctx, a.username, a.forUser),
 });
 
-/** public.current_profile() — filtered by the caller's identity, as the RPC was. */
+/** public.current_profile(), filtered by the caller's identity, as the RPC was. */
 export const current = query({
   args: {},
   handler: async (ctx) => {
@@ -83,8 +83,8 @@ export const byUsername = query({
 
 /* `ensureProfile` stood here: the direct port of the on_auth_user_created
    trigger, called by the app on every sign-in. Convex Auth's
-   afterUserCreatedOrUpdated callback took that job at the cutover — see
-   createProfileForNewUser below — and nothing has called it since.
+   afterUserCreatedOrUpdated callback took that job at the cutover (see
+   createProfileForNewUser below) and nothing has called it since.
 
    Deleted rather than left, because it was a PUBLIC mutation that keyed the
    profile it inserted on `identity.subject`. Under Convex Auth that is
@@ -96,7 +96,7 @@ export const byUsername = query({
  * Field-level updates the host is allowed to make to their own profile.
  *
  * Postgres revoked UPDATE on `is_suspended` and `welcomed_at` from every client
- * role. The equivalent here is that neither appears in these args — a host
+ * role. The equivalent here is that neither appears in these args. A host
  * cannot un-suspend themselves by sending an extra field, because there is no
  * field to send.
  */
@@ -163,7 +163,7 @@ export const setUsername = mutation({
       fail("Usernames are letters, numbers and hyphens.");
     }
     // Postgres had a unique index AND a reserved-name trigger. Both are here,
-    // and both are inside this mutation, which is serializable — so a second
+    // and both are inside this mutation, which is serializable, so a second
     // caller racing for the same name re-reads and loses.
     if (!(await isFree(ctx, wanted, me.id))) fail("That link is taken.");
 
@@ -194,7 +194,7 @@ export const markWelcomed = internalMutation({
  * picks a zone in onboarding or Settings, so signing in again a month later
  * cannot quietly move someone who deliberately chose UTC.
  *
- * Postgres protected that with the service role — a browser session could not
+ * Postgres protected that with the service role. A browser session could not
  * set `timezone_auto` back to true. Here the invariant is enforced by the
  * function instead: it writes ONLY when the flag is already true, so it does
  * not matter who calls it.
@@ -314,7 +314,7 @@ export async function createProfileForNewUser(
  * The flag is set and the row returned in ONE transaction, so two sign-ins
  * racing cannot both send. A welcome that never arrives is a small thing; one
  * that arrives every time a host signs in is the kind of bug people
- * unsubscribe over — which is why this is a claim rather than a read-then-write.
+ * unsubscribe over, which is why this is a claim rather than a read-then-write.
  */
 export const claimWelcome = mutation({
   args: {},

@@ -7,7 +7,7 @@ import { TZDate } from "@date-fns/tz";
 /* Moving a booking, guarded from two directions.
 
    The engine half is exercised directly; the rest is pinned by reading the
-   source, in the style of admin-booking-link.test.ts — the two re-checks a
+   source, in the style of admin-booking-link.test.ts. The two re-checks a
    move has to survive live in a route handler and a Convex mutation, neither
    of which this suite can execute.
 
@@ -121,7 +121,7 @@ describe("time off is enforced at the booking door too", () => {
 
   /* The engine filters the times on the way in; Convex cannot import it, so
      the second implementation has to learn the same rules. Migration 0005
-     exists because that check was once missing entirely — a date override
+     exists because that check was once missing entirely. a date override
      that only the engine knew about would be the same hole, reopened. */
   /* Three doors now: a guest booking, a guest moving one, and a team booking
      testing each member in turn. A fourth added without this call would be a

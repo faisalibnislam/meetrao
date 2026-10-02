@@ -15,8 +15,8 @@ import type { Comparison, Edge } from "@/lib/comparisons";
    differently.
 
    The table is a real <table> with a caption and row headers, not a grid of
-   divs. A screen reader announces which feature a cell belongs to, and — the
-   reason it matters here — so does everything that reads pages for a living.
+   divs. A screen reader announces which feature a cell belongs to, and (the
+   reason it matters here) so does everything that reads pages for a living.
    ───────────────────────────────────────────────────────────────────────────── */
 
 const EDGE: Record<Edge, { label: string; className: string }> = {

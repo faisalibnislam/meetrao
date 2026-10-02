@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { checkVerified, resendVerification } from "@/lib/actions/auth-client";
 
 /* In the prototype the confirm button stands in for clicking the emailed link.
-   In production the link itself verifies, so this re-reads the session — and
+   In production the link itself verifies, so this re-reads the session, and
    says so plainly when it is still unconfirmed rather than letting the user
    through. */
 export function VerifyActions({ signedIn }: { signedIn: boolean }) {

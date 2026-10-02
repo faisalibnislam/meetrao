@@ -9,7 +9,7 @@ import { PRO_MONTHLY, PRO_YEARLY } from "@/lib/pricing";
    THE FULL COMPARISON IS NOT HERE ANY MORE. This section used to render the
    same nineteen-row table that /pricing renders, which is the right thing on
    a page somebody opened to compare plans and the wrong thing in the middle of
-   a scroll — nineteen rows of ticks is a wall to get past, not an argument.
+   a scroll, nineteen rows of ticks is a wall to get past, not an argument.
 
    What a reader needs here is the shape of the deal: free is the whole booking
    product, Pro is for running a business on it, and it costs a tenner. Anyone
@@ -70,8 +70,8 @@ function Plan({
   note: string;
   points: readonly string[];
   /* `loud` is the paid card. Both sit on the same dark ground, so the
-     difference is a filled panel against a bordered one rather than a colour —
-     there is no second accent available on a ground that is already the
+     difference is a filled panel against a bordered one rather than a colour.
+     There is no second accent available on a ground that is already the
      accent. */
   tone: "quiet" | "loud";
 }) {

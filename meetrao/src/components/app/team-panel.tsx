@@ -26,7 +26,7 @@ import Link from "next/link";
    A team is not an account type and has no seats to buy: a member is an
    ordinary host who agreed to appear in a rotation, and removing them takes
    nothing away from them. That is why this is a settings panel rather than a
-   place of its own — it is a property of the host's account, like their hours.
+   place of its own. It is a property of the host's account, like their hours.
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type TeamView = {

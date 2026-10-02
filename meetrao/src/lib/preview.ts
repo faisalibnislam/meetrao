@@ -1,7 +1,7 @@
 /**
  * Whether /preview is served without a session.
  *
- * The gallery is an inventory of the product's internals — every component,
+ * The gallery is an inventory of the product's internals, every component,
  * every state, the token table. That is exactly what a developer wants and
  * exactly what production should not hand to a stranger.
  *

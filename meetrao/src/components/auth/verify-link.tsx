@@ -8,7 +8,7 @@ import { Callout } from "@/components/ui/panels";
 /* ─────────────────────────────────────────────────────────────────────────────
    Spending the code the emailed link carried.
 
-   Convex Auth verifies with a CODE, not a link — there is no endpoint to click
+   Convex Auth verifies with a CODE, not a link. There is no endpoint to click
    and nothing happens server-side when the recipient opens their mail. So the
    link points here with `?email=&code=`, and this submits them.
 
@@ -18,7 +18,7 @@ import { Callout } from "@/components/ui/panels";
    copy it into a box, which is a worse first five minutes.
 
    Runs once. `useEffect` in React 19 Strict Mode fires twice in development,
-   and the code is single-use — the second attempt would fail and overwrite a
+   and the code is single-use. The second attempt would fail and overwrite a
    successful verification with "that link has expired". The ref guards it.
    ───────────────────────────────────────────────────────────────────────────── */
 export function VerifyLink({ email, code }: { email: string; code: string }) {
@@ -37,7 +37,7 @@ export function VerifyLink({ email, code }: { email: string; code: string }) {
         router.replace("/onboarding/1");
         router.refresh();
       } catch {
-        // Expired, already spent, or simply wrong — all the same to the person
+        // Expired, already spent, or simply wrong, all the same to the person
         // holding it, and all fixed by asking for another.
         setFailed(true);
       }

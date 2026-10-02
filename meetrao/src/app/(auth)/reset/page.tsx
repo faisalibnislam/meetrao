@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Set a new password" };
 /* Reached from the emailed reset link.
  *
  * Convex Auth emails a CODE and creates no session, so the address and the
- * code ride in the query string and are handed to the form — there is nothing
+ * code ride in the query string and are handed to the form. There is nothing
  * signed in here to say who is asking. */
 export default async function ResetPage({
   searchParams,

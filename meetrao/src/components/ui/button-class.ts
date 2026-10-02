@@ -5,13 +5,13 @@ import { cx } from "@/lib/cx";
 
    Separate from button.tsx because that file is a client component, and a
    Server Component that styles an anchor or a plain <button> needs this string
-   too — the guest cancellation page does exactly that. Importing a function
+   too. The guest cancellation page does exactly that. Importing a function
    from a "use client" module and calling it on the server throws at request
    time, so anything both sides use lives here, where neither directive applies.
 
    One style string shared by <button> and <a>. The UA gives <button>
    border-box and <a> content-box, so a shared height + border computes two
-   different heights unless box-sizing is pinned — three separate defects in the
+   different heights unless box-sizing is pinned. Three separate defects in the
    previous build were exactly this. `box-border` below is that pin; do not
    remove it.
    ───────────────────────────────────────────────────────────────────────────── */

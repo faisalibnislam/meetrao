@@ -10,7 +10,7 @@ import type { Doc } from "../_generated/dataModel";
    disagrees with itself the first time somebody's card fails.
 
    A cancelled subscription keeps Pro until the period it was paid for runs
-   out — that is what `plan_until` is for. Somebody who cancels on day two of
+   out. That is what `plan_until` is for. Somebody who cancels on day two of
    a year they paid for has not stopped being a customer.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -54,7 +54,7 @@ export function isPro(profile: PlanFields): boolean {
 /**
  * Refuses with a message the UI turns into an upgrade prompt.
  *
- * The code is what the app matches on, not the wording — a gate whose
+ * The code is what the app matches on, not the wording. A gate whose
  * detection depends on prose breaks the first time somebody improves the
  * prose.
  */

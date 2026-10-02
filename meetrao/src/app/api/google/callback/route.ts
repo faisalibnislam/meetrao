@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
   /* The code is exchanged INSIDE Convex, so the refresh token is created and
      stored without ever passing through this process. The code is single-use,
-     arrives via our own registered redirect URI, and the caller is signed in —
+     arrives via our own registered redirect URI, and the caller is signed in,
      so the tokens can only attach to their own account.
 
      `missing-scope` is its own answer because Google lets a user tick only

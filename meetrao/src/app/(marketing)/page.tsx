@@ -18,8 +18,8 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { FAQS } from "@/lib/faq";
 
 /* No `title` here, deliberately. The root layout's `title.default` already
-   leads with the category — which is what somebody who has never heard the name
-   types — and omitting the key inherits it.
+   leads with the category (which is what somebody who has never heard the name
+   types) and omitting the key inherits it.
 
    `title: null` was the obvious way to write that and is wrong: it renders an
    EMPTY <title>, on the home page, silently. Measured, not assumed. */
@@ -497,7 +497,7 @@ export default function LandingPage() {
       {/* Built from the same FAQS array the section below renders, so the
           machine-readable answers and the ones a person reads cannot drift.
           Google stopped showing FAQ rich results for most sites in 2023; this
-          is here for the retrieval systems that do read it — a model asked
+          is here for the retrieval systems that do read it. A model asked
           "is Meetrao free?" gets Meetrao's own careful answer rather than a
           paraphrase of the marketing copy. */}
       <JsonLd json={graph(faqLd(FAQS))} />

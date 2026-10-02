@@ -6,8 +6,8 @@ import { v } from "convex/values";
    The read-only API's own doors.
 
    These are `query` and `mutation` rather than internal functions because the
-   caller is a Next route handler holding an API key, not a signed-in session —
-   there is no identity for Convex to check, and the key itself is the
+   caller is a Next route handler holding an API key, not a signed-in session.
+   There is no identity for Convex to check, and the key itself is the
    credential.
 
    Each one takes a HASH, never a key, and answers only for the account that

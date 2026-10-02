@@ -9,7 +9,7 @@ import { notifyBookingDeclined } from "./lib/effects";
 
    `bookings.guest_rsvp` and its two timestamps have existed since the port and
    nothing ever wrote them, so a host learned that a guest had declined only by
-   looking in their own calendar — or by sitting in an empty Meet.
+   looking in their own calendar, or by sitting in an empty Meet.
 
    WHAT THIS READS, AND WHAT IT DOES NOT. One request per booking, for the
    event id stored on that booking, asking only for the attendee list. It reads

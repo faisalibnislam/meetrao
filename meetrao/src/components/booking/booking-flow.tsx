@@ -19,7 +19,7 @@ import type { BookingQuestion } from "@/lib/types";
    The guest path: pick a date, pick a time, confirm details.
 
    This is the only surface that has to work for someone with no account, on a
-   phone, from an email link — so it renders complete from the server and then
+   phone, from an email link, so it renders complete from the server and then
    corrects itself to the guest's real timezone once the browser can say what
    that is.
 
@@ -138,7 +138,7 @@ export function BookingFlow(props: FlowProps) {
   );
 
   // Slots were computed in the host's zone; re-fetch them in the guest's the
-  // moment we know it differs. This is a subscription to an external system —
+  // moment we know it differs. This is a subscription to an external system,
   // the loading flag it raises is the fetch starting, not a derived value.
   useEffect(() => {
     if (timezone === props.initial.timezone) return;
@@ -269,7 +269,7 @@ export function BookingFlow(props: FlowProps) {
   }
 
   /* Before a booking exists there is no Meet link to name, so this reads as
-     the KIND — "Google Meet" — and the confirmation carries the actual link. */
+     the KIND ("Google Meet") and the confirmation carries the actual link. */
   const locationLine =
     props.location === "phone"
       ? props.locationDetail

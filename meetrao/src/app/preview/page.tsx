@@ -16,7 +16,7 @@ import { optionalSession } from "@/lib/data/session";
 import { previewEnabled } from "@/lib/preview";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   /preview — every UI primitive, in every state, on one page.
+   /preview, every UI primitive, in every state, on one page.
 
    Why it exists: the alternative to this page is booting an authenticated
    screen and hunting for the one component you changed. Here the whole
@@ -68,7 +68,7 @@ const TYPE_SCALE: [string, string, string][] = [
   ["10.5px / 0.08em", "text-[10.5px] tracking-[0.08em] uppercase", "EYEBROW, LARGE"],
   ["11.5px", "text-[11.5px]", "Metric note, sidebar email"],
   ["12px", "text-[12px]", "Table second line, crumbs"],
-  ["12.5px", "text-[12.5px]", "Body small — the app's workhorse"],
+  ["12.5px", "text-[12.5px]", "Body small: the app's workhorse"],
   ["13px", "text-[13px]", "Nav rows, menu items, empty-state text"],
   ["13.5px", "text-[13.5px]", "Row primary, button label at 36–40"],
   ["14px", "text-[14px]", "Empty-state title, button at 42–44"],
@@ -122,7 +122,7 @@ export default async function PreviewPage() {
         <Section
           id="tokens"
           title="Tokens"
-          note="Read live from the cascade — these are the values the browser resolves right now, not a copy of globals.css."
+          note="Read live from the cascade: these are the values the browser resolves right now, not a copy of globals.css."
         >
           <Bare>
             <Caption>Surfaces</Caption>
@@ -157,7 +157,7 @@ export default async function PreviewPage() {
             </Grid>
           </Bare>
           <Bare>
-            <Caption>Status — never used decoratively</Caption>
+            <Caption>Status: never used decoratively</Caption>
             <Grid min={210}>
               {STATUS_TOKENS.map((t) => (
                 <TokenSwatch key={t} name={t} />
@@ -176,7 +176,7 @@ export default async function PreviewPage() {
           </Bare>
         </Section>
 
-        <Section id="type" title="Type" note="The sizes the design actually uses. They are irregular on purpose — half-pixel steps are not a mistake to tidy.">
+        <Section id="type" title="Type" note="The sizes the design actually uses. They are irregular on purpose, half-pixel steps are not a mistake to tidy.">
           <Card className="flex flex-col divide-y divide-line-soft">
             {TYPE_SCALE.map(([label, cls, sample]) => (
               <div key={label} className="flex flex-wrap items-baseline gap-x-[18px] gap-y-[4px] px-[14px] py-[11px]">
@@ -195,7 +195,7 @@ export default async function PreviewPage() {
 
         <Section
           id="icons"
-          title={`Icons — ${ICON_NAMES.length}`}
+          title={`Icons, ${ICON_NAMES.length}`}
           note="Drawn in-house on a 24-unit grid with square caps and mitred joins. Light is the default; the seven filled glyphs below carry status."
         >
           <Card>
@@ -211,13 +211,13 @@ export default async function PreviewPage() {
             </div>
           </Card>
           <Row>
-            <Specimen caption='weight="light" (default) vs weight="solid" — 1.4 and 2.3 stroke'>
+            <Specimen caption='weight="light" (default) vs weight="solid", 1.4 and 2.3 stroke'>
               <Icon name="check" size={20} weight="light" />
               <Icon name="check" size={20} weight="solid" />
               <Icon name="xmark" size={20} weight="light" />
               <Icon name="xmark" size={20} weight="solid" />
             </Specimen>
-            <Specimen caption="size — 8 to 20px is the range the design references">
+            <Specimen caption="size, 8 to 20px is the range the design references">
               {[8, 10, 11, 13, 16, 18, 20].map((s) => (
                 <Icon key={s} name="calendar" size={s} />
               ))}
@@ -260,12 +260,12 @@ export default async function PreviewPage() {
           </TableCard>
 
           <Row>
-            <Specimen caption="icon — leading glyph, sized for the control height">
+            <Specimen caption="icon, leading glyph, sized for the control height">
               <Button variant="accent" size={30} icon="plus">Create meeting</Button>
               <Button variant="secondary" size={30} icon="copy">Copy link</Button>
               <Button variant="ghost" size={30} icon="rotate-left">Reset</Button>
             </Specimen>
-            <Specimen caption="disabled — 45% opacity, not-allowed cursor">
+            <Specimen caption="disabled, 45% opacity, not-allowed cursor">
               <Button variant="accent" size={32} disabled>Save</Button>
               <Button variant="secondary" size={32} disabled>Cancel</Button>
               <Button variant="danger" size={32} disabled>Delete</Button>
@@ -273,7 +273,7 @@ export default async function PreviewPage() {
           </Row>
 
           <Row>
-            <Specimen caption="<ButtonLink href> — the same string on an anchor" className="min-w-[280px] flex-1">
+            <Specimen caption="<ButtonLink href>, the same string on an anchor" className="min-w-[280px] flex-1">
               <ButtonLink href="/preview" variant="accent" size={32}>Anchor, accent</ButtonLink>
               <ButtonLink href="/preview" variant="secondary" size={32} trailingIcon="arrow-right">
                 With trailing
@@ -283,7 +283,7 @@ export default async function PreviewPage() {
                 Connect
               </ButtonLink>
             </Specimen>
-            <Specimen caption="full — stretches to its container" className="min-w-[280px] flex-1">
+            <Specimen caption="full, stretches to its container" className="min-w-[280px] flex-1">
               <div className="w-full">
                 <Button variant="accent" size={38} full icon="plus">
                   New meeting
@@ -295,14 +295,14 @@ export default async function PreviewPage() {
 
         <Section id="status" title="Status" note="Badge, Avatar and Eyebrow. Status colour is identity here, never decoration.">
           <Row>
-            <Specimen caption='<Badge tone> — "ok" | "bad" | "warn" | "off"'>
+            <Specimen caption='<Badge tone>, "ok" | "bad" | "warn" | "off"'>
               {(["ok", "bad", "warn", "off"] as Tone[]).map((tone) => (
                 <Badge key={tone} tone={tone}>
                   {tone === "ok" ? "Confirmed" : tone === "bad" ? "Cancelled" : tone === "warn" ? "Pending" : "Inactive"}
                 </Badge>
               ))}
             </Specimen>
-            <Specimen caption="<Badge dot={false}> — no status dot">
+            <Specimen caption="<Badge dot={false}>, no status dot">
               {(["ok", "bad", "warn", "off"] as Tone[]).map((tone) => (
                 <Badge key={tone} tone={tone} dot={false}>
                   {tone}
@@ -311,7 +311,7 @@ export default async function PreviewPage() {
             </Specimen>
           </Row>
           <Row>
-            <Specimen caption="<Avatar name size /> — 24 · 26 · 28 · 32 · 38 · 42">
+            <Specimen caption="<Avatar name size />, 24 · 26 · 28 · 32 · 38 · 42">
               {([24, 26, 28, 32, 38, 42] as const).map((size) => (
                 <Avatar key={size} name="Faisal Islam" size={size} />
               ))}
@@ -350,7 +350,7 @@ export default async function PreviewPage() {
               <strong className="font-semibold">Google Calendar isn&rsquo;t connected.</strong> Meetrao can&rsquo;t
               check for conflicts or add bookings to your calendar.
             </Callout>
-            <Caption>{`align="center" — the banner form, glyph and action on one line`}</Caption>
+            <Caption>{`align="center", the banner form, glyph and action on one line`}</Caption>
           </Bare>
 
           <Grid min={330}>
@@ -381,7 +381,7 @@ export default async function PreviewPage() {
             <MetricCard icon="list" tone="plain" value="3" unit="of 4" label="Active meetings" note="Bookable from your link" />
             <MetricCard icon="bolt" tone="amber" value="4.2" unit="hrs" label="Avg. reply time" note="From link opened to booked" />
           </div>
-          <Caption>{`tone — ${(["accent", "slate", "amber", "plain"] as MetricTone[]).join(" · ")}`}</Caption>
+          <Caption>{`tone, ${(["accent", "slate", "amber", "plain"] as MetricTone[]).join(" · ")}`}</Caption>
         </Section>
 
         <Section id="controls" title="Controls" note="The stateful set. These render in a client island; everything else on this page is server-rendered.">
@@ -427,7 +427,7 @@ export default async function PreviewPage() {
           </TableCard>
         </Section>
 
-        <Section id="overlays" title="Overlays and loading" note="Modal, toast and the busy state. Click through them — they are live.">
+        <Section id="overlays" title="Overlays and loading" note="Modal, toast and the busy state. Click through them, they are live.">
           <Row>
             <Specimen caption='<Spinner tone="ink" | "accent" | "onFill" />'>
               <Spinner size={12} tone="ink" />
@@ -444,7 +444,7 @@ export default async function PreviewPage() {
 
         <Section id="brand" title="Brand" note="The supplied marks, used as-is.">
           <Row>
-            <Specimen caption="<Logo height /> — height drives width from the 576×127 ratio">
+            <Specimen caption="<Logo height />, height drives width from the 576×127 ratio">
               <Logo height={16} />
               <Logo height={20} />
               <Logo height={28} />

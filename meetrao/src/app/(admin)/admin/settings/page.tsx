@@ -20,7 +20,7 @@ export default async function AdminSettingsPage() {
   const settings = (await convex.query(api.platformSettings.getForApp, {})) as PlatformSettings | null;
   const held = await listHeldBookingLinks();
   const products = await convex.query(api.platformSettings.products, {});
-  // Shown as the host alone — an admin scanning a list wants to recognise the
+  // Shown as the host alone. An admin scanning a list wants to recognise the
   // link, not read https:// twelve times.
   const siteHost = siteUrl().replace(/^https?:\/\//, "").replace(/\/$/, "");
 

@@ -10,8 +10,8 @@ import { cx } from "@/lib/cx";
    do not, because a meeting three days out has nothing to join yet.
 
    The time column is 134px, not the design's 112px. formatTimeRange keeps both
-   meridiems whenever a range crosses noon or midnight, and its widest output —
-   "10:00 AM – 10:30 PM" — measures 127.4px at 13px/600 in Instrument Sans. At
+   meridiems whenever a range crosses noon or midnight, and its widest output,
+   "10:00 AM – 10:30 PM", measures 127.4px at 13px/600 in Instrument Sans. At
    112px roughly half of realistic bookings wrapped onto a second line, which
    also pushed the row's own height around. 134px clears the worst case with
    about 5% to spare. Measured in a browser, not estimated. */

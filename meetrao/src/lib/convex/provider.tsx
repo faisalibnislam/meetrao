@@ -13,7 +13,7 @@ function client() {
  * Mounted at the root so the auth forms can reach `useAuthActions`.
  *
  * This is the CLIENT half. It has to sit inside `ConvexAuthNextjsServerProvider`
- * (see src/app/layout.tsx) — on its own it throws, because `useAuth()` comes
+ * (see src/app/layout.tsx), on its own it throws, because `useAuth()` comes
  * back undefined with nothing above it to supply the state.
  */
 export function ConvexClientProvider({ children }: { children: React.ReactNode }) {

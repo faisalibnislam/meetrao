@@ -1,7 +1,7 @@
 import { TZDate } from "@date-fns/tz";
 import type { PlainDate } from "./slots";
 
-/* Formatting. Every function takes an explicit timezone — nothing here reads
+/* Formatting. Every function takes an explicit timezone. Nothing here reads
    the ambient one, because "the host's hours in the guest's zone" is the whole
    product and an implicit zone is how that goes wrong. */
 
@@ -33,7 +33,7 @@ export function formatTimeRange(start: Date, end: Date, timeZone: string): strin
   return aMer === bMer ? `${a.slice(0, -3)} – ${b}` : `${a} – ${b}`;
 }
 
-/** "Monday, September 7" — the public booking page and confirmation. */
+/** "Monday, September 7", the public booking page and confirmation. */
 export function formatLongDate(instant: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-US", {
     weekday: "long",
@@ -48,14 +48,14 @@ export function formatPlainLongDate(date: PlainDate, timeZone: string): string {
   return formatLongDate(new Date(new TZDate(date.year, date.month - 1, date.day, 12, 0, timeZone).getTime()), timeZone);
 }
 
-/** "September 2026" — the calendar's month label. */
+/** "September 2026", the calendar's month label. */
 export function formatMonth(year: number, month: number): string {
   return new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(Date.UTC(year, month - 1, 1)),
   );
 }
 
-/** "Sep 7, 2026" — admin tables and the joined column. */
+/** "Sep 7, 2026", admin tables and the joined column. */
 export function formatShortDate(instant: Date, timeZone: string): string {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
@@ -106,7 +106,7 @@ export function greetingFor(instant: Date, timeZone: string): string {
 
 /* ── availability editor ─────────────────────────────────────────────────────
    Minutes-into-day are what the database stores; "09:00 AM" is what the editor
-   shows. The full day is offered, not just office hours — a host who works
+   shows. The full day is offered, not just office hours. A host who works
    nights is not a special case. */
 
 export function minutesToLabel(minutes: number): string {
@@ -130,7 +130,7 @@ export function addMinutes(instant: Date, minutes: number): Date {
   return new Date(instant.getTime() + minutes * MINUTE);
 }
 
-/** "30 min" · "1 hr" · "1 hr 30 min" — used where space allows a long form. */
+/** "30 min" · "1 hr" · "1 hr 30 min", used where space allows a long form. */
 export function formatDuration(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
   const h = Math.floor(minutes / 60);

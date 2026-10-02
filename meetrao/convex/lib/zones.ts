@@ -1,7 +1,7 @@
 /* The zone list, mirrored from src/lib/timezones.ts.
 
    Convex functions cannot import from src/ (different tsconfig root and
-   bundle), so this is a copy. If the app gains a zone, add it here too —
+   bundle), so this is a copy. If the app gains a zone, add it here too,
    src/lib/timezones.test.ts is the reminder that they must agree. */
 export const TIMEZONES = [
   "Pacific/Midway", "Pacific/Honolulu", "America/Anchorage", "America/Los_Angeles",

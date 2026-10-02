@@ -13,8 +13,8 @@ import { supportedTimezone } from "@/lib/timezones";
  * `timezone_auto` is what keeps this honest. It is true only until the host
  * picks a zone in onboarding or Settings, so signing in again a month later
  * cannot quietly move a host who deliberately chose UTC back onto whatever
- * their laptop happens to say. The rule is enforced inside the mutation — it
- * writes only when the flag is already true — so it holds whoever calls it.
+ * their laptop happens to say. The rule is enforced inside the mutation (it
+ * writes only when the flag is already true) so it holds whoever calls it.
  *
  * Never throws. A wrong timezone is worth fixing; it is not worth failing a
  * sign-in over.

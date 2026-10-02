@@ -89,11 +89,11 @@ async function stepContent(step: number, session: Session, convex: Client, calen
   if (step === 4) {
     // The design's default week is seeded the first time this step is opened,
     // so the host edits a sensible schedule rather than an empty one. Through
-    // the service role, and never fatal — see the helper.
+    // the service role, and never fatal, see the helper.
     await ensureDefaultAvailability(session.userId);
 
     // Onboarding edits the default schedule. A new host has exactly one, and
-    // naming schedules is not a step-4 concern — the Availability screen is
+    // naming schedules is not a step-4 concern. The Availability screen is
     // where a host adds more.
     const defaultSchedule = (await convex.query(api.availability.listSchedules, {}))[0] ?? null;
 

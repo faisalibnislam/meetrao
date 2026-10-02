@@ -4,7 +4,7 @@
    Plain HTML with one small script, not a hosted loader: a loader would mean
    every embedding page fetching JavaScript from us on every visit, which is a
    dependency they did not ask for and an outage they cannot fix. What is below
-   keeps working if meetrao.com is slow — the iframe is just late.
+   keeps working if meetrao.com is slow. The iframe is just late.
 
    Neither "use client" nor "server-only": the meetings screen renders it in the
    browser and the tests read it in node. See src/lib/availability.ts for why

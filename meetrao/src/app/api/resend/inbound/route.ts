@@ -21,14 +21,14 @@ import {
  * turns it back into ordinary email in a real inbox.
  *
  * Two variables switch it on, both optional so a deployment without them keeps
- * working — it simply does not forward:
+ * working. It simply does not forward:
  *
  *   RESEND_WEBHOOK_SECRET  the `whsec_…` signing secret Resend shows once, when
  *                          the webhook is created. Without it nothing is
  *                          processed: unverified mail is anonymous mail.
  *   SUPPORT_INBOX          the address forwards are sent to.
  *
- * Status codes matter here — Resend retries a webhook that fails. A refusal we
+ * Status codes matter here, Resend retries a webhook that fails. A refusal we
  * will never change our mind about (wrong event, no destination) answers 200 so
  * the retries stop; a send that failed answers 500 so they continue.
  */
@@ -76,7 +76,7 @@ export async function POST(request: Request) {
   const resend = new Resend(e.RESEND_API_KEY);
 
   /* The webhook is an envelope, not a message: `email.received` carries no
-     `text`, no `html` and no attachment bytes — only metadata. Everything a
+     `text`, no `html` and no attachment bytes, only metadata. Everything a
      person actually wants to read has to be fetched. Skipping this step is why
      every forward for a week said "this message arrived with no readable body".
 
@@ -104,7 +104,7 @@ export async function POST(request: Request) {
   /* Each file is passed to the send as a signed URL rather than downloaded and
      re-uploaded: Resend fetches it itself, so a 12 MB PDF never occupies this
      function's memory and never crosses the wire twice. The URLs are short-
-     lived, which is fine — the send happens seconds later. */
+     lived, which is fine. The send happens seconds later. */
   const { send, skipped } = chooseAttachments(attachments);
   const files: { filename: string; path: string; contentType: string }[] = [];
   const unresolved: ReceivedAttachment[] = [];

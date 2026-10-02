@@ -13,8 +13,8 @@ import { DENIALS, INCLUDED, LIMITS, PRICING_FAQ, WHY } from "./pricing";
    opt in first.
 
    The failure this guards is not a lie told on purpose. It is the sentence a
-   future copy pass shortens — "free, forever" is two characters cheaper than
-   the truth and reads better — and which then sits on the site contradicting
+   future copy pass shortens ("free, forever" is two characters cheaper than
+   the truth and reads better) and which then sits on the site contradicting
    the contract it links to. Nobody would notice until somebody did.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -25,7 +25,7 @@ const SRC = path.join(ROOT, "src");
  * Everything a visitor can read, with comments stripped.
  *
  * The distinction matters more here than anywhere else in the codebase. Three
- * files explain at length why Meetrao does not say "free forever" — and the
+ * files explain at length why Meetrao does not say "free forever", and the
  * first version of this test failed on all three, because a rule against a
  * phrase catches the note explaining the rule. A comment is documentation; a
  * string literal is a claim, and only the second is shipped to anybody.
@@ -52,9 +52,9 @@ describe("nothing promises what the Terms do not", () => {
     expect(COPY.some((f) => f.file.includes("pricing"))).toBe(true);
   });
 
-  /* "Free forever" is the one phrase that cannot be walked back. lib/faq.ts
-     already refuses it in as many words — 'We cannot honestly promise
-     "forever"' — and that refusal is worth nothing if another page says it. */
+  /* "Free forever" is the one phrase that cannot be walked back. Lib/faq.ts
+     already refuses it in as many words ('We cannot honestly promise
+     "forever"') and that refusal is worth nothing if another page says it. */
   it.each(["free forever", "forever free", "always be free", "always free", "free for life"])(
     "never says %s",
     (phrase) => {
@@ -77,7 +77,7 @@ describe("nothing promises what the Terms do not", () => {
      of the problem, not an example of it. */
   it("sends the reader to the clause that governs the price", () => {
     /* The link lives in the comparison now, which both /pricing and the
-       landing page render — so it is checked where it actually is rather
+       landing page render. So it is checked where it actually is rather
        than where it used to be. */
     const page = COPY.find((f) => f.file.endsWith("marketing/pricing-page.tsx"));
     const comparison = COPY.find((f) => f.file.endsWith("marketing/plan-comparison.tsx"));
@@ -107,7 +107,7 @@ describe("the pricing page argues in the right order", () => {
 
      They used to be a section of their own, headed "What it does not do". The
      page now compares Free and Pro line by line and carries the limits as one
-     sentence under the table — smaller, but it must still come BEFORE the
+     sentence under the table, smaller, but it must still come BEFORE the
      invitation to sign up, which is the part this has always been about. */
   it("puts what neither plan does above the sign-up invitation", () => {
     const comparison = readFileSync(
@@ -143,7 +143,7 @@ describe("the pricing page argues in the right order", () => {
     /* These five are claimed on /vs/calendly too. If one is ever built, both
        pages have to change, and this fails until they do.
 
-       Three of the original five went this way — rescheduling, locations and
+       Three of the original five went this way, rescheduling, locations and
        team scheduling were all built, and each one failed here first. */
     const all = LIMITS.map(([t]) => t.toLowerCase()).join(" | ");
     for (const missing of ["google calendar only", "no payments", "no zoom", "round-robin only", "email only"]) {
@@ -152,7 +152,7 @@ describe("the pricing page argues in the right order", () => {
   });
 
   /* The check above, on its own, is satisfied by renaming "No rescheduling yet"
-     to "Rescheduling" — the word survives while the meaning inverts, and a
+     to "Rescheduling", the word survives while the meaning inverts, and a
      limits section quietly gains a feature. Found by mutating it. So every
      entry must also still READ as a limit. */
   it.each(LIMITS)("states %s as a restriction, not a capability", (title) => {

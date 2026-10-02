@@ -4,7 +4,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { Icon } from "./icon";
 import { cx } from "@/lib/cx";
 
-/* Field label — 12.5 / 600, always ink. */
+/* Field label, 12.5 / 600, always ink. */
 export function Label({ children, htmlFor, className }: { children: ReactNode; htmlFor?: string; className?: string }) {
   return (
     <label htmlFor={htmlFor} className={cx("text-[12.5px] font-semibold text-ink", className)}>
@@ -13,7 +13,7 @@ export function Label({ children, htmlFor, className }: { children: ReactNode; h
   );
 }
 
-/* Helper / meta — 12–12.5 / 400 on --ink-3. */
+/* Helper / meta, 12–12.5 / 400 on --ink-3. */
 export function Help({ children, id, className }: { children: ReactNode; id?: string; className?: string }) {
   return (
     <span id={id} className={cx("text-[12px] leading-[1.5] text-ink-3", className)}>
@@ -49,7 +49,7 @@ export function Field({
   help?: ReactNode;
   error?: ReactNode;
   className?: string;
-  /** Right-aligned control in the label row, e.g. the "Forgot?" link. */
+  /** Right-aligned control in the label row, e.g. The "Forgot?" link. */
   labelRight?: ReactNode;
 }) {
   return (
@@ -167,7 +167,7 @@ export function SearchField({
 }
 
 /* ── Switch ───────────────────────────────────────────────────────────────────
-   34×20 track, 14px thumb, 140ms spring travel. Keeps its size — the hit area
+   34×20 track, 14px thumb, 140ms spring travel. Keeps its size. The hit area
    is widened by the wrapping row, not by growing the control. */
 export function Switch({
   checked,

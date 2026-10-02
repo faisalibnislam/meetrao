@@ -10,8 +10,8 @@ import { clearedAuthCookies } from "@/lib/auth/cookies";
 /* ─────────────────────────────────────────────────────────────────────────────
    Signing out.
 
-   The only auth server action left. Everything else — sign in, sign up, reset,
-   Google — is client-side now, because Convex Auth writes its session cookie in
+   The only auth server action left. Everything else (sign in, sign up, reset,
+   Google) is client-side now, because Convex Auth writes its session cookie in
    the browser and has no server-side `signIn`. See src/components/auth/.
 
    Sign-out is the exception, and only because it is DESTRUCTION rather than
@@ -23,7 +23,7 @@ import { clearedAuthCookies } from "@/lib/auth/cookies";
 /**
  * Ends the session at both ends.
  *
- * Deleting the cookies alone would leave the refresh token live in Convex —
+ * Deleting the cookies alone would leave the refresh token live in Convex,
  * the browser would forget it, and anything still holding it would not. So the
  * session is invalidated in Convex FIRST, and the cookies go afterwards.
  *
@@ -39,7 +39,7 @@ export async function signOut() {
     const token = await convexAuthNextjsToken();
     if (token) await fetchAction(api.auth.signOut, {}, { token });
   } catch (cause) {
-    /* Not fatal — a person who clicked "Log out" must end up logged out of
+    /* Not fatal, a person who clicked "Log out" must end up logged out of
        this browser whatever the network did, and the cookies below do that.
        But it is logged, because a silent failure here leaves a live session
        behind and nothing on screen would ever say so. */
@@ -48,7 +48,7 @@ export async function signOut() {
     });
   }
 
-  /* Then the cookies — re-set with their full attributes, not deleted. See
+  /* Then the cookies, re-set with their full attributes, not deleted. See
      src/lib/auth/cookies.ts for why `.delete()` and a missing `secure` both
      fail, silently and only in production. */
   const store = await cookies();

@@ -5,7 +5,7 @@ import { Icon } from "./icon";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   MenuSelect — the custom select used for every dropdown in the product.
+   MenuSelect, the custom select used for every dropdown in the product.
 
    Behaviour that matters: it opens downward by default but flips upward when
    there is not enough room (measured against the nearest scrolling ancestor,

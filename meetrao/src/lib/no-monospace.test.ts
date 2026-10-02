@@ -9,13 +9,13 @@ import path from "node:path";
    plus a family token, a Tailwind theme entry, a rule on `.doc-prose code` and
    a Courier stack in every email template. Removing it by hand is the kind of
    sweep that leaves three behind, and the three it leaves are the ones nobody
-   loads — a legal page, a Supabase template, the preview gallery.
+   loads, a legal page, a Supabase template, the preview gallery.
 
    Two things are checked, and the second matters more than it looks:
 
    Tailwind's preflight styles <code>, <kbd>, <samp> and <pre> with
    `--theme(--font-mono, …ui-monospace…)`. DELETING `--font-mono` does not
-   remove monospace from the product — it hands those four elements Tailwind's
+   remove monospace from the product, it hands those four elements Tailwind's
    own monospace fallback. The token has to exist and has to say sans, so the
    test asserts it is there rather than that it is gone.
    ───────────────────────────────────────────────────────────────────────────── */

@@ -4,7 +4,7 @@
    One definition, because these two strings appear in the footer, in six email
    templates, on the Privacy Policy, on the Terms, and in the Google OAuth
    consent screen's own configuration. An address that disagrees with itself
-   across those places is not a typo — it is the thing a verification reviewer
+   across those places is not a typo. It is the thing a verification reviewer
    notices, and the thing a regulator asks about.
 
    `src/lib/contact-address.test.ts` fails if a second address on one of our own
@@ -12,7 +12,7 @@
    ───────────────────────────────────────────────────────────────────────────── */
 
 /**
- * The postal address, as it should appear to a reader — one line.
+ * The postal address, as it should appear to a reader, one line.
  *
  * Anti-spam law (CAN-SPAM, and the equivalents elsewhere) requires a physical
  * address in commercial email, which is why the templates carry it. The site
@@ -25,7 +25,7 @@ export const POSTAL_ADDRESS = "44/A Judge Court Road, Cumilla 3500, Bangladesh";
  * The one address a visitor is ever shown, and the one Meetrao sends from.
  *
  * hello@, not support@, for the plainest possible reason: hello@ is the only
- * mailbox that exists. An address nobody can read is worse than no address —
+ * mailbox that exists. An address nobody can read is worse than no address,
  * it is a promise of a reply that cannot arrive, printed on the Support page,
  * the Privacy Policy, the Terms and the footer of every email.
  *
@@ -40,7 +40,7 @@ export const SUPPORT_EMAIL = "hello@meetrao.com";
  *
  * A sole proprietorship, deliberately not a person's name: the service is
  * identified by its name, its address and its support address. If Meetrao ever
- * incorporates, this is the one line to change — the Terms and the Privacy
+ * incorporates, this is the one line to change. The Terms and the Privacy
  * Policy both read from it.
  */
 export const OPERATOR = "Meetrao, an independently operated service";

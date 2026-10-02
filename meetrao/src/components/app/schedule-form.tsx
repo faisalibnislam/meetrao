@@ -13,8 +13,8 @@ import { scheduleMeeting } from "@/lib/actions/schedule";
 /* ─────────────────────────────────────────────────────────────────────────────
    Scheduling a meeting the other way round.
 
-   The booking link answers "when are you free?". This answers "be here, then" —
-   the host picks the time and invites whoever should come.
+   The booking link answers "when are you free?". This answers "be here, then".
+   The host picks the time and invites whoever should come.
 
    Three shapes of decision, in the order a host makes them: what the meeting
    is, when it happens, and who is coming. The invitee list is the part that is

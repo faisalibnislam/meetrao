@@ -9,7 +9,7 @@ import { api } from "@/convex/_generated/api";
    Bearer-token auth for the read-only API.
 
    The key arrives as `Authorization: Bearer mk_live_…` and is hashed here. The
-   hash is what travels on to Convex and what the row holds — the plaintext is
+   hash is what travels on to Convex and what the row holds. The plaintext is
    never compared against anything stored, because nothing stored is the
    plaintext.
 
@@ -38,7 +38,7 @@ export async function presentedKeyHash(request: NextRequest): Promise<string | n
  * Records that the key was used.
  *
  * Not awaited, and failures are swallowed: "last used" is a convenience on a
- * settings screen, and a caller's request should not fail — or wait — because
+ * settings screen, and a caller's request should not fail (or wait) because
  * a timestamp could not be written.
  */
 export function touch(hash: string): void {

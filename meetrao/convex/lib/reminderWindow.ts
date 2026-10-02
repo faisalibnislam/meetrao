@@ -3,7 +3,7 @@
 
    Pure and separate from convex/reminders.ts so it can be tested: a Convex
    handler takes a ctx and no test in this repo can call one, and this is the
-   part with all the edges in it — a booking made inside its own reminder
+   part with all the edges in it, a booking made inside its own reminder
    window, a sweep catching up after an outage, a meeting that has already
    started.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -18,10 +18,10 @@ export const GRACE = 20 * MINUTE;
 export type Lead = "24h" | "1h";
 
 /**
- * `send` — claim the row and mail it.
- * `mark` — claim the row and mail nothing: the moment has passed, and leaving
+ * `send` (claim the row and mail it.
+ * `mark`) claim the row and mail nothing: the moment has passed, and leaving
  *          it unclaimed means considering it again on every sweep forever.
- * `wait` — not yet.
+ * `wait`, not yet.
  */
 export type Verdict = "send" | "mark" | "wait";
 
@@ -70,7 +70,7 @@ export function verdictFor(
  * two hours away tomorrow's.
  *
  * Booking windows are short enough that the far end is a weekday name rather
- * than a date — "on Friday" reads as a reminder, "on 2 October" reads as an
+ * than a date, "on Friday" reads as a reminder, "on 2 October" reads as an
  * invoice.
  */
 export function dayPhrase(startsAt: number, now: number, timeZone: string): string {

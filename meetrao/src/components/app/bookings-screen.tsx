@@ -14,7 +14,7 @@ import { cx } from "@/lib/cx";
 
    A flat table sorted by date makes you read the date column to work out where
    one day ends and the next begins. Grouping says it once, in a heading, and
-   the rows underneath only have to carry the time — which is how a diary reads
+   the rows underneath only have to carry the time, which is how a diary reads
    and how anyone scanning this is already thinking.
 
    The same shape serves every width, so there is no second card layout for

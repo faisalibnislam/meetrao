@@ -3,7 +3,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { fail } from "./errors";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Authorization — the replacement for Row Level Security.
+   Authorization, the replacement for Row Level Security.
 
    Postgres decided this. Twenty-four policies meant a host could not read
    another host's rows even if the application asked for them, because the
@@ -34,7 +34,7 @@ export function AuthError(message: string, code: string): never {
  * subject is "<userId>|<sessionId>", which is not what any row is keyed by, so
  * something has to do the translation and it had better be one thing.
  *
- * `users.supabase_id` is the map. The name is now a misnomer — it was the
+ * `users.supabase_id` is the map. The name is now a misnomer. It was the
  * Supabase UUID during the migration, and for accounts created since it is
  * simply the Convex user id written back to itself (see
  * profiles.createProfileForNewUser). It is kept under that name because
@@ -54,12 +54,12 @@ export async function currentUserId(ctx: QueryCtx | MutationCtx): Promise<string
   const mapped = (user as { supabase_id?: string } | null)?.supabase_id;
   if (mapped) return mapped;
 
-  // No mapping row yet — a sign-up mid-flight, before the profile callback has
+  // No mapping row yet. A sign-up mid-flight, before the profile callback has
   // written it back. The Convex user id is the right answer either way.
   return userId;
 }
 
-/** The caller's profile, or null. Does not throw — for optional-session paths. */
+/** The caller's profile, or null. Does not throw, for optional-session paths. */
 export async function optionalProfile(ctx: QueryCtx | MutationCtx): Promise<Doc<"profiles"> | null> {
   const userId = await currentUserId(ctx);
   if (!userId) return null;
@@ -101,7 +101,7 @@ export function assertOwner(profile: Doc<"profiles">, ownerId: string | null | u
   if (!ownerId || ownerId !== profile.id) AuthError("Not permitted.", "FORBIDDEN");
 }
 
-/** Owner OR admin — the `_select_admin` policies that sit beside an owner one. */
+/** Owner OR admin. The `_select_admin` policies that sit beside an owner one. */
 export function assertOwnerOrAdmin(profile: Doc<"profiles">, ownerId: string | null | undefined): void {
   if (profile.is_admin) return;
   assertOwner(profile, ownerId);

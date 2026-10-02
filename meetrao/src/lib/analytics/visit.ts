@@ -16,7 +16,7 @@ export type DeviceClass = "phone" | "tablet" | "desktop" | "unknown";
 
 export type VisitClassification = {
   device: DeviceClass;
-  /** Family only — "iOS", never "iOS 18.4". A version number is a fingerprint. */
+  /** Family only, "iOS", never "iOS 18.4". A version number is a fingerprint. */
   os: string | null;
   /** Family only, same reason. */
   browser: string | null;
@@ -27,7 +27,7 @@ export type VisitClassification = {
    Kept as a row (the table has an is_bot column) rather than dropped, so
    "visits tripled overnight" has an answer instead of a shrug.
 
-   `(?<!cu)bot\b` — Cubot is an Android phone brand, and its UA ("CUBOT P40")
+   `(?<!cu)bot\b`, Cubot is an Android phone brand, and its UA ("CUBOT P40")
    would otherwise make every one of those phones a crawler. A false bot is
    quiet: the row is simply missing from every number on the screen.
 
@@ -40,14 +40,14 @@ const BOT =
    two, so the split has to be real.
 
    `ipad` first because iPad Safari's UA also contains "Mobile". Android's rule
-   is the inverse of the phone rule — Google's own guidance is that an Android
+   is the inverse of the phone rule. Google's own guidance is that an Android
    tablet omits "Mobile" from a UA that still says "Android". */
 const TABLET = /ipad|android(?!.*\bmobile\b)|tablet|playbook|kindle|silk\/|nexus (?:7|9|10)|sm-t\d/i;
 const PHONE =
   /\bmobile\b|iphone|ipod|windows phone|iemobile|blackberry|bb10|\bbada\b|opera mini|opera mobi|webos|palm|symbian|fennec/i;
 
 /* Anything recognisably a browser engine. A UA matching none of these is not
-   called "desktop" — it is called unknown, because guessing desktop is how a
+   called "desktop". It is called unknown, because guessing desktop is how a
    table of devices ends up flattering the desktop. */
 const BROWSER_ENGINE = /mozilla\/|applewebkit|gecko\/|khtml|opera|edge|chrome|safari|firefox|trident/i;
 
@@ -124,7 +124,7 @@ function browserFamily(ua: string): string | null {
  * "google.com" already answers the question the operator is asking. `www.` is
  * stripped so google.com and www.google.com are one row rather than two.
  *
- * Our own host returns null rather than "meetrao.com" — an in-site click is not
+ * Our own host returns null rather than "meetrao.com". An in-site click is not
  * a referral, and counting it as one makes Meetrao its own biggest source.
  */
 export function referrerHost(referrer: string | null | undefined, ownHost?: string | null): string | null {
@@ -150,7 +150,7 @@ export function referrerHost(referrer: string | null | undefined, ownHost?: stri
  * The pathname, with everything after it removed.
  *
  * A booking link's query string can carry a guest's name (`?name=…`), so the
- * query is dropped here — not trimmed later, dropped before the stored value
+ * query is dropped here, not trimmed later, dropped before the stored value
  * exists. A path that does not start with "/" is refused outright: the beacon
  * posts this, and a beacon posts whatever a page tells it to.
  */
@@ -175,7 +175,7 @@ export function normalizePath(input: string | null | undefined): string | null {
  *  1. The IP never lands in a column. It is an argument here and nothing else,
  *     so there is no table to leak it from and no export that contains it.
  *  2. The salt is a server secret. Without one the hash is reversible by brute
- *     force — the IPv4 space is four billion values, which is minutes.
+ *     force. The IPv4 space is four billion values, which is minutes.
  *  3. The date is *inside* the hash, so the same visitor is a different value
  *     tomorrow. "How many people came today" is answerable; "is this the same
  *     person who came last week" is not, by construction.

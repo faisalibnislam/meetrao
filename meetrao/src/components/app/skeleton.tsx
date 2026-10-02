@@ -4,7 +4,7 @@ import { cx } from "@/lib/cx";
    Loading skeletons.
 
    Every app route is dynamic, and Next skips prefetching dynamic routes that
-   have no loading boundary — so before these existed a tab click did nothing
+   have no loading boundary, so before these existed a tab click did nothing
    visible at all until the whole server response landed. Measured against a
    stand-in backend at 100ms a hop: 445ms of a completely unchanged screen.
    With a boundary, the first paint lands in single-digit milliseconds.
@@ -18,7 +18,7 @@ import { cx } from "@/lib/cx";
 
    2. Roughly right, not pixel-perfect. A skeleton that mirrors every card and
       column is a second copy of the screen that silently drifts out of date.
-      These match the shape — a row block, a card grid — and no more.
+      These match the shape (a row block, a card grid) and no more.
    ───────────────────────────────────────────────────────────────────────────── */
 
 /** One shimmering block. `w` is any CSS width. */
@@ -33,7 +33,7 @@ export function Bar({ w = "100%", h = 13, className }: { w?: string | number; h?
 }
 
 /**
- * A list of rows — Bookings, Contacts, Notifications, Meetings.
+ * A list of rows, Bookings, Contacts, Notifications, Meetings.
  *
  * `grouped` adds the small day heading the Bookings screen puts above each
  * day's rows, so that screen's skeleton has the same rhythm as its content.
@@ -75,7 +75,7 @@ export function TabsSkeleton({ tabs = 2 }: { tabs?: number }) {
   );
 }
 
-/** A grid of cards — the dashboard's metrics, Availability's schedules. */
+/** A grid of cards, the dashboard's metrics, Availability's schedules. */
 export function CardsSkeleton({ count = 4, height = 96, min = 210 }: { count?: number; height?: number; min?: number }) {
   return (
     <div className="grid gap-[12px]" style={{ gridTemplateColumns: `repeat(auto-fit, minmax(${min}px, 1fr))` }}>

@@ -6,12 +6,12 @@ import { cx } from "@/lib/cx";
  * A photograph, or a labelled frame standing in for one.
  *
  * The design leaves ten of these to real photography. Given a `src` this is
- * simply the photo; without one it is a visible, named frame — impossible to
+ * simply the photo; without one it is a visible, named frame, impossible to
  * mistake for finished art, and it degrades one slot at a time as photos
  * arrive rather than all-or-nothing.
  */
 /**
- * `next/image` with `fill` needs a positioned ancestor, so this supplies one —
+ * `next/image` with `fill` needs a positioned ancestor, so this supplies one,
  * but only when the caller has not already positioned the box itself.
  *
  * Emitting both is not a harmless duplicate. Tailwind orders its position
@@ -38,7 +38,7 @@ export function ImageFrame({
   className?: string;
   ground?: string;
   rounded?: string;
-  /** An avatar slot — 28 to 38px. Too small for the caption, which clips into
+  /** An avatar slot, 28 to 38px. Too small for the caption, which clips into
       nonsense ("GUEST" renders as "UES"), so it shows a figure and nothing else.
       The frame still reads as a placeholder; it just stops reading as broken. */
   avatar?: boolean;

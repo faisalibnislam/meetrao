@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    The booking link name.
 
-   One validator for both surfaces — onboarding step 1 and Settings → Profile —
+   One validator for both surfaces, onboarding step 1 and Settings → Profile,
    so the two can never disagree about what is allowed. `checking` means the
    syntax rules passed and the availability lookup is next.
    ───────────────────────────────────────────────────────────────────────────── */

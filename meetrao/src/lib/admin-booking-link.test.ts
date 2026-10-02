@@ -7,7 +7,7 @@ import { RESERVED, usernameStatus } from "./username";
    An admin can rename any account in the product.
 
    That is a bigger lever than anything else in the console, and three of the
-   ways it can go wrong are silent — the feature keeps working perfectly while
+   ways it can go wrong are silent. The feature keeps working perfectly while
    the guarantee underneath it is gone:
 
      · the two functions become callable by anyone with the publishable key,
@@ -83,7 +83,7 @@ describe("who can call the rename functions", () => {
 describe("the admin's field obeys the host's own rules", () => {
   /* The database check constraint allows 40 characters, no reserved-word list
      and consecutive hyphens. `usernameStatus` is stricter on all three, and it
-     is the ONLY thing enforcing them — so an admin path that skipped it could
+     is the ONLY thing enforcing them. So an admin path that skipped it could
      save `meetrao.com/admin`, or a 38-character name, and the host would find
      their own Settings field refusing to save it back. */
   it("validates with usernameStatus, the same function Settings uses", () => {
@@ -104,7 +104,7 @@ describe("the admin's field obeys the host's own rules", () => {
   /* `checkUsername` in the onboarding actions passes the CALLER's id when
      asking whether a name is free. Used here it would be wrong in both
      directions: it reports the target's own current name as taken, and
-     reports the admin's own name as free — offering to move a host onto a
+     reports the admin's own name as free, offering to move a host onto a
      link that is not available at all.
 
      The parameter changed name with the backend (`p_for_user` → `forUser`);
@@ -131,7 +131,7 @@ describe("retiring actually retires", () => {
   });
 
   it("offers the choice on a rename, and defaults the action to not guessing", () => {
-    // p_retire_old has no default of `true` — a plain rename must not silently
+    // p_retire_old has no default of `true`, a plain rename must not silently
     // burn the old name. The UI ticks the box; the function does not.
     expect(MIGRATION).toMatch(/p_retire_old boolean default false/);
     expect(MIGRATION).toMatch(/p_force\s+boolean default false/);

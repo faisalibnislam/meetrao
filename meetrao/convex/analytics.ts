@@ -12,11 +12,11 @@ const DAY = 24 * 60 * 60 * 1000;
 const dayKey = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
 /**
- * Insert-only, and called with no session — visitors are anonymous.
+ * Insert-only, and called with no session, visitors are anonymous.
  *
  * BUT NOT OPEN. `src/app/api/analytics/collect/route.ts` says why: "a browser
  * that could insert into site_visits directly could also invent a country and
- * forge a hash", which is why that table had no insert policy and no grant —
+ * forge a hash", which is why that table had no insert policy and no grant,
  * only the service role could write it.
  *
  * A Convex mutation has no service role and this deployment's URL ships to
@@ -65,7 +65,7 @@ async function twoWindows(ctx: Parameters<typeof requireProfile>[0], days: numbe
   return { rows, n, thisFrom, prevFrom, prevTo: thisFrom };
 }
 
-/** analytics_overview — the same six figures, bots counted but excluded. */
+/** analytics_overview, the same six figures, bots counted but excluded. */
 export const overview = query({
   args: { days: v.number() },
   handler: async (ctx, a) => {
@@ -88,7 +88,7 @@ export const overview = query({
   },
 });
 
-/** analytics_daily — per UTC day, zero-filled. */
+/** analytics_daily, per UTC day, zero-filled. */
 export const daily = query({
   args: { days: v.number() },
   handler: async (ctx, a) => {
@@ -110,7 +110,7 @@ export const daily = query({
 
 const DIMENSIONS = ["country", "region", "path", "referrer", "device", "os", "browser"] as const;
 
-/** analytics_top — label/visits/visitors, ties broken by label, as SQL did. */
+/** analytics_top, label/visits/visitors, ties broken by label, as SQL did. */
 export const top = query({
   args: { dimension: v.string(), days: v.number(), limit: v.optional(v.number()) },
   handler: async (ctx, a) => {
@@ -143,7 +143,7 @@ export const top = query({
  * analytics_prune.
  *
  * In Postgres this was called opportunistically from the collect route on
- * ordinary visitor traffic — "called from the collect route, not a cron" — so
+ * ordinary visitor traffic ("called from the collect route, not a cron") so
  * pruning stopped whenever traffic did. It is a real schedule now; see
  * convex/crons.ts.
  */

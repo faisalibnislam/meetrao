@@ -307,7 +307,7 @@ export function CalendarPanel({
               startAction(async () => {
                 /* The result is READ. It used to be discarded, so the warm
                    "Calendar disconnected" toast fired over a calendar that was
-                   still connected — the card said Connected, the toast said
+                   still connected, the card said Connected, the toast said
                    otherwise, and the toast was the one that was lying. */
                 const r = await disconnectCalendar();
                 toast(

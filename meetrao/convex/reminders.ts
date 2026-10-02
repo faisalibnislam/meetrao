@@ -21,7 +21,7 @@ import { DEFAULT_LEADS, GRACE, dayPhrase, verdictFor } from "./lib/reminderWindo
    settled this trade first: a reminder that goes missing is a small thing, one
    that arrives twice is why people turn reminders off.
 
-   WHO GETS WHAT. The guest always — they booked the meeting and the reminder
+   WHO GETS WHAT. The guest always. They booked the meeting and the reminder
    is the thing they asked for by booking it. The host only if reminders are on
    in their settings; absent means on, because every profile written before
    this feature has no such field and defaulting off would silently switch a
@@ -58,7 +58,7 @@ type Due = {
  * minutes ago, and must not tell them about one that ended yesterday.
  *
  * A booking made inside the window gets the reminders that are still ahead of
- * it and not the ones that are not — booking at 09:00 for 10:00 claims the
+ * it and not the ones that are not, booking at 09:00 for 10:00 claims the
  * one-hour reminder, and the day-before reminder is marked as spent rather
  * than sent late.
  */
@@ -87,7 +87,7 @@ export const claimDue = internalMutation({
       const hostName = host.full_name || host.username;
 
       /* The host's own lead times, which Pro can change. Absent is the free
-         default, and a free account that was Pro keeps whatever it chose —
+         default, and a free account that was Pro keeps whatever it chose,
          harmless, and better than silently moving somebody's reminders. */
       const leads = {
         long: host.reminder_long_minutes ?? DEFAULT_LEADS.long,
@@ -132,7 +132,7 @@ export const claimDue = internalMutation({
   },
 });
 
-/** "30 min" · "1 hr 30 min" — src/lib/booking/time.ts's formatDuration, which Convex cannot import. */
+/** "30 min" · "1 hr 30 min", src/lib/booking/time.ts's formatDuration, which Convex cannot import. */
 function durationLabel(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
   const hours = Math.floor(minutes / 60);
@@ -166,7 +166,7 @@ async function deliver(to: string, subject: string, html: string, key: string): 
  *
  * Failures are counted and returned rather than thrown: one refused address
  * must not stop the rest of the batch, and the row is already claimed either
- * way. A reminder is worth one attempt — by the time a retry ran, the meeting
+ * way. A reminder is worth one attempt, by the time a retry ran, the meeting
  * would be closer than the reminder claims it is.
  */
 export const sweep = internalAction({

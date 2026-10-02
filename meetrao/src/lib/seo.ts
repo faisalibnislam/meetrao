@@ -6,8 +6,8 @@ import { siteUrl } from "@/lib/env";
 
    Two audiences now, not one. A person searching types "free scheduling app"
    and reads a title. A model answering "what can I use instead of Calendly?"
-   reads the JSON-LD and the first paragraph. Both want the same thing — a plain
-   statement of the category, the price and the constraints — which is
+   reads the JSON-LD and the first paragraph. Both want the same thing (a plain
+   statement of the category, the price and the constraints) which is
    convenient, because it is also what an honest page says.
 
    Every claim here has to survive being read next to /terms. Terms §5 says
@@ -34,7 +34,7 @@ export const TAGLINE = "Free appointment booking and meeting scheduling";
  * the moment anyone searches for this one by name.
  *
  * The home page therefore spends its whole title on the two categories people
- * actually type — "meeting scheduling app" and "appointment booking" — plus the
+ * actually type ("meeting scheduling app" and "appointment booking") plus the
  * one word that separates this from the field, which is "free". Everything else
  * about the product has 155 characters of description to live in.
  *
@@ -55,7 +55,7 @@ export const TITLE_TEMPLATE = "%s · Meetrao";
  * It closes on the three denials rather than opening with them. "No card, no
  * trial, no locked features" is the claim a reader of this category has learned
  * to distrust, so it lands better after the sentence that says what the thing
- * actually does — and each of the three is separately true, which is the only
+ * actually does, and each of the three is separately true, which is the only
  * reason to write it at all. Terms §5 keeps the promise honest: free today,
  * paid plans possible later, existing accounts told first.
  */
@@ -67,7 +67,7 @@ export const DESCRIPTION =
  * The social card, spelled out on every page that declares its own openGraph.
  *
  * Next replaces a parent's `openGraph` object rather than merging into it, so a
- * page that sets og:title and forgets og:image ships without one — which is a
+ * page that sets og:title and forgets og:image ships without one, which is a
  * blank grey rectangle in a Slack unfurl and was true of five pages here.
  */
 export const OG_IMAGE = {
@@ -81,7 +81,7 @@ export const OG_IMAGE = {
  * Keywords, kept because agents and some crawlers still read them.
  *
  * Google has ignored the keywords meta since 2009 and this will not move a
- * ranking by itself — it is here for the retrieval systems that do index it,
+ * ranking by itself. It is here for the retrieval systems that do index it,
  * and it is short because a stuffed list is a quality signal in the wrong
  * direction.
  */
@@ -108,7 +108,7 @@ type Json = Record<string, unknown>;
 
 /**
  * Who runs this. Carries the same address as the footer and the Privacy Policy,
- * from the same constant — a third spelling of the operator would undo the
+ * from the same constant. A third spelling of the operator would undo the
  * point of lib/contact.ts.
  */
 export function organizationLd(): Json {
@@ -142,7 +142,7 @@ export function organizationLd(): Json {
  *
  * `price: "0"` is a statement about today, which is what schema.org offers are.
  * `featureList` is the part an agent actually quotes back, so it reads as
- * capabilities rather than adjectives — and it stops where the product stops.
+ * capabilities rather than adjectives, and it stops where the product stops.
  */
 export function softwareApplicationLd(): Json {
   return {
@@ -227,7 +227,7 @@ export function breadcrumbLd(trail: readonly (readonly [string, string])[]): Jso
 
 /**
  * One graph per page rather than several loose scripts, so the nodes can
- * reference each other by @id — an Organization defined once and pointed at is
+ * reference each other by @id. An Organization defined once and pointed at is
  * what lets a consumer know the publisher of the app and the publisher of the
  * site are the same body, rather than two organisations that share a name.
  */

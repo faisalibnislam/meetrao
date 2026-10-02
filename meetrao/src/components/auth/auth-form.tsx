@@ -18,7 +18,7 @@ export type AuthMode = "login" | "signup" | "forgot";
 /**
  * ONE message, whatever went wrong.
  *
- * Not laziness — a form that distinguishes "no such account" from "wrong
+ * Not laziness, a form that distinguishes "no such account" from "wrong
  * password" is an account-enumeration oracle. Do not be tempted to surface
  * Convex Auth's own error to make debugging easier.
  */
@@ -130,7 +130,7 @@ function Fields({
 
   // The device's own zone, mapped to one this app offers. Read through
   // useClientValue so the server renders "UTC" and the client corrects it
-  // after hydration — reading Intl during render would mismatch.
+  // after hydration, reading Intl during render would mismatch.
   const timezone = useClientValue(() => nearestSupportedTimezone(detectTimezone()), "UTC");
 
   return (

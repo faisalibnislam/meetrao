@@ -4,7 +4,7 @@ import { getPublicTeam, getTeamBusy, getTeamHours, teamOpenDates, teamSlotsForDa
 import { getBusy, getMeetingAvailability, getMeetingOverrides, getSeatMap, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 
 /* The slot query the booking page calls. Public, because the guest has no
-   session — and read-only, so it exposes availability and nothing else about
+   session, and read-only, so it exposes availability and nothing else about
    the host's calendar. */
 
 export const dynamic = "force-dynamic";
@@ -15,7 +15,7 @@ const DAY = 86_400_000;
  * The same answer for a team link: the union of its members' times.
  *
  * Kept beside the solo path rather than in it, because almost nothing is
- * shared — a team has no single host, no seat map and no meeting of its own
+ * shared. A team has no single host, no seat map and no meeting of its own
  * to look up by username.
  */
 async function teamSlots(request: NextRequest, teamSlug: string) {

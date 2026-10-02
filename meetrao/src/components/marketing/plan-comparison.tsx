@@ -64,7 +64,7 @@ export function PlanComparison({ footnote = true }: { footnote?: boolean }) {
 }
 
 /* A tick, a dash, or words. A dash says "not here" more honestly than an empty
-   cell, which reads as an oversight — and each cell names its column for a
+   cell, which reads as an oversight, and each cell names its column for a
    screen reader, since the header row is hidden on a phone. */
 function Cell({ value, label, accent = false }: { value: PlanCell; label: string; accent?: boolean }) {
   return (

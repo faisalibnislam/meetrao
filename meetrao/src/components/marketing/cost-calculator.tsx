@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-/* "What the back-and-forth costs you" — an illustration, labelled as one.
+/* "What the back-and-forth costs you", an illustration, labelled as one.
    Four weeks a month reproduces the brief's worked example: 10 × 8 min is
    5.3 hrs, about $400 at $75. */
 

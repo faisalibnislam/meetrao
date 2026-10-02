@@ -158,7 +158,7 @@ describe("brandTokens", () => {
     expect(contrast(tokens!.soft, "#ffffff")).toBeLessThan(1.5);
   });
 
-  it("keeps brand text readable on white and on its own tint — every colour", () => {
+  it("keeps brand text readable on white and on its own tint, every colour", () => {
     // The invariant the whole feature rests on: whatever the host picked, a
     // guest can read the page. Yellow and cyan are in here because they are
     // what break a naive implementation.
@@ -183,7 +183,7 @@ describe("brandTokens", () => {
 
    Its whole job is to stop a branded page from sitting on Meetrao's warm grey,
    so what is checked here is that nothing of ours survives and that the few
-   pieces of text drawn directly on it stay readable — including on the dark
+   pieces of text drawn directly on it stay readable, including on the dark
    backgrounds that break a naive implementation.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -208,7 +208,7 @@ describe("readableOnGround", () => {
 
   it("LIGHTENS a dark ground, which darkening can never solve", () => {
     /* The case the first version got wrong: it only ever darkened, so a navy
-       ground bottomed out at black and fell back to our ink — invisible. */
+       ground bottomed out at black and fell back to our ink, invisible. */
     for (const ground of ["#001a3d", "#0b0b0b", "#14554a", "#3b0a2a"]) {
       const text = readableOnGround(ground);
       expect(contrast(text, ground), ground).toBeGreaterThanOrEqual(4.5);
@@ -219,7 +219,7 @@ describe("readableOnGround", () => {
   it("is readable on a mid-tone, where neither direction reaches the bar", () => {
     for (const ground of ["#7a7a7a", "#808080", "#6e6e6e"]) {
       const text = readableOnGround(ground);
-      // Not 4.5 — no colour achieves that here — but the better of the two.
+      // Not 4.5 (no colour achieves that here) but the better of the two.
       expect(contrast(text, ground)).toBeGreaterThan(3.5);
     }
   });

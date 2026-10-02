@@ -10,11 +10,11 @@ import Link from "next/link";
 
    THE TEXT IS `text-on-ground`, NOT `text-ink-3`. These links are the one
    piece of type drawn straight onto the page background, and a Pro host can
-   now choose that background — including a dark one, which `--ink-3` is
+   now choose that background, including a dark one, which `--ink-3` is
    invisible against. The token resolves to `--ink-3` unless a brand overrides
    it, so nothing moves on an unbranded page.
 
-   src/app/public-footer.test.ts checks every page under (public) renders this,
+   Src/app/public-footer.test.ts checks every page under (public) renders this,
    because the failure mode of moving it out of the layout is a page that
    quietly loses its legal links.
    ───────────────────────────────────────────────────────────────────────────── */

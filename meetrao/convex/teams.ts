@@ -21,9 +21,9 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
    rotation that quietly skips a name nobody notices is missing. Adding an
    existing host is one mutation and fails loudly.
 
-   THE SLUG IS PRODUCT-WIDE. meetrao.com/<name> is a host and
+   THE SLUG IS PRODUCT-WIDE. Meetrao.com/<name> is a host and
    meetrao.com/team/<name> is a team, but a guest reads them as one namespace
-   and so does a search engine — so a team cannot take a name a host holds, or
+   and so does a search engine, so a team cannot take a name a host holds, or
    the reverse.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -68,7 +68,7 @@ async function requireOwner(ctx: MutationCtx, teamId: string) {
   return { me, team };
 }
 
-/** A name nobody else holds — host or team. */
+/** A name nobody else holds, host or team. */
 async function slugIsFree(ctx: MutationCtx, slug: string, exceptTeamId?: string): Promise<boolean> {
   const host = await ctx.db
     .query("profiles")

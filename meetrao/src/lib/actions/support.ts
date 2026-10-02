@@ -16,7 +16,7 @@ import { api } from "@/convex/_generated/api";
  * The one address a visitor is ever shown.
  *
  * An admin can point `platform_settings.support_email` somewhere else, and the
- * form will deliver there — but this is what the failure message offers when
+ * form will deliver there, but this is what the failure message offers when
  * sending did not work, so it has to be an address that is genuinely watched
  * rather than whatever the row happens to hold. That is lib/contact.ts, which
  * is also what the Support page prints two clicks earlier; a fallback address

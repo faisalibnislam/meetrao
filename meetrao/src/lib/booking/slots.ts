@@ -8,14 +8,14 @@ import { TZDate } from "@date-fns/tz";
    slots for one date.
 
    Pure and side-effect free, so it can be unit-tested and re-run server-side
-   immediately before a booking is written. Nothing here reads the clock — the
+   immediately before a booking is written. Nothing here reads the clock (the
    caller passes `now`.
 
    Rules, in the order they cut:
-     · availability   — a slot must fit entirely inside one weekly range
-     · minimum notice — cuts the near end
-     · booking window — cuts the far end
-     · buffer         — applies on BOTH sides of every busy period
+     · availability  ) a slot must fit entirely inside one weekly range
+     · minimum notice (cuts the near end
+     · booking window) cuts the far end
+     · buffer        , applies on BOTH sides of every busy period
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type Interval = { start: Date; end: Date };
@@ -30,7 +30,7 @@ export type AvailabilityRule = {
 /**
  * One calendar day that does not follow the weekly pattern.
  *
- * `date` is a host-local "YYYY-MM-DD" — the same key `dateKey` produces — and
+ * `date` is a host-local "YYYY-MM-DD" (the same key `dateKey` produces) and
  * an empty `ranges` closes the day. A day with ranges REPLACES the weekly
  * rules for that date: a host who says "14:00-17:00 that Friday" means instead
  * of, not as well as.
@@ -47,7 +47,7 @@ export type SlotRules = {
   bookingWindowDays: number;
 };
 
-/** A calendar date as the guest sees it — not an instant. */
+/** A calendar date as the guest sees it, not an instant. */
 export type PlainDate = { year: number; month: number; day: number };
 
 export type ComputeSlotsInput = {
@@ -74,7 +74,7 @@ export function zonedInstant(
 ): Date {
   const hours = Math.floor(minutesIntoDay / 60);
   const minutes = minutesIntoDay % 60;
-  // Date normalises overflow, so hour 24 lands on the next day at 00:00 —
+  // Date normalises overflow, so hour 24 lands on the next day at 00:00,
   // which is what an availability range ending at 1440 means.
   return new Date(new TZDate(year, month - 1, day, hours, minutes, timeZone).getTime());
 }
@@ -138,7 +138,7 @@ export function expandAvailability(
     const weekday = weekdayIn(midday, hostTimezone);
 
     /* A date the host has spoken about answers for itself. An override with
-       no ranges closes the day outright — which is why this replaces the
+       no ranges closes the day outright, which is why this replaces the
        weekly rules rather than filtering them. */
     const override = byDate.get(dateKey(cursor));
     const ranges = override

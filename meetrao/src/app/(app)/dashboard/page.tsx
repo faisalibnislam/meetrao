@@ -44,7 +44,7 @@ export default async function DashboardPage() {
   const nextStart = next ? new Date(next.startsAt) : null;
   const nextTime = nextStart ? formatTime(nextStart, zone) : null;
 
-  // Avg. reply time measures link-opened → booked. With nothing recorded yet
+  // Avg. Reply time measures link-opened → booked. With nothing recorded yet
   // the card says so rather than showing an invented figure.
   const hours = typeof replyMinutes === "number" ? (replyMinutes / 60).toFixed(1) : null;
 

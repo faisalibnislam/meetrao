@@ -16,7 +16,7 @@ async function isFree(username: string, forUser: string | null): Promise<boolean
 
 
 /* Onboarding is five steps and every one of them writes as it goes, so a host
-   who stops halfway keeps what they entered — "Your progress is saved. You can
+   who stops halfway keeps what they entered, "Your progress is saved. You can
    finish setting up later." is true, not reassurance. */
 
 export type UsernameCheck = { status: "ok" | "taken"; ideas: string[] };

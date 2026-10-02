@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 /* The footer moved out of the (public) layout and into the pages, because the
    "Powered by Meetrao" badge depends on whose page it is and a layout cannot
    know. The legal links live in the same component and do NOT depend on the
-   plan — a guest has no settings page to find Terms and Privacy in.
+   plan. a guest has no settings page to find Terms and Privacy in.
    
    So the failure this guards is a page that quietly ships with no legal
    links, which is exactly what moving a footer out of a layout invites. */
@@ -50,7 +50,7 @@ describe("the layout stacks what the pages return", () => {
      climbed to the top-right corner. It shipped, and it looked like a CSS
      mystery rather than a consequence of the refactor.
      
-     A column stacks them. Both classes matter — flex-col to stack,
+     A column stacks them. Both classes matter, flex-col to stack,
      items-center to centre each one horizontally. */
   it("is a column, because pages return a card and a footer", () => {
     expect(layout, "a row puts the footer beside the card").toContain("flex-col");
@@ -59,7 +59,7 @@ describe("the layout stacks what the pages return", () => {
 
   it.each(pages)("%s returns its content and the footer as siblings", (file) => {
     const text = readFileSync(path.join(APP, file), "utf8");
-    /* A fragment, or <BrandScope> — which is a fragment with CSS variables on
+    /* A fragment, or <BrandScope>, which is a fragment with CSS variables on
        it. BrandScope renders `display: contents`, so it introduces no box and
        the card and footer are still the layout column's own children, exactly
        as a fragment leaves them. Anything else here would wrap them in a box
@@ -83,7 +83,7 @@ describe("the badge", () => {
   /* EVERY guest-facing page hides it for a Pro host now, including the ones
      reached by booking reference.
 
-     This file used to say the opposite — that the reference pages keep the
+     This file used to say the opposite. That the reference pages keep the
      badge because "a guest following a link from an email is not on anybody's
      branded page". That was a rationalisation of a limitation: those pages had
      no username in the URL and so could not tell whose booking it was. They

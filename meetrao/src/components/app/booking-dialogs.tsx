@@ -17,7 +17,7 @@ import { whereText } from "@/lib/locations";
    always costs two deliberate clicks.
 
    Moving is offered beside cancelling rather than behind it: a host who wants
-   a different time should not have to cancel — that mails the guest a
+   a different time should not have to cancel, that mails the guest a
    cancellation and throws away the Meet link to say "can we do Thursday?". */
 
 export type DialogState = { booking: BookingView; view: "detail" | "cancel" | "move" } | null;

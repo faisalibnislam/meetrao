@@ -56,7 +56,7 @@ export function StackedCell({ primary, secondary }: { primary: ReactNode; second
 
 /**
  * Below ~640px a horizontally scrolled table is usable but not good. Screens
- * that carry a lot of rows render this card list instead — the landing page
+ * that carry a lot of rows render this card list instead. The landing page
  * shows the pattern and the app copies it.
  */
 export function CardList({ children }: { children: ReactNode }) {

@@ -7,7 +7,7 @@ import { Icon } from "./icon";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Dialog shell — all seven dialogs share it.
+   Dialog shell, all seven dialogs share it.
 
    Scrim (click-outside dismisses) · white card · header on a bottom border ·
    body · --fill footer with a ghost secondary to the left of an emphasised
@@ -119,7 +119,7 @@ export function DetailRow({
 }: {
   label: string;
   value: ReactNode;
-  /** A machine string — an email, a Meet URL, a reference. Set a shade
+  /** A machine string, an email, a Meet URL, a reference. Set a shade
       smaller than prose so it reads as data. */
   machine?: boolean;
   keyWidth?: number;

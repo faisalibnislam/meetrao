@@ -12,7 +12,7 @@ import { useNow } from "@/lib/use-client-value";
 
    This line was the first thing moved off DM Mono, before the family was
    dropped from the product entirely: at 11.5px with 0.04em tracking it read as
-   a machine stamp under a serif greeting. The tracking went with it — mono's
+   a machine stamp under a serif greeting. The tracking went with it, mono's
    letter-spacing is wrong on a proportional face. */
 export function DashboardHeader({
   firstName,

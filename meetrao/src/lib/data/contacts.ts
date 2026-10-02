@@ -25,7 +25,7 @@ export type ContactView = {
  * stored on the row.
  *
  * Denormalising last/next onto `contacts` would mean four more places that have
- * to remember to update it — a booking created, cancelled, rescheduled, or its
+ * to remember to update it, a booking created, cancelled, rescheduled, or its
  * time passing, which nothing writes at all. Computing it on read cannot go
  * stale, and a host's booking list is small.
  */

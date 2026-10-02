@@ -5,7 +5,7 @@ import type { Id } from "./_generated/dataModel";
 /**
  * Diagnostic: what Convex makes of the caller's token.
  *
- * Returns no secrets and no other user's data — it reports only what the
+ * Returns no secrets and no other user's data, it reports only what the
  * presented JWT already contains, plus whether a profile exists for it. Kept
  * after the migration because "is anyone actually signed in?" is otherwise
  * answered by guesswork, and the server components use it as their session

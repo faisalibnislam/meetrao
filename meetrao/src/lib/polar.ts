@@ -11,7 +11,7 @@ import { env } from "@/lib/env";
    check coming in. Nothing else in the codebase talks to it.
 
    THE WEBHOOK IS THE ONLY THING THAT GRANTS PRO. Not the checkout return, not
-   a success page, not a client callback — those are all things a browser can
+   a success page, not a client callback, those are all things a browser can
    be made to say. A plan is a claim about money, and the only party that
    knows is the one that took it.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -25,7 +25,7 @@ function base(): string {
  * The API version this code was written against, sent on every request.
  *
  * Polar dates its versions and serves the account's current default when the
- * header is absent — which means an unpinned integration silently moves to a
+ * header is absent, which means an unpinned integration silently moves to a
  * new payload shape on somebody else's schedule. The account answered
  * `polar-version: 2026-10` when this was built; pinning it means a version
  * bump is something we opt into after reading what changed, rather than
@@ -62,7 +62,7 @@ export const PRICES: Record<Cadence, { name: string; amount: number; interval: "
  * Creates the two products, so an operator never has to leave the admin
  * console or copy a UUID by hand.
  *
- * Amounts are in cents, which is Polar's unit — $3 is 300, and getting that
+ * Amounts are in cents, which is Polar's unit, $3 is 300, and getting that
  * wrong by a factor of a hundred is the kind of mistake that only shows up on
  * somebody's card statement.
  */
@@ -81,7 +81,7 @@ export async function createProduct(cadence: Cadence): Promise<{ id: string; nam
  * A checkout session for one host.
  *
  * `external_customer_id` is the profile id, which is what ties the
- * subscription back to an account when the webhook arrives — Polar echoes it
+ * subscription back to an account when the webhook arrives, Polar echoes it
  * on every subscription event. The email is passed so the customer does not
  * have to type an address we already know.
  */
@@ -128,7 +128,7 @@ export async function customerPortalUrl(profileId: string): Promise<string> {
  *
  * Polar changed scheme in September 2026: secrets minted before then are keyed
  * on the UTF-8 bytes of the whole `whsec_…` string, and newer ones on the
- * base64 body after the prefix. Their own SDK tries both, so this does too —
+ * base64 body after the prefix. Their own SDK tries both, so this does too,
  * a webhook that verifies only under the scheme you guessed is one that fails
  * silently on the day you rotate the secret.
  */
@@ -166,7 +166,7 @@ export function verifyPolarSignature(args: {
     for (const candidate of offered) {
       const a = Buffer.from(expected);
       const b = Buffer.from(candidate);
-      // Constant time, and only when the lengths already match — timingSafeEqual
+      // Constant time, and only when the lengths already match, timingSafeEqual
       // throws otherwise, which would itself be a length oracle.
       if (a.length === b.length && timingSafeEqual(a, b)) return true;
     }

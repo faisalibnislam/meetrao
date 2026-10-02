@@ -7,20 +7,20 @@ import { cx } from "@/lib/cx";
 /* ─────────────────────────────────────────────────────────────────────────────
    The product section's lead: four things it does, shown rather than listed.
 
-   WHAT THIS REPLACED, AND WHY. Two stacked grids of sixteen identical cards —
+   WHAT THIS REPLACED, AND WHY. Two stacked grids of sixteen identical cards,
    icon chip, bold line, sentence, sixteen times, across two headings that
    split them for no reason a reader could see. Every card had the same weight,
    so nothing led; it was a wall to scroll past rather than something to read,
    and at no point did it show the product it was describing.
 
    Four panels carry the features that are worth seeing move. The rest did not
-   get deleted — they sit under this in one dense list, which is the right
+   get deleted. They sit under this in one dense list, which is the right
    shape for "and all of these too". A feature a reader has to be SOLD is not
    the same as one they need to find, and the old section treated them alike.
 
    NO SCREENSHOTS. These are built from the same tokens as the real screens, so
    they cannot go stale the way a PNG does, they stay sharp at any density, and
-   — the part that matters here — they re-colour with the rest of the page.
+   (the part that matters here) they re-colour with the rest of the page.
 
    The rotation stops on hover, on focus, and for anybody who has asked their
    system for less motion. A panel that keeps moving while you are reading it

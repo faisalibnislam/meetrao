@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    Where a meeting happens.
 
-   Four kinds, and the app-side mirror of this list is src/lib/locations.ts —
+   Four kinds, and the app-side mirror of this list is src/lib/locations.ts,
    Convex functions cannot import from src/, so the vocabulary is written twice
    and pinned by a test, the same arrangement convex/lib/zones.ts has with
    src/lib/timezones.ts.

@@ -15,7 +15,7 @@ import path from "node:path";
 
    Nothing else catches this. `next build` compiles it, `tsc` type-checks it,
    and a unit test imports the module directly because Vitest does not honour
-   the directive — so it only ever appears as a 500 and an opaque digest in a
+   the directive. So it only ever appears as a 500 and an opaque digest in a
    browser. Onboarding steps 4 and 5 shipped that way.
 
    The rule this enforces: a server module may import a Component (PascalCase)
@@ -86,7 +86,7 @@ describe("the client boundary", () => {
         for (const raw of names.split(",")) {
           const name = raw.trim().replace(/^type\s+/, "").split(/\s+as\s+/)[0].trim();
           if (!name || raw.trim().startsWith("type ")) continue;
-          // A component is PascalCase — a capital followed by a lowercase.
+          // A component is PascalCase, a capital followed by a lowercase.
           // Not merely "starts with a capital": SETTINGS_TABS does that too,
           // and it is a constant, which on the server is a client reference
           // rather than an array. That exact gap let the settings page ship
@@ -94,7 +94,7 @@ describe("the client boundary", () => {
           if (/^[A-Z][a-z]/.test(name)) continue;
 
           offences.push(
-            `${path.relative(SRC, file)} imports \`${name}\` from the client module ${spec} — ` +
+            `${path.relative(SRC, file)} imports \`${name}\` from the client module ${spec}, ` +
               `move it to a module with no "use client", or import it as a type`,
           );
         }

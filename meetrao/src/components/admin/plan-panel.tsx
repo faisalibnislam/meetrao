@@ -14,7 +14,7 @@ import { grantProToUser, revokeProFromUser } from "@/lib/actions/admin";
 /* ─────────────────────────────────────────────────────────────────────────────
    One account's plan, and giving Pro away.
 
-   A grant is shown as what it is — "Pro, on the house" — never as a
+   A grant is shown as what it is ("Pro, on the house") never as a
    subscription. An operator looking at this screen in six months needs to be
    able to tell a paying customer from a favour, and so does anybody counting
    revenue.
@@ -116,8 +116,8 @@ export function PlanPanel({ userId, name, info }: { userId: string; name: string
         </div>
 
         {info.subscribed && info.comp ? (
-          /* Both at once is legitimate — somebody granted Pro who later
-             subscribed — but it is worth saying out loud, because revoking the
+          /* Both at once is legitimate (somebody granted Pro who later
+             subscribed) but it is worth saying out loud, because revoking the
              grant will not take Pro away. */
           <span className="text-[12px] leading-[1.5] text-amber">
             This account both pays and holds a grant. Removing the grant leaves them Pro through their

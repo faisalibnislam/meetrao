@@ -7,13 +7,13 @@ import { sendWelcome } from "./send";
 /**
  * Sends welcome.html the first time, and never again.
  *
- * The design's trigger is "Email confirmed, or Google sign-up" — not the end of
+ * The design's trigger is "Email confirmed, or Google sign-up", not the end of
  * onboarding, which is where this used to live and which a host who abandons
  * setup never reaches.
  *
  * Email confirmation happens once because the token is single-use, but
  * /auth/callback runs on every Google sign-in. So the send is claimed: one
- * UPDATE, with `welcomed_at is null` in the WHERE. Postgres settles the race —
+ * UPDATE, with `welcomed_at is null` in the WHERE. Postgres settles the race,
  * two concurrent callbacks cannot both update the row, and whichever loses gets
  * no row back and sends nothing.
  *
@@ -34,6 +34,6 @@ export async function sendWelcomeOnce(userId: string): Promise<void> {
 
     await sendWelcome(data as Parameters<typeof sendWelcome>[0]);
   } catch {
-    // Deliberately swallowed — see above.
+    // Deliberately swallowed, see above.
   }
 }

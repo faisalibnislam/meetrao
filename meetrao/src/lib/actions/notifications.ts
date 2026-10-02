@@ -6,7 +6,7 @@ import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { convexMessage } from "@/lib/convex/error";
 
-/* Read state is the only thing a host changes here — the rows themselves are
+/* Read state is the only thing a host changes here. The rows themselves are
    written by the triggers (Postgres) or convex/lib/effects.ts (Convex).
    `read_at` is a timestamp rather than a boolean so "mark all as read" is one
    statement and the moment is recoverable. */

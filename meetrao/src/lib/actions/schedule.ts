@@ -15,7 +15,7 @@ import { api } from "@/convex/_generated/api";
 /* ─────────────────────────────────────────────────────────────────────────────
    The other direction: the host picks the time and invites people.
 
-   Everything else in the product runs guest-first — someone opens the link and
+   Everything else in the product runs guest-first, someone opens the link and
    books a slot the engine offered them. This is the inverse, and the rules are
    deliberately different:
 
@@ -30,8 +30,8 @@ import { api } from "@/convex/_generated/api";
        on a row shaped exactly as before.
 
    Inserted through the service role: `bookings` has no INSERT policy for
-   `authenticated` — the guest door is `create_booking`, which is SECURITY
-   DEFINER — and adding one would open a table that has stayed closed on
+   `authenticated` (the guest door is `create_booking`, which is SECURITY
+   DEFINER) and adding one would open a table that has stayed closed on
    purpose. requireOnboardedSession() is the gate, and host_id is taken from
    the session rather than from the request.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -139,7 +139,7 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
   }
 
   /* The calendar write comes after the booking exists. If Google refuses, the
-     meeting is still real and the host is told which part failed — rather than
+     meeting is still real and the host is told which part failed, rather than
      everyone losing an invitation that was already confirmed on screen. */
   let meetUrl = "";
   let calendarWarning: string | undefined;

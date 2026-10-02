@@ -7,7 +7,7 @@ import type { HookView, KeyView } from "@/components/app/developer-panel";
 import type { DomainView, PlanView, TimingView } from "@/components/app/billing-panel";
 
 /* What the Team settings panel needs, in one place: the teams this host owns
-   or belongs to, and their own meetings — any of which can be handed to a
+   or belongs to, and their own meetings, any of which can be handed to a
    team they own. */
 
 /** Whether the signed-in host is on Pro. For screens that only need the flag. */
@@ -48,7 +48,7 @@ export async function billingPanelData(): Promise<{
 /**
  * The Branding panel: logo, colour and the domain.
  *
- * The domain is read here as well as in billingPanelData — it is one row and
+ * The domain is read here as well as in billingPanelData. It is one row and
  * two screens used to show it. The Plan screen now only links across, but the
  * query is cheap and keeping both shapes means neither screen has to know
  * about the other.

@@ -21,8 +21,8 @@ export async function defaultScheduleFor(
   return all.find((s) => s.is_default) ?? all[0] ?? null;
 }
 
-/** The rules a given meeting books against — its schedule, or the default. */
-/** The schedule a meeting follows, resolved the one way — its own, or the
+/** The rules a given meeting books against, its schedule, or the default. */
+/** The schedule a meeting follows, resolved the one way, its own, or the
  *  host's default. Shared by the rules and the overrides resolvers so the two
  *  can never disagree about which schedule a booking is being checked against. */
 async function scheduleForMeeting(
@@ -67,7 +67,7 @@ export async function rulesForMeeting(
   return await ctx.db.query("availability_rules").withIndex("by_schedule", (q) => q.eq("schedule_id", schedule.id)).collect();
 }
 
-/** public.seed_default_availability — idempotent, as the SQL was. */
+/** public.seed_default_availability, idempotent, as the SQL was. */
 export async function seedDefaults(ctx: MutationCtx, userId: string): Promise<void> {
   const existing = await ctx.db.query("availability_schedules").withIndex("by_user", (q) => q.eq("user_id", userId)).first();
   if (existing) return;
@@ -129,7 +129,7 @@ export const createSchedule = mutation({
     if (name.length > 60) fail("Keep the name under 60 characters.");
 
     const mine = await ctx.db.query("availability_schedules").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
-    // unique (user_id, name) — Postgres index, re-enforced here.
+    // unique (user_id, name), Postgres index, re-enforced here.
     if (mine.some((s) => s.name.toLowerCase() === name.toLowerCase())) fail("You already have a schedule with that name.");
 
     const makeDefault = a.makeDefault ?? mine.length === 0;
@@ -192,7 +192,7 @@ export const deleteSchedule = mutation({
     if (target.is_default) fail("Make another schedule the default first.");
 
     // Postgres: availability_rules.schedule_id ON DELETE CASCADE, and
-    // meeting_types.schedule_id ON DELETE SET NULL — "point them back at the
+    // meeting_types.schedule_id ON DELETE SET NULL, "point them back at the
     // default rather than orphaning them" (migration 0010). Both are explicit.
     const rules = await ctx.db.query("availability_rules").withIndex("by_schedule", (q) => q.eq("schedule_id", target.id)).collect();
     for (const r of rules) await ctx.db.delete(r._id);
@@ -264,8 +264,8 @@ export const renameSchedule = mutation({
  * The availability screen's save: the host's timezone and one schedule's whole
  * week, together.
  *
- * Supabase did this as three statements — update the profile, delete the rules,
- * insert the new ones — with no transaction around them, so a failure between
+ * Supabase did this as three statements (update the profile, delete the rules,
+ * insert the new ones) with no transaction around them, so a failure between
  * the delete and the insert left a host with no hours at all. Here it is one
  * mutation, so it either all lands or none of it does.
  */
@@ -288,7 +288,7 @@ export const saveWeek = mutation({
       if (r.end_minute <= r.start_minute) fail("A range must end after it starts.");
     }
 
-    // Chosen, not detected — registration must never overwrite it.
+    // Chosen, not detected, registration must never overwrite it.
     await ctx.db.patch(me._id, { timezone: a.timezone, timezone_auto: false, updated_at: Date.now() });
 
     const old = await ctx.db.query("availability_rules").withIndex("by_schedule", (q) => q.eq("schedule_id", schedule.id)).collect();
@@ -328,7 +328,7 @@ function validDate(date: string): boolean {
  *
  * One row per (schedule, date): saving the same day twice replaces it rather
  * than stacking two answers for one date, which the engine would have to pick
- * between. Convex has no unique index, so the read-then-write is the rule —
+ * between. Convex has no unique index, so the read-then-write is the rule,
  * safe because the mutation is serializable.
  *
  * EXISTING BOOKINGS ARE NOT TOUCHED. Taking a Friday off closes it to new

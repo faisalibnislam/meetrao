@@ -7,7 +7,7 @@ import { SiteAccountLive, SignedOutActions } from "./site-account-live";
 import { POSTAL_ADDRESS } from "@/lib/contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Marketing chrome — one sticky nav and one footer, shared by the landing page
+   Marketing chrome, one sticky nav and one footer, shared by the landing page
    and the four standalone public pages. The prototypes duplicate this across
    five files because the design tool has no layout primitive.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -31,12 +31,12 @@ export function SiteNav({
   liveAccount,
 }: {
   sectionLinks?: boolean;
-  /** Signed in, the two sign-up buttons make no sense — show the way back. */
+  /** Signed in, the two sign-up buttons make no sense, show the way back. */
   account?: NavAccount | null;
   /**
    * Resolve the session in the BROWSER instead of on the server.
    *
-   * For the statically rendered pages — landing, Terms, Privacy — where reading
+   * For the statically rendered pages (landing, Terms, Privacy) where reading
    * a cookie on the server would turn the whole page dynamic. See
    * site-account-live.tsx for why that trade is not worth making on the page
    * search engines measure. Pages that already read the session (/help,
@@ -127,7 +127,7 @@ export function SiteFooter() {
     {
       /* A crawler reaches a page by following a link to it. Two comparison
          pages with nothing pointing at them are two pages that get found
-         late, if at all — and the footer is on every page of the site. */
+         late, if at all, and the footer is on every page of the site. */
       title: "Compare",
       links: [
         ["Meetrao vs Calendly", "/vs/calendly"],
@@ -167,10 +167,10 @@ export function SiteFooter() {
           </div>
           {/* flex-initial, not flex-none. The design file says `flex:none` here, which
               was authored at desktop width where the row sits beside the heading and
-              fits. flex-none is `flex: 0 0 auto` — the row sizes to its content and
+              fits. Flex-none is `flex: 0 0 auto`, the row sizes to its content and
               refuses to shrink, so its own flex-wrap can never engage and two 15px
               buttons hold the page at 466px. On a 390px phone that is what makes the
-              whole site pan sideways. flex-initial keeps it from stretching and lets
+              whole site pan sideways. Flex-initial keeps it from stretching and lets
               it wrap. */}
           <div className="flex min-w-0 flex-initial flex-wrap gap-[10px]">
             <Link

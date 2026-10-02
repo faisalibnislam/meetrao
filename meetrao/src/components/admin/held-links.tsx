@@ -12,7 +12,7 @@ import { reclaimBookingLink, type ReclaimableLink } from "@/lib/actions/admin";
 
    A name is held back when an account is removed or an admin retires a link,
    so that a dead `meetrao.com/<link>` cannot be handed to the next person who
-   signs up — old meeting invitations still point at it, and a stranger
+   signs up, old meeting invitations still point at it, and a stranger
    inheriting them is worse than a 404.
 
    That hold was permanent: the Convex functions to list and lift it existed

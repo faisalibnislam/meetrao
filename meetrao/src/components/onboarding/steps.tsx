@@ -24,8 +24,8 @@ import Link from "next/link";
 /* ── what the Google permission is for ────────────────────────────────────────
 
    Written out in full, on the screen that asks for it, rather than left to the
-   consent dialog. Google's own screen names a scope — "See, edit and delete
-   events on your calendar" — which is accurate and alarming, and a host who
+   consent dialog. Google's own screen names a scope ("See, edit and delete
+   events on your calendar") which is accurate and alarming, and a host who
    meets that sentence with no context declines. The honest answer is that the
    scope is broad and the use is narrow, and the place to say so is before they
    click, not in a policy they will not open.
@@ -432,7 +432,7 @@ export function StepReady({
           ))}
         </div>
 
-        {/* The one upsell in onboarding, and it is at the END — after the
+        {/* The one upsell in onboarding, and it is at the END, after the
             link works. Asking somebody to consider paying before they have
             seen the thing work is how a setup flow loses people. */}
         <div className="flex flex-col gap-[7px] rounded-[8px] border border-accent-line bg-accent-soft px-[15px] py-[13px]">

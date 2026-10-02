@@ -6,13 +6,13 @@ import { siteUrl } from "@/lib/env";
 
    The rule behind the list: disallow is for pages that would waste a crawler's
    time, and `noindex` is for pages that must never appear in results. They are
-   not interchangeable, and using the wrong one is the classic mistake —
+   not interchangeable, and using the wrong one is the classic mistake,
    disallowing a page means the crawler never fetches it, never sees its
    `noindex`, and can still list the bare URL if something links to it.
 
    So the signed-in product is disallowed (a crawler gets a redirect to /login
    there anyway, so fetching it is pure waste), and the guest booking pages are
-   left crawlable and carry `robots: { index: false }` in their own metadata —
+   left crawlable and carry `robots: { index: false }` in their own metadata,
    those are the ones with a guest's name on them, and a directive that is read
    beats one that is not.
    ───────────────────────────────────────────────────────────────────────────── */

@@ -8,12 +8,12 @@
 
    They used to live in availability-editor.tsx, which is a client component.
    Every export of a "use client" module becomes a client reference on the
-   server, so a Server Component calling one throws at request time —
+   server, so a Server Component calling one throws at request time,
 
      Attempted to call rulesToDays() from the server but rulesToDays is on the
      client.
 
-   — while the build, the type check and any unit test all pass, because none
+  , while the build, the type check and any unit test all pass, because none
    of them honour the directive. Onboarding steps 4 and 5 returned 500 in
    production for exactly that reason. Pure helpers shared across the boundary
    belong in a module that declares neither side.
@@ -47,7 +47,7 @@ export function starterWeek(): Day[] {
 
 export const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
-/** Monday first — the working week is what a host is setting. */
+/** Monday first. The working week is what a host is setting. */
 export const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 /** The default range a day gets when it is switched on: 09:00 to 17:00. */
@@ -122,7 +122,7 @@ export function formatTimeOffDate(date: string): string {
   }).format(new Date(Date.UTC(y, m - 1, d)));
 }
 
-/** "Away all day" · "9:00 AM – 12:00 PM" — what a time-off row reads as. */
+/** "Away all day" · "9:00 AM – 12:00 PM", what a time-off row reads as. */
 export function timeOffSummary(ranges: Range[]): string {
   if (ranges.length === 0) return "Away all day";
   return ranges.map((r) => `${minutesToClock(r.start)} – ${minutesToClock(r.end)}`).join(", ");

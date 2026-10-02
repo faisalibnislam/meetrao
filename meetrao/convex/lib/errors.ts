@@ -9,7 +9,7 @@ import { ConvexError } from "convex/values";
    crosses that boundary intact.
 
    So every message a person is meant to read goes through `fail`. A plain
-   Error is still right for genuine bugs — those SHOULD be opaque to the client
+   Error is still right for genuine bugs, those SHOULD be opaque to the client
    and loud in the logs.
    ───────────────────────────────────────────────────────────────────────────── */
 

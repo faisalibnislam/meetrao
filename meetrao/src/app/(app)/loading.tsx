@@ -1,6 +1,6 @@
 import { Bar, BodySkeleton, RowsSkeleton } from "@/components/app/skeleton";
 
-/* The fallback boundary for app routes without one of their own — the new and
+/* The fallback boundary for app routes without one of their own, the new and
    edit screens, reached by a button rather than a sidebar tab. Those titles are
    not static (a meeting's edit screen is named after the meeting), so this one
    shimmers the header too, at the AppScreen header's own metrics: a 19px title

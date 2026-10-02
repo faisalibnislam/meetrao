@@ -6,7 +6,7 @@
    decisions in it.
 
    THE SHAPE A HOST ASKS FOR IS `meeting.example.com/alex`. That is the link
-   they will put in a signature, so it has to work — and so does the bare
+   they will put in a signature, so it has to work, and so does the bare
    domain, which is what somebody types when they half-remember the link. Both
    resolve to the same page; neither redirects to the other, because a redirect
    between two URLs a host advertises is a flicker for no gain.
@@ -38,7 +38,7 @@ const SHARED_PREFIXES = [
   "/auth",
 ];
 
-/** Exact paths, not prefixes — a meeting could legitimately be slugged "help". */
+/** Exact paths, not prefixes. A meeting could legitimately be slugged "help". */
 const SHARED_EXACT = new Set([
   "/robots.txt",
   "/sitemap.xml",

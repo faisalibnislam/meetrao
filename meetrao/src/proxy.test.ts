@@ -8,7 +8,7 @@ import { NextRequest } from "next/server";
    Convex Auth's middleware is stubbed because it pulls in Next's middleware
    machinery, which does not resolve outside a Next build. The stub records
    that it was reached, so "left alone" can be asserted as "delegated and
-   returned nothing" rather than merely "no redirect happened" — which an
+   returned nothing" rather than merely "no redirect happened", which an
    accidentally dead proxy would also satisfy. */
 const delegated: string[] = [];
 
@@ -80,7 +80,7 @@ describe("proxy · an OAuth code stranded on the site root", () => {
   });
 
   /* The forward must happen INSTEAD of the auth middleware, not before it and
-     then again through it — a delegated request would be redirected twice. */
+     then again through it. a delegated request would be redirected twice. */
   it("forwards without consulting the auth middleware at all", async () => {
     await get("https://meetrao.com/?code=abc123");
     expect(delegated).toEqual([]);
@@ -96,7 +96,7 @@ describe("proxy · an OAuth code stranded on the site root", () => {
    visitor is signed out as well.
 
    This shipped twice. First it broke connecting a calendar. The fix named the
-   calendar callback and let everything else through — which left sign-up and
+   calendar callback and let everything else through, which left sign-up and
    password reset broken in the identical way, and a real confirmation link
    arrived correct, lost its code here, and landed on a page telling the person
    they had not confirmed.
@@ -125,7 +125,7 @@ describe("proxy · only the OAuth callback's code belongs to the auth middleware
     ["/api/google/callback", "Google Calendar consent, exchanged inside Convex"],
     ["/verify", "the emailed confirmation code"],
     ["/reset", "the emailed password-reset code"],
-  ])("leaves %s alone — %s", async (path) => {
+  ])("leaves %s alone, %s", async (path) => {
     await get("https://meetrao.com/dashboard");
     expect(await ask(`https://meetrao.com${path}?email=a%40b.com&code=its-own-code`)).toBe(false);
   });
@@ -150,7 +150,7 @@ describe("proxy · only the OAuth callback's code belongs to the auth middleware
                  and redirects to /login
      /login      the proxy asks Convex, is told it IS good, and redirects back
 
-   Both call Convex, so they are not simply trusting different things — the
+   Both call Convex, so they are not simply trusting different things, the
    middleware validates the token it just REFRESHED, while the page reads the
    stale cookie from the same request. A session whose access token expired
    while its refresh token is still valid sits exactly in that gap, and the

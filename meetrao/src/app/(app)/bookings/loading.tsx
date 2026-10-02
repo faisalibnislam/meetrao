@@ -1,7 +1,7 @@
 import { AppScreen } from "@/components/app/app-screen";
 import { BodySkeleton, RowsSkeleton, TabsSkeleton } from "@/components/app/skeleton";
 
-/* Real header, shimmering body — see components/app/skeleton.tsx. The title and
+/* Real header, shimmering body, see components/app/skeleton.tsx. The title and
    subtitle are the same strings page.tsx renders, so nothing here moves when
    the bookings arrive. */
 export default function Loading() {

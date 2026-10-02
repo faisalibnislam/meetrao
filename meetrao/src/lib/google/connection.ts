@@ -7,7 +7,7 @@ import { convexMessage } from "@/lib/convex/error";
 /* ─────────────────────────────────────────────────────────────────────────────
    Google Calendar connection state.
 
-   The tokens live in Convex and are USED there — `convex/google.ts` does the
+   The tokens live in Convex and are USED there, `convex/google.ts` does the
    exchange, the refresh, the revoke and the API calls. Nothing in this file
    has ever seen a refresh token since that move, and nothing should: the
    functions below ask about a connection or end one, and neither answer
@@ -59,7 +59,7 @@ export type DisconnectResult = { ok: boolean; error?: string };
  * Both halves happen inside Convex, where the token is: the row is read and
  * deleted in one transaction that hands the token back, and the revoke follows.
  *
- * STILL DOES NOT THROW — account deletion calls this on its way out, and a
+ * STILL DOES NOT THROW, account deletion calls this on its way out, and a
  * host must not be trapped in a connected state because Google is having a bad
  * afternoon. But it now REPORTS. It used to swallow everything into
  * console.error and return void, so when the action started refusing every

@@ -26,7 +26,7 @@ const DAY = 86_400_000;
  * The booking page, for somebody else's website.
  *
  * The same component, the same slot engine and the same API as the hosted
- * page — a second implementation would be a second place for a timezone bug,
+ * page. A second implementation would be a second place for a timezone bug,
  * and the one thing worse than no widget is a widget that offers times the
  * real page would not.
  *
@@ -98,7 +98,7 @@ export default async function EmbedPage({
     // A full slot is not on offer, however free the host's calendar looks.
     .filter((iso) => meeting.capacity <= 1 || (seats[iso] ?? 0) < meeting.capacity);
 
-  // The widget counts as an opening, the same as the hosted page: "Avg. reply
+  // The widget counts as an opening, the same as the hosted page: "Avg. Reply
   // time" measures opened → booked, and a booking with no opening skews it.
   const pageViewId = await convexAnonymous().mutation(api.publicBooking.recordPageView, {
     hostId: host.id,
@@ -106,7 +106,7 @@ export default async function EmbedPage({
   });
 
   /* THE COLOUR, BUT NOT THE MARK. A widget sits on the host's own site, which
-     already carries their logo at the top of the page — a second one inside
+     already carries their logo at the top of the page. A second one inside
      the card would be the only place on the internet their logo appears
      twice. The colour is what makes it look like part of their site. */
   return (
@@ -133,7 +133,7 @@ export default async function EmbedPage({
       />
 
       {/* Free accounts carry a line on somebody else's site; Pro does not.
-          Deliberately small and below the card — a widget a host paid to
+          Deliberately small and below the card, a widget a host paid to
           embed should look like theirs, and one they did not should still
           not shout. */}
       {host.unbranded ? null : (

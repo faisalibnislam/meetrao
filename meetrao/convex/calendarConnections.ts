@@ -8,7 +8,7 @@ import { requireProfile } from "./lib/auth";
 /* ─────────────────────────────────────────────────────────────────────────────
    Google OAuth tokens.
 
-   In Postgres this table had RLS ON and NO POLICY — meaning no browser session
+   In Postgres this table had RLS ON and NO POLICY, meaning no browser session
    could read it at all, by design, and only the service role could reach it.
 
    The Convex equivalent is that EVERY function in this file is internal. An
@@ -99,7 +99,7 @@ export const disconnect = internalMutation({
    neither returns a token:
 
    · `statusOwn` answers "is my calendar connected, and does it need
-     reconnecting" — the Settings screen's question, and nothing more.
+     reconnecting", the Settings screen's question, and nothing more.
    · `disconnectOwn` deletes the caller's own row. Deleting a secret you own is
      not a disclosure.
    ────────────────────────────────────────────────────────────────────────────── */

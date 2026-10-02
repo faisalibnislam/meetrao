@@ -11,7 +11,7 @@ import { requirePro } from "./lib/plan";
    API keys: read-only, per host, hashed.
 
    WHAT A KEY CAN DO. Read that host's own bookings and meetings. Nothing
-   writes — no creating, no cancelling, no moving. Every booking rule in this
+   writes, no creating, no cancelling, no moving. Every booking rule in this
    product is enforced at a door that assumes a guest is on the other side of
    it, and a write API would be a second door that has to enforce them all
    again. Read-only is a smaller promise that can actually be kept.
@@ -46,7 +46,7 @@ export const store = internalMutation({
   args: { userId: v.string(), name: v.string(), prefix: v.string(), hash: v.string() },
   handler: async (ctx, a) => {
     /* Checked here rather than in `create`, because this is where the row is
-       written — a gate on the caller is a gate somebody can call around. */
+       written. A gate on the caller is a gate somebody can call around. */
     const owner = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.userId)).unique();
     if (!owner) fail("No such account.");
     requirePro(owner, "The API");
@@ -75,7 +75,7 @@ export const store = internalMutation({
  * Mints a key and returns it ONCE.
  *
  * An action rather than a mutation because hashing is async crypto, which a
- * Convex mutation cannot do — and because the plaintext must exist only in
+ * Convex mutation cannot do, and because the plaintext must exist only in
  * this call's return value, never in a row.
  */
 export const create = action({

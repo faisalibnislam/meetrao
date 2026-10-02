@@ -3,7 +3,7 @@ import { POSTAL_ADDRESS } from "@/lib/contact";
 
 /* Renders every template in src/emails through the real senders, with the
    Resend SDK's network call intercepted. Catches an unfilled {{field}}, which
-   render() throws on — the difference between an email and no email.
+   render() throws on, the difference between an email and no email.
 
    The two emails Convex Auth sends are NOT here; they live in
    convex/lib/emails.ts and are covered by convex-templates.test.ts. */
@@ -12,7 +12,7 @@ const sent: { to: string; subject: string; html: string; headers?: unknown }[] =
 
 beforeAll(() => {
   // Dummies, deliberately. The point is to render the templates, not to reach
-  // Resend — the SDK's fetch is intercepted below and never leaves the process.
+  // Resend. The SDK's fetch is intercepted below and never leaves the process.
   for (const [k, v] of Object.entries({
     NEXT_PUBLIC_CONVEX_URL: "https://example-deployment.convex.cloud",
     GOOGLE_CLIENT_ID: "test-client-id",

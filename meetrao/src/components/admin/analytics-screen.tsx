@@ -66,7 +66,7 @@ export function AnalyticsScreen({ data }: { data: SiteAnalytics }) {
 /* ── range ─────────────────────────────────────────────────────────────────── */
 
 /* Links, not buttons: the data is fetched on the server, so the range belongs in
-   the URL — which also means a range can be bookmarked and the back button
+   the URL, which also means a range can be bookmarked and the back button
    does what it looks like it should. */
 function RangeTabs({ current }: { current: Range }) {
   return (
@@ -104,8 +104,8 @@ function Headline({ data }: { data: SiteAnalytics }) {
   ];
 
   /* The dividers are the grid's own 1px gaps showing the container colour
-     through, not borders on the cells. An auto-fit grid rewraps — four across,
-     then two by two, then one — and a "border-left on every cell but the first"
+     through, not borders on the cells. An auto-fit grid rewraps (four across,
+     then two by two, then one) and a "border-left on every cell but the first"
      rule draws a stray line at the start of each new row when it does. A gap
      cannot be in the wrong place. */
   return (
@@ -137,7 +137,7 @@ function Headline({ data }: { data: SiteAnalytics }) {
 /**
  * Change against the same span immediately before this one.
  *
- * Returns null when there is nothing to compare — zero to zero is not "0%", and
+ * Returns null when there is nothing to compare, zero to zero is not "0%", and
  * zero to something is not "+∞%". Both of those render as a word.
  */
 function change(now: number, before: number): { text: string; up: boolean; flat: boolean } | null {
@@ -282,7 +282,7 @@ const NICE = [1, 1.2, 1.4, 1.6, 1.8, 2, 2.2, 2.4, 2.6, 2.8, 3, 3.2, 3.6, 4, 4.4,
  * The top of the vertical scale: the smallest round number at or above the
  * peak. 3 → 4, 9 → 10, 61 → 80, 305 → 320.
  *
- * Kept tight on purpose. Rounding 61 up to 100 — which a coarser ladder does —
+ * Kept tight on purpose. Rounding 61 up to 100, which a coarser ladder does,
  * spends two fifths of the chart's height on empty space and flattens every bar
  * in it, which is a graph that under-reports its own subject.
  */

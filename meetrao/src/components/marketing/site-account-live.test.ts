@@ -8,7 +8,7 @@ import type { Profile } from "@/lib/types";
    on its own.
 
    The failure worth guarding is the quiet one. With a session but no profile,
-   the obvious code builds an account with an empty name — which renders as a
+   the obvious code builds an account with an empty name, which renders as a
    blank avatar chip with blank initials, in place of two buttons that worked.
    Nothing throws, nothing logs, and the only person who sees it is a signed-in
    host looking at a broken control on the home page.

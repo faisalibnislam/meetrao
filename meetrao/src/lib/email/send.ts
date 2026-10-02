@@ -11,15 +11,15 @@ import type { Profile } from "@/lib/types";
 
    `src/emails/*.html` are the design's send-ready files, used as-is: table
    based, styles inlined, under 10KB each, tested against real mail clients.
-   They are not rebuilt in JSX and not passed through a mail-component library —
-   a div-based rewrite breaks Outlook.
+   They are not rebuilt in JSX and not passed through a mail-component library.
+   A div-based rewrite breaks Outlook.
 
    Three rules the design is explicit about:
 
      · Escape every merge value. A guest controls their own name and the note
        field; unescaped, a note can close a table cell and rewrite the email.
      · Host mail respects the five notification preferences. Guest mail never
-       does — confirmations and cancellations are transactional. The guest
+       does, confirmations and cancellations are transactional. The guest
        senders below take no preference parameter at all, which is the cleanest
        way to guarantee it.
      · Default to sending when a preference cannot be read. A database blip
@@ -114,12 +114,12 @@ async function deliver({ to, subject, html, idempotencyKey, marketing }: SendInp
 /** Footer values every template shares. */
 function chrome() {
   return {
-    // Absolute, and a PNG. Email clients do not render SVG — Gmail and Outlook
-    // drop it entirely — and a relative path has no page to be relative to.
+    // Absolute, and a PNG. Email clients do not render SVG, Gmail and Outlook
+    // drop it entirely, and a relative path has no page to be relative to.
     logo_url: `${siteUrl()}/brand/meetrao-email-logo.png`,
     // No `|| "Meetrao"` fallback: a footer with the company name and no
     // address is not a compliant footer, and quietly substituting one hides
-    // the fault. env() guarantees a real value — see `optional` in env.ts.
+    // the fault. Env() guarantees a real value, see `optional` in env.ts.
     postal_address: env().EMAIL_POSTAL_ADDRESS,
     preferences_url: `${siteUrl()}/settings/notifications`,
     unsubscribe_url: `${siteUrl()}/settings/notifications`,
@@ -183,8 +183,8 @@ function bookingUrls(reference: string) {
  * The "Where" line and the button above it.
  *
  * A Meet link is a thing to click; an address is not. When there is nothing to
- * join, the button points at the booking itself — which is where the guest
- * moves or cancels it — and says so, rather than offering "Join Google Meet"
+ * join, the button points at the booking itself (which is where the guest
+ * moves or cancels it) and says so, rather than offering "Join Google Meet"
  * for a meeting that happens in a room.
  */
 function meetFields(mail: Pick<BookingMail, "meetUrl" | "reference" | "where">) {
@@ -197,7 +197,7 @@ function meetFields(mail: Pick<BookingMail, "meetUrl" | "reference" | "where">) 
   };
 }
 
-/** "New booking" — the host's copy. Suppressed when the host turned it off. */
+/** "New booking", the host's copy. Suppressed when the host turned it off. */
 export async function sendBookingNewToHost(
   mail: BookingMail,
   prefs: Pick<Profile, "notify_new_booking"> | null,
@@ -304,7 +304,7 @@ export async function sendCancellationToGuest(mail: CancellationMail): Promise<S
  *
  * The idempotency key carries the new start time, not just the booking id: a
  * booking can be moved more than once, and a key that named only the booking
- * would make every move after the first a duplicate of the first — silently
+ * would make every move after the first a duplicate of the first, silently
  * dropped by Resend, with the guest left holding the old time.
  */
 export async function sendRescheduled(

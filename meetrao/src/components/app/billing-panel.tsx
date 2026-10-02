@@ -14,10 +14,10 @@ import { saveReminderTiming } from "@/lib/actions/settings";
    Plan, and the reminder timing that lives nowhere else.
 
    The custom domain used to be on this screen and is now on the Branding one,
-   beside the logo and the colour — see the pointer below.
+   beside the logo and the colour (see the pointer below.
 
    The plan shown here is whatever Polar last told us. Nothing on this screen
-   can set it — the upgrade button opens a checkout and the page waits to be
+   can set it) the upgrade button opens a checkout and the page waits to be
    told, which is why coming back from Polar refreshes rather than assuming.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -150,7 +150,7 @@ export function BillingPanel({
 
       {/* ── their own domain, which lives on the Branding screen now ──
           Moved rather than duplicated: the logo, the colour and the domain are
-          one decision a host makes once — "make this look like mine" — and a
+          one decision a host makes once ("make this look like mine") and a
           DNS form on a page about money was the odd one out. This line stays
           so a host who comes looking for it here is not left guessing. */}
       <div className="flex flex-wrap items-center justify-between gap-[10px] rounded-[8px] border border-line bg-surface px-[15px] py-[13px]">

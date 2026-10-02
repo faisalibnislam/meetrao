@@ -12,7 +12,7 @@ export type AvatarResult = { url?: string | null; error?: string };
  * Records a freshly uploaded avatar, and removes the one it replaces.
  *
  * The upload itself happens in the browser, against the host's own session, so
- * the storage policies decide whether it is allowed rather than this code —
+ * the storage policies decide whether it is allowed rather than this code,
  * `avatars_insert_own` requires the first path segment to be the uploader's
  * own id. The path is re-checked here anyway: this runs with the service role,
  * and a path arriving from a client is not a thing to take on trust.

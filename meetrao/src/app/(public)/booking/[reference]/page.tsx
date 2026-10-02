@@ -13,7 +13,7 @@ import { BrandMark, BrandScope } from "@/components/booking/brand";
 export const dynamic = "force-dynamic";
 
 /* Never indexed. This page is reached with a 32-hex-character reference and
-   shows a named guest, a named host and a time — the whole point is that only
+   shows a named guest, a named host and a time. The whole point is that only
    the two people involved can see it. `noindex, nofollow` rather than a
    robots.txt disallow, because a disallowed page is one a crawler never fetches
    and therefore one whose noindex it never reads; a bare URL can still be

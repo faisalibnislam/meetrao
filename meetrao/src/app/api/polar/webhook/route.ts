@@ -9,8 +9,8 @@ export const dynamic = "force-dynamic";
 /* ─────────────────────────────────────────────────────────────────────────────
    Polar's webhook: the one thing that grants or removes Pro.
 
-   Nothing else writes a plan. Not the checkout return — a browser can be sent
-   to a success URL by anyone — and not a client callback. A plan is a claim
+   Nothing else writes a plan. Not the checkout return (a browser can be sent
+   to a success URL by anyone) and not a client callback. A plan is a claim
    about money and the only party that knows is the one that took it.
 
    REJECT FIRST, PARSE SECOND. The body is read as text and verified before it
@@ -19,7 +19,7 @@ export const dynamic = "force-dynamic";
 
    A delivery that cannot be verified gets 401 and no detail. A delivery for
    somebody who is not a host here gets 200, because it is not Polar's problem
-   that an organisation sells other things — answering anything else would
+   that an organisation sells other things, answering anything else would
    have them retry it forever.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
   /* Only subscription events change a plan. `subscription.updated` is Polar's
      catch-all and carries the current status, so handling the family by prefix
-     means a new member of it — paused, migrated — is already handled. */
+     means a new member of it (paused, migrated) is already handled. */
   if (!event.type?.startsWith("subscription.")) {
     return NextResponse.json({ ok: true, ignored: event.type ?? "unknown" });
   }

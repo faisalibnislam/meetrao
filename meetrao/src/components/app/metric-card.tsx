@@ -2,7 +2,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 
 /* The dashboard's four tinted cards. Each carries its own colour, and the
-   colour is the card's identity — status colours never decorate elsewhere.
+   colour is the card's identity, status colours never decorate elsewhere.
 
    The trend chip is semibold to hold its weight at a proportional face's
    smaller apparent size. It keeps the uppercase and the wide tracking: it is a

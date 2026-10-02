@@ -25,7 +25,7 @@ import {
    to anon at all (migration 0016). This route holds the service role and is the
    only writer.
 
-   What the browser sends is exactly two strings — the path and the referrer —
+   What the browser sends is exactly two strings. The path and the referrer,
    and both are re-validated here, because a beacon posts whatever the page
    tells it to.
 
@@ -62,7 +62,7 @@ function withinBudget(hash: string, now: number): boolean {
 }
 
 /* Retention pruning used to ride along on 1 request in 500, because there was
-   nowhere else to put it. It is a scheduled job now — see convex/crons.ts —
+   nowhere else to put it. It is a scheduled job now, see convex/crons.ts,
    which is both more predictable and does not make one unlucky visitor pay for
    it. */
 
@@ -86,7 +86,7 @@ export async function POST(request: Request): Promise<Response> {
   let payload: { path?: unknown; referrer?: unknown };
   try {
     // sendBeacon sends text/plain so the request stays CORS-simple; the body is
-    // still JSON. Capped before parsing — the beacon sends a few hundred bytes.
+    // still JSON. Capped before parsing. The beacon sends a few hundred bytes.
     const raw = (await request.text()).slice(0, 2048);
     payload = JSON.parse(raw) as { path?: unknown; referrer?: unknown };
   } catch {
@@ -121,7 +121,7 @@ export async function POST(request: Request): Promise<Response> {
   after(async () => {
     /* The secret is what keeps this endpoint ours. site_visits had no insert
        grant precisely so a browser could not forge a visit, and a Convex
-       mutation has no service role to inherit that from — see the note on
+       mutation has no service role to inherit that from, see the note on
        `record` in convex/analytics.ts. */
     const secret = process.env.ANALYTICS_INGEST_SECRET;
     if (!secret) {
@@ -135,7 +135,7 @@ export async function POST(request: Request): Promise<Response> {
       // outage, and there is no one to tell.
       console.error("analytics: convex insert failed", cause);
     }
-    // No opportunistic prune here — convex/crons.ts runs it on a schedule,
+    // No opportunistic prune here, convex/crons.ts runs it on a schedule,
     // which is what it should always have been.
   });
 
@@ -146,7 +146,7 @@ export async function POST(request: Request): Promise<Response> {
  * The hash salt.
  *
  * Must be set. It used to fall back to the service-role key, which made the
- * analytics work with no configuration at all — and tied the visitor hash to a
+ * analytics work with no configuration at all, and tied the visitor hash to a
  * credential that could be rotated for unrelated reasons, silently resetting
  * that day's unique-visitor count. There is no service-role key now, and the
  * fallback would be worse than the requirement.

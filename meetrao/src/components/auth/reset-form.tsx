@@ -11,7 +11,7 @@ import { Callout } from "@/components/ui/panels";
  * Setting a new password after a reset.
  *
  * Convex Auth emails a CODE and no session, so the code and the address have
- * to travel with the new password — there is nothing signed in to say who is
+ * to travel with the new password. There is nothing signed in to say who is
  * asking. The reset link carries both in the query string; the fields below
  * are the fallback for someone who typed the address by hand or lost the
  * link's parameters.
@@ -45,7 +45,7 @@ export function ResetForm({
         router.push("/dashboard?updated=password");
         router.refresh();
       } catch {
-        // Expired, already used, or simply wrong — all the same to the person
+        // Expired, already used, or simply wrong, all the same to the person
         // holding it, and all fixed the same way.
         setConvexError("That reset link has expired. Request a new one.");
       }

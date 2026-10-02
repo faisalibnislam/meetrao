@@ -19,12 +19,12 @@ export type MoveResult = { error?: string; calendarWarning?: string };
  * Host-side reschedule. Same ordering as cancellation, and for the same
  * reason: the booking moves first, then the calendar event, then the mail.
  *
- * The host's own hours are not consulted — Convex does not check them for a
+ * The host's own hours are not consulted, Convex does not check them for a
  * host moving their own meeting, exactly as it does not when the host creates
  * one. A clash with another booking still refuses.
  *
  * The new time arrives as a calendar date and minutes into that day, and is
- * turned into an instant HERE, against the host's own timezone — the same
+ * turned into an instant HERE, against the host's own timezone. The same
  * conversion `scheduleMeeting` does, and for the same reason: the host's
  * screen only ever shows their own wall clock, and a browser in another zone
  * would otherwise move the meeting by its offset.
@@ -94,7 +94,7 @@ export async function rescheduleBooking(
  *
  * Order matters: the booking is marked cancelled first, then the calendar event
  * is removed, then both parties are told. A calendar or email failure after the
- * write leaves a cancelled booking and a warning — never a booking that looks
+ * write leaves a cancelled booking and a warning, never a booking that looks
  * cancelled to one side and live to the other.
  */
 export async function cancelBooking(bookingId: string): Promise<CancelResult> {
@@ -130,7 +130,7 @@ export async function cancelBooking(bookingId: string): Promise<CancelResult> {
 
   // Every invitee, not just the guest of record. A meeting the host scheduled
   // for three people that only tells one of them it is cancelled leaves two
-  // sitting in an empty Meet — the failure this feature would otherwise add.
+  // sitting in an empty Meet. The failure this feature would otherwise add.
   const others = invitees.filter((i) => i.email.toLowerCase() !== booking.guest_email.toLowerCase());
 
   await Promise.allSettled([

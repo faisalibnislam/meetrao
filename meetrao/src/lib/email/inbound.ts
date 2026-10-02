@@ -4,8 +4,8 @@ import { createHmac, timingSafeEqual } from "node:crypto";
    Inbound mail.
 
    Receiving on meetrao.com is enabled and the MX record is verified, so mail to
-   hello@meetrao.com reaches Resend. Resend inbound is not a mailbox, though —
-   there is no IMAP, no webmail, and nothing that puts a message in front of a
+   hello@meetrao.com reaches Resend. Resend inbound is not a mailbox, though.
+   There is no IMAP, no webmail, and nothing that puts a message in front of a
    person. A received message exists only in Resend's store until a webhook does
    something with it.
 
@@ -22,7 +22,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
      signature      = base64(HMAC-SHA256(base64-decoded secret, signed content))
 
    The `svix-signature` header carries a space-separated list of
-   `<version>,<signature>` pairs — more than one during a secret rotation — and
+   `<version>,<signature>` pairs (more than one during a secret rotation) and
    the delivery is authentic if any v1 entry matches. */
 
 /** How far a delivery's timestamp may drift before it is treated as a replay. */
@@ -73,8 +73,8 @@ export function verifyWebhook(args: {
 /* ── payload ────────────────────────────────────────────────────────────────
    Read defensively. This is the one shape in the whole app that is defined by
    somebody else's product and can gain or lose fields without a release here,
-   and a message that arrives in an unexpected shape must still reach a person —
-   a support address that silently drops mail is worse than no support address. */
+   and a message that arrives in an unexpected shape must still reach a person.
+   A support address that silently drops mail is worse than no support address. */
 
 export type ReceivedAttachment = {
   id: string;
@@ -84,7 +84,7 @@ export type ReceivedAttachment = {
   contentId: string | null;
   /** An image embedded in the message rather than clipped to it. */
   inline: boolean;
-  /** Bytes, or 0 when unknown — the webhook payload does not carry sizes. */
+  /** Bytes, or 0 when unknown. The webhook payload does not carry sizes. */
   size: number;
 };
 
@@ -94,11 +94,11 @@ export type ReceivedEmail = {
   to: string[];
   subject: string;
   /**
-   * The body — and it does NOT come from the webhook.
+   * The body, and it does NOT come from the webhook.
    *
    * `email.received` carries the envelope only: sender, recipients, subject,
    * message id and attachment metadata. There is no `text` and no `html` in
-   * it, which is confirmed three ways — two live payloads captured from this
+   * it, which is confirmed three ways, two live payloads captured from this
    * endpoint, and Resend's own `ReceivedEmailEventData` type, which declares
    * neither field.
    *
@@ -164,7 +164,7 @@ export function asAttachments(value: unknown): ReceivedAttachment[] {
 /**
  * Pulls a received email out of a webhook envelope.
  *
- * Returns null for any event that is not `email.received` — one endpoint may
+ * Returns null for any event that is not `email.received`, one endpoint may
  * end up subscribed to delivery events too, and those are not mail to forward.
  */
 export function parseReceived(payload: unknown): ReceivedEmail | null {
@@ -189,7 +189,7 @@ export function parseReceived(payload: unknown): ReceivedEmail | null {
 /* ── attachments ────────────────────────────────────────────────────────────
    Re-sending someone else's files has two limits worth respecting. Resend
    caps a message at 40 MB, and a webhook that tries to move 40 MB is a webhook
-   that times out and gets retried — three times, moving it again each time. */
+   that times out and gets retried, three times, moving it again each time. */
 
 /** Total bytes we will re-send. Well under Resend's 40 MB ceiling, on purpose. */
 export const ATTACHMENT_BUDGET = 15 * 1024 * 1024;
@@ -202,7 +202,7 @@ export const ATTACHMENT_BUDGET = 15 * 1024 * 1024;
  * attaching them again would show every logo in a signature twice.
  *
  * Ordering is the message's own. Taking the first files that fit is arbitrary,
- * but every alternative is too — and the ones that do not fit are named in the
+ * but every alternative is too, and the ones that do not fit are named in the
  * body, so nothing disappears silently.
  */
 export function chooseAttachments(
@@ -216,7 +216,7 @@ export function chooseAttachments(
   for (const attachment of list) {
     if (attachment.inline) continue;
 
-    // size 0 means "unknown", not "empty" — the webhook omits sizes. An
+    // size 0 means "unknown", not "empty", the webhook omits sizes. An
     // unknown file still counts against the budget once it is fetched, so it
     // is admitted only while there is room left for a whole one.
     const cost = attachment.size || 0;
@@ -286,7 +286,7 @@ export function forwardSubject(mail: ReceivedEmail): string {
 export function forwardHtml(
   mail: ReceivedEmail,
   escape: (value: string) => string,
-  /** Rendered above the body — currently the "too large to forward" note. */
+  /** Rendered above the body, currently the "too large to forward" note. */
   notice = "",
 ): string {
   const envelope = [
@@ -301,7 +301,7 @@ export function forwardHtml(
     )
     .join("");
 
-  // A message with neither part is not dropped — the envelope alone still tells
+  // A message with neither part is not dropped. The envelope alone still tells
   // someone that mail arrived, and the id finds it in the Resend dashboard.
   const body = mail.html
     ? mail.html

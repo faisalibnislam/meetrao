@@ -25,7 +25,7 @@ export default function Page() {
   return (
     <>
       {/* The FAQ entries are the part a model quotes when asked "is there a
-          free alternative to ${DATA.competitor}" — including the one that
+          free alternative to ${DATA.competitor}", including the one that
           answers "what is the catch" with the actual catches. */}
       <JsonLd
         json={graph(

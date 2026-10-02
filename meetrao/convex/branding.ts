@@ -13,7 +13,7 @@ import { normaliseHex, validateBrandColor } from "./lib/brand";
 
    · Writing is gated here, with requirePro: a free host cannot set branding.
    · SERVING is gated in convex/publicBooking.ts, on the way out. A host whose
-     subscription lapses keeps the rows — so coming back costs them nothing —
+     subscription lapses keeps the rows, so coming back costs them nothing,
      but their pages go back to Meetrao's mark the moment the plan does.
 
    Gating only the write would mean branding set during a paid month stayed up
@@ -61,7 +61,7 @@ export const saveLogo = mutation({
 
     /* Checked HERE rather than in the browser, because the upload URL goes to
        the browser and anything can post to it. The file is already stored by
-       the time this runs, so a refused one is deleted on the way out — not
+       the time this runs, so a refused one is deleted on the way out, not
        left behind to be paid for. */
     const meta = await ctx.db.system.get(a.storageId);
     if (!meta) fail("That upload could not be found.", "NOT_FOUND");
@@ -112,8 +112,8 @@ export const removeLogo = mutation({
  * The page background.
  *
  * Shares validateBrandColor with the accent, which refuses the near-whites and
- * the unlabelable mid-tones. BOTH of those are fine as a background — a white
- * page is a page, and a grey one is a grey page — so only the "is it a colour"
+ * the unlabelable mid-tones. BOTH of those are fine as a background (a white
+ * page is a page, and a grey one is a grey page) so only the "is it a colour"
  * half applies here, and the rest of the safety comes from deriving the text
  * drawn on it rather than from restricting the choice.
  */
@@ -122,7 +122,7 @@ export const setBackground = mutation({
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
 
-    // Empty clears it, and clearing is never gated — see removeLogo.
+    // Empty clears it, and clearing is never gated, see removeLogo.
     if (a.color.trim() === "") {
       await ctx.db.patch(me._id, { brand_bg: null, updated_at: Date.now() });
       return null;
@@ -143,7 +143,7 @@ export const setColor = mutation({
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
 
-    // Empty clears it, and clearing is never gated — see removeLogo.
+    // Empty clears it, and clearing is never gated, see removeLogo.
     if (a.color.trim() === "") {
       await ctx.db.patch(me._id, { brand_color: null, updated_at: Date.now() });
       return null;

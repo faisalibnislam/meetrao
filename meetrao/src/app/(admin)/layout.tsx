@@ -3,7 +3,7 @@ import { signOut } from "@/lib/actions/auth";
 import { requireAdmin } from "@/lib/data/session";
 
 /* The admin console reuses the shell, with its own nav.
-   Settings is a nav row here and is therefore NOT offered in the account menu —
+   Settings is a nav row here and is therefore NOT offered in the account menu,
    two identical adjacent rows, the second dropping the admin out of the
    console, is exactly the trap the design warns about. */
 

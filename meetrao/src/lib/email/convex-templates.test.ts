@@ -8,7 +8,7 @@ import { humanExpiry, renderReset, renderVerify } from "@/convex/lib/emails";
    They live in convex/lib/emails.ts rather than src/emails, because Convex
    sends them and Convex functions cannot read from disk. That put them outside
    render.verify.test.ts's reach, which is how they went out as Auth.js's
-   default template — unbranded, and with no postal address — for the whole
+   default template (unbranded, and with no postal address) for the whole
    window between the auth cutover and this file.
 
    The rendering half is pure on purpose so it can be tested here, with no
@@ -56,7 +56,7 @@ describe("the emails Convex Auth sends", () => {
   /* An unsubscribe pointing at /settings/notifications needs the account the
      recipient is in the middle of confirming or recovering. One that cannot
      work is worse than none, and neither message is one anybody may opt out
-     of — without it they cannot get into their own account. */
+     of, without it they cannot get into their own account. */
   it("offers no unsubscribe on either, because both are transactional", () => {
     for (const [name, r] of both) {
       expect(r.html.toLowerCase(), `${name} offers an unsubscribe`).not.toContain("unsubscribe");
@@ -75,7 +75,7 @@ describe("the emails Convex Auth sends", () => {
   });
 
   /* The address reaches the markup only inside the link, so encodeURIComponent
-     is the first defence and escapeHtml the second — a hostile address comes
+     is the first defence and escapeHtml the second. a hostile address comes
      out percent-encoded, not as `&lt;script&gt;`. Both layers are asserted:
      nothing executable survives, and the encoding is the reason. */
   it("neutralises a hostile address rather than interpolating it", () => {
@@ -84,12 +84,12 @@ describe("the emails Convex Auth sends", () => {
     expect(nasty.html).not.toContain("<script>");
     expect(nasty.html).toContain("%3Cscript%3E");
     // ...and the quote that would have closed the href is too. The payload's
-    // letters survive as inert text inside the URL, which is the point —
+    // letters survive as inert text inside the URL, which is the point,
     // encoding neutralises it rather than removing it.
     expect(nasty.html).toContain("%22");
   });
 
-  /* The postal address is NOT url-encoded — it is visible text in the footer,
+  /* The postal address is NOT url-encoded. It is visible text in the footer,
      so escapeHtml is the only thing standing between it and the markup. */
   it("escapes a value that renders as visible text", () => {
     const r = renderVerify({ ...base, postalAddress: 'Somewhere <b>& "there"' });

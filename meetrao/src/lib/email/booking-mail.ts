@@ -8,8 +8,8 @@ import type { Booking } from "@/lib/types";
    server-action file, where every export has to be an async action.
 
    Both take the fields they actually read rather than a whole `Booking`, so a
-   caller holding a freshly moved row — which comes back from Convex as a few
-   columns, not as the full record — can pass it without inventing the rest. */
+   caller holding a freshly moved row (which comes back from Convex as a few
+   columns, not as the full record) can pass it without inventing the rest. */
 
 export type MailableBooking = Pick<
   Booking,
@@ -36,7 +36,7 @@ export type MailableBooking = Pick<
  * anywhere on the row.
  *
  * Each recipient reads the time in their own zone in the body of the mail, so
- * the old and new times here are both rendered in the HOST's zone — mixing
+ * the old and new times here are both rendered in the HOST's zone, mixing
  * zones between "was" and "now" is how a reader concludes the meeting moved by
  * five and a half hours when it moved by one.
  */
@@ -76,7 +76,7 @@ export function rescheduleMail(
  * The note and the answers as one string, for the "Note from …" block.
  *
  * The templates substitute escaped TEXT, not markup, so answers cannot be a
- * table without teaching the renderer to trust pre-built HTML — which is the
+ * table without teaching the renderer to trust pre-built HTML, which is the
  * one thing it refuses to do. A labelled run of lines is the honest fit, and
  * it is what a host reads on their phone anyway.
  */

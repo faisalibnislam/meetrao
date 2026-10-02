@@ -1,8 +1,8 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    Where a meeting happens.
 
-   Four kinds. convex/lib/locations.ts is the same list, because a Convex
-   function cannot import from src/ — the two are pinned to each other by
+   Four kinds. Convex/lib/locations.ts is the same list, because a Convex
+   function cannot import from src/. The two are pinned to each other by
    src/lib/locations.test.ts, exactly as the timezone list is.
 
    "google_meet" is the default and was the only kind until now; every meeting

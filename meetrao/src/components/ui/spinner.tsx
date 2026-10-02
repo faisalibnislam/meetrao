@@ -1,6 +1,6 @@
 import { cx } from "@/lib/cx";
 
-/** 700ms linear infinite — the design's one loading affordance. */
+/** 700ms linear infinite, the design's one loading affordance. */
 export function Spinner({
   size = 12,
   tone = "ink",

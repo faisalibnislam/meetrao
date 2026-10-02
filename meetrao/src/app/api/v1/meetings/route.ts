@@ -5,7 +5,7 @@ import { api } from "@/convex/_generated/api";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/v1/meetings — the meeting types this key's account offers. */
+/** GET /api/v1/meetings, the meeting types this key's account offers. */
 export async function GET(request: NextRequest) {
   const hash = await presentedKeyHash(request);
   if (!hash) return unauthorized();

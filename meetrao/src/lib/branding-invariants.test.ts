@@ -5,8 +5,8 @@ import { describe, expect, it } from "vitest";
 /* ─────────────────────────────────────────────────────────────────────────────
    A Pro host's branding, guarded at the four places it can silently break.
 
-   None of this can be checked by rendering — there is no DOM harness here —
-   so it is checked at the source, which is the same way the rest of this repo
+   None of this can be checked by rendering. There is no DOM harness here.
+   So it is checked at the source, which is the same way the rest of this repo
    guards its invariants. Each test below names the failure it exists for.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -14,7 +14,7 @@ const ROOT = process.cwd();
 const APP = path.join(ROOT, "src", "app");
 const read = (p: string) => readFileSync(path.join(ROOT, p), "utf8");
 
-/* Several assertions below are "this file does NOT say X" — and the comments
+/* Several assertions below are "this file does NOT say X", and the comments
    in this codebase explain at length why something is absent, so they say X
    while meaning the opposite. Stripped first, as src/app/public-footer.test.ts
    does for the same reason. */
@@ -39,7 +39,7 @@ describe("the mark on a guest-facing page", () => {
     const text = readFileSync(path.join(APP, file), "utf8");
     /* <Logo> and <LogoLink> hard-code our mark. BrandMark falls back to the
        same component, so the only difference is whether a Pro host's logo gets
-       a chance to replace it — which is exactly the thing that is easy to
+       a chance to replace it, which is exactly the thing that is easy to
        forget when a page is added. */
     expect(text, `${file} shows the Meetrao mark to a Pro host's guests`).not.toMatch(
       /<Logo(Link)?\s/,
@@ -61,8 +61,8 @@ describe("branding is gated on the way OUT, not only on the way in", () => {
   const projection = read("convex/publicBooking.ts");
 
   /* The failure this exists for: a host subscribes, sets a logo, and lets the
-     subscription lapse. The rows survive on purpose — coming back should cost
-     them nothing — so if the public query did not re-check the plan, they
+     subscription lapse. The rows survive on purpose (coming back should cost
+     them nothing) so if the public query did not re-check the plan, they
      would keep a paid feature forever by having set it once. */
   it("checks the plan in the projection, not just in the mutation", () => {
     const fn = projection.slice(projection.indexOf("function publicBrand"));
@@ -74,7 +74,7 @@ describe("branding is gated on the way OUT, not only on the way in", () => {
   it("is reached from every public host projection", () => {
     // getHost, getMeetingAvailability and getByReference each hand a host to a
     // guest-facing page. One that forgot would serve an unbranded page from a
-    // branded link — or a branded one to a lapsed host.
+    // branded link, or a branded one to a lapsed host.
     const calls = projection.match(/publicBrand\(/g) ?? [];
     expect(calls.length).toBeGreaterThanOrEqual(4); // the definition plus three uses
   });
@@ -155,7 +155,7 @@ describe("the brand scope introduces no box", () => {
 
   it("wraps the page in nothing at all", () => {
     /* The (public) layout centres a column of siblings. A wrapper with a box
-       would make the card and footer its children instead of the column's —
+       would make the card and footer its children instead of the column's,
        the exact shape of a bug that already shipped once.
 
        This was a `display: contents` div and is now a bare fragment, which is
@@ -167,7 +167,7 @@ describe("the brand scope introduces no box", () => {
   it("rebinds at :root, because the page background is painted by body", () => {
     /* A wrapper inherits its variables DOWN. `html, body { background:
        var(--ground) }` are ancestors of everything a page renders, and the
-       cookie banner is mounted by the root layout outside the page entirely —
+       cookie banner is mounted by the root layout outside the page entirely,
        so a scoped wrapper left both of them in Meetrao's palette however much
        the host had chosen. */
     expect(brand).toContain(":root{");
@@ -204,7 +204,7 @@ describe("a branded page keeps none of Meetrao's palette", () => {
 
 describe("the embed stays transparent", () => {
   it("turns off the page background that globals.css paints", () => {
-    /* The widget's layout always SAID transparent, but only its own div was —
+    /* The widget's layout always SAID transparent, but only its own div was,
        `html, body { background: var(--ground) }` still painted the page behind
        it, so every embed carried our beige. Harmless-looking until a host's
        own background filled that space with a deliberate colour on somebody
@@ -224,7 +224,7 @@ describe("a host's own logo is larger than ours", () => {
 describe("the booking page shows a host's photograph", () => {
   it("uses <Avatar> rather than drawing initials itself", () => {
     /* This page hand-rolled initials from the host's name and never read
-       host.avatarUrl, so a host with a photograph showed up as two letters —
+       host.avatarUrl, so a host with a photograph showed up as two letters,
        on the one page that is their front door. */
     const page = read("src/app/(public)/[username]/page.tsx");
     expect(page).toContain("<Avatar");

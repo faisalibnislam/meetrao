@@ -8,7 +8,7 @@ import { clearedAuthCookies, isLocalHost } from "./cookies";
    cookie attributes did not matter.
 
    Off localhost Convex Auth prefixes its session cookies with `__Host-`. That
-   prefix is a browser-enforced contract — a Set-Cookie for a `__Host-` name is
+   prefix is a browser-enforced contract. a Set-Cookie for a `__Host-` name is
    rejected unless it carries Secure and Path=/. A deletion missing either is
    not a deletion: the browser drops the write, the cookie survives, and the
    next page load is still signed in. Locally there is no prefix and no https,
@@ -72,7 +72,7 @@ describe("clearing the session cookies on localhost", () => {
   const cleared = clearedAuthCookies(LOCAL);
 
   /* Not pedantry: Safari refuses to send Secure cookies over http, so a
-     hardcoded `secure: true` would break sign-out in development instead —
+     hardcoded `secure: true` would break sign-out in development instead,
      the same bug, pointed the other way. */
   it("does not mark them Secure, because http would reject them", () => {
     for (const c of cleared) expect(c.options.secure, `${c.name} was Secure on http`).toBe(false);

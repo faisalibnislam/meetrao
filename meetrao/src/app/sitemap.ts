@@ -12,7 +12,7 @@ import { absoluteUrl } from "@/lib/seo";
    asking them.
 
    `lastModified` is the deploy time rather than a per-page date. A fabricated
-   per-page date is worse than an honest whole-site one — crawlers learn quickly
+   per-page date is worse than an honest whole-site one, crawlers learn quickly
    that a sitemap which claims everything changed today is not worth believing.
    ───────────────────────────────────────────────────────────────────────────── */
 

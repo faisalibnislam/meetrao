@@ -12,7 +12,7 @@ import { buttonClass, type ButtonSize, type ButtonVariant } from "./button-class
 
    One style string shared by <button> and <a>. The UA gives <button> border-box
    and <a> content-box, so a shared height + border computes two different
-   heights unless box-sizing is pinned — three separate defects in the previous
+   heights unless box-sizing is pinned. Three separate defects in the previous
    build were exactly this. `box-border` below is that pin; do not remove it.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -59,7 +59,7 @@ export function Button({
         size={size}
       />
       {/* `contents`, not a plain span. The span exists to keep a text label as
-          one flex item, but an inline box also traps a block-level child — a
+          one flex item, but an inline box also traps a block-level child, a
           <GoogleG> beside a word stacked above it instead of sitting inline.
           Dissolving the box makes each child a flex item of the button, which
           is exactly the design's shape: the mark, then the label. */}
@@ -90,7 +90,7 @@ export function ButtonLink({
     >
       <Leading icon={icon} iconWeight={iconWeight} iconSize={iconSize} variant={variant} size={size} />
       {/* `contents`, not a plain span. The span exists to keep a text label as
-          one flex item, but an inline box also traps a block-level child — a
+          one flex item, but an inline box also traps a block-level child, a
           <GoogleG> beside a word stacked above it instead of sitting inline.
           Dissolving the box makes each child a flex item of the button, which
           is exactly the design's shape: the mark, then the label. */}

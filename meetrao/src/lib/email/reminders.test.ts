@@ -4,7 +4,7 @@ import { renderReminder } from "@/convex/lib/reminderEmail";
 
 /* The reminder sweep's two halves that can be run without a deployment: when a
    reminder is due, and what it says. The sweep itself takes a ctx and no test
-   here can call one — verdictFor exists as a separate function so the edges
+   here can call one, verdictFor exists as a separate function so the edges
    below are covered rather than reasoned about. */
 
 const HOUR = 3_600_000;
@@ -34,7 +34,7 @@ describe("when a reminder is due", () => {
   });
 
   /* A sweep catching up after an outage must not announce a meeting that has
-     already started — but a few minutes late is still useful. */
+     already started, but a few minutes late is still useful. */
   it("still sends just after the start, and stops once past the grace period", () => {
     expect(verdictFor("1h", NOW - GRACE + 60_000, NOW)).toBe("send");
     expect(verdictFor("1h", NOW - GRACE - 60_000, NOW)).toBe("mark");

@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Convex schema — a transcription of supabase/migrations, with three rules
+   Convex schema, a transcription of supabase/migrations, with three rules
    applied consistently. They are worth reading before changing anything here.
 
    1. THE POSTGRES UUIDs SURVIVE. Every row keeps its original `id` as an
@@ -15,7 +15,7 @@ import { authTables } from "@convex-dev/auth/server";
 
    2. TIMESTAMPS ARE EPOCH MILLISECONDS. Postgres `timestamptz` arrives as an
       ISO string, and ISO strings only sort chronologically when their format
-      is byte-identical — which it is not, because fractional seconds vary.
+      is byte-identical, which it is not, because fractional seconds vary.
       Anything that is range-queried or ordered would then be subtly wrong, so
       every instant is a number here and is converted back to the app's ISO
       string shape at the boundary in `convex/lib/serialize.ts`.
@@ -33,12 +33,12 @@ const nullableString = v.union(v.string(), v.null());
 const nullableNumber = v.union(v.number(), v.null());
 
 export default defineSchema({
-  /* Convex Auth's own tables — users, accounts, sessions, verification codes.
+  /* Convex Auth's own tables, users, accounts, sessions, verification codes.
      `users` is extended with `supabase_id`: the Supabase UUID that is also
      `profiles.id`. That one field is what keeps every user-keyed row valid
      across the issuer change, and it is resolved in exactly one place,
      convex/lib/auth.ts:currentUserId, which every authorization path already
-     goes through. profiles.id and its foreign keys stay UUIDs — rewriting
+     goes through. Profiles.id and its foreign keys stay UUIDs, rewriting
      fifteen tables to Convex ids would buy nothing and would cost the ability
      to compare the two databases row for row. */
   ...authTables,
@@ -47,7 +47,7 @@ export default defineSchema({
 
      `supabase_id` is the Supabase UUID, which is also `profiles.id`. It is
      what keeps every user-keyed row valid across the issuer change, and it is
-     resolved in exactly one place — convex/lib/auth.ts:currentUserId, which
+     resolved in exactly one place, convex/lib/auth.ts:currentUserId, which
      every authorization path already goes through. Nothing else in the
      codebase learns that identity changed shape.
 
@@ -68,7 +68,7 @@ export default defineSchema({
     .index("phone", ["phone"])
     .index("by_supabase_id", ["supabase_id"]),
 
-  /* unique: lower(username) — enforced in convex/profiles.ts */
+  /* unique: lower(username), enforced in convex/profiles.ts */
   profiles: defineTable({
     id: v.string(),
     username: v.string(),
@@ -92,10 +92,10 @@ export default defineSchema({
     notify_booking_changed: v.boolean(),
     notify_booking_cancelled: v.boolean(),
     /** Optional: every profile written before reminders existed has none, and
-        absent reads as ON — see convex/reminders.ts. */
+        absent reads as ON, see convex/reminders.ts. */
     notify_reminders: v.optional(v.boolean()),
     /**
-     * Minutes before a meeting that each reminder goes out — the long one and
+     * Minutes before a meeting that each reminder goes out, the long one and
      * the short one. Absent is the free default, 1440 and 60.
      *
      * Two slots rather than a list, because the two claim columns on
@@ -107,7 +107,7 @@ export default defineSchema({
     notify_daily_agenda: v.boolean(),
     notify_product_news: v.boolean(),
     /**
-     * "free" or "pro". Absent reads as free — every profile written before
+     * "free" or "pro". Absent reads as free. Every profile written before
      * plans existed has none.
      *
      * Written ONLY by the Polar webhook. Nothing in the app sets it: a plan
@@ -124,7 +124,7 @@ export default defineSchema({
     polar_customer_id: v.optional(nullableString),
     polar_subscription_id: v.optional(nullableString),
     /**
-     * Pro given by an operator rather than bought — a friend, a refund in
+     * Pro given by an operator rather than bought, a friend, a refund in
      * kind, an early user, a charity.
      *
      * SEPARATE FROM `plan` ON PURPOSE. `plan` has exactly one writer, Polar's
@@ -147,7 +147,7 @@ export default defineSchema({
     /**
      * Their own logo and colour on the booking page, in place of Meetrao's.
      *
-     * Stored whatever the plan, and SERVED only while the plan is Pro — see
+     * Stored whatever the plan, and SERVED only while the plan is Pro, see
      * the projection in convex/publicBooking.ts. Keeping the rows means a host
      * who lapses and comes back does not have to upload anything again, and
      * one who lapses does not keep a paid-for feature by having set it once.
@@ -161,7 +161,7 @@ export default defineSchema({
     /**
      * The two colours a host picks: the accent, and the page background.
      *
-     * `brand_bg` absent is NOT "use Meetrao's grey" — convex/lib/brand.ts
+     * `brand_bg` absent is NOT "use Meetrao's grey", convex/lib/brand.ts
      * derives a pale wash of the accent instead, so one colour is enough to
      * clear our palette off the page. It is stored only when the host wants
      * something other than that.
@@ -181,11 +181,11 @@ export default defineSchema({
 
   /* A team is a booking link several hosts answer, in turn.
   
-     The owner is a host like any other — there is no separate account type and
+     The owner is a host like any other. There is no separate account type and
      no seat to buy. Membership is by profile id, so a member's own hours,
      timezone and calendar are the ones consulted when it is their turn.
 
-     unique: lower(slug) product-wide — enforced in convex/teams.ts, which is
+     Unique: lower(slug) product-wide, enforced in convex/teams.ts, which is
      also what keeps a team from taking a username that is already a host's. */
   teams: defineTable({
     id: v.string(),
@@ -200,7 +200,7 @@ export default defineSchema({
     .index("by_owner", ["owner_id"])
     .index("by_slug_lower", ["slug_lower"]),
 
-  /* unique: (team_id, user_id) — enforced in convex/teams.ts */
+  /* unique: (team_id, user_id), enforced in convex/teams.ts */
   team_members: defineTable({
     id: v.string(),
     team_id: v.string(),
@@ -212,7 +212,7 @@ export default defineSchema({
     .index("by_team", ["team_id"])
     .index("by_user", ["user_id"]),
 
-  /* unique: (user_id, slug) — enforced in convex/meetingTypes.ts */
+  /* unique: (user_id, slug), enforced in convex/meetingTypes.ts */
   meeting_types: defineTable({
     id: v.string(),
     user_id: v.string(),
@@ -238,8 +238,8 @@ export default defineSchema({
      * meeting this product started as; above 1 makes it a class, a workshop or
      * an office hour, where several bookings share one time.
      *
-     * The seats are counted from the bookings themselves — there is no seat
-     * table — so a cancellation frees one by existing less.
+     * The seats are counted from the bookings themselves (there is no seat
+     * table) so a cancellation frees one by existing less.
      */
     capacity: v.optional(v.number()),
     is_active: v.boolean(),
@@ -247,7 +247,7 @@ export default defineSchema({
     schedule_id: nullableString,
     /**
      * Set when this meeting belongs to a TEAM rather than to one host. The
-     * row still carries a user_id — the owner, who can edit it — but bookings
+     * row still carries a user_id (the owner, who can edit it) but bookings
      * are assigned to whichever member is free and least recently booked.
      */
     team_id: v.optional(nullableString),
@@ -277,7 +277,7 @@ export default defineSchema({
     .index("by_user", ["user_id"])
     .index("by_user_slug", ["user_id", "slug"]),
 
-  /* unique: (user_id, name) and one is_default per user — convex/availability.ts */
+  /* unique: (user_id, name) and one is_default per user, convex/availability.ts */
   availability_schedules: defineTable({
     id: v.string(),
     user_id: v.string(),
@@ -305,7 +305,7 @@ export default defineSchema({
 
   /* The double-booking guard lived in an EXCLUDE USING gist constraint. Convex
      has no equivalent, so it is a read-then-insert inside one serializable
-     mutation — proven in docs/spikes/convex-concurrency/. `by_host_starts` is
+     mutation, proven in docs/spikes/convex-concurrency/. `by_host_starts` is
      the index that read uses, and it must stay narrow. */
   bookings: defineTable({
     id: v.string(),
@@ -333,7 +333,7 @@ export default defineSchema({
     /** The guest's answers, each carrying the label it was asked under. */
     answers: v.optional(v.array(v.object({ label: v.string(), value: v.string() }))),
     /* Where this booking happens, snapshotted at booking time beside
-       meeting_name and duration_minutes — a host who switches a meeting from
+       meeting_name and duration_minutes, a host who switches a meeting from
        Meet to a phone call next month has not moved last month's meeting. */
     location: v.optional(v.string()),
     location_detail: v.optional(v.string()),
@@ -367,14 +367,14 @@ export default defineSchema({
 
   /* ONE calendar day that does not follow the weekly pattern: a holiday, a
      day off, or a day with different hours. Keyed by the DATE as the host
-     writes it ("2026-12-25"), not by an instant — "Christmas Day" is a day in
+     writes it ("2026-12-25"), not by an instant, "Christmas Day" is a day in
      the host's calendar, and an instant would drift a timezone either way.
 
      `ranges` empty means the day is closed. A day with ranges replaces the
      weekly rules for that date rather than adding to them, which is what a
      host means by "I work 14:00–17:00 that Friday".
 
-     unique: (schedule_id, date) — enforced in convex/availability.ts */
+     Unique: (schedule_id, date), enforced in convex/availability.ts */
   availability_overrides: defineTable({
     id: v.string(),
     user_id: v.string(),
@@ -390,7 +390,7 @@ export default defineSchema({
     .index("by_schedule_date", ["schedule_id", "date"])
     .index("by_user", ["user_id"]),
 
-  /* unique: (booking_id, email) — enforced in convex/bookings.ts */
+  /* unique: (booking_id, email), enforced in convex/bookings.ts */
   booking_invitees: defineTable({
     id: v.string(),
     booking_id: v.string(),
@@ -401,7 +401,7 @@ export default defineSchema({
     .index("by_uuid", ["id"])
     .index("by_booking", ["booking_id"]),
 
-  /* unique: (user_id, email) — enforced in convex/contacts.ts */
+  /* unique: (user_id, email), enforced in convex/contacts.ts */
   contacts: defineTable({
     id: v.string(),
     user_id: v.string(),
@@ -441,7 +441,7 @@ export default defineSchema({
 
   /* Google OAuth tokens. In Postgres this table had RLS on and NO policy, so
      only the service role could reach it. The Convex equivalent is that every
-     function touching it is an internalQuery/internalMutation — it is not
+     function touching it is an internalQuery/internalMutation. It is not
      reachable from a client at all. Do not add a public function here. */
   calendar_connections: defineTable({
     id: v.string(),
@@ -507,7 +507,7 @@ export default defineSchema({
        Here rather than in the environment because an operator creating them
        from the admin console cannot set an env var, and a redeploy to record
        two ids somebody just generated is a strange way to sell a plan. The
-       TOKEN stays in the environment — a credential is not configuration. */
+       TOKEN stays in the environment. A credential is not configuration. */
     polar_product_monthly: v.optional(nullableString),
     polar_product_yearly: v.optional(nullableString),
     updated_at: v.number(),
@@ -521,7 +521,7 @@ export default defineSchema({
      be social-engineered. `prefix` is the first few characters, kept so a host
      can tell two keys apart in a list.
 
-     unique: hash — enforced by the CSPRNG that makes the key. */
+     Unique: hash, enforced by the CSPRNG that makes the key. */
   api_keys: defineTable({
     id: v.string(),
     user_id: v.string(),
@@ -557,7 +557,7 @@ export default defineSchema({
     .index("by_user", ["user_id"]),
 
   /* Fixed-window counters for the guest path. Postgres had nothing like this
-     because nothing enforced a limit there either — `create_booking` was
+     because nothing enforced a limit there either, `create_booking` was
      granted to `anon` and the publishable key ships to every browser, so the
      door was open. Convex has no built-in rate limiting, so this is it. */
   rate_limits: defineTable({

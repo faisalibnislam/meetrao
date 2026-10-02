@@ -9,7 +9,7 @@ import { convexMessage } from "@/lib/convex/error";
 
 /* Contacts a host maintains by hand, alongside the ones the database fills in
    from bookings. Email is the identity, so saving an address that already
-   exists updates that contact rather than creating a second one — which is what
+   exists updates that contact rather than creating a second one, which is what
    a host means when they type it again. */
 
 export type ContactResult = { error?: string; id?: string };
@@ -72,7 +72,7 @@ export async function deleteContact(id: string): Promise<ContactResult> {
  * Reports what happened to every row rather than claiming success: a file where
  * half the addresses are malformed should say so, not import silently and leave
  * the host to notice later. Rows with no usable email are skipped, not rejected
- * — one bad line should not throw away a thousand good ones.
+ *, one bad line should not throw away a thousand good ones.
  */
 export async function importContacts(csv: string): Promise<ImportResult> {
   const { userId } = await requireOnboardedSession();
@@ -103,7 +103,7 @@ export async function importContacts(csv: string): Promise<ImportResult> {
     const last = (r.lastname ?? "").trim();
     rows.push({
       user_id: userId,
-      // "name", or "full name", or first and last in separate columns — every
+      // "name", or "full name", or first and last in separate columns, every
       // address book exports a different one of the three.
       name: (r.name ?? r.fullname ?? [first, last].filter(Boolean).join(" ")).trim(),
       email,

@@ -20,7 +20,7 @@ import { Row, Specimen } from "./kit";
    The stateful half of the gallery.
 
    Everything that needs a handler or a piece of state lives here, and nowhere
-   else — the rest of /preview is server-rendered. Keeping the boundary this
+   else. The rest of /preview is server-rendered. Keeping the boundary this
    sharp is not tidiness: a "use client" module's exports become client
    references on the server, and calling one from a server file throws at
    request time. Two onboarding steps and the Settings screen shipped that bug.
@@ -52,7 +52,7 @@ export function InteractiveControls() {
           <Switch checked={false} disabled onChange={() => {}} label="Disabled, off" />
         </Specimen>
 
-        <Specimen caption="<CheckBox checked /> — the row is the hit target, not the box">
+        <Specimen caption="<CheckBox checked />, the row is the hit target, not the box">
           <label className="flex cursor-pointer items-center gap-[9px] text-[13px] text-ink">
             <input
               type="checkbox"
@@ -130,7 +130,7 @@ function OverlayDemos() {
 
   return (
     <div className="flex flex-col gap-[12px]">
-      <Specimen caption="<Modal open onClose title primary secondary /> — 400px, or 460px with wide">
+      <Specimen caption="<Modal open onClose title primary secondary />, 400px, or 460px with wide">
         <Button
           variant="secondary"
           size={32}
@@ -153,7 +153,7 @@ function OverlayDemos() {
         </Button>
       </Specimen>
 
-      <Specimen caption='useToast()({ tone, title, text }) — four tones, auto-dismiss at 3200ms'>
+      <Specimen caption='useToast()({ tone, title, text }), four tones, auto-dismiss at 3200ms'>
         {(["ok", "bad", "warn", "neutral"] as const).map((tone) => (
           <Button
             key={tone}
@@ -166,7 +166,7 @@ function OverlayDemos() {
         ))}
       </Specimen>
 
-      <Specimen caption="<Button busy /> — the glyph slot becomes a spinner, the label stays put">
+      <Specimen caption="<Button busy />, the glyph slot becomes a spinner, the label stays put">
         <Button
           variant="accent"
           size={32}

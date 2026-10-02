@@ -6,7 +6,7 @@ import path from "node:path";
    `identity.subject` is not a user id, and treating it as one fails silently.
 
    Convex Auth's subject is "<userId>|<sessionId>". Nothing in this database is
-   keyed by that string, so passing it to a query matches no row — and matching
+   keyed by that string, so passing it to a query matches no row, and matching
    no row is not an error, it is an empty result. Every symptom is therefore a
    quiet wrong answer rather than a crash:
 
@@ -23,7 +23,7 @@ import path from "node:path";
    `currentUserId` in convex/lib/auth.ts is the one place that resolves it.
    Everything else goes through that, or through requireProfile / requireAdmin,
    which are built on it. Actions have no ctx.db, so they reach it through an
-   internalQuery — see convex/google.ts:callerId.
+   internalQuery, see convex/google.ts:callerId.
    ───────────────────────────────────────────────────────────────────────────── */
 
 const ROOT = path.join(process.cwd(), "convex");
@@ -61,7 +61,7 @@ describe("the raw auth subject stays inside its resolver", () => {
 
     expect(
       offenders,
-      `these read the raw subject instead of resolving it — see convex/lib/auth.ts:currentUserId:\n  ${offenders.join("\n  ")}`,
+      `these read the raw subject instead of resolving it, see convex/lib/auth.ts:currentUserId:\n  ${offenders.join("\n  ")}`,
     ).toEqual([]);
   });
 

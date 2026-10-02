@@ -17,7 +17,7 @@ export type AdminResult = { error?: string };
  *
  * `admin_activity` has a SELECT policy for admins and no INSERT policy at all,
  * so every one of these written through the caller's own session was rejected
- * by RLS and thrown away unchecked — the rows that exist came from the
+ * by RLS and thrown away unchecked. The rows that exist came from the
  * SECURITY DEFINER triggers, which bypass policies. Service-role is also the
  * right trust boundary regardless: an audit log a browser session can write to
  * is one an admin could forge entries in.
@@ -93,7 +93,7 @@ export async function removeAccount(userId: string): Promise<AdminResult> {
 /* ── the booking link ───────────────────────────────────────────────────────
    meetrao.com/<username> is public, unique product-wide and claimed first-come
    first-served, so it is the one part of an account an operator eventually has
-   to intervene in — a squatted trademark, an impersonation, a host locked out
+   to intervene in, a squatted trademark, an impersonation, a host locked out
    of their own name. Before this the only lever was removing the account,
    which is not a proportionate answer to a bad URL.
 
@@ -106,7 +106,7 @@ export type LinkCheck =
   | { state: "ok" }
   /** Another live account holds it. */
   | { state: "taken"; ideas: string[] }
-  /** In `reserved_usernames` — freed by a removal or retired by an admin. */
+  /** In `reserved_usernames`, freed by a removal or retired by an admin. */
   | { state: "retired" };
 
 /**
@@ -117,7 +117,7 @@ export type LinkCheck =
  * *caller's* id to `username_available`, which is right for a host editing
  * their own link and wrong in both directions here. It would report the
  * target's existing name as taken, and it would report the admin's own name as
- * free — offering to move a host onto a link that is not available at all.
+ * free, offering to move a host onto a link that is not available at all.
  *
  * It also separates "taken" from "retired", because the remedy differs: one
  * needs a different name, the other needs a deliberate decision to reuse a
@@ -136,7 +136,7 @@ export async function checkBookingLink(userId: string, raw: string): Promise<Lin
   if (state.retired) return { state: "retired" };
   if (state.free) return { state: "ok" };
 
-  // Only offer alternatives that are themselves free — an idea that is also
+  // Only offer alternatives that are themselves free. An idea that is also
   // taken is worse than no idea.
   const ideas: string[] = [];
   for (const candidate of usernameIdeas(value, state.targetName)) {
@@ -166,7 +166,7 @@ function linkError(message: string): string {
 export async function setBookingLink(input: {
   userId: string;
   username: string;
-  /** Hold the old name back so nobody — the host included — can re-register it. */
+  /** Hold the old name back so nobody (the host included) can re-register it. */
   retireOld: boolean;
   /** Reuse a name that is currently held back. Asked for explicitly, never implied. */
   force?: boolean;
@@ -175,7 +175,7 @@ export async function setBookingLink(input: {
 
   const username = sanitizeUsername(input.username);
   // The same validator the host's own field uses, so the two surfaces can
-  // never disagree about what is allowed — including the reserved-word list,
+  // never disagree about what is allowed, including the reserved-word list,
   // which the database does not know about.
   if (usernameStatus(username) !== "checking") return { error: "That is not a valid booking link." };
 
@@ -212,7 +212,7 @@ export async function setBookingLink(input: {
  * placeholder.
  *
  * `profiles.username` is NOT NULL, so there is no state in which an account
- * has no booking link — removing one necessarily means replacing it. The old
+ * has no booking link, removing one necessarily means replacing it. The old
  * name is always held back, or the host could claim it straight back from
  * Settings → Profile and the intervention would have achieved nothing.
  *
@@ -247,7 +247,7 @@ export async function releaseBookingLink(userId: string): Promise<AdminResult & 
 /* ── Held-back booking links ────────────────────────────────────────────────
    A name goes into `reserved_usernames` when an account is removed or an admin
    retires a link, so a dead `meetrao.com/<link>` cannot be handed to the next
-   person who signs up — old meeting invitations still point at it.
+   person who signs up, old meeting invitations still point at it.
 
    That hold is permanent until someone lifts it, and until now nothing could:
    the Convex functions existed and no screen reached them, so a reserved name
@@ -275,7 +275,7 @@ export async function listHeldBookingLinks(): Promise<ReclaimableLink[]> {
  * Frees a held-back link so it can be claimed again.
  *
  * REFUSES A NAME SOMETHING STILL HOLDS. A reservation should only exist for a
- * name nobody occupies, but they are separate rows and nothing enforces it —
+ * name nobody occupies, but they are separate rows and nothing enforces it,
  * and freeing an occupied name would let a second account claim a link the
  * first is still serving, which is the one outcome the hold exists to prevent.
  * Checked here against live data rather than trusting what the page rendered,
@@ -409,7 +409,7 @@ export type GrantResult = { error?: string };
 /**
  * Gives an account Pro without a payment.
  *
- * The length and the reason are both checked in Convex as well — this is the
+ * The length and the reason are both checked in Convex as well. This is the
  * form's side of a rule whose boundary is the mutation, like every other
  * admin action here.
  */

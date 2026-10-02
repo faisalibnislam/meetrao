@@ -23,7 +23,7 @@ const DAY = 86_400_000;
  * The guest moving their own booking.
  *
  * Reached from the confirmation screen and from every booking email, and
- * authorised by the reference alone — the same credential that already cancels
+ * authorised by the reference alone, the same credential that already cancels
  * the meeting outright. Nothing is written until the guest picks a time and
  * confirms, so a link previewer fetching this URL changes nothing.
  */
@@ -91,7 +91,7 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
   );
 
   /* The booking's own slot would otherwise read as busy and hide the times
-     either side of it — including, at a shorter duration, the time it already
+     either side of it, including, at a shorter duration, the time it already
      holds. The API and the Convex mutation drop it again for themselves. */
   const ownStart = new Date(booking.startsAt).getTime();
   const ownEnd = new Date(booking.endsAt).getTime();

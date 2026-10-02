@@ -5,7 +5,7 @@ import { v } from "convex/values";
 
 /**
  * Removes bookings made by a verification script, and the rows their effects
- * created. Internal only — not reachable from any client.
+ * created. Internal only, not reachable from any client.
  *
  * Kept in the repo because the alternative is a harness that leaves debris,
  * and a harness that leaves debris gets switched off.
@@ -67,7 +67,7 @@ export const purgeVisits = internalMutation({
  * panel cannot be exercised without a held link. Both are ordinary rows, and
  * creating them by hand in a dashboard is how a check stops being run.
  *
- * Internal only — not reachable from any client — and it names the account it
+ * Internal only (not reachable from any client) and it names the account it
  * is acting on rather than promoting whoever happens to be first.
  */
 export const seedAdminFixture = internalMutation({
@@ -152,7 +152,7 @@ export const purgeAdminFixture = internalMutation({
  *
  * The booking page cannot be exercised for time off without a real override
  * on a real schedule, and creating one by hand in a dashboard is how a check
- * stops being run — the same reasoning as seedAdminFixture above.
+ * stops being run, the same reasoning as seedAdminFixture above.
  */
 export const seedTimeOffFixture = internalMutation({
   args: { username: v.string(), date: v.string() },
