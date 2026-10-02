@@ -151,11 +151,83 @@ describe("nothing on a branded surface hard-codes white on the accent", () => {
 });
 
 describe("the brand scope introduces no box", () => {
-  it("uses display:contents, so the page's layout is untouched", () => {
+  const brand = code("src/components/booking/brand.tsx");
+
+  it("wraps the page in nothing at all", () => {
     /* The (public) layout centres a column of siblings. A wrapper with a box
        would make the card and footer its children instead of the column's —
-       which is the exact shape of a bug that already shipped once. */
-    const brand = read("src/components/booking/brand.tsx");
-    expect(brand).toContain('className="contents"');
+       the exact shape of a bug that already shipped once.
+
+       This was a `display: contents` div and is now a bare fragment, which is
+       stronger: there is no element to get a box by accident. */
+    expect(brand).toContain("<>");
+    expect(brand).not.toContain('className="contents"');
+  });
+
+  it("rebinds at :root, because the page background is painted by body", () => {
+    /* A wrapper inherits its variables DOWN. `html, body { background:
+       var(--ground) }` are ancestors of everything a page renders, and the
+       cookie banner is mounted by the root layout outside the page entirely —
+       so a scoped wrapper left both of them in Meetrao's palette however much
+       the host had chosen. */
+    expect(brand).toContain(":root{");
+    expect(brand).toContain("--ground:");
+    expect(brand).toContain("--on-ground:");
+  });
+});
+
+describe("a branded page keeps none of Meetrao's palette", () => {
+  const brand = code("src/components/booking/brand.tsx");
+
+  /* The complaint this exists for: a host set a blue brand and the page still
+     showed our warm grey ground, our cream panel and a green cookie button.
+     Every neutral the design draws has to be rebound, not just the accent. */
+  it.each([
+    "--ground",
+    "--on-ground",
+    "--surface",
+    "--fill",
+    "--fill-2",
+    "--line",
+    "--line-soft",
+    "--line-strong",
+    "--accent",
+    "--accent-2",
+    "--accent-ink",
+    "--on-accent",
+    "--accent-soft",
+    "--accent-line",
+  ])("%s is overridden", (token) => {
+    expect(brand, `${token} keeps its Meetrao value on a branded page`).toContain(`${token}:`);
+  });
+});
+
+describe("the embed stays transparent", () => {
+  it("turns off the page background that globals.css paints", () => {
+    /* The widget's layout always SAID transparent, but only its own div was —
+       `html, body { background: var(--ground) }` still painted the page behind
+       it, so every embed carried our beige. Harmless-looking until a host's
+       own background filled that space with a deliberate colour on somebody
+       else's site. */
+    const layout = code("src/app/embed/layout.tsx");
+    expect(layout).toContain("html,body{background:transparent}");
+  });
+});
+
+describe("a host's own logo is larger than ours", () => {
+  it("renders at 1.35x, because a square symbol reads smaller than a wordmark", () => {
+    const brand = code("src/components/booking/brand.tsx");
+    expect(brand).toMatch(/height \* 1\.35/);
+  });
+});
+
+describe("the booking page shows a host's photograph", () => {
+  it("uses <Avatar> rather than drawing initials itself", () => {
+    /* This page hand-rolled initials from the host's name and never read
+       host.avatarUrl, so a host with a photograph showed up as two letters —
+       on the one page that is their front door. */
+    const page = read("src/app/(public)/[username]/page.tsx");
+    expect(page).toContain("<Avatar");
+    expect(page).toContain("src={host.avatarUrl}");
   });
 });

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, Help, Input, Label } from "@/components/ui/controls";
 import { Callout, PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
-import { logoUploadUrl, removeLogo, saveLogo, setBrandColor } from "@/lib/actions/branding";
+import { logoUploadUrl, removeLogo, saveLogo, setBrandBackground, setBrandColor } from "@/lib/actions/branding";
 import { claimDomain, removeDomain, verifyDomain } from "@/lib/actions/billing";
 import { brandTokens, normaliseHex, validateBrandColor } from "@/convex/lib/brand";
 import { Logo } from "@/components/ui/logo";
@@ -37,10 +37,16 @@ const ACCEPT = "image/png,image/jpeg,image/webp";
    they are meant to pick from. */
 const SUGGESTED = ["#14554a", "#1f3d7a", "#7a2048", "#8a4b1f", "#2f6d3a", "#1a1917"];
 
+/* Backgrounds, which are a different kind of choice: mostly near-white washes,
+   plus two dark ones to show that dark pages work — the text drawn on the
+   ground flips to suit, so neither is a trap. */
+const SUGGESTED_BG = ["#f4f6fb", "#fbf7f1", "#f3f7f4", "#eef0f4", "#15213a", "#141414"];
+
 export function BrandingPanel({
   pro,
   logoUrl,
   color,
+  background,
   domain,
   username,
   siteHost,
@@ -48,6 +54,7 @@ export function BrandingPanel({
   pro: boolean;
   logoUrl: string | null;
   color: string | null;
+  background: string | null;
   domain: DomainView;
   username: string;
   /** "meetrao.com" — for showing what the link looks like either way. */
@@ -61,6 +68,8 @@ export function BrandingPanel({
   const [logo, setLogo] = useState(logoUrl);
   const [draftColor, setDraftColor] = useState(color ?? "");
   const [savedColor, setSavedColor] = useState(color);
+  const [draftBg, setDraftBg] = useState(background ?? "");
+  const [savedBg, setSavedBg] = useState(background);
 
   const [draftDomain, setDraftDomain] = useState(domain.domain ?? "");
   const [records, setRecords] = useState<{ type: string; name: string; value: string }[]>([]);
@@ -68,7 +77,8 @@ export function BrandingPanel({
   /* The preview follows what is TYPED, not what is saved, and falls back to
      the saved colour while a half-typed hex is not yet a colour. */
   const previewColor = normaliseHex(draftColor) ?? savedColor;
-  const tokens = brandTokens(previewColor);
+  const previewBg = normaliseHex(draftBg) ?? savedBg;
+  const tokens = brandTokens(previewColor, previewBg);
 
   const invalid = draftColor.trim() !== "" && "error" in validateBrandColor(draftColor);
   const colorProblem = invalid ? (validateBrandColor(draftColor) as { error: string }).error : null;
@@ -102,6 +112,24 @@ export function BrandingPanel({
       }
       setLogo(saved.url ?? null);
       toast({ tone: "ok", title: "Logo saved", text: "It is on your booking page now." });
+      router.refresh();
+    });
+  }
+
+  function saveBg(value: string) {
+    startBusy(async () => {
+      const result = await setBrandBackground(value);
+      if (result.error) {
+        toast({ tone: "bad", title: "Could not save", text: result.error });
+        return;
+      }
+      setSavedBg(result.color ?? null);
+      setDraftBg(result.color ?? "");
+      toast({
+        tone: "ok",
+        title: result.color ? "Background saved" : "Back to a wash of your colour",
+        text: "Your booking page uses it now.",
+      });
       router.refresh();
     });
   }
@@ -280,6 +308,78 @@ export function BrandingPanel({
           ))}
         </div>
 
+      </section>
+
+      {/* ── background ─────────────────────────────────────────────────── */}
+      <section className="flex flex-col gap-[11px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
+        <div className="flex flex-wrap items-center justify-between gap-[10px]">
+          <span className="text-[13px] font-semibold text-ink">Your background</span>
+          {!pro ? <Badge tone="off" dot={false}>Pro</Badge> : null}
+        </div>
+        <Help>
+          The page behind the booking card. Leave it alone and we use a pale wash of your colour — either
+          way, none of Meetrao&rsquo;s own palette is left on the page. Dark backgrounds work: the few
+          pieces of text drawn on the page flip to suit.
+        </Help>
+
+        <div className="flex flex-wrap items-end gap-[10px]">
+          <Field label="Hex" htmlFor="brand-bg" className="min-w-[130px] max-w-[180px] flex-1">
+            <Input
+              id="brand-bg"
+              height={36}
+              placeholder={tokens ? tokens.ground : "#F4F6FB"}
+              spellCheck={false}
+              disabled={!pro}
+              invalid={draftBg.trim() !== "" && normaliseHex(draftBg) === null}
+              value={draftBg}
+              onChange={(e) => setDraftBg(e.target.value)}
+            />
+          </Field>
+
+          <label className="flex flex-col gap-[5px]">
+            <Label>Pick</Label>
+            <input
+              type="color"
+              aria-label="Pick a background colour"
+              disabled={!pro}
+              value={previewBg ?? tokens?.ground ?? "#f4f6fb"}
+              onChange={(e) => setDraftBg(e.target.value)}
+              className="h-[36px] w-[44px] cursor-pointer rounded-[6px] border border-line-strong bg-surface p-[3px] disabled:cursor-not-allowed disabled:opacity-45"
+            />
+          </label>
+
+          <Button
+            variant="accent"
+            size={36}
+            busy={busy}
+            disabled={!pro || draftBg.trim() === "" || normaliseHex(draftBg) === null}
+            onClick={() => saveBg(draftBg)}
+          >
+            Save background
+          </Button>
+
+          {savedBg ? (
+            <Button variant="ghost" size={36} disabled={busy} onClick={() => saveBg("")}>
+              Reset
+            </Button>
+          ) : null}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-[7px]">
+          <span className="text-[11.5px] text-ink-3">Try:</span>
+          {SUGGESTED_BG.map((swatch) => (
+            <button
+              key={swatch}
+              type="button"
+              disabled={!pro}
+              aria-label={`Use ${swatch}`}
+              onClick={() => setDraftBg(swatch)}
+              className="h-[22px] w-[22px] cursor-pointer rounded-full border border-line-strong disabled:cursor-not-allowed disabled:opacity-45"
+              style={{ background: swatch }}
+            />
+          ))}
+        </div>
+
         <BrandPreview tokens={tokens} logo={logo} />
       </section>
 
@@ -421,12 +521,17 @@ export function BrandingPanel({
 }
 
 /**
- * The booking page's own parts, in the colour being typed.
+ * The booking page's own parts, in the colours being typed.
  *
  * Not a screenshot and not an iframe: the same tokens the real page binds, on
- * the pieces a colour actually changes — the mark, a chosen date, the confirm
- * button and a highlight. An iframe would be truer and would also need a save
- * before it could show anything, which is the problem this solves.
+ * the pieces a colour actually changes. An iframe would be truer and would
+ * also need a save before it could show anything, which is the problem this
+ * solves.
+ *
+ * THE GROUND IS DRAWN, not just the card. The background colour's whole job is
+ * the area around the card, so a preview that showed only the card would be
+ * blind to the one thing this control does — including whether the footer's
+ * legal links are still readable on it, which is the case worth seeing.
  */
 function BrandPreview({
   tokens,
@@ -443,42 +548,68 @@ function BrandPreview({
         "--on-accent": tokens.onAccent,
         "--accent-soft": tokens.soft,
         "--accent-line": tokens.line,
+        "--ground": tokens.ground,
+        "--on-ground": tokens.onGround,
+        "--surface": tokens.surface,
+        "--fill": tokens.fill,
+        "--fill-2": tokens.fill2,
+        "--line": tokens.borderBase,
+        "--line-soft": tokens.borderSoft,
+        "--line-strong": tokens.borderStrong,
       } as React.CSSProperties)
     : undefined;
 
   return (
     <div className="flex flex-col gap-[8px]">
       <Label>Preview</Label>
+
+      {/* The page. Everything below sits on the host's own background. */}
       <div
         style={style}
-        className="flex flex-col gap-[12px] rounded-[8px] border border-line bg-surface px-[14px] py-[13px]"
+        className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-ground px-[14px] py-[13px]"
       >
-        <div className="flex items-center justify-between gap-[10px] border-b border-line pb-[10px]">
+        <div className="flex items-center justify-between gap-[10px]">
           {logo ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={logo} alt="" className="block max-h-[18px] w-auto max-w-[110px] object-contain" />
+            <img src={logo} alt="" className="block max-h-[22px] w-auto max-w-[110px] object-contain" />
           ) : (
             <Logo height={16} />
           )}
-          <span className="text-[10px] font-semibold tracking-[0.08em] text-ink-3 uppercase">Booking page</span>
+          <span className="text-[9.5px] font-semibold tracking-[0.08em] text-on-ground uppercase">
+            Booking page
+          </span>
         </div>
 
-        <div className="flex flex-wrap items-center gap-[8px]">
-          {/* A chosen date and an unchosen one, side by side: the pair is what
-              shows whether a colour reads as "selected" at all. */}
-          <span className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[6px] border border-accent bg-accent text-[13px] font-semibold text-on-accent">
-            14
-          </span>
-          <span className="inline-flex h-[34px] w-[34px] items-center justify-center rounded-[6px] border border-line-strong bg-surface text-[13px] text-ink">
-            15
-          </span>
-          <span className="inline-flex items-center rounded-[5px] border border-accent-line bg-accent-soft px-[9px] py-[4px] text-[11.5px] font-semibold text-accent-ink">
-            09:30
-          </span>
-          <span className="inline-flex h-[32px] items-center rounded-[6px] border border-accent bg-accent px-[12px] text-[12.5px] font-semibold text-on-accent">
-            Confirm
-          </span>
-          <span className="text-[12.5px] font-semibold text-accent-ink">A link in your colour</span>
+        {/* The card. */}
+        <div className="flex flex-col gap-[11px] rounded-[7px] border border-line bg-surface px-[12px] py-[11px]">
+          <div className="flex flex-wrap items-center gap-[8px]">
+            {/* A chosen date and an unchosen one, side by side: the pair is what
+                shows whether a colour reads as "selected" at all. */}
+            <span className="inline-flex h-[32px] w-[32px] items-center justify-center rounded-[6px] border border-accent bg-accent text-[12.5px] font-semibold text-on-accent">
+              14
+            </span>
+            <span className="inline-flex h-[32px] w-[32px] items-center justify-center rounded-[6px] border border-line-strong bg-surface text-[12.5px] text-ink">
+              15
+            </span>
+            <span className="inline-flex items-center rounded-[5px] border border-accent-line bg-accent-soft px-[9px] py-[4px] text-[11.5px] font-semibold text-accent-ink">
+              09:30
+            </span>
+            <span className="inline-flex h-[30px] items-center rounded-[6px] border border-accent bg-accent px-[12px] text-[12px] font-semibold text-on-accent">
+              Confirm
+            </span>
+          </div>
+
+          {/* The quiet panel, which is the booking card's left half. */}
+          <div className="rounded-[6px] bg-fill px-[10px] py-[8px] text-[11.5px] text-ink-2">
+            45 minutes · Google Meet
+          </div>
+        </div>
+
+        {/* The footer, which is the text most at risk on a dark background. */}
+        <div className="flex justify-center gap-[12px] text-[10.5px] text-on-ground">
+          <span>Terms</span>
+          <span>Privacy</span>
+          <span>Support</span>
         </div>
       </div>
     </div>

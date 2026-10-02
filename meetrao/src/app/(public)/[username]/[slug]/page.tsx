@@ -151,7 +151,7 @@ export default async function BookingPage({
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
         <BrandMark brand={host.brand} hostName={host.fullName || host.username} height={20} />
-        <Eyebrow size={10.5}>Booking page</Eyebrow>
+        <Eyebrow size={10.5} className="text-on-ground">Booking page</Eyebrow>
       </div>
 
       <BookingFlow

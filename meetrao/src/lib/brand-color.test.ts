@@ -5,9 +5,11 @@ import {
   brandTokens,
   contrast,
   darken,
+  luminance,
   normaliseHex,
   onBrand,
   readableOn,
+  readableOnGround,
   validateBrandColor,
 } from "@/convex/lib/brand";
 
@@ -172,5 +174,130 @@ describe("brandTokens", () => {
       // And the brand's border is visible against the page it is drawn on.
       expect(contrast(tokens.line, "#ffffff")).toBeGreaterThan(1.1);
     }
+  });
+});
+
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The second colour: the page background.
+
+   Its whole job is to stop a branded page from sitting on Meetrao's warm grey,
+   so what is checked here is that nothing of ours survives and that the few
+   pieces of text drawn directly on it stay readable — including on the dark
+   backgrounds that break a naive implementation.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+const MEETRAO = {
+  ground: "#e7e4dc",
+  fill: "#f4f3ee",
+  fill2: "#eae8e1",
+  line: "#e0ddd4",
+  lineSoft: "#edebe4",
+  lineStrong: "#cfcbc0",
+  accent: "#14554a",
+};
+
+describe("readableOnGround", () => {
+  it("darkens a light ground, keeping its hue", () => {
+    for (const ground of ["#eaf2ff", "#fff6e5", "#e7e4dc", "#ffffff"]) {
+      const text = readableOnGround(ground);
+      expect(normaliseHex(text)).toBe(text);
+      expect(contrast(text, ground), ground).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it("LIGHTENS a dark ground, which darkening can never solve", () => {
+    /* The case the first version got wrong: it only ever darkened, so a navy
+       ground bottomed out at black and fell back to our ink — invisible. */
+    for (const ground of ["#001a3d", "#0b0b0b", "#14554a", "#3b0a2a"]) {
+      const text = readableOnGround(ground);
+      expect(contrast(text, ground), ground).toBeGreaterThanOrEqual(4.5);
+      expect(luminance(text), `${ground} should get LIGHT text`).toBeGreaterThan(luminance(ground));
+    }
+  });
+
+  it("is readable on a mid-tone, where neither direction reaches the bar", () => {
+    for (const ground of ["#7a7a7a", "#808080", "#6e6e6e"]) {
+      const text = readableOnGround(ground);
+      // Not 4.5 — no colour achieves that here — but the better of the two.
+      expect(contrast(text, ground)).toBeGreaterThan(3.5);
+    }
+  });
+});
+
+describe("a branded page keeps none of Meetrao's palette", () => {
+  it("replaces the whole neutral ramp when only an accent is given", () => {
+    // One colour has to be enough: a host who sets blue and nothing else must
+    // not be left with our warm grey around their card.
+    const t = brandTokens("#003e88")!;
+    expect(t.ground).not.toBe(MEETRAO.ground);
+    expect(t.fill).not.toBe(MEETRAO.fill);
+    expect(t.fill2).not.toBe(MEETRAO.fill2);
+    expect(t.borderBase).not.toBe(MEETRAO.line);
+    expect(t.borderSoft).not.toBe(MEETRAO.lineSoft);
+    expect(t.borderStrong).not.toBe(MEETRAO.lineStrong);
+    expect(t.accent).not.toBe(MEETRAO.accent);
+  });
+
+  it("uses the chosen background when there is one", () => {
+    const t = brandTokens("#003e88", "#f2f6ff")!;
+    expect(t.ground).toBe("#f2f6ff");
+  });
+
+  it("works from a background alone, without falling back to our green", () => {
+    const t = brandTokens(null, "#f2f6ff")!;
+    expect(t).not.toBeNull();
+    expect(t.accent).not.toBe(MEETRAO.accent);
+    expect(t.ground).toBe("#f2f6ff");
+  });
+
+  it("is null only when the host has chosen nothing at all", () => {
+    expect(brandTokens(null, null)).toBeNull();
+    expect(brandTokens("", "")).toBeNull();
+  });
+});
+
+describe("the card and its borders survive any background", () => {
+  const grounds = ["#f2f6ff", "#001a3d", "#ffffff", "#0b0b0b", "#fff6e5", "#14554a", "#7a7a7a"];
+
+  it.each(grounds)("%s keeps the card white, so the contrast maths still holds", (ground) => {
+    expect(brandTokens("#003e88", ground)!.surface).toBe("#ffffff");
+  });
+
+  it.each(grounds)("%s gives borders that read on the card without shouting", (ground) => {
+    const t = brandTokens("#003e88", ground)!;
+    for (const [name, border] of [
+      ["borderSoft", t.borderSoft],
+      ["borderBase", t.borderBase],
+      ["borderStrong", t.borderStrong],
+    ] as const) {
+      const c = contrast(border, "#ffffff");
+      expect(c, `${name} on ${ground} is invisible`).toBeGreaterThan(1.05);
+      expect(c, `${name} on ${ground} is a near-black rule`).toBeLessThan(3);
+    }
+  });
+
+  it.each(grounds)("%s keeps the card's own text readable on the quiet panel", (ground) => {
+    /* THE BUG THIS CAUGHT, on screen rather than in a test: the panel was
+       mixed from the ground, so a dark background turned the booking card's
+       left half into a mid-slate block with near-black `--ink` text on it.
+       The panel lives inside the white card and carries that ink, so it has
+       to stay light whatever the page behind the card is doing. */
+    const t = brandTokens("#003e88", ground)!;
+    expect(contrast(BRAND_INK, t.fill), `ink on fill (${ground})`).toBeGreaterThanOrEqual(4.5);
+    expect(contrast(BRAND_INK, t.fill2), `ink on fill2 (${ground})`).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each(grounds)("%s keeps the quiet panel distinguishable from the card", (ground) => {
+    const t = brandTokens("#003e88", ground)!;
+    // Visible as a panel, but never so strong it reads as a second card.
+    const c = contrast(t.fill, t.surface);
+    expect(c, `fill on surface (${ground})`).toBeGreaterThan(1.02);
+    expect(c, `fill on surface (${ground})`).toBeLessThan(1.35);
+  });
+
+  it.each(grounds)("%s keeps text on the ground readable", (ground) => {
+    const t = brandTokens("#003e88", ground)!;
+    expect(contrast(t.onGround, t.ground)).toBeGreaterThan(3.5);
   });
 });

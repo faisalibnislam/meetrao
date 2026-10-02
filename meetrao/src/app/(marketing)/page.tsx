@@ -104,7 +104,7 @@ const EXTRAS: [IconName, string, string][] = [
   ["rectangle-list", "Ask what you need to know", "Up to five questions on the booking form. The answers arrive with the booking."],
   ["address-card", "Phone, in person, or your own link", "Not everything is a video call. Say where it happens and guests are told."],
   ["hashtag", "On your own site", "Paste one snippet and the booking form appears in your page, sized to fit."],
-  ["palette", "Your logo, your colour", "Your mark instead of ours, and one colour that carries through the calendar and the confirmation."],
+  ["palette", "Your logo, your colours", "Your mark instead of ours, an accent and a page background. None of our palette is left on the page."],
   ["globe", "Your own domain", "meeting.yourcompany.com/your-name. Point the DNS at us and the certificate is handled."],
   ["chart-line", "Read it from your own tools", "An API key reads your bookings, and a webhook tells you the moment one changes."],
 ];
