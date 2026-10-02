@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { EmbedHeight } from "@/components/booking/embed-height";
+import { BrandScope } from "@/components/booking/brand";
 import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import {
   getBusy,
@@ -104,8 +105,12 @@ export default async function EmbedPage({
     meetingTypeId: meeting.id,
   });
 
+  /* THE COLOUR, BUT NOT THE MARK. A widget sits on the host's own site, which
+     already carries their logo at the top of the page — a second one inside
+     the card would be the only place on the internet their logo appears
+     twice. The colour is what makes it look like part of their site. */
   return (
-    <>
+    <BrandScope brand={host.brand}>
       <EmbedHeight />
       <BookingFlow
         username={host.username}
@@ -138,6 +143,6 @@ export default async function EmbedPage({
           </a>
         </p>
       )}
-    </>
+    </BrandScope>
   );
 }

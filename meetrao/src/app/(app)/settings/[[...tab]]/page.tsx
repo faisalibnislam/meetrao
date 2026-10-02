@@ -17,7 +17,8 @@ import { timezoneOptions } from "@/lib/timezones";
 import { TeamPanel } from "@/components/app/team-panel";
 import { DeveloperPanel } from "@/components/app/developer-panel";
 import { BillingPanel } from "@/components/app/billing-panel";
-import { billingPanelData, developerPanelData, teamPanelData } from "@/lib/data/teams";
+import { BrandingPanel } from "@/components/app/branding-panel";
+import { billingPanelData, brandingPanelData, developerPanelData, teamPanelData } from "@/lib/data/teams";
 import { siteUrl } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -53,6 +54,13 @@ export default async function SettingsPage({
         <div className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
           {tab === "billing" ? (
           <BillingPanel {...(await billingPanelData())} welcome={welcome === "1"} />
+        ) : null}
+        {tab === "branding" ? (
+          <BrandingPanel
+            {...(await brandingPanelData())}
+            username={session.profile.username}
+            siteHost={new URL(siteUrl()).host}
+          />
         ) : null}
         {tab === "developer" ? <DeveloperPanel {...(await developerPanelData())} siteUrl={siteUrl()} /> : null}
         {tab === "team" ? (

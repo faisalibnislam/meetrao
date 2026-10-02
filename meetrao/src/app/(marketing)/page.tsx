@@ -63,7 +63,7 @@ const RESEARCH = [
 
 const RESEARCH_TONE = {
   slate: { figure: "text-slate", tag: "border-slate-line bg-slate-soft text-slate" },
-  accent: { figure: "text-accent", tag: "border-accent-line bg-accent-soft text-accent" },
+  accent: { figure: "text-accent-ink", tag: "border-accent-line bg-accent-soft text-accent-ink" },
   plain: { figure: "text-ink-2", tag: "border-line bg-fill text-ink-2" },
 };
 
@@ -104,6 +104,8 @@ const EXTRAS: [IconName, string, string][] = [
   ["rectangle-list", "Ask what you need to know", "Up to five questions on the booking form. The answers arrive with the booking."],
   ["address-card", "Phone, in person, or your own link", "Not everything is a video call. Say where it happens and guests are told."],
   ["hashtag", "On your own site", "Paste one snippet and the booking form appears in your page, sized to fit."],
+  ["palette", "Your logo, your colour", "Your mark instead of ours, and one colour that carries through the calendar and the confirmation."],
+  ["globe", "Your own domain", "meeting.yourcompany.com/your-name. Point the DNS at us and the certificate is handled."],
   ["chart-line", "Read it from your own tools", "An API key reads your bookings, and a webhook tells you the moment one changes."],
 ];
 
@@ -176,7 +178,7 @@ export default function LandingPage() {
                     className={cx(
                       "max-w-[82%] px-[14px] py-[10px] text-[13.5px] leading-[1.5]",
                       mine
-                        ? "rounded-[14px_14px_4px_14px] bg-accent text-white"
+                        ? "rounded-[14px_14px_4px_14px] bg-accent text-on-accent"
                         : "rounded-[14px_14px_14px_4px] border border-line bg-fill text-ink",
                     )}
                   >
@@ -411,7 +413,7 @@ export default function LandingPage() {
               key={title}
               className="flex flex-col gap-[10px] rounded-[14px] border border-line bg-surface px-[22px] pt-[22px] pb-[24px] transition-colors duration-[120ms] hover:border-accent-line"
             >
-              <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[9px] bg-accent-soft text-accent">
+              <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[9px] bg-accent-soft text-accent-ink">
                 <Icon name={glyph} size={14} />
               </span>
               <span className="text-[14.5px] font-semibold tracking-[-0.005em] text-ink">{title}</span>
@@ -435,7 +437,7 @@ export default function LandingPage() {
               key={title}
               className="flex flex-col gap-[10px] rounded-[14px] border border-line bg-fill px-[22px] pt-[22px] pb-[24px] transition-colors duration-[120ms] hover:border-accent-line"
             >
-              <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[9px] bg-surface text-accent">
+              <span className="inline-flex h-[32px] w-[32px] flex-none items-center justify-center rounded-[9px] bg-surface text-accent-ink">
                 <Icon name={glyph} size={14} />
               </span>
               <span className="text-[14.5px] font-semibold tracking-[-0.005em] text-ink">{title}</span>

@@ -43,7 +43,7 @@ export function PricingPage() {
                   className="flex min-w-[min(260px,100%)] flex-1 flex-col gap-[5px] rounded-[10px] border border-accent-line bg-accent-soft px-[15px] py-[13px]"
                 >
                   <span className="flex items-center gap-[7px] text-[13.5px] font-semibold text-ink">
-                    <Icon name="check" weight="solid" size={11} className="flex-none text-accent" />
+                    <Icon name="check" weight="solid" size={11} className="flex-none text-accent-ink" />
                     {title}
                   </span>
                   <span className="text-[13px] leading-[1.5] text-pretty text-ink-2">{body}</span>
@@ -54,7 +54,7 @@ export function PricingPage() {
             <div className="mt-[10px] flex flex-wrap items-center gap-[10px]">
               <Link
                 href="/signup"
-                className="unlink inline-flex h-[44px] items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-white no-underline hover:bg-accent-2 hover:text-white"
+                className="unlink inline-flex h-[44px] items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-accent no-underline hover:bg-accent-2 hover:text-on-accent"
               >
                 Create a free account
               </Link>
@@ -86,7 +86,7 @@ export function PricingPage() {
             <div className="mt-[26px] flex flex-wrap items-center gap-[12px]">
               <Link
                 href="/signup"
-                className="unlink inline-flex h-[44px] items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-white no-underline hover:bg-accent-2 hover:text-white"
+                className="unlink inline-flex h-[44px] items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-accent no-underline hover:bg-accent-2 hover:text-on-accent"
               >
                 Start free
               </Link>
@@ -120,7 +120,7 @@ export function PricingPage() {
               </span>
               <Link
                 href="/signup"
-                className="unlink inline-flex h-[42px] flex-none items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-white no-underline hover:bg-accent-2 hover:text-white"
+                className="unlink inline-flex h-[42px] flex-none items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-accent no-underline hover:bg-accent-2 hover:text-on-accent"
               >
                 Create a free account
               </Link>

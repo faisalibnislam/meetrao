@@ -183,7 +183,7 @@ export function ContactsScreen({ contacts }: { contacts: ContactView[] }) {
               "inline-flex h-[30px] cursor-pointer items-center gap-[7px] rounded-[6px] border px-[11px] text-[12.5px]",
               "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
               view === v.id
-                ? "border-accent bg-accent font-semibold text-white"
+                ? "border-accent bg-accent font-semibold text-on-accent"
                 : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
             )}
           >

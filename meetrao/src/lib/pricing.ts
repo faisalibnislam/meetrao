@@ -89,7 +89,9 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
   { feature: "Reminders before a meeting", free: "A day and an hour before", pro: "Times you choose" },
   { feature: "Embed on your own site", free: "With a small badge", pro: "No badge" },
   { feature: "“Powered by Meetrao” on your booking page", free: "Shown", pro: "Removed" },
-  { feature: "Your own domain — book.yourcompany.com", free: false, pro: true },
+  { feature: "Your own logo on your booking page", free: false, pro: true },
+  { feature: "Your own colour, through every page a guest sees", free: false, pro: true },
+  { feature: "Your own domain — meeting.yourcompany.com/your-name", free: false, pro: true },
   { feature: "Team link, rotating to whoever is free", free: false, pro: true },
   { feature: "Sessions several guests share", free: false, pro: true },
   { feature: "API keys and webhooks", free: false, pro: true },
@@ -102,7 +104,14 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
  * one person. If a feature is neither, it belongs in Free.
  */
 export const PRO_ADDS: readonly [string, string][] = [
-  ["Your own domain", "Serve your booking page at book.yourcompany.com, with the certificate handled."],
+  [
+    "Your logo and your colour",
+    "Your mark in place of ours, and one colour that carries through the calendar, the buttons and the confirmation. We work out the readable shades, so a guest can always read the page.",
+  ],
+  [
+    "Your own domain",
+    "meeting.yourcompany.com/your-name, certificate handled. The bare domain works too, and so does a link straight to one meeting.",
+  ],
   ["No Meetrao badge", "Your booking page and your embed stop mentioning us."],
   ["Team links", "One link several people answer, rotating to whoever is free and least recently booked."],
   ["Sessions several guests share", "A class, a workshop, an office hour — one slot, several seats, counting down."],
@@ -138,7 +147,7 @@ export const LIMITS: readonly [string, string][] = [
 export const WHY: readonly string[] = [
   "Meetrao is built and run by one person. There is no sales team to fund and no investor expecting a return this quarter, which is why the free plan is the real product rather than a demonstration of one.",
   "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free — never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
-  "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; a team link means several calendars checked on every page load. Ten dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
+  "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; hosting a logo means storage and bandwidth on every page view; a team link means several calendars checked on every page load. Ten dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
 ];
 
 /**

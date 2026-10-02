@@ -68,7 +68,7 @@ export function CostCalculator() {
             <label htmlFor={slider.id} className="cursor-pointer text-[13.5px] font-medium text-ink-2">
               {slider.label}
             </label>
-            <span className="text-[16px] font-medium text-accent">{slider.display}</span>
+            <span className="text-[16px] font-medium text-accent-ink">{slider.display}</span>
           </div>
           <input
             id={slider.id}
@@ -89,10 +89,10 @@ export function CostCalculator() {
 
       <div className="flex flex-wrap items-baseline justify-between gap-[10px] pt-[14px]">
         <div className="flex flex-col gap-[2px]">
-          <span className="font-serif text-[38px] leading-[1] text-accent">≈ {money(cost)}/mo</span>
+          <span className="font-serif text-[38px] leading-[1] text-accent-ink">≈ {money(cost)}/mo</span>
           <span className="text-[12.5px] text-ink-3">{hours.toFixed(1)} hrs of your month</span>
         </div>
-        <span className="inline-flex h-[26px] items-center rounded-[6px] border border-accent-line bg-accent-soft px-[11px] text-[12.5px] font-semibold text-accent">
+        <span className="inline-flex h-[26px] items-center rounded-[6px] border border-accent-line bg-accent-soft px-[11px] text-[12.5px] font-semibold text-accent-ink">
           Meetrao: $0
         </span>
       </div>

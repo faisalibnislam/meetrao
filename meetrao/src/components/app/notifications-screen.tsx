@@ -23,7 +23,7 @@ import { cx } from "@/lib/cx";
    ───────────────────────────────────────────────────────────────────────────── */
 
 const LOOK: Record<NotificationKind, { icon: IconName; ring: string; tint: string; label: string }> = {
-  booking_new: { icon: "calendar", ring: "border-accent-line bg-accent-soft", tint: "text-accent", label: "New booking" },
+  booking_new: { icon: "calendar", ring: "border-accent-line bg-accent-soft", tint: "text-accent-ink", label: "New booking" },
   booking_cancelled: { icon: "circle-xmark", ring: "border-red-line bg-red-soft", tint: "text-red", label: "Cancelled" },
   booking_changed: { icon: "rotate-left", ring: "border-amber-line bg-amber-soft", tint: "text-amber", label: "Moved" },
   /* Amber, not red: the guest said no in their calendar, which is news — but
@@ -67,7 +67,7 @@ export function NotificationsScreen({ notifications }: { notifications: Notifica
                 "inline-flex h-[30px] cursor-pointer items-center gap-[7px] rounded-[6px] border px-[11px] text-[12.5px]",
                 "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
                 onlyUnread === value
-                  ? "border-accent bg-accent font-semibold text-white"
+                  ? "border-accent bg-accent font-semibold text-on-accent"
                   : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
               )}
             >

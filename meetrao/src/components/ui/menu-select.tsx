@@ -237,7 +237,7 @@ export function MenuSelect({
                   )}
                 >
                   <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{o.label}</span>
-                  {selected ? <Icon name="check" weight="solid" size={11} className="flex-none text-accent" /> : null}
+                  {selected ? <Icon name="check" weight="solid" size={11} className="flex-none text-accent-ink" /> : null}
                 </button>
               );
             })}

@@ -71,7 +71,7 @@ export function SiteAccountMenu({
         {avatarUrl ? (
           <Avatar name={name} size={26} src={avatarUrl} />
         ) : (
-          <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[10.5px] font-bold text-accent">
+          <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[10.5px] font-bold text-accent-ink">
             {initials}
           </span>
         )}

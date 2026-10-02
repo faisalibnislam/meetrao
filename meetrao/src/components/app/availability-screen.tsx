@@ -257,7 +257,7 @@ export function AvailabilityScreen({
                 "inline-flex h-[32px] cursor-pointer items-center gap-[8px] rounded-[6px] border px-[12px] text-[13px]",
                 "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
                 s.id === active.id
-                  ? "border-accent bg-accent font-semibold text-white"
+                  ? "border-accent bg-accent font-semibold text-on-accent"
                   : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
               )}
             >
@@ -397,7 +397,7 @@ export function AvailabilityScreen({
         <span
           role="status"
           aria-live="polite"
-          className={cx("inline-flex items-center gap-[7px] text-[12.5px]", unsaved ? "text-ink-3" : "text-accent")}
+          className={cx("inline-flex items-center gap-[7px] text-[12.5px]", unsaved ? "text-ink-3" : "text-accent-ink")}
         >
           {unsaved
             ? dirty.length > 1
@@ -497,7 +497,7 @@ export function AvailabilityScreen({
         secondary={{ label: "Keep it", onClick: () => setDialog(null) }}
       >
         <div className="flex items-start gap-[9px] text-[13px] leading-[1.55] text-ink-2">
-          <Icon name="circle-info" weight="solid" size={13} className="mt-[2px] flex-none text-accent" />
+          <Icon name="circle-info" weight="solid" size={13} className="mt-[2px] flex-none text-accent-ink" />
           <span>
             {active.usedBy.length
               ? `${active.usedBy.length} meeting${active.usedBy.length === 1 ? "" : "s"} — ${active.usedBy.join(", ")} — will move to your default schedule.`
@@ -530,7 +530,7 @@ function ChoiceRow({
         "inline-flex h-[32px] cursor-pointer items-center rounded-[6px] border px-[12px] text-[12.5px]",
         "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
         selected
-          ? "border-accent bg-accent-soft font-semibold text-accent"
+          ? "border-accent bg-accent-soft font-semibold text-accent-ink"
           : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
       )}
     >

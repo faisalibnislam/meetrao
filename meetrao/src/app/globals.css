@@ -30,6 +30,25 @@
   --accent-soft: #e4edea;
   --accent-line: #c2d6d0;
   --accent-soft-hover: #d7e6e0;
+  /* TWO TOKENS THAT EXIST FOR BRANDED BOOKING PAGES, and whose defaults are
+     exactly what the design already drew — nothing moves on an unbranded
+     screen by their being here.
+
+     A Pro host sets one colour and src/components/booking/brand.tsx rebinds
+     this whole block inside their page. That only works if the two jobs the
+     accent does are separable, because they cannot both be one value:
+
+       --on-accent   what goes ON a filled accent button. Was hard-coded
+                     `text-white`, which is unreadable the moment a host picks
+                     yellow or cyan.
+       --accent-ink  the accent used AS text, on white or on its own tint.
+                     Needs 4.5:1, which the raw colour of a vivid brand does
+                     not have — convex/lib/brand.ts darkens it until it does.
+
+     So: `bg-accent` keeps the host's colour exactly as chosen, `text-on-accent`
+     labels it, and `text-accent-ink` is the readable form for text. */
+  --on-accent: #ffffff;
+  --accent-ink: var(--accent);
 
   /* Status */
   --red: #98291f;
@@ -74,6 +93,8 @@
   --color-accent-2: var(--accent-2);
   --color-accent-soft: var(--accent-soft);
   --color-accent-line: var(--accent-line);
+  --color-on-accent: var(--on-accent);
+  --color-accent-ink: var(--accent-ink);
   --color-red: var(--red);
   --color-red-soft: var(--red-soft);
   --color-red-line: var(--red-line);

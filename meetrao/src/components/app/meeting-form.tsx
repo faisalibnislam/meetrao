@@ -148,7 +148,7 @@ export function MeetingForm({
                 "inline-flex h-[32px] cursor-pointer items-center rounded-[6px] border px-[12px] text-[12.5px]",
                 "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
                 locationKind === o.value
-                  ? "border-accent bg-accent-soft font-semibold text-accent"
+                  ? "border-accent bg-accent-soft font-semibold text-accent-ink"
                   : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
               )}
             >
@@ -159,7 +159,7 @@ export function MeetingForm({
 
         {locationKind === "google_meet" ? (
           <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
-            <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-accent" />
+            <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-accent-ink" />
             <span className="text-[12.5px] leading-[1.6] text-ink-2">
               Meetrao creates one calendar event and invites your guest to it, so the meeting, the description
               and the Meet link land on both calendars. Changes and cancellations update both sides.

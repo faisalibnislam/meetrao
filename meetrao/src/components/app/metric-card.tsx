@@ -11,7 +11,7 @@ import { cx } from "@/lib/cx";
 export type MetricTone = "accent" | "slate" | "amber" | "plain";
 
 const TONE: Record<MetricTone, { card: string; ink: string }> = {
-  accent: { card: "border-accent-line bg-accent-soft", ink: "text-accent" },
+  accent: { card: "border-accent-line bg-accent-soft", ink: "text-accent-ink" },
   slate: { card: "border-slate-line bg-slate-soft", ink: "text-slate" },
   amber: { card: "border-amber-line bg-amber-soft", ink: "text-amber" },
   plain: { card: "border-line bg-fill", ink: "text-ink-2" },

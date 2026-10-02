@@ -155,7 +155,7 @@ export function BookingLinkPanel({
                 name={ok ? "check" : "xmark"}
                 weight="solid"
                 size={11}
-                className={cx("mr-[11px] flex-none", ok ? "text-accent" : "text-red")}
+                className={cx("mr-[11px] flex-none", ok ? "text-accent-ink" : "text-red")}
               />
             ) : null}
           </div>
@@ -166,7 +166,7 @@ export function BookingLinkPanel({
             aria-live="polite"
             className={cx(
               "block min-h-[18px] text-[12px] leading-[1.5]",
-              ok ? "text-accent" : bad ? "text-red" : "text-ink-3",
+              ok ? "text-accent-ink" : bad ? "text-red" : "text-ink-3",
             )}
           >
             {note}
@@ -179,7 +179,7 @@ export function BookingLinkPanel({
                   key={idea}
                   type="button"
                   onClick={() => edit(idea)}
-                  className="inline-flex h-[28px] cursor-pointer items-center gap-[7px] rounded-[6px] border border-accent-line bg-accent-soft px-[10px] text-[12px] text-accent transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
+                  className="inline-flex h-[28px] cursor-pointer items-center gap-[7px] rounded-[6px] border border-accent-line bg-accent-soft px-[10px] text-[12px] text-accent-ink transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
                 >
                   <Icon name="plus" size={9} />
                   {idea}

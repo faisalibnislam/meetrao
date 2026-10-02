@@ -546,7 +546,7 @@ export function BookingFlow(props: FlowProps) {
                 className="h-[38px] w-[38px] flex-none rounded-[8px] object-cover"
               />
             ) : (
-              <span className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[13px] font-bold text-accent">
+              <span className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[13px] font-bold text-accent-ink">
                 {initials(props.hostName)}
               </span>
             )}
@@ -638,8 +638,8 @@ export function BookingFlow(props: FlowProps) {
                       "transition-[background-color,border-color] duration-[120ms]",
                       !open && "cursor-not-allowed border-transparent bg-transparent text-ink-3 opacity-45",
                       open && !isSelected && !isToday && "cursor-pointer border-line bg-surface text-ink hover:border-line-strong hover:bg-fill",
-                      open && isToday && !isSelected && "cursor-pointer border-accent bg-surface font-semibold text-accent",
-                      isSelected && "cursor-pointer border-accent bg-accent font-semibold text-white hover:bg-accent-2",
+                      open && isToday && !isSelected && "cursor-pointer border-accent bg-surface font-semibold text-accent-ink",
+                      isSelected && "cursor-pointer border-accent bg-accent font-semibold text-on-accent hover:bg-accent-2",
                     )}
                   >
                     {cell}
@@ -699,7 +699,7 @@ export function BookingFlow(props: FlowProps) {
                         left === null ? "h-[38px]" : "h-[44px] flex-col gap-[1px]",
                         "cursor-pointer transition-[background-color,border-color] duration-[120ms]",
                         isChosen
-                          ? "border-accent bg-accent font-semibold text-white hover:bg-accent-2"
+                          ? "border-accent bg-accent font-semibold text-on-accent hover:bg-accent-2"
                           : "border-line-strong bg-surface text-ink hover:border-accent hover:bg-fill",
                       )}
                     >
@@ -708,7 +708,7 @@ export function BookingFlow(props: FlowProps) {
                           empty workshop is noise; "1 seat left" is the reason
                           somebody books now. */}
                       {left !== null && left <= 3 ? (
-                        <span className={cx("text-[10.5px] font-medium", isChosen ? "text-white/80" : "text-ink-3")}>
+                        <span className={cx("text-[10.5px] font-medium", isChosen ? "text-on-accent/80" : "text-ink-3")}>
                           {left} left
                         </span>
                       ) : null}

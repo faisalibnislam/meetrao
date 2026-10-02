@@ -166,6 +166,23 @@ const G = {
       "M8.2 8.6a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 0 0 0-4.4" +
       "M4.8 16.4c0-1.4 1.6-2.4 3.4-2.4s3.4 1 3.4 2.4M14.6 9.6h4.4M14.6 13.4h4.4",
   },
+  /* f53f */ palette: {
+    /* The classic shape: a round palette with a bite out of the lower right
+       and three wells of colour. Strokes throughout, like the rest of the
+       light set, so the wells are arc pairs rather than filled circles.
+
+       Each segment is its own string with the join spelled out. The first
+       draft concatenated them without separators, which ran "4.2" into "0"
+       and turned the outline into a hook with no wells at all. */
+    stroke: [
+      "M12 3.6a8.4 8.4 0 1 0 0 16.8",
+      "c1.3 0 2.3-1 2.3-2.2 0-.6-.2-1-.5-1.4-.3-.4-.5-.8-.5-1.3 0-1 .8-1.8 1.8-1.8",
+      "h1.9c2.4 0 4.3-1.9 4.3-4.3 0-3.2-4-5.8-9.3-5.8",
+      "M8.1 8.4a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2",
+      "M12.6 6.9a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2",
+      "M6.9 13.2a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2",
+    ].join(" "),
+  },
   /* f2f5 */ "sign-out": { stroke: "M14 4.5H4.5v15H14M10 12h11M17.4 8.4 21 12l-3.6 3.6" },
   plus: { stroke: "M12 4.6v14.8M4.6 12h14.8" },
   minus: { stroke: "M4.6 12h14.8" },

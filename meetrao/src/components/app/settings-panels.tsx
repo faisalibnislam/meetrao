@@ -182,7 +182,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
                 name={ok ? "check" : "xmark"}
                 weight="solid"
                 size={11}
-                className={cx("mr-[11px] flex-none", ok ? "text-accent" : "text-red")}
+                className={cx("mr-[11px] flex-none", ok ? "text-accent-ink" : "text-red")}
               />
             ) : null}
           </div>
@@ -193,7 +193,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
             aria-live="polite"
             className={cx(
               "block min-h-[18px] text-[12px] leading-[1.5]",
-              ok ? "text-accent" : bad ? "text-red" : "text-ink-3",
+              ok ? "text-accent-ink" : bad ? "text-red" : "text-ink-3",
             )}
           >
             {note}
@@ -206,7 +206,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
                   key={idea}
                   type="button"
                   onClick={() => editUsername(idea)}
-                  className="inline-flex h-[28px] cursor-pointer items-center gap-[7px] rounded-[6px] border border-accent-line bg-accent-soft px-[10px] text-[12px] text-accent transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
+                  className="inline-flex h-[28px] cursor-pointer items-center gap-[7px] rounded-[6px] border border-accent-line bg-accent-soft px-[10px] text-[12px] text-accent-ink transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
                 >
                   <Icon name="plus" size={9} />
                   {idea}
@@ -289,7 +289,7 @@ export function CalendarPanel({
       ) : null}
 
       <div className="flex flex-wrap items-center gap-[13px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
-        <Icon name="calendar" size={17} className="flex-none text-accent" />
+        <Icon name="calendar" size={17} className="flex-none text-accent-ink" />
         <div className="flex min-w-[150px] flex-1 flex-col gap-[2px]">
           <span className="text-[13.5px] font-semibold text-ink">Google Calendar</span>
           <span className="text-[12.5px] text-ink-3">

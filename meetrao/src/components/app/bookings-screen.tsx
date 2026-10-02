@@ -128,7 +128,7 @@ export function BookingsScreen({
               <div className="flex flex-wrap items-baseline gap-[9px]">
                 <h2 className="m-0 text-[14px] font-semibold text-ink">{day.heading}</h2>
                 {day.today ? (
-                  <span className="inline-flex h-[19px] items-center rounded-[4px] bg-accent-soft px-[7px] text-[10.5px] font-semibold tracking-[0.04em] text-accent uppercase">
+                  <span className="inline-flex h-[19px] items-center rounded-[4px] bg-accent-soft px-[7px] text-[10.5px] font-semibold tracking-[0.04em] text-accent-ink uppercase">
                     Today
                   </span>
                 ) : null}

@@ -136,7 +136,7 @@ export function Walkthrough() {
                   <span
                     className={cx(
                       "flex-none font-serif text-[24px] leading-[1] tracking-[-0.02em] transition-colors duration-[420ms]",
-                      reached ? "text-accent" : "text-ink-3",
+                      reached ? "text-accent-ink" : "text-ink-3",
                     )}
                   >
                     {step.n}
@@ -379,7 +379,7 @@ export function Walkthrough() {
                               setBooked(true);
                               setTimeout(() => setStage("confirm"), 620);
                             }}
-                            className="inline-flex h-[40px] cursor-pointer items-center justify-center gap-[9px] rounded-[7px] border border-accent bg-accent font-sans text-[13.5px] font-semibold text-white transition-colors duration-[120ms] hover:bg-accent-2"
+                            className="inline-flex h-[40px] cursor-pointer items-center justify-center gap-[9px] rounded-[7px] border border-accent bg-accent font-sans text-[13.5px] font-semibold text-on-accent transition-colors duration-[120ms] hover:bg-accent-2"
                           >
                             {booked ? "Scheduled — go to step 04" : "Schedule meeting"}
                           </button>
@@ -389,7 +389,7 @@ export function Walkthrough() {
                       {stage === "confirm" ? (
                         <div className="animate-stage mx-auto flex w-full max-w-[420px] flex-col gap-[12px]">
                           <div className="flex items-center gap-[11px]">
-                            <span className="inline-flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-accent text-white">
+                            <span className="inline-flex h-[30px] w-[30px] flex-none items-center justify-center rounded-full bg-accent text-on-accent">
                               <Icon name="check" weight="solid" size={12} />
                             </span>
                             <span className="font-serif text-[28px] leading-[1.02] text-ink">
@@ -425,8 +425,8 @@ export function Walkthrough() {
                           </div>
 
                           <div className="flex gap-[10px] rounded-[9px] border border-accent-line bg-accent-soft px-[13px] py-[11px]">
-                            <Icon name="check" weight="solid" size={11} className="mt-[2px] flex-none text-accent" />
-                            <span className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-accent">
+                            <Icon name="check" weight="solid" size={11} className="mt-[2px] flex-none text-accent-ink" />
+                            <span className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-accent-ink">
                               This is already on your calendar. Adam has been invited to the same event.
                             </span>
                           </div>

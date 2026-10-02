@@ -3,11 +3,12 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { Eyebrow } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import { Logo } from "@/components/ui/logo";
 import { EmptyState } from "@/components/ui/panels";
 import { getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 import { OG_IMAGE } from "@/lib/seo";
+import { publicUrl } from "@/lib/public-origin";
 import { PublicFooter } from "@/components/booking/public-footer";
+import { BrandMark, BrandScope } from "@/components/booking/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -21,16 +22,21 @@ export async function generateMetadata({
   if (!host) return { title: "Not found", robots: { index: false, follow: false } };
 
   const name = host.fullName || host.username;
+  /* Absolute, and built from the domain this request arrived on. A Pro host's
+     page on their own domain must not canonicalise to meetrao.com — see
+     src/lib/public-origin.ts. */
+  const here = await publicUrl(`/${host.username}`);
+
   return {
     title: `Book a meeting with ${name}`,
     description: `Pick a time that works with ${name}. Live availability, no account needed, and a Google Meet link on every booking.`,
-    alternates: { canonical: `/${host.username}` },
+    alternates: { canonical: here },
     openGraph: {
       images: [OG_IMAGE],
       type: "profile",
       title: `Book a meeting with ${name}`,
       description: `Pick a time that works with ${name}. No account needed.`,
-      url: `/${host.username}`,
+      url: here,
     },
   };
 }
@@ -46,17 +52,17 @@ export default async function HostPage({ params }: { params: Promise<{ username:
   if (meetings.length === 1) redirect(`/${host.username}/${meetings[0].slug}`);
 
   return (
-    <>
+    <BrandScope brand={host.brand}>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
-        <Logo height={20} />
+        <BrandMark brand={host.brand} hostName={host.fullName || host.username} height={20} />
         <Eyebrow size={10.5}>Booking page</Eyebrow>
       </div>
 
       <div className="grid grid-cols-[minmax(0,0.78fr)_minmax(0,1fr)] overflow-hidden rounded-[12px] border border-line bg-surface max-[820px]:grid-cols-[1fr]">
         <div className="flex min-w-0 flex-col gap-[15px] border-r border-line bg-fill p-[30px] max-[820px]:border-r-0 max-[820px]:border-b max-[820px]:bg-surface max-[820px]:px-[22px] max-[820px]:py-[26px]">
           <div className="flex items-center gap-[11px]">
-            <span className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[13px] font-bold text-accent">
+            <span className="inline-flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[8px] bg-accent-soft text-[13px] font-bold text-accent-ink">
               {(host.fullName || host.username)
                 .split(" ")
                 .slice(0, 2)
@@ -110,6 +116,6 @@ export default async function HostPage({ params }: { params: Promise<{ username:
       </div>
     </div>
       <PublicFooter badge={!host.unbranded} />
-    </>
+    </BrandScope>
   );
 }

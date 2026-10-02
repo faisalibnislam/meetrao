@@ -71,7 +71,7 @@ export function VerifyActions({ signedIn }: { signedIn: boolean }) {
         >
           <span className="inline-flex items-center gap-[8px]">
             {sentCount > 0 && !resending ? (
-              <Icon name="check" weight="solid" size={10} className="text-accent" />
+              <Icon name="check" weight="solid" size={10} className="text-accent-ink" />
             ) : null}
             {resending ? "Sending…" : sentCount > 0 ? "Sent again" : "Resend the email"}
           </span>

@@ -23,7 +23,7 @@ export type ButtonSize = 24 | 26 | 28 | 30 | 32 | 34 | 36 | 38 | 40 | 42 | 44 | 
 
 const VARIANT: Record<ButtonVariant, string> = {
   accent:
-    "border border-accent bg-accent text-white hover:bg-accent-2 hover:border-accent-2 disabled:hover:bg-accent",
+    "border border-accent bg-accent text-on-accent hover:bg-accent-2 hover:border-accent-2 disabled:hover:bg-accent",
   secondary: "border border-line-strong bg-surface text-ink hover:bg-fill",
   ghost: "border border-transparent bg-transparent text-ink-2 hover:bg-fill hover:text-ink",
   danger: "border border-red bg-red text-white hover:bg-red-hover hover:border-red-hover",

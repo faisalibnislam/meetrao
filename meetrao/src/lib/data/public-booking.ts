@@ -2,6 +2,7 @@ import "server-only";
 
 import type { AvailabilityRule, DateOverride, Interval, SlotRules } from "@/lib/booking/slots";
 import type { BookingQuestion } from "@/lib/types";
+import type { PublicBrand } from "@/components/booking/brand";
 import { busyPeriods } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
@@ -23,6 +24,14 @@ export type PublicHost = {
   avatarUrl: string | null;
   /** Pro: the "Powered by Meetrao" badge is not shown on their pages. */
   unbranded: boolean;
+  /**
+   * Pro: their own logo and colour, or null for Meetrao's.
+   *
+   * Already gated by plan in convex/publicBooking.ts — a lapsed host's rows
+   * are still in the table and do not come back from the query. Nothing here
+   * re-checks, because there is nothing here to re-check with.
+   */
+  brand: PublicBrand;
 };
 
 export type PublicMeeting = {
@@ -45,6 +54,7 @@ type HostRow = {
   id: string;
   username: string;
   unbranded?: boolean;
+  brand?: { logo_url: string | null; color: string | null } | null;
   full_name: string;
   job_title: string;
   timezone: string;
@@ -60,6 +70,7 @@ function toHost(row: HostRow): PublicHost {
     timezone: row.timezone,
     avatarUrl: row.avatar_url ?? null,
     unbranded: row.unbranded ?? false,
+    brand: row.brand ? { logoUrl: row.brand.logo_url, color: row.brand.color } : null,
   };
 }
 

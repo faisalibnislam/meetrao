@@ -55,13 +55,13 @@ const CALLOUT: Record<CalloutTone, { box: string; icon: IconName; iconClass: str
   accent: {
     box: "border-accent-line bg-accent-soft",
     icon: "check",
-    iconClass: "text-accent",
+    iconClass: "text-accent-ink",
     body: "text-ink-2",
   },
   info: {
     box: "border-line bg-fill",
     icon: "circle-info",
-    iconClass: "text-accent",
+    iconClass: "text-accent-ink",
     body: "text-ink-2",
   },
 };

@@ -152,7 +152,7 @@ export function SiteFooter() {
   ];
 
   return (
-    <footer className="bg-accent-2 text-white">
+    <footer className="bg-accent-2 text-on-accent">
       <div className="mx-auto max-w-[1200px] px-[26px] max-[560px]:px-[18px]">
         {/* CTA band, the top of the footer */}
         <div className="flex flex-wrap items-end justify-between gap-[30px] pt-[76px] pb-[60px]">
@@ -259,7 +259,7 @@ export function SiteFooter() {
 
 /** The rule-and-label that opens every section. */
 export function Kicker({ children, tone = "light" }: { children: string; tone?: "light" | "dark" }) {
-  const color = tone === "light" ? "text-[#7FD8C4]" : "text-accent";
+  const color = tone === "light" ? "text-[#7FD8C4]" : "text-accent-ink";
   const rule = tone === "light" ? "bg-[#7FD8C4]" : "bg-accent";
   return (
     <span className={`inline-flex items-center gap-[10px] text-[10.5px] font-medium tracking-[0.14em] uppercase ${color}`}>

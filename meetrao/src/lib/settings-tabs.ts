@@ -1,4 +1,4 @@
-/* The five Settings panels, and their URLs.
+/* The Settings panels, and their URLs.
 
    Not in settings-nav.tsx, which is a client component: the settings route
    validates the tab segment on the server, and a constant exported from a
@@ -10,6 +10,7 @@ export const SETTINGS_TABS = [
   { key: "calendar", label: "Calendar" },
   { key: "booking", label: "Booking" },
   { key: "billing", label: "Plan" },
+  { key: "branding", label: "Branding" },
   { key: "team", label: "Team" },
   { key: "developer", label: "Developer" },
   { key: "notifications", label: "Notifications" },

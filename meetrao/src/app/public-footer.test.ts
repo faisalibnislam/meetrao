@@ -59,9 +59,12 @@ describe("the layout stacks what the pages return", () => {
 
   it.each(pages)("%s returns its content and the footer as siblings", (file) => {
     const text = readFileSync(path.join(APP, file), "utf8");
-    // The fragment is what made the layout's row a problem; it is fine, as
-    // long as the layout above knows to stack.
-    expect(text).toMatch(/<>\s/);
+    /* A fragment, or <BrandScope> — which is a fragment with CSS variables on
+       it. BrandScope renders `display: contents`, so it introduces no box and
+       the card and footer are still the layout column's own children, exactly
+       as a fragment leaves them. Anything else here would wrap them in a box
+       and re-break the centring this file exists to guard. */
+    expect(text).toMatch(/(<>\s|<BrandScope)/);
   });
 });
 
@@ -77,13 +80,30 @@ describe("the badge", () => {
     }
   });
 
-  /* The pages that know a host pass its plan; the ones reached by booking
-     reference do not, and keep the badge. That is deliberate — a guest
-     following a link from an email is not on anybody's branded page. */
-  it("is hidden only where a host is resolved", () => {
-    const withHost = ["(public)/[username]/page.tsx", "(public)/[username]/[slug]/page.tsx"];
-    for (const file of withHost) {
+  /* EVERY guest-facing page hides it for a Pro host now, including the ones
+     reached by booking reference.
+
+     This file used to say the opposite — that the reference pages keep the
+     badge because "a guest following a link from an email is not on anybody's
+     branded page". That was a rationalisation of a limitation: those pages had
+     no username in the URL and so could not tell whose booking it was. They
+     can now, because convex/publicBooking.ts returns the host's plan and brand
+     on the booking itself. A guest who books through a host's own branded page
+     and then lands on our green confirmation has been handed to a stranger
+     halfway through, and the email link is the MOST likely way they get there. */
+  it("is hidden wherever a host is known, which is everywhere", () => {
+    const byUsername = ["(public)/[username]/page.tsx", "(public)/[username]/[slug]/page.tsx"];
+    for (const file of byUsername) {
       expect(readFileSync(path.join(APP, file), "utf8")).toContain("badge={!host.unbranded}");
+    }
+
+    const byReference = globSync("(public)/booking/**/page.tsx", { cwd: APP });
+    expect(byReference.length).toBeGreaterThanOrEqual(4);
+    for (const file of byReference) {
+      expect(
+        readFileSync(path.join(APP, file), "utf8"),
+        `${file} shows "Powered by Meetrao" on a Pro host's page`,
+      ).toContain("badge={!booking.hostUnbranded}");
     }
   });
 });

@@ -3,17 +3,18 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/controls";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Callout, PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
-import { claimDomain, openPortal, removeDomain, startCheckout, verifyDomain } from "@/lib/actions/billing";
+import { openPortal, startCheckout } from "@/lib/actions/billing";
 import { saveReminderTiming } from "@/lib/actions/settings";
-import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Plan, domain, and the two Pro settings that live nowhere else.
+   Plan, and the reminder timing that lives nowhere else.
+
+   The custom domain used to be on this screen and is now on the Branding one,
+   beside the logo and the colour — see the pointer below.
 
    The plan shown here is whatever Polar last told us. Nothing on this screen
    can set it — the upgrade button opens a checkout and the page waits to be
@@ -60,8 +61,6 @@ export function BillingPanel({
   const router = useRouter();
   const toast = useToast();
   const [busy, startBusy] = useTransition();
-  const [draftDomain, setDraftDomain] = useState(domain.domain ?? "");
-  const [records, setRecords] = useState<{ type: string; name: string; value: string }[]>([]);
   const [long, setLong] = useState(String(timing.long));
   const [short, setShort] = useState(String(timing.short));
 
@@ -132,7 +131,8 @@ export function BillingPanel({
         {!pro ? (
           <ul className="m-0 flex list-none flex-col gap-[6px] p-0">
             {[
-              "Your own domain for your booking page",
+              "Your own logo and colour on your booking page",
+              "Your own domain, at meeting.yourcompany.com",
               "No Meetrao badge on your pages or embed",
               "Team links that rotate between people",
               "Sessions several guests share",
@@ -148,113 +148,25 @@ export function BillingPanel({
         ) : null}
       </div>
 
-      {/* ── custom domain ─────────────────────────────────────────────── */}
-      <div className={cx("flex flex-col gap-[11px] rounded-[8px] border px-[15px] py-[14px]", pro ? "border-line bg-surface" : "border-line bg-fill")}>
-        <div className="flex flex-wrap items-center justify-between gap-[10px]">
-          <span className="text-[13px] font-semibold text-ink">Your own domain</span>
-          {!pro ? <Badge tone="off" dot={false}>Pro</Badge> : domain.verifiedAt ? <Badge tone="ok">Live</Badge> : null}
+      {/* ── their own domain, which lives on the Branding screen now ──
+          Moved rather than duplicated: the logo, the colour and the domain are
+          one decision a host makes once — "make this look like mine" — and a
+          DNS form on a page about money was the odd one out. This line stays
+          so a host who comes looking for it here is not left guessing. */}
+      <div className="flex flex-wrap items-center justify-between gap-[10px] rounded-[8px] border border-line bg-surface px-[15px] py-[13px]">
+        <div className="flex min-w-0 flex-col gap-[3px]">
+          <span className="text-[13px] font-semibold text-ink">Your logo, colour and domain</span>
+          <span className="text-[12px] leading-[1.5] text-ink-3">
+            {domain.domain
+              ? domain.verifiedAt
+                ? `Your booking page answers at ${domain.domain}.`
+                : `${domain.domain} is claimed and waiting for DNS.`
+              : "Make the pages guests see look like yours."}
+          </span>
         </div>
-
-        <span className="text-[12px] leading-[1.5] text-ink-3">
-          Serve your booking page at book.yourcompany.com. Add the record below and we will check it.
-        </span>
-
-        {pro ? (
-          <>
-            <div className="flex flex-wrap items-end gap-[10px]">
-              <Field label="Domain" htmlFor="custom-domain" className="min-w-[200px] flex-1">
-                <Input
-                  id="custom-domain"
-                  height={36}
-                  placeholder="book.yourcompany.com"
-                  value={draftDomain}
-                  onChange={(e) => setDraftDomain(e.target.value)}
-                />
-              </Field>
-              <Button
-                variant="secondary"
-                size={36}
-                busy={busy}
-                onClick={() =>
-                  startBusy(async () => {
-                    const result = await claimDomain(draftDomain);
-                    if (result.error) {
-                      toast({ tone: "bad", title: "Could not claim", text: result.error });
-                      return;
-                    }
-                    if (result.state?.status === "pending") setRecords(result.state.records);
-                    if (result.state?.status === "unconfigured") {
-                      toast({ tone: "warn", title: "Not available yet", text: "Custom domains are not configured on this deployment." });
-                      return;
-                    }
-                    toast({ tone: "ok", title: "Domain claimed", text: "Add the DNS record, then check it." });
-                    router.refresh();
-                  })
-                }
-              >
-                Claim
-              </Button>
-            </div>
-
-            {records.length ? (
-              <div className="flex flex-col gap-[6px] rounded-[6px] border border-line bg-fill px-[12px] py-[10px]">
-                <span className="text-[12px] font-semibold text-ink">Add this record at your DNS provider</span>
-                {records.map((r) => (
-                  <span key={r.name} className="text-[12px] break-all text-ink-2">
-                    {r.type} · {r.name} · {r.value}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-
-            {domain.domain ? (
-              <div className="flex flex-wrap items-center gap-[8px]">
-                <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">
-                  {domain.domain}
-                  {domain.verifiedAt ? "" : " — waiting for DNS"}
-                </span>
-                <Button
-                  variant="ghost"
-                  size={28}
-                  busy={busy}
-                  onClick={() =>
-                    startBusy(async () => {
-                      const result = await verifyDomain(domain.domain as string);
-                      if (result.state?.status === "verified") {
-                        toast({ tone: "ok", title: "Domain is live", text: "Your booking page now answers there." });
-                      } else if (result.state?.status === "pending") {
-                        setRecords(result.state.records);
-                        toast({ tone: "warn", title: "Not visible yet", text: "DNS can take a few minutes." });
-                      } else {
-                        toast({ tone: "bad", title: "Could not check", text: result.error ?? "Try again shortly." });
-                      }
-                      router.refresh();
-                    })
-                  }
-                >
-                  Check DNS
-                </Button>
-                <Button
-                  variant="ghost"
-                  size={28}
-                  busy={busy}
-                  className="text-red hover:text-red"
-                  onClick={() =>
-                    startBusy(async () => {
-                      await removeDomain();
-                      setRecords([]);
-                      setDraftDomain("");
-                      toast({ tone: "ok", title: "Domain removed", text: "Your meetrao.com link keeps working." });
-                      router.refresh();
-                    })
-                  }
-                >
-                  Remove
-                </Button>
-              </div>
-            ) : null}
-          </>
-        ) : null}
+        <ButtonLink href="/settings/branding" variant="secondary" size={32}>
+          Branding
+        </ButtonLink>
       </div>
 
       {/* ── reminder timing ───────────────────────────────────────────── */}

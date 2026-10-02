@@ -129,7 +129,7 @@ export function StepClaimLink({ initial }: { initial: string }) {
                 name={ok ? "check" : "xmark"}
                 weight="solid"
                 size={12}
-                className={cx("mr-[12px] flex-none", ok ? "text-accent" : "text-red")}
+                className={cx("mr-[12px] flex-none", ok ? "text-accent-ink" : "text-red")}
               />
             ) : null}
           </div>
@@ -140,7 +140,7 @@ export function StepClaimLink({ initial }: { initial: string }) {
             aria-live="polite"
             className={cx(
               "block min-h-[19px] text-[12.5px] leading-[1.5]",
-              ok ? "text-accent" : bad ? "text-red" : "text-ink-3",
+              ok ? "text-accent-ink" : bad ? "text-red" : "text-ink-3",
             )}
           >
             {note}
@@ -156,7 +156,7 @@ export function StepClaimLink({ initial }: { initial: string }) {
                   key={idea}
                   type="button"
                   onClick={() => run(idea)}
-                  className="inline-flex h-[31px] cursor-pointer items-center gap-[8px] rounded-[6px] border border-accent-line bg-accent-soft px-[11px] text-[12.5px] text-accent transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
+                  className="inline-flex h-[31px] cursor-pointer items-center gap-[8px] rounded-[6px] border border-accent-line bg-accent-soft px-[11px] text-[12.5px] text-accent-ink transition-colors duration-[120ms] hover:bg-[var(--accent-soft-hover)]"
                 >
                   <Icon name="plus" size={9} />
                   {idea}

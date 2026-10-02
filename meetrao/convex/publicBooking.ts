@@ -8,6 +8,7 @@ import { findOverlap, insertBooking, moveBooking } from "./bookings";
 import { overridesForMeeting, rulesForMeeting } from "./availability";
 import { membersOf } from "./teams";
 import { planOf } from "./lib/plan";
+import type { Doc } from "./_generated/dataModel";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
@@ -33,6 +34,25 @@ import { consume } from "./lib/rateLimit";
 const MINUTE = 60_000;
 const DAY = 24 * 60 * MINUTE;
 
+/**
+ * The host's own logo and colour, or null for Meetrao's.
+ *
+ * GATED ON THE WAY OUT, not only where it is set. Branding is written behind
+ * requirePro in convex/branding.ts, and the rows survive a lapsed plan on
+ * purpose — so coming back costs the host nothing. This is what stops those
+ * surviving rows from being a paid feature somebody keeps for free: the moment
+ * `planOf` stops saying pro, every public page falls back to our mark.
+ *
+ * Returned as one nullable object rather than two loose fields so a caller
+ * cannot accidentally render half of it.
+ */
+function publicBrand(p: Doc<"profiles">): { logo_url: string | null; color: string | null } | null {
+  if (planOf(p) !== "pro") return null;
+  const logo = p.brand_logo_url ?? null;
+  const color = p.brand_color ?? null;
+  return logo || color ? { logo_url: logo, color } : null;
+}
+
 export const getHost = query({
   args: { username: v.string() },
   handler: async (ctx, a) => {
@@ -53,6 +73,7 @@ export const getHost = query({
       /* Whether the "Powered by Meetrao" badge is shown. A boolean, not the
          plan: a guest has no use for knowing which tier somebody is on. */
       unbranded: planOf(p) === "pro",
+      brand: publicBrand(p),
     };
   },
 });
@@ -100,6 +121,7 @@ export const getMeetingAvailability = query({
         /* Whether the badge is shown. A boolean, not the plan: a guest has no
            use for knowing which tier somebody is on. */
         unbranded: planOf(host) === "pro",
+        brand: publicBrand(host),
       },
       meeting: {
         id: meeting.id, name: meeting.name, description: meeting.description, slug: meeting.slug,
@@ -660,7 +682,19 @@ export const getByReference = query({
     return {
       ...bookingOut(b),
       meeting_slug: meeting && meeting.is_active ? meeting.slug : null,
-      host: host ? { username: host.username, full_name: host.full_name, timezone: host.timezone, avatar_url: host.avatar_url } : null,
+      /* The confirmation, reschedule and cancel screens are the host's pages
+         too — a guest who booked through a branded page and lands on our
+         green one has been handed off to a stranger. */
+      host: host
+        ? {
+            username: host.username,
+            full_name: host.full_name,
+            timezone: host.timezone,
+            avatar_url: host.avatar_url,
+            unbranded: planOf(host) === "pro",
+            brand: publicBrand(host),
+          }
+        : null,
     };
   },
 });

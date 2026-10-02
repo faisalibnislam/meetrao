@@ -20,7 +20,7 @@ import type { Comparison, Edge } from "@/lib/comparisons";
    ───────────────────────────────────────────────────────────────────────────── */
 
 const EDGE: Record<Edge, { label: string; className: string }> = {
-  meetrao: { label: "Meetrao", className: "border-accent-line bg-accent-soft text-accent" },
+  meetrao: { label: "Meetrao", className: "border-accent-line bg-accent-soft text-accent-ink" },
   them: { label: "Them", className: "border-line bg-fill text-ink-2" },
   even: { label: "Even", className: "border-line bg-surface text-ink-3" },
 };
@@ -45,7 +45,7 @@ export function ComparisonPage({ data }: { data: Comparison }) {
             <div className="mt-[10px] flex flex-wrap items-center gap-[10px]">
               <Link
                 href="/signup"
-                className="unlink inline-flex h-[44px] items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-white no-underline hover:bg-accent-2 hover:text-white"
+                className="unlink inline-flex h-[44px] items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-accent no-underline hover:bg-accent-2 hover:text-on-accent"
               >
                 Get started
               </Link>
@@ -198,7 +198,7 @@ export function ComparisonPage({ data }: { data: Comparison }) {
               </span>
               <Link
                 href="/signup"
-                className="unlink inline-flex h-[42px] flex-none items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-white no-underline hover:bg-accent-2 hover:text-white"
+                className="unlink inline-flex h-[42px] flex-none items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-on-accent no-underline hover:bg-accent-2 hover:text-on-accent"
               >
                 Create a free account
               </Link>
@@ -245,7 +245,7 @@ function Picker({ title, items, tone }: { title: string; items: string[]; tone: 
               name="check"
               weight="solid"
               size={10}
-              className={cx("mt-[5px] flex-none", tone === "accent" ? "text-accent" : "text-ink-3")}
+              className={cx("mt-[5px] flex-none", tone === "accent" ? "text-accent-ink" : "text-ink-3")}
             />
             <span className="text-[13.5px] leading-[1.55] text-ink-2">{item}</span>
           </li>

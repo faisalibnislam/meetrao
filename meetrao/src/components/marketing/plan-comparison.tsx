@@ -25,7 +25,7 @@ export function PlanComparison({ footnote = true }: { footnote?: boolean }) {
           <span className="border-l border-line px-[16px] py-[13px] text-[13px] font-semibold text-ink">
             Free
           </span>
-          <span className="border-l border-accent-line bg-accent-soft px-[16px] py-[13px] text-[13px] font-semibold text-accent">
+          <span className="border-l border-accent-line bg-accent-soft px-[16px] py-[13px] text-[13px] font-semibold text-accent-ink">
             Pro · {PRO_YEARLY}
           </span>
         </div>
@@ -76,7 +76,7 @@ function Cell({ value, label, accent = false }: { value: PlanCell; label: string
     >
       {value === true ? (
         <>
-          <Icon name="check" weight="solid" size={11} className="flex-none text-accent" aria-hidden="true" />
+          <Icon name="check" weight="solid" size={11} className="flex-none text-accent-ink" aria-hidden="true" />
           <span className="sr-only">{label}: yes</span>
         </>
       ) : value === false ? (

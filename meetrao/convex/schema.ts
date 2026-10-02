@@ -144,6 +144,22 @@ export default defineSchema({
     /** Their own domain for the booking page, once DNS points at us. */
     custom_domain: v.optional(nullableString),
     custom_domain_verified_at: v.optional(nullableNumber),
+    /**
+     * Their own logo and colour on the booking page, in place of Meetrao's.
+     *
+     * Stored whatever the plan, and SERVED only while the plan is Pro — see
+     * the projection in convex/publicBooking.ts. Keeping the rows means a host
+     * who lapses and comes back does not have to upload anything again, and
+     * one who lapses does not keep a paid-for feature by having set it once.
+     *
+     * `brand_logo_url` is what pages render; `brand_logo_storage_id` is what
+     * deletion needs. Same split as avatar_url / avatar_storage_id above, for
+     * the same reason.
+     */
+    brand_logo_url: v.optional(nullableString),
+    brand_logo_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
+    /** One hex colour. Everything else on the page is derived from it. */
+    brand_color: v.optional(nullableString),
     onboarding_completed_at: nullableNumber,
     welcomed_at: nullableNumber,
     created_at: v.number(),
