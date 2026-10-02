@@ -7,48 +7,107 @@
    something calls `.map` on it and the page 500s. That happened once with the
    FAQ array; `lib/faq.ts` exists for the same reason this file does.
 
-   ── on writing a pricing page for something that costs nothing ──
+   ── on writing a pricing page with two tiers on it ──
 
-   The hard part is not the number. It is that "free" is the most distrusted
-   word in this category, and a page that only repeats it louder confirms the
-   suspicion. So the order here is: the number, then everything included, then
-   — before any invitation to sign up — what the product genuinely cannot do,
-   and why it is free at all.
+   This page used to say there was no paid tier at all, and its credibility
+   came from that. There is one now, so the credibility has to come from
+   somewhere else: saying plainly what Free actually is — the whole booking
+   product, not a trial of it — and what Pro is, which is the parts a business
+   needs rather than the parts a person does.
 
-   Every claim has to survive being read next to /terms §5, which says Meetrao
-   is free while in beta and that paid plans are intended later. Nothing here
-   says "free forever". It says free today, no card, no trial clock, nothing
-   locked, and that an existing account is never billed without opting in —
-   each of which is separately true and separately checkable.
+   The order is: Free and what it includes, then Pro and what it adds, then
+   what NEITHER does. That last section is the reason the first two are
+   believable and it goes before any invitation to sign up.
+
+   Every claim has to survive being read next to /terms §5. Nothing here says
+   "free forever" — it says free today, no card to use it, and that an
+   existing free account is never billed without opting in, each of which is
+   separately true and separately checkable.
    ───────────────────────────────────────────────────────────────────────────── */
 
 /** The headline claim, and the three denials under it. */
-export const HEADLINE = "Everything. Nothing to pay.";
+export const HEADLINE = "Book meetings free. Pay only to make it yours.";
 
 export const DENIALS: readonly [string, string][] = [
-  ["No credit card", "Not at sign-up, not later. There is no card field in the product."],
-  ["No trial clock", "Nothing expires in 14 days, because there is no paid tier for it to expire into."],
-  ["No locked features", "Every feature on this site is on every account. There is no plan to compare against."],
+  ["No credit card to start", "Free needs no card, at sign-up or later. Taking bookings costs nothing."],
+  ["No trial clock", "Free is not a countdown. Nothing you set up stops working in 14 days."],
+  ["No per-seat pricing", "Pro is $10 a year for the account, not per person and not per booking."],
 ];
 
+/** What Pro costs, in both cadences. Rendered, and used in the copy below. */
+export const PRO_YEARLY = "$10 a year";
+export const PRO_MONTHLY = "$3 a month";
+
 /**
- * What you get — which is the whole product, because there is only one tier.
+ * What Free is — the whole booking product, not a sample of it.
  *
  * Written as capabilities rather than adjectives, and each one is a thing you
- * could go and check within a minute of signing up. A feature list on a pricing
- * page is a promise with a receipt attached.
+ * could go and check within a minute of signing up. A feature list on a
+ * pricing page is a promise with a receipt attached.
+ *
+ * The things NOT on this list are on PRO_ADDS, and the split is deliberate:
+ * nothing a guest experiences is paid for. Reminders, rescheduling, timezone
+ * handling and cancellation are all free, because charging a host to stop
+ * letting their guests down is the wrong business.
  */
 export const INCLUDED: readonly string[] = [
   "One public booking link — meetrao.com/your-name",
-  "Unlimited meeting types, each with its own duration and description",
-  "Google Calendar connected, and checked for conflicts before a slot is offered",
-  "A Google Meet link created on every confirmed booking",
-  "Guests book without an account, in their own timezone",
-  "Weekly working hours, with several ranges a day",
-  "Buffers between meetings, minimum notice, and a booking window",
-  "Email confirmations to both sides, and cancellation from either",
-  "A contact list that fills itself from your bookings, with CSV export",
+  "Unlimited meeting types and weekly schedules",
   "Unlimited bookings a month",
+  "Google Calendar connected, and checked for conflicts before a slot is offered",
+  "A Google Meet link created on every confirmed booking — or a phone call, an address, your own link",
+  "Guests book without an account, in their own timezone",
+  "Reminders the day before and an hour before, to both of you",
+  "Guests move a meeting themselves, keeping the same Meet link",
+  "Days off and one-off hours, on top of your weekly pattern",
+  "Up to five questions on the booking form",
+  "Buffers between meetings, minimum notice, and a booking window",
+  "A contact list that fills itself from your bookings, with CSV export",
+];
+
+/**
+ * The two plans, line by line.
+ *
+ * A column each, because "what you get" and "what it adds" as separate
+ * sections made a reader hold one list in their head while reading the other.
+ * `true` is a tick, `false` is a dash, and a string says what differs rather
+ * than pretending a difference is a presence.
+ */
+export type PlanCell = boolean | string;
+
+export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCell }[] = [
+  { feature: "Your booking link — meetrao.com/your-name", free: true, pro: true },
+  { feature: "Unlimited meeting types and weekly schedules", free: true, pro: true },
+  { feature: "Unlimited bookings", free: true, pro: true },
+  { feature: "Google Calendar checked before a slot is offered", free: true, pro: true },
+  { feature: "Google Meet link on every online booking", free: true, pro: true },
+  { feature: "Phone, in person, or your own meeting link", free: true, pro: true },
+  { feature: "Guests move a booking themselves", free: true, pro: true },
+  { feature: "Days off and one-off hours", free: true, pro: true },
+  { feature: "Up to five questions on the booking form", free: true, pro: true },
+  { feature: "Contacts, filled from your bookings, with CSV export", free: true, pro: true },
+  { feature: "Reminders before a meeting", free: "A day and an hour before", pro: "Times you choose" },
+  { feature: "Embed on your own site", free: "With a small badge", pro: "No badge" },
+  { feature: "“Powered by Meetrao” on your booking page", free: "Shown", pro: "Removed" },
+  { feature: "Your own domain — book.yourcompany.com", free: false, pro: true },
+  { feature: "Team link, rotating to whoever is free", free: false, pro: true },
+  { feature: "Sessions several guests share", free: false, pro: true },
+  { feature: "API keys and webhooks", free: false, pro: true },
+];
+
+/**
+ * What Pro adds, and why each one is on this side of the line.
+ *
+ * Two themes only: looking like your own business, and working as more than
+ * one person. If a feature is neither, it belongs in Free.
+ */
+export const PRO_ADDS: readonly [string, string][] = [
+  ["Your own domain", "Serve your booking page at book.yourcompany.com, with the certificate handled."],
+  ["No Meetrao badge", "Your booking page and your embed stop mentioning us."],
+  ["Team links", "One link several people answer, rotating to whoever is free and least recently booked."],
+  ["Sessions several guests share", "A class, a workshop, an office hour — one slot, several seats, counting down."],
+  ["API keys and webhooks", "Read your bookings from your own tools, and get a signed POST when one changes."],
+  ["Reminder timing", "Choose when both reminders land, instead of a day and an hour before."],
 ];
 
 /**
@@ -77,9 +136,9 @@ export const LIMITS: readonly [string, string][] = [
  * free because it is small and new, not because you are the product.
  */
 export const WHY: readonly string[] = [
-  "Meetrao is built and run by one person. There is no sales team to fund, no investor expecting a return this quarter, and no growth target that a paywall would be the answer to.",
-  "It is not free because your data is worth something. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free — never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
-  "It is free because it is small. It does a narrow job, it costs little to run at this size, and charging for it today would buy a billing system nobody has asked for.",
+  "Meetrao is built and run by one person. There is no sales team to fund and no investor expecting a return this quarter, which is why the free plan is the real product rather than a demonstration of one.",
+  "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free — never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
+  "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; a team link means several calendars checked on every page load. Ten dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
 ];
 
 /**

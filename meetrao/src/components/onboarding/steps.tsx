@@ -7,7 +7,8 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { buttonClass } from "@/components/ui/button-class";
 import { ChoiceChip, Field, Help, Input, Textarea } from "@/components/ui/controls";
 import { Eyebrow } from "@/components/ui/badge";
-import { Icon } from "@/components/ui/icon";
+import { Icon, type IconName } from "@/components/ui/icon";
+import { cx } from "@/lib/cx";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Callout } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
@@ -18,11 +19,32 @@ import { saveAvailability } from "@/lib/actions/availability";
 import { completeOnboarding, saveFirstMeeting } from "@/lib/actions/onboarding";
 import type { TimezoneOption } from "@/lib/timezones";
 import { bookingLink } from "@/lib/username";
+import Link from "next/link";
 
-const REASONS = [
-  "See when you are busy, so guests are never offered a time you cannot make.",
-  "Put each booking on your calendar and your guest’s, with the Meet link, automatically.",
-  "Update or remove both invitations when a booking changes or is cancelled.",
+/* ── what the Google permission is for ────────────────────────────────────────
+
+   Written out in full, on the screen that asks for it, rather than left to the
+   consent dialog. Google's own screen names a scope — "See, edit and delete
+   events on your calendar" — which is accurate and alarming, and a host who
+   meets that sentence with no context declines. The honest answer is that the
+   scope is broad and the use is narrow, and the place to say so is before they
+   click, not in a policy they will not open.
+
+   Keep this list true. It is the same claim /help and /privacy make, and the
+   three have to agree. */
+const READS: string[] = [
+  "When you are busy — the times, not the titles. Guests are never offered a slot you already have something in.",
+  "Whether your guest accepted the invitation to a meeting Meetrao itself created, so you are told if they decline.",
+];
+
+const WRITES: string[] = [
+  "One event for each booking, on your calendar and your guest’s, with a Google Meet link.",
+  "Changes to that event when a booking moves, and its removal when one is cancelled.",
+];
+
+const NEVER: string[] = [
+  "The titles, descriptions, locations, attachments or guests of your other meetings.",
+  "Anything at all when you disconnect — the permission is revoked with Google, not just with us.",
 ];
 
 /* ── Step 2 · Calendar ────────────────────────────────────────────────────── */
@@ -41,7 +63,7 @@ export function StepCalendar({
   return (
     <OnboardingCard
       title="Connect your calendar"
-      blurb="Meetrao reads your Google Calendar so guests are never offered a time you already have something in — and writes each booking back to it, inviting your guest so it lands on their calendar too."
+      blurb="Without it, Meetrao cannot see your conflicts — so guests could book a time you are already busy. Here is exactly what the permission covers before you grant it."
       actions={
         <>
           {connected ? (
@@ -77,16 +99,65 @@ export function StepCalendar({
           </Callout>
         ) : null}
 
-        <ul className="m-0 flex list-none flex-col gap-[9px] p-0">
-          {REASONS.map((text) => (
-            <li key={text} className="flex items-start gap-[10px]">
-              <Icon name="check" weight="solid" size={10} className="mt-[4px] flex-none text-accent" />
-              <span className="text-[13px] leading-[1.5] text-ink-2">{text}</span>
-            </li>
-          ))}
-        </ul>
+        <div className="flex flex-col gap-[12px]">
+          <PermissionGroup icon="eye" tone="accent" title="What Meetrao reads" items={READS} />
+          <PermissionGroup icon="calendar" tone="accent" title="What it writes" items={WRITES} />
+          <PermissionGroup icon="lock" tone="muted" title="What it never does" items={NEVER} />
+        </div>
+
+        <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
+          <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
+          <span className="text-[12.5px] leading-[1.6] text-ink-2">
+            Google will ask for “See, edit and delete events on your calendar”. That is the narrowest
+            permission that can put a booking on your calendar and invite your guest to it — Google does not
+            offer a write-only one. What Meetrao does with it is the list above.{" "}
+            <Link href="/help#calendar">The full explanation is in the help centre</Link>.
+          </span>
+        </div>
       </div>
     </OnboardingCard>
+  );
+}
+
+/* One group of the permission explanation. Three of these rather than one long
+   list, because "reads", "writes" and "never" are the three questions somebody
+   actually has, and a flat list of nine bullets answers none of them. */
+function PermissionGroup({
+  icon,
+  tone,
+  title,
+  items,
+}: {
+  icon: IconName;
+  tone: "accent" | "muted";
+  title: string;
+  items: string[];
+}) {
+  return (
+    <div className="flex flex-col gap-[7px]">
+      <span className="flex items-center gap-[8px] text-[12.5px] font-semibold text-ink">
+        <Icon
+          name={icon}
+          size={12}
+          className={tone === "accent" ? "flex-none text-accent" : "flex-none text-ink-3"}
+        />
+        {title}
+      </span>
+      <ul className="m-0 flex list-none flex-col gap-[6px] p-0 pl-[20px]">
+        {items.map((text) => (
+          <li key={text} className="flex items-start gap-[9px]">
+            <span
+              aria-hidden="true"
+              className={cx(
+                "mt-[7px] h-[4px] w-[4px] flex-none rounded-full",
+                tone === "accent" ? "bg-accent" : "bg-line-strong",
+              )}
+            />
+            <span className="text-[12.5px] leading-[1.5] text-pretty text-ink-2">{text}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -359,6 +430,20 @@ export function StepReady({
               <span className="text-[13px] text-ink-2">{row.text}</span>
             </div>
           ))}
+        </div>
+
+        {/* The one upsell in onboarding, and it is at the END — after the
+            link works. Asking somebody to consider paying before they have
+            seen the thing work is how a setup flow loses people. */}
+        <div className="flex flex-col gap-[7px] rounded-[8px] border border-accent-line bg-accent-soft px-[15px] py-[13px]">
+          <span className="text-[13px] font-semibold text-ink">Everything here is free</span>
+          <span className="text-[12.5px] leading-[1.55] text-ink-2">
+            Pro is $10 a year when you want your booking page on your own domain, the Meetrao badge gone, or
+            one link your whole team answers.{" "}
+            <Link href="/settings/billing" className="font-semibold">
+              See Pro
+            </Link>
+          </span>
         </div>
 
         {!connected ? (

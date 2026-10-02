@@ -10,6 +10,7 @@ import { Callout, PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { addWebhook, createApiKey, removeWebhook, revokeApiKey, testWebhook } from "@/lib/actions/developer";
 import { cx } from "@/lib/cx";
+import Link from "next/link";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Keys and endpoints.
@@ -34,7 +35,17 @@ function when(iso: string | null): string {
   return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
 }
 
-export function DeveloperPanel({ keys, hooks, siteUrl }: { keys: KeyView[]; hooks: HookView[]; siteUrl: string }) {
+export function DeveloperPanel({
+  keys,
+  hooks,
+  siteUrl,
+  pro,
+}: {
+  keys: KeyView[];
+  hooks: HookView[];
+  siteUrl: string;
+  pro: boolean;
+}) {
   const router = useRouter();
   const toast = useToast();
   const [busy, startBusy] = useTransition();
@@ -65,12 +76,24 @@ export function DeveloperPanel({ keys, hooks, siteUrl }: { keys: KeyView[]; hook
         subtitle="Read your bookings from your own tools, and get told when one changes."
       />
 
+      {pro ? null : (
+        <Callout tone="accent" title="The API is part of Pro">
+          A read-only key for your bookings and meetings, and a signed webhook when one changes.{" "}
+          <Link href="/settings/billing" className="font-semibold">
+            See Pro — $10 a year
+          </Link>
+          .
+        </Callout>
+      )}
+
       <div className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
         <div className="flex flex-wrap items-center justify-between gap-[10px]">
           <span className="text-[13px] font-semibold text-ink">API keys</span>
-          <Button variant="secondary" size={28} icon="plus" onClick={() => setDialog("key")}>
-            New key
-          </Button>
+          {pro ? (
+            <Button variant="secondary" size={28} icon="plus" onClick={() => setDialog("key")}>
+              New key
+            </Button>
+          ) : null}
         </div>
 
         <span className="text-[12px] leading-[1.5] text-ink-3">
@@ -113,9 +136,11 @@ export function DeveloperPanel({ keys, hooks, siteUrl }: { keys: KeyView[]; hook
       <div className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
         <div className="flex flex-wrap items-center justify-between gap-[10px]">
           <span className="text-[13px] font-semibold text-ink">Webhook endpoints</span>
-          <Button variant="secondary" size={28} icon="plus" onClick={() => setDialog("hook")}>
-            Add endpoint
-          </Button>
+          {pro ? (
+            <Button variant="secondary" size={28} icon="plus" onClick={() => setDialog("hook")}>
+              Add endpoint
+            </Button>
+          ) : null}
         </div>
 
         <span className="text-[12px] leading-[1.5] text-ink-3">

@@ -91,7 +91,7 @@ export function SiteAccountLive({
 }
 
 /**
- * "Log in" and "Get started — Free": what a visitor who has no account sees.
+ * "Log in" and "Get started": what a visitor who has no account sees.
  *
  * Lives in this file rather than in site-chrome so there is one definition
  * rather than two — the client component above needs it for its first render,
@@ -114,7 +114,7 @@ export function SignedOutActions() {
             edge, where it could not be tapped at all. The label shortens rather
             than the button shrinking, so the primary action keeps its full
             height and weight. */}
-        <span className="max-[400px]:hidden">Get started — Free</span>
+        <span className="max-[400px]:hidden">Get started</span>
         <span className="hidden max-[400px]:inline">Get started</span>
       </Link>
     </>

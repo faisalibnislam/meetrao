@@ -15,6 +15,7 @@ import {
 } from "@/lib/data/public-booking";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
+import { PublicFooter } from "@/components/booking/public-footer";
 
 export const dynamic = "force-dynamic";
 
@@ -141,6 +142,7 @@ export default async function BookingPage({
   });
 
   return (
+    <>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
         <Logo height={20} />
@@ -174,5 +176,7 @@ export default async function BookingPage({
         pageViewId={typeof pageViewId === "string" ? pageViewId : null}
       />
     </div>
+      <PublicFooter badge={!host.unbranded} />
+    </>
   );
 }

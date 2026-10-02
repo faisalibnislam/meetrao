@@ -3,6 +3,7 @@ import { AppScreen } from "@/components/app/app-screen";
 import { MeetingForm } from "@/components/app/meeting-form";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { scheduleOptions } from "@/lib/data/schedules";
+import { isProNow } from "@/lib/data/teams";
 
 export const metadata: Metadata = { title: "New meeting" };
 
@@ -12,6 +13,7 @@ export default async function NewMeetingPage() {
   return (
     <AppScreen title="New meeting" crumb={{ label: "Meetings", href: "/meetings" }} crumbCurrent="New">
       <MeetingForm
+        pro={await isProNow()}
         schedules={await scheduleOptions(profile.id)}
         initial={{
           name: "",

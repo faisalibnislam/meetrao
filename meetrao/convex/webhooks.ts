@@ -5,6 +5,7 @@ import { fail } from "./lib/errors";
 import { requireProfile, assertOwnerOrAdmin } from "./lib/auth";
 import { uuid } from "./lib/ids";
 import { newWebhookSecret, signPayload } from "./lib/apiAuth";
+import { requirePro } from "./lib/plan";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Outgoing webhooks: booked, moved, cancelled.
@@ -54,6 +55,7 @@ export const add = mutation({
   args: { url: v.string() },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
+    requirePro(me, "Webhooks");
 
     const url = a.url.trim();
     /* https only. A signature over plaintext still hands the payload to

@@ -7,6 +7,7 @@ import { Logo } from "@/components/ui/logo";
 import { EmptyState } from "@/components/ui/panels";
 import { getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
 import { OG_IMAGE } from "@/lib/seo";
+import { PublicFooter } from "@/components/booking/public-footer";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,7 @@ export default async function HostPage({ params }: { params: Promise<{ username:
   if (meetings.length === 1) redirect(`/${host.username}/${meetings[0].slug}`);
 
   return (
+    <>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
         <Logo height={20} />
@@ -107,5 +109,7 @@ export default async function HostPage({ params }: { params: Promise<{ username:
         </div>
       </div>
     </div>
+      <PublicFooter badge={!host.unbranded} />
+    </>
   );
 }

@@ -130,16 +130,27 @@ export default function TermsPage() {
         </p>
 
         <h2 id="t-price">5. What it costs</h2>
-        <p>Meetrao is free while it is in beta. We intend to introduce paid plans later.</p>
         <p>
-          When we do, we will tell you by email before anything becomes chargeable, and you will have to opt in —
-          we will not start billing a free account automatically. If you choose not to pay, you will be able to
-          export your data and close your account. Payments, when they exist, will be handled by a payment
-          processor; we will not see or store your full card number.
+          There are two plans. <strong>Free</strong> covers taking bookings — your link, your meeting types,
+          your calendar, reminders, rescheduling and cancellation — with no card and no limit on how many
+          bookings you take. <strong>Pro</strong> is $10 a year, or $3 a month, and adds a custom domain,
+          removal of Meetrao branding, team links, shared sessions, the API and control over reminder timing.
         </p>
         <p>
-          Because it is a beta, features may change or disappear, and we may set limits on usage. We will not do
-          that in a way designed to break your existing bookings.
+          <strong>A free account is never billed automatically.</strong> Pro begins only when you choose it and
+          complete a payment, and it ends when you cancel. If you cancel, Pro runs to the end of the period you
+          have already paid for and then the account returns to Free — your bookings, your link and your data
+          stay where they are.
+        </p>
+        <p>
+          Payments are handled by Polar, which is the merchant of record: Polar takes the payment, issues the
+          receipt and is responsible for sales tax. We do not see or store your card number. You can change your
+          payment method or cancel at any time through the billing portal linked from your settings.
+        </p>
+        <p>
+          Features may still change while Meetrao is young, and some that were free have moved to Pro as the
+          product has grown. We will not do that in a way designed to break bookings you have already taken:
+          existing bookings, and the links guests already hold, keep working either way.
         </p>
 
         <h2 id="t-ip">6. Who owns what</h2>

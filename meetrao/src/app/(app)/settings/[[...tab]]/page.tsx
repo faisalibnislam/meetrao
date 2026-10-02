@@ -16,7 +16,8 @@ import { connectionStatus } from "@/lib/google/connection";
 import { timezoneOptions } from "@/lib/timezones";
 import { TeamPanel } from "@/components/app/team-panel";
 import { DeveloperPanel } from "@/components/app/developer-panel";
-import { developerPanelData, teamPanelData } from "@/lib/data/teams";
+import { BillingPanel } from "@/components/app/billing-panel";
+import { billingPanelData, developerPanelData, teamPanelData } from "@/lib/data/teams";
 import { siteUrl } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -33,10 +34,10 @@ export default async function SettingsPage({
   searchParams,
 }: {
   params: Promise<{ tab?: string[] }>;
-  searchParams: Promise<{ calendar?: string }>;
+  searchParams: Promise<{ calendar?: string; welcome?: string }>;
 }) {
   const { tab: segments } = await params;
-  const { calendar } = await searchParams;
+  const { calendar, welcome } = await searchParams;
 
   const tab = (segments?.[0] ?? "profile") as SettingsTab;
   if (segments && segments.length > 1) notFound();
@@ -50,7 +51,10 @@ export default async function SettingsPage({
         <SettingsNav current={tab} />
 
         <div className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
-          {tab === "developer" ? <DeveloperPanel {...(await developerPanelData())} siteUrl={siteUrl()} /> : null}
+          {tab === "billing" ? (
+          <BillingPanel {...(await billingPanelData())} welcome={welcome === "1"} />
+        ) : null}
+        {tab === "developer" ? <DeveloperPanel {...(await developerPanelData())} siteUrl={siteUrl()} /> : null}
         {tab === "team" ? (
           <TeamPanel {...(await teamPanelData(session.profile.id))} siteUrl={siteUrl()} />
         ) : null}

@@ -140,11 +140,81 @@ async function convexProxyOnce() {
   return convexProxy;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Custom domains.
+
+   A Pro host can point book.acme.com at us. The request arrives with their
+   host header and no path to say whose page it is, so the path is supplied
+   here: "/" becomes "/<their username>", and "/30-minute" becomes
+   "/<their username>/30-minute".
+
+   REWRITE, NEVER REDIRECT. A redirect would bounce the guest to
+   meetrao.com/<username>, which is the opposite of what the host paid for.
+
+   The lookup is a Convex query on every request to an unknown host, which is
+   why it runs LAST — after the known hosts are excluded — and why the result
+   is cached per hostname for the life of the edge instance. A domain that has
+   just been verified may take a minute to start working; a domain that has
+   just been removed may take a minute to stop.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+const KNOWN_HOSTS = new Set(["localhost", "127.0.0.1"]);
+
+/** Hostname → username, or null for "not one of ours". Bounded, and short-lived. */
+const domainCache = new Map<string, { username: string | null; at: number }>();
+const DOMAIN_TTL = 60_000;
+
+function isOwnHost(hostname: string): boolean {
+  if (KNOWN_HOSTS.has(hostname)) return true;
+  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  try {
+    const own = new URL(site).hostname;
+    // The apex and any subdomain of it — previews included.
+    return hostname === own || hostname.endsWith(".vercel.app") || hostname.endsWith(`.${own}`);
+  } catch {
+    return false;
+  }
+}
+
+async function usernameForDomain(hostname: string): Promise<string | null> {
+  const cached = domainCache.get(hostname);
+  if (cached && Date.now() - cached.at < DOMAIN_TTL) return cached.username;
+
+  const base = process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!base) return null;
+
+  try {
+    const response = await fetch(`${base.replace(/\/$/, "")}/api/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: "publicBooking:hostForDomain", args: { domain: hostname }, format: "json" }),
+    });
+    if (!response.ok) return null;
+    const json = (await response.json()) as { status?: string; value?: { username?: string } | null };
+    const username = json.status === "success" ? (json.value?.username ?? null) : null;
+    domainCache.set(hostname, { username, at: Date.now() });
+    return username;
+  } catch {
+    // A lookup that fails must not take the site down for everyone else.
+    return null;
+  }
+}
+
 /* `event` is optional so the existing tests can call proxy(request) alone;
    Next always supplies it in production, and the Convex middleware needs it. */
 export async function proxy(request: NextRequest, event?: NextFetchEvent): Promise<NextResponse> {
   const stranded = strandedAuthCode(request);
   if (stranded) return NextResponse.redirect(stranded);
+
+  const hostname = request.nextUrl.hostname;
+  if (!isOwnHost(hostname)) {
+    const username = await usernameForDomain(hostname);
+    if (username) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/${username}${request.nextUrl.pathname === "/" ? "" : request.nextUrl.pathname}`;
+      return NextResponse.rewrite(url);
+    }
+  }
 
   const handled = await (await convexProxyOnce())(request, event as NextFetchEvent);
   return (handled as NextResponse | undefined) ?? NextResponse.next({ request });

@@ -47,7 +47,7 @@ export function ComparisonPage({ data }: { data: Comparison }) {
                 href="/signup"
                 className="unlink inline-flex h-[44px] items-center rounded-[8px] bg-accent px-[18px] text-[14px] font-semibold whitespace-nowrap text-white no-underline hover:bg-accent-2 hover:text-white"
               >
-                Get started — Free
+                Get started
               </Link>
               <Link
                 href="/#how"

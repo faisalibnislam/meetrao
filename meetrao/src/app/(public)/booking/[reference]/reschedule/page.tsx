@@ -8,6 +8,7 @@ import { LogoLink } from "@/components/ui/logo";
 import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import { getBookingByReference } from "@/lib/data/guest-booking";
 import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { PublicFooter } from "@/components/booking/public-footer";
 
 export const dynamic = "force-dynamic";
 
@@ -114,6 +115,7 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
     : [];
 
   return (
+    <>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
         <LogoLink height={20} />
@@ -136,5 +138,7 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
         move={{ reference: booking.reference, currentStart: booking.startsAt }}
       />
     </div>
+      <PublicFooter />
+    </>
   );
 }
