@@ -2,6 +2,7 @@ import { query, mutation, internalMutation } from "./_generated/server";
 import { fail } from "./lib/errors";
 import { v } from "convex/values";
 import { requireAdmin, requireProfile } from "./lib/auth";
+import { hasComp, hasSubscription, planOf } from "./lib/plan";
 import type { MutationCtx } from "./_generated/server";
 import { profileOut, bookingOut, activityOut, meetingTypeOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
@@ -53,6 +54,117 @@ export const setSuspended = mutation({
       summary: `${p.full_name || p.email} was ${a.suspended ? "suspended" : "restored"}`,
     });
     return profileOut((await ctx.db.get(p._id))!);
+  },
+});
+
+/* ── complimentary Pro ──────────────────────────────────────────────────────
+
+   Giving Pro away, without pretending it was bought.
+
+   The grant is its own field, read beside the subscription rather than
+   instead of it — see convex/lib/plan.ts for why. Three consequences worth
+   knowing before editing this:
+
+     · A granted account that later subscribes has both. The subscription is
+       what the books should count; the grant just stops mattering.
+     · A Polar event cannot erase a grant, and a grant cannot be mistaken for
+       revenue by anything reading `plan`.
+     · Revoking is immediate and leaves the row — the audit line and the
+       reason are the point, and a deleted field answers no questions later.
+
+   Every grant and revocation writes an admin_activity row, because "who gave
+   this account Pro, and why" is a question that gets asked months later. */
+
+/** The lengths the screen offers. Anything else is refused. */
+const COMP_DAYS: Record<string, number | null> = {
+  month: 30,
+  quarter: 90,
+  year: 365,
+  forever: null,
+};
+
+export const grantPro = mutation({
+  args: { userId: v.string(), length: v.string(), reason: v.string() },
+  handler: async (ctx, a) => {
+    const admin = await requireAdmin(ctx);
+    const p = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.userId)).unique();
+    if (!p) fail("No such user.");
+
+    if (!(a.length in COMP_DAYS)) fail("Pick one of the offered lengths.");
+    const reason = a.reason.trim().slice(0, 140);
+    /* A reason is required. An operator who cannot say why in a dozen words
+       is making a decision somebody will have to reconstruct later. */
+    if (!reason) fail("Say why this account is getting Pro.");
+
+    const days = COMP_DAYS[a.length];
+    const now = Date.now();
+    // "Forever" is a hundred years, not a null: every reader already knows how
+    // to compare two dates, and none of them has to learn a special case.
+    const until = days === null ? now + 100 * 365 * 24 * 60 * 60_000 : now + days * 24 * 60 * 60_000;
+
+    await ctx.db.patch(p._id, {
+      comp_until: until,
+      comp_reason: reason,
+      comp_granted_by: admin.id,
+      comp_granted_at: now,
+      updated_at: now,
+    });
+
+    await logActivity(ctx, {
+      actorId: admin.id,
+      kind: "pro_granted",
+      summary: `${p.full_name || p.email} was given Pro (${a.length}) — ${reason}`,
+    });
+
+    return { until: new Date(until).toISOString() };
+  },
+});
+
+export const revokePro = mutation({
+  args: { userId: v.string() },
+  handler: async (ctx, a) => {
+    const admin = await requireAdmin(ctx);
+    const p = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.userId)).unique();
+    if (!p) fail("No such user.");
+    if (!p.comp_until) return { revoked: false };
+
+    await ctx.db.patch(p._id, { comp_until: null, updated_at: Date.now() });
+    await logActivity(ctx, {
+      actorId: admin.id,
+      kind: "pro_revoked",
+      /* Names what it was for, so the pair of lines reads as a story rather
+         than as two unrelated events. */
+      summary: `${p.full_name || p.email} lost granted Pro — was: ${p.comp_reason || "no reason given"}`,
+    });
+
+    return { revoked: true };
+  },
+});
+
+/** What the admin screen shows about one account's plan. */
+export const planFor = query({
+  args: { userId: v.string() },
+  handler: async (ctx, a) => {
+    await requireAdmin(ctx);
+    const p = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.userId)).unique();
+    if (!p) return null;
+
+    let grantedBy: string | null = null;
+    if (p.comp_granted_by) {
+      const by = await ctx.db
+        .query("profiles").withIndex("by_uuid", (q) => q.eq("id", p.comp_granted_by as string)).unique();
+      grantedBy = by ? by.full_name || by.email : null;
+    }
+
+    return {
+      plan: planOf(p),
+      subscribed: hasSubscription(p),
+      comp: hasComp(p),
+      comp_until: p.comp_until ? new Date(p.comp_until).toISOString() : null,
+      comp_reason: p.comp_reason ?? "",
+      comp_granted_by: grantedBy,
+      plan_until: p.plan_until ? new Date(p.plan_until).toISOString() : null,
+    };
   },
 });
 

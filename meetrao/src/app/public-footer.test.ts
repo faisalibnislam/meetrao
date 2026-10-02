@@ -41,6 +41,30 @@ describe("the layout", () => {
   });
 });
 
+describe("the layout stacks what the pages return", () => {
+  const layout = readFileSync(path.join(APP, "(public)", "layout.tsx"), "utf8");
+
+  /* Moving the footer into the pages made every page return TWO elements. The
+     layout centred a single child in a row, so the card and the footer became
+     siblings in that row: the card stopped being centred and the footer
+     climbed to the top-right corner. It shipped, and it looked like a CSS
+     mystery rather than a consequence of the refactor.
+     
+     A column stacks them. Both classes matter — flex-col to stack,
+     items-center to centre each one horizontally. */
+  it("is a column, because pages return a card and a footer", () => {
+    expect(layout, "a row puts the footer beside the card").toContain("flex-col");
+    expect(layout, "without items-center the card hugs the left edge").toContain("items-center");
+  });
+
+  it.each(pages)("%s returns its content and the footer as siblings", (file) => {
+    const text = readFileSync(path.join(APP, file), "utf8");
+    // The fragment is what made the layout's row a problem; it is fine, as
+    // long as the layout above knows to stack.
+    expect(text).toMatch(/<>\s/);
+  });
+});
+
 describe("the badge", () => {
   const footer = readFileSync(path.join(process.cwd(), "src/components/booking/public-footer.tsx"), "utf8");
 

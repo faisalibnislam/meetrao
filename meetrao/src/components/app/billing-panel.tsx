@@ -20,7 +20,14 @@ import { cx } from "@/lib/cx";
    told, which is why coming back from Polar refreshes rather than assuming.
    ───────────────────────────────────────────────────────────────────────────── */
 
-export type PlanView = { plan: "free" | "pro"; planUntil: string | null; hasSubscription: boolean };
+export type PlanView = {
+  plan: "free" | "pro";
+  planUntil: string | null;
+  hasSubscription: boolean;
+  /** Pro given by an operator rather than bought. */
+  complimentary: boolean;
+  compUntil: string | null;
+};
 export type DomainView = { domain: string | null; verifiedAt: string | null };
 export type TimingView = { long: number; short: number };
 
@@ -86,21 +93,30 @@ export function BillingPanel({
           <div className="flex min-w-0 flex-col gap-[3px]">
             <span className="flex items-center gap-[8px] text-[14px] font-semibold text-ink">
               {pro ? "Pro" : "Free"}
-              {pro ? <Badge tone="ok" dot={false}>Active</Badge> : null}
+              {pro ? (
+                <Badge tone="ok" dot={false}>{plan.complimentary ? "On the house" : "Active"}</Badge>
+              ) : null}
             </span>
             <span className="text-[12px] text-ink-3">
-              {pro
-                ? plan.planUntil
-                  ? `Renews ${new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(plan.planUntil))}`
-                  : "Active"
-                : "Everything you need to take bookings, at no cost."}
+              {plan.complimentary
+                ? plan.compUntil && new Date(plan.compUntil).getFullYear() < new Date().getFullYear() + 50
+                  ? `Given to you, through ${new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(plan.compUntil))}. Nothing to pay.`
+                  : "Given to you. Nothing to pay."
+                : pro
+                  ? plan.planUntil
+                    ? `Renews ${new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(plan.planUntil))}`
+                    : "Active"
+                  : "Everything you need to take bookings, at no cost."}
             </span>
           </div>
 
-          {pro ? (
+          {pro && plan.hasSubscription ? (
             <Button variant="secondary" size={32} busy={busy} onClick={() => go(openPortal)}>
               Manage billing
             </Button>
+          ) : plan.complimentary ? (
+            // Nothing to manage: there is no subscription behind this.
+            <span className="text-[12.5px] text-ink-3">No payment method needed.</span>
           ) : (
             <div className="flex flex-wrap gap-[8px]">
               <Button variant="secondary" size={32} busy={busy} onClick={() => go(() => startCheckout("monthly"))}>
