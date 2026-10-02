@@ -24,7 +24,7 @@ export function needsMeetLink(kind: string): boolean {
 
 /** What the "Where" line reads as, given the kind and its detail. */
 export function whereText(kind: string, detail: string, meetUrl: string | null): string {
-  if (kind === "phone") return detail ? `Phone — ${detail}` : "Phone call";
+  if (kind === "phone") return detail ? `Phone: ${detail}` : "Phone call";
   if (kind === "in_person") return detail || "In person";
   if (kind === "custom") return detail || "Details to follow";
   return meetUrl ? meetUrl.replace(/^https?:\/\//, "") : "Link to follow by email";

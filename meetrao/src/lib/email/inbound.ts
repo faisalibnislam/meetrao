@@ -267,7 +267,7 @@ export function refuseToForward(destination: string): string | null {
 
   const domain = to.slice(to.lastIndexOf("@") + 1);
   if (domain === "meetrao.com" || domain.endsWith(".meetrao.com")) {
-    return "SUPPORT_INBOX is on meetrao.com, which receives into Resend — forwarding there would loop";
+    return "SUPPORT_INBOX is on meetrao.com, which receives into Resend, forwarding there would loop";
   }
 
   return null;

@@ -32,7 +32,7 @@ const Body = z.object({
   message: z
     .string()
     .trim()
-    .min(10, "A sentence or two is enough — we just need something to go on."),
+    .min(10, "A sentence or two is enough: we just need something to go on."),
 });
 
 export type SupportResult = { error?: string; sentTo?: string };

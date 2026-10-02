@@ -23,7 +23,7 @@ export function needsMeetLink(kind: string): boolean {
 
 /** What the "Where" line reads as, given the kind and its detail. */
 export function whereText(kind: string, detail: string, meetUrl: string | null): string {
-  if (kind === "phone") return detail ? `Phone — ${detail}` : "Phone call";
+  if (kind === "phone") return detail ? `Phone: ${detail}` : "Phone call";
   if (kind === "in_person") return detail || "In person";
   if (kind === "custom") return detail || "Details to follow";
   return meetUrl ? meetUrl.replace(/^https?:\/\//, "") : "Link to follow by email";
@@ -34,7 +34,7 @@ export const LOCATION_OPTIONS: { value: LocationKind; label: string; hint: strin
   { value: "google_meet", label: "Google Meet", hint: "A link is created for every booking." },
   { value: "phone", label: "Phone call", hint: "Give the number, or say who calls whom." },
   { value: "in_person", label: "In person", hint: "The address guests should come to." },
-  { value: "custom", label: "Something else", hint: "Zoom, Teams, a note — whatever you tell guests." },
+  { value: "custom", label: "Something else", hint: "Zoom, Teams, a note: whatever you tell guests." },
 ];
 
 /** The label on the button that opens a meeting, when there is one to open. */

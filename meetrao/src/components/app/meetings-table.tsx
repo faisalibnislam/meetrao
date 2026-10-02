@@ -206,14 +206,14 @@ export function MeetingsTable({
         wide
         onClose={() => setEmbedding(null)}
         title="Put this on your own site"
-        subtitle={embedding ? `${embedding.name} — the booking form, inside your page.` : undefined}
+        subtitle={embedding ? `${embedding.name}, the booking form, inside your page.` : undefined}
         primary={{ label: copied ? "Copied" : "Copy snippet", onClick: copySnippet }}
         secondary={{ label: "Close", onClick: () => setEmbedding(null) }}
       >
         <div className="flex flex-col gap-[11px]">
           <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">
             Paste this where the form should appear. It resizes itself as the guest moves through it, and it
-            books exactly what your link books — the same times, the same rules.
+            books exactly what your link books, the same times, the same rules.
           </span>
           {/* Read-only and selectable rather than a styled block: a host who
               cannot use the clipboard button can still select all of it. */}
@@ -226,7 +226,7 @@ export function MeetingsTable({
             className="w-full resize-none rounded-[6px] border border-line bg-fill px-[12px] py-[10px] font-sans text-[12px] leading-[1.6] text-ink"
           />
           <span className="text-[12px] leading-[1.5] text-ink-3">
-            Works on any site that takes HTML — Webflow, WordPress, Framer, a plain page. Inactive meetings
+            Works on any site that takes HTML, Webflow, WordPress, Framer, a plain page. Inactive meetings
             show nothing, so switching one off takes it down everywhere at once.
           </span>
         </div>

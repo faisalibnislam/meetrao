@@ -61,9 +61,9 @@ export function usernameNote(status: UsernameStatus, value: string, hasIdeas = f
     case "checking":
       return "Checking availability…";
     case "short":
-      return "A little longer — at least 3 characters.";
+      return "A little longer: at least 3 characters.";
     case "long":
-      return "Too long — 30 characters at most.";
+      return "Too long: 30 characters at most.";
     case "chars":
       return "Letters, numbers and hyphens only.";
     case "hyphen":

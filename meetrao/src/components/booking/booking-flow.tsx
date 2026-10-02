@@ -273,7 +273,7 @@ export function BookingFlow(props: FlowProps) {
   const locationLine =
     props.location === "phone"
       ? props.locationDetail
-        ? `Phone — ${props.locationDetail}`
+        ? `Phone: ${props.locationDetail}`
         : "Phone call"
       : props.location === "in_person"
         ? props.locationDetail || "In person"

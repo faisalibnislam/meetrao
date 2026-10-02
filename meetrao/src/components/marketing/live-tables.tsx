@@ -131,7 +131,7 @@ export function LiveMeetingsTable() {
                         label={`${on ? "Disable" : "Enable"} ${name}`}
                         onChange={(next) => {
                           setActive((s) => ({ ...s, [id]: next }));
-                          flash("", `${next ? "Enabled" : "Disabled"} — ${name}. Nothing was saved; this is a demo.`);
+                          flash("", `${next ? "Enabled" : "Disabled"}: ${name}. Nothing was saved; this is a demo.`);
                         }}
                       />
                     </span>
@@ -177,7 +177,7 @@ export function LiveMeetingsTable() {
                     label={`${on ? "Disable" : "Enable"} ${name}`}
                     onChange={(next) => {
                       setActive((s) => ({ ...s, [id]: next }));
-                      flash("", `${next ? "Enabled" : "Disabled"} — ${name}. Nothing was saved; this is a demo.`);
+                      flash("", `${next ? "Enabled" : "Disabled"}: ${name}. Nothing was saved; this is a demo.`);
                     }}
                   />
                 </div>
@@ -211,7 +211,7 @@ export function LiveMeetingsTable() {
         aria-live="polite"
         className={cx("block min-h-[18px] text-[12px] leading-[1.5]", hint ? "text-accent-ink" : "text-ink-3")}
       >
-        {hint || "Toggle a meeting or copy a link — the table is live. Nothing is saved."}
+        {hint || "Toggle a meeting or copy a link: the table is live. Nothing is saved."}
       </span>
     </div>
   );
@@ -357,7 +357,7 @@ export function LiveBookingsTable() {
           </div>
         ) : (
           <div className="flex flex-col">
-            {rows.map(([guest, email, type, date, time, , joinable]) => {
+            {rows.map(([guest, email, type, date, time, joinable]) => {
               const cancelled = joinable === null;
               return (
                 <div key={guest} className="flex flex-col gap-[11px] border-t border-line-soft px-[15px] py-[14px]">

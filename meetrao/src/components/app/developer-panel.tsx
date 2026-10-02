@@ -80,7 +80,7 @@ export function DeveloperPanel({
         <Callout tone="accent" title="The API is part of Pro">
           A read-only key for your bookings and meetings, and a signed webhook when one changes.{" "}
           <Link href="/settings/billing" className="font-semibold">
-            See Pro — $10 a year
+            See Pro, $10 a year
           </Link>
           .
         </Callout>
@@ -146,7 +146,7 @@ export function DeveloperPanel({
         <span className="text-[12px] leading-[1.5] text-ink-3">
           A signed POST on <strong className="font-semibold text-ink-2">booking.created</strong>,{" "}
           <strong className="font-semibold text-ink-2">booking.changed</strong> and{" "}
-          <strong className="font-semibold text-ink-2">booking.cancelled</strong>. One attempt each — check the
+          <strong className="font-semibold text-ink-2">booking.cancelled</strong>. One attempt each, check the
           signature with the secret below, and fall back to the API if you miss one.
         </span>
 
@@ -271,7 +271,7 @@ export function DeveloperPanel({
         open={dialog === "hook"}
         onClose={() => setDialog(null)}
         title="Add an endpoint"
-        subtitle="https only — the payload carries a guest's name and address."
+        subtitle="https only, the payload carries a guest's name and address."
         primary={{
           label: "Add",
           busy,

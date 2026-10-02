@@ -117,7 +117,7 @@ export function RemoveAccountPanel({ userId, name }: { userId: string; name: str
         secondary={{ label: "Keep account", onClick: () => setOpen(false) }}
       >
         <span className="text-[13.5px] leading-[1.55] text-pretty text-ink-2">
-          This permanently deletes {name} — their profile, booking link, meetings, availability and booking
+          This permanently deletes {name}, their profile, booking link, meetings, availability and booking
           history. Upcoming meetings are cancelled and their guests notified. {first} would have to sign up again
           from scratch. This cannot be undone.
         </span>

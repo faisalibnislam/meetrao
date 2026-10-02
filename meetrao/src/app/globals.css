@@ -709,3 +709,50 @@ body {
   font-size: 13px;
   color: var(--ink);
 }
+
+
+/* ── The product showcase's three motions ─────────────────────────────────────
+   Keyframes rather than a library: three of them, each a handful of lines, and
+   a dependency for this would ship to every page.
+
+   Reduced motion is already handled, by the global `*` block further up this
+   file: it collapses every animation and transition to 0.001ms !important.
+   That is why all three carry `both` — the fill mode is what makes a collapsed
+   animation land on its FINISHED state rather than its first frame. An
+   animation that hides its content when it is switched off is a broken page,
+   not a calm one, and that is the only thing these had to get right.
+
+   A second reduced-motion block here would be a competing mechanism for the
+   same job; src/components/marketing/use-cases.test.ts asserts there is one.
+   The auto-advance timer is separate and checks the media query in JS, because
+   CSS cannot stop a setTimeout. ── */
+
+@keyframes mr-tick-run {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* The countdown under the open panel. */
+.mr-tick {
+  animation: mr-tick-run linear forwards;
+}
+
+@keyframes mr-rise-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Slots arriving a row at a time. */
+.mr-rise {
+  animation: mr-rise-in 320ms ease both;
+}
+
+@keyframes mr-slide-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* Reminder emails landing. */
+.mr-slide {
+  animation: mr-slide-in 380ms ease both;
+}

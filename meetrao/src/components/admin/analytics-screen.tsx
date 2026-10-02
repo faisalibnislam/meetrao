@@ -30,7 +30,7 @@ export function AnalyticsScreen({ data }: { data: SiteAnalytics }) {
       {empty ? (
         <EmptyState
           title="No visits recorded yet"
-          text="The counter is live on every public page. Numbers appear here as soon as somebody opens one — there is nothing to configure."
+          text="The counter is live on every public page. Numbers appear here as soon as somebody opens one. There is nothing to configure."
         />
       ) : (
         <>
@@ -53,7 +53,7 @@ export function AnalyticsScreen({ data }: { data: SiteAnalytics }) {
 
           <p className="m-0 max-w-[620px] text-[12px] leading-[1.6] text-ink-3">
             Counted without cookies: no identifier is stored on a visitor&rsquo;s device and no IP address is kept.
-            Visitors are counted per day, so the same person on two days is two visitors — the figures do not follow
+            Visitors are counted per day, so the same person on two days is two visitors. The figures do not follow
             anybody across the period. Crawlers are excluded from every number above except the bot count. Rows are
             deleted after 400 days.
           </p>

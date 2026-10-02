@@ -8,7 +8,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 
 export const metadata: Metadata = {
-  title: "Help Centre — how scheduling works",
+  title: "Help Centre: how scheduling works",
   description:
     "How Meetrao works, in the order you meet it: connect Google Calendar, set your hours, " +
     "share your link, and see exactly what a guest sees when they book.",
@@ -29,7 +29,7 @@ const PILLARS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "video",
     title: "On both calendars",
-    text: "Each booking creates one event with its own Google Meet link, and invites your guest — so it lands on their calendar as well as yours.",
+    text: "Each booking creates one event with its own Google Meet link, and invites your guest, so it lands on their calendar as well as yours.",
   },
 ];
 
@@ -81,7 +81,7 @@ const SCOPES: { scope: string; google: string; use: string }[] = [
   {
     scope: "calendar.freebusy",
     google: "See when you are busy or free",
-    use: "Checked every time somebody opens your booking page, so a slot you already have something in is never offered. It returns busy periods — start and end times — and nothing else.",
+    use: "Checked every time somebody opens your booking page, so a slot you already have something in is never offered. It returns busy periods (start and end times) and nothing else.",
   },
   {
     scope: "calendar.events",
@@ -91,7 +91,7 @@ const SCOPES: { scope: string; google: string; use: string }[] = [
   {
     scope: "userinfo.email",
     google: "Your Google account’s email address",
-    use: "Shown on the Calendar settings panel so you can tell which account is connected — a work one from a personal one.",
+    use: "Shown on the Calendar settings panel so you can tell which account is connected, a work one from a personal one.",
   },
 ];
 
@@ -100,7 +100,7 @@ const CALENDAR_FACTS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "eye",
     title: "What is read",
-    text: "Busy periods — times, not titles. And, for an event Meetrao created itself, whether your guest accepted or declined it.",
+    text: "Busy periods: times, not titles. And, for an event Meetrao created itself, whether your guest accepted or declined it.",
   },
   {
     icon: "calendar",
@@ -130,11 +130,11 @@ const CALENDAR_TROUBLE: [string, string][] = [
   ],
   [
     "It says my calendar needs reconnecting",
-    "Google refused the refresh token. The usual cause is that access was revoked from the Google account's security page, the password changed, or the app is still in testing mode — where refresh tokens expire after seven days. Reconnecting fixes it; publishing the OAuth consent screen stops it recurring.",
+    "Google refused the refresh token. The usual cause is that access was revoked from the Google account's security page, the password changed, or the app is still in testing mode, where refresh tokens expire after seven days. Reconnecting fixes it; publishing the OAuth consent screen stops it recurring.",
   ],
   [
     "Guests were offered a time I was busy",
-    "Either the calendar is disconnected — the booking page says so — or the conflicting event is on a calendar other than the one you connected. Meetrao checks the calendar belonging to the connected account only.",
+    "Either the calendar is disconnected (the booking page says so) or the conflicting event is on a calendar other than the one you connected. Meetrao checks the calendar belonging to the connected account only.",
   ],
   [
     "The booking is on my calendar but my guest never got it",
@@ -157,7 +157,7 @@ const RULES: [string, string][] = [
   ],
   [
     "Booking window",
-    "How far ahead people can book — 7, 14, 30 or 60 days. Keeps your calendar from filling out to next quarter.",
+    "How far ahead people can book: 7, 14, 30 or 60 days. Keeps your calendar from filling out to next quarter.",
   ],
 ];
 
@@ -184,12 +184,12 @@ const PANELS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "sliders",
     title: "Booking",
-    text: "Defaults applied to every new meeting you create — a starting duration and minimum notice, so you are not setting them each time.",
+    text: "Defaults applied to every new meeting you create, a starting duration and minimum notice, so you are not setting them each time.",
   },
   {
     icon: "palette",
     title: "Branding",
-    text: "Your logo, your colour and your own domain on the pages guests see. Part of Pro — the controls are there on Free, with a note saying so.",
+    text: "Your logo, your colour and your own domain on the pages guests see. Part of Pro. The controls are there on Free, with a note saying so.",
   },
   {
     icon: "envelope",
@@ -206,7 +206,7 @@ const PANELS: { icon: IconName; title: string; text: string }[] = [
 const FAQS: [string, string][] = [
   [
     "Can I have more than one type of meeting?",
-    "Yes. Create as many as you like — each gets its own link, and your main link shows all the active ones.",
+    "Yes. Create as many as you like: each gets its own link, and your main link shows all the active ones.",
   ],
   [
     "Can guests reschedule?",
@@ -214,15 +214,15 @@ const FAQS: [string, string][] = [
   ],
   [
     "Does Meetrao read my meeting titles or notes?",
-    "Almost never. It sees only whether a period is busy or free — titles, descriptions and attachments are never read. It does write the bookings you accept and invite your guest to them, and for those events it reads one more thing: whether the guest accepted or declined, so it can tell you when somebody says no.",
+    "Almost never. It sees only whether a period is busy or free, titles, descriptions and attachments are never read. It does write the bookings you accept and invite your guest to them, and for those events it reads one more thing: whether the guest accepted or declined, so it can tell you when somebody says no.",
   ],
   [
     "What if I disconnect my calendar?",
-    "Your link keeps working, but Meetrao can no longer see conflicts — so guests may be offered times you are not free. A banner reminds you until you reconnect. Disconnecting also revokes Meetrao's access with Google, so the permission disappears from your Google account, not just from ours.",
+    "Your link keeps working, but Meetrao can no longer see conflicts, so guests may be offered times you are not free. A banner reminds you until you reconnect. Disconnecting also revokes Meetrao's access with Google, so the permission disappears from your Google account, not just from ours.",
   ],
   [
     "Can I use something other than Google Meet?",
-    "Yes. A meeting can be a Google Meet, a phone call, an address, or anything else you describe — your own Zoom or Teams link, for instance. Meetrao creates Meet links itself; for the others it passes on exactly what you wrote.",
+    "Yes. A meeting can be a Google Meet, a phone call, an address, or anything else you describe, your own Zoom or Teams link, for instance. Meetrao creates Meet links itself; for the others it passes on exactly what you wrote.",
   ],
   [
     "Can two people book the same slot?",
@@ -239,7 +239,7 @@ const FAQS: [string, string][] = [
   ],
   [
     "What does it cost?",
-    "Nothing while Meetrao is in beta. If paid plans arrive we will email you first, and you would have to opt in — a free account is never billed automatically.",
+    "Nothing while Meetrao is in beta. If paid plans arrive we will email you first, and you would have to opt in, a free account is never billed automatically.",
   ],
   [
     "How do I get my data out?",
@@ -326,7 +326,7 @@ export default async function HelpPage() {
             <h3>With an email address</h3>
             <p>
               Enter your name, work email and a password of at least 8 characters. We email you a confirmation
-              link straight away. <strong>You cannot use Meetrao until you click it</strong> — this stops anyone
+              link straight away. <strong>You cannot use Meetrao until you click it</strong>. this stops anyone
               signing up with an address that is not theirs.
             </p>
             <p>
@@ -337,7 +337,7 @@ export default async function HelpPage() {
 
             <h3>With Google</h3>
             <p>
-              Continue with Google and you skip the confirmation step entirely — Google has already verified the
+              Continue with Google and you skip the confirmation step entirely. Google has already verified the
               address. You go straight to setup.
             </p>
 
@@ -348,7 +348,7 @@ export default async function HelpPage() {
           </section>
 
           <section>
-            <h2 id="setup">Setting up — the five steps</h2>
+            <h2 id="setup">Setting up: the five steps</h2>
             <p>
               After you confirm your email, Meetrao walks you through setup. The tracker at the top shows where
               you are. Everything here can be changed later, so do not agonise over it.
@@ -369,7 +369,7 @@ export default async function HelpPage() {
             </div>
 
             <Tip>
-              You can skip connecting your calendar, but then Meetrao cannot see when you are busy — guests may
+              You can skip connecting your calendar, but then Meetrao cannot see when you are busy, guests may
               be offered times you already have something in. Connect it before you share your link.
             </Tip>
 
@@ -380,7 +380,7 @@ export default async function HelpPage() {
           </section>
 
           <section>
-            <h2 id="calendar">Google Calendar — what the permission covers</h2>
+            <h2 id="calendar">Google Calendar: what the permission covers</h2>
             <p>
               Meetrao asks for one Google permission, at step two of setup. It is the part people hesitate
               over, so here is the whole of it: what is read, what is written, what is never touched, and how
@@ -390,7 +390,7 @@ export default async function HelpPage() {
               <strong>Why it is needed at all.</strong> A booking page that cannot see your calendar is a
               booking page that offers times you are already busy. Meetrao checks your existing events before
               it offers a slot, and writes each confirmed booking back so the meeting appears on both
-              calendars with a Meet link — rather than leaving you to copy it across.
+              calendars with a Meet link, rather than leaving you to copy it across.
             </p>
 
             <div className="mb-[18px] grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-[12px]">
@@ -408,7 +408,7 @@ export default async function HelpPage() {
             <h3>The three permissions, in Google’s own words</h3>
             <p>
               Google’s consent screen names scopes, not features. The middle one sounds broader than what
-              Meetrao does with it — that is Google’s vocabulary, and there is no narrower scope that can put
+              Meetrao does with it. That is Google’s vocabulary, and there is no narrower scope that can put
               an event on your calendar and invite somebody to it.
             </p>
 
@@ -430,7 +430,7 @@ export default async function HelpPage() {
               is, so a personal one connected by mistake is obvious.
             </p>
             <p>
-              You can skip it during setup and your link still works — but until a calendar is connected,
+              You can skip it during setup and your link still works, but until a calendar is connected,
               Meetrao cannot see conflicts, and your booking page says so.
             </p>
 
@@ -452,7 +452,7 @@ export default async function HelpPage() {
               ))}
             </div>
             <p>
-              Anything else, <Link href="/support">tell us what happened</Link> — including the address you
+              Anything else, <Link href="/support">tell us what happened</Link>, including the address you
               were on and roughly when, which is usually enough to find it.
             </p>
           </section>
@@ -466,7 +466,7 @@ export default async function HelpPage() {
             <p>
               Four cards summarise where things stand: how many meetings are <strong>Upcoming</strong>, when your{" "}
               <strong>Next meeting</strong> is and with whom, how many <strong>Active meetings</strong> can be
-              booked from your link, and your average <strong>reply time</strong> — how long people take to book
+              booked from your link, and your average <strong>reply time</strong>, how long people take to book
               after opening your link.
             </p>
             <p>
@@ -483,15 +483,15 @@ export default async function HelpPage() {
           </section>
 
           <section>
-            <h2 id="meetings">Meetings — what people can book</h2>
+            <h2 id="meetings">Meetings: what people can book</h2>
             <p>
               A &ldquo;meeting&rdquo; is a type of appointment, not a single booking. Most people have two or
-              three — a short intro call, a standard consultation, a longer deep dive. Each has its own link.
+              three, a short intro call, a standard consultation, a longer deep dive. Each has its own link.
             </p>
 
             <h3>Creating one</h3>
             <p>
-              Give it a name guests will recognise and a description — both appear on your booking page. Pick a
+              Give it a name guests will recognise and a description, both appear on your booking page. Pick a
               duration (15, 30, 45 or 60 minutes). Location is Google Meet; it is the only option in this
               release, and every booking gets its own link.
             </p>
@@ -510,7 +510,7 @@ export default async function HelpPage() {
             <h3>Turning one off</h3>
             <p>
               The <strong>Active</strong> switch controls whether a meeting can be booked. Switch it off and it
-              stays in your list — with its settings and history intact — but nobody can book it from your link.
+              stays in your list (with its settings and history intact) but nobody can book it from your link.
               Better than deleting something you might want back.
             </p>
             <p>
@@ -520,10 +520,10 @@ export default async function HelpPage() {
           </section>
 
           <section>
-            <h2 id="availability">Availability — when you are free</h2>
+            <h2 id="availability">Availability: when you are free</h2>
             <p>One weekly schedule covers all your meetings. Tick the days you work and set the hours for each.</p>
             <p>
-              A day can have more than one range — <em>Add hours</em> lets you set 9:00–12:00 and 14:00–17:00 so
+              A day can have more than one range, <em>Add hours</em> lets you set 9:00–12:00 and 14:00–17:00 so
               nobody books over lunch. Unticking a day marks it Unavailable but keeps its hours, so switching it
               back on later takes one click.
             </p>
@@ -535,7 +535,7 @@ export default async function HelpPage() {
 
             <Tip>
               These hours are the outer boundary. Within them, Meetrao still hides anything your Google Calendar
-              says you are busy for — so a meeting already in your calendar at 10am will not be offered, even
+              says you are busy for, so a meeting already in your calendar at 10am will not be offered, even
               though Tuesday 9–5 is open.
             </Tip>
 
@@ -546,21 +546,21 @@ export default async function HelpPage() {
           </section>
 
           <section>
-            <h2 id="bookings">Bookings — who booked you</h2>
+            <h2 id="bookings">Bookings: who booked you</h2>
             <p>
               Every booking, split into <strong>Upcoming</strong> and <strong>Past</strong>. Each row shows the
               guest and their email, which meeting they booked, the date and time, and whether it is confirmed or
               cancelled. Search by guest name or email address.
             </p>
             <p>
-              <em>Join</em> appears on anything still to come. <em>Details</em> opens the full record — including
-              the note your guest left, if any — and is where you cancel from.
+              <em>Join</em> appears on anything still to come. <em>Details</em> opens the full record, including
+              the note your guest left, if any, and is where you cancel from.
             </p>
 
             <h3>Cancelling</h3>
             <p>
               Open <em>Details</em>, then <em>Cancel meeting</em>. Your guest is emailed, the calendar event is
-              removed, and the slot opens for someone else to book. It cannot be undone — but the guest can book
+              removed, and the slot opens for someone else to book. It cannot be undone, but the guest can book
               a new time from your link.
             </p>
             <p>
@@ -603,7 +603,7 @@ export default async function HelpPage() {
             </div>
 
             <Tip>
-              Turning these off only affects <em>your</em> inbox. Your guests still get their confirmations — and
+              Turning these off only affects <em>your</em> inbox. Your guests still get their confirmations, and
               you will still receive password and security emails, which cannot be switched off.
             </Tip>
           </section>
@@ -617,12 +617,12 @@ export default async function HelpPage() {
             </p>
             <p>
               Days you do not work are dimmed. They pick a date, then a time from the slots that are genuinely
-              open, then give a name, an email and — if they want — a short note. That is the whole flow: two
+              open, then give a name, an email and (if they want) a short note. That is the whole flow: two
               taps and a form.
             </p>
             <p>
               Because Meetrao invites them to the calendar event, the meeting appears on their calendar
-              automatically with the Meet link attached — they do not have to add it themselves. The confirmation
+              automatically with the Meet link attached. They do not have to add it themselves. The confirmation
               page shows the booking with a <em>Join Google Meet</em> button, an .ics download if they use
               something other than Google, and a way to cancel. The same details arrive by email.
             </p>
@@ -643,7 +643,7 @@ export default async function HelpPage() {
             <h3>Your logo</h3>
             <p>
               Upload a PNG, JPG or WEBP under 1&nbsp;MB and it appears at the top of your booking page in
-              place of the Meetrao mark. It is shown about a third larger than our own mark — ours is a
+              place of the Meetrao mark. It is shown about a third larger than our own mark, ours is a
               wordmark drawn to sit quietly, and most logos are square or near-square, which reads as half
               the size at the same height. A wide logo still works better than a tall one, and the file you
               would put in an email signature is usually the right one. SVG
@@ -653,7 +653,7 @@ export default async function HelpPage() {
 
             <h3>Your colours</h3>
             <p>
-              You pick two: an accent and a page background. Everything else is worked out from them — the
+              You pick two: an accent and a page background. Everything else is worked out from them, the
               chosen date in the calendar, the confirm button, the highlights, the links, the focus rings,
               the panels and every border. You do not set those individually, and there is no way to end up
               with a page where five shades disagree.
@@ -664,28 +664,28 @@ export default async function HelpPage() {
             </p>
             <p>
               <strong>The background</strong> is the page behind the booking card. Leave it alone and we use
-              a pale wash of your accent, which is usually what you want — the point is that none of
+              a pale wash of your accent, which is usually what you want. The point is that none of
               Meetrao&rsquo;s own palette is left on the page either way. Our warm grey, our cream panels and
               our green are all replaced the moment you choose anything at all, including on the cookie
               notice.
             </p>
             <p>
               Dark backgrounds work. The booking card itself stays white, because that is what a form is
-              read on, and the few pieces of text that sit directly on the page — the legal links in the
-              footer, the small label beside your logo — switch to a light colour to suit. You do not have
+              read on, and the few pieces of text that sit directly on the page, the legal links in the
+              footer, the small label beside your logo, switch to a light colour to suit. You do not have
               to think about it.
             </p>
             <p>
               <strong>The text on top is chosen for you, by measurement.</strong> A yellow button gets dark
               text and a navy one gets white, because a readable page matters more than a consistent one.
-              The same colour used as text — a link, say — is darkened until it is readable on white, which
+              The same colour used as text (a link, say) is darkened until it is readable on white, which
               is why a bright brand looks slightly deeper where it appears as words than where it appears as
               a button. That is deliberate, and it is what keeps the page legible for everyone.
             </p>
             <p>
               Two kinds of colour are refused, each with a reason shown. A colour too close to white
               (#FFF9E6, a pale mint) makes a button nobody recognises as a button. A colour exactly midway
-              between light and dark — around #7A7A7A — has no readable label at all, in either white or
+              between light and dark (around #7A7A7A) has no readable label at all, in either white or
               black. In both cases, pick a deeper or lighter shade of the same hue.
             </p>
             <p>
@@ -696,15 +696,15 @@ export default async function HelpPage() {
             <h3>Where it shows</h3>
             <p>
               Your booking page, the page for each meeting, the confirmation, the reschedule and cancel
-              screens, and the embed widget on your own site. Your logo is not repeated inside the embed —
-              your site already has it at the top of the page — and nor is your background, since the widget
+              screens, and the embed widget on your own site. Your logo is not repeated inside the embed, because
+              your site already has it at the top of the page, and nor is your background, since the widget
               sits on whatever colour your own page already has. Your accent carries through it. Emails to guests stay in
               the plain format they are in today.
             </p>
             <p>
               The “Powered by Meetrao” line comes off every one of those pages while you are on Pro. If a
               subscription lapses, your logo and colour stay saved but your pages go back to ours, and
-              everything returns the moment Pro does — you do not upload anything again.
+              everything returns the moment Pro does. You do not upload anything again.
             </p>
           </section>
 
@@ -718,13 +718,13 @@ export default async function HelpPage() {
 
             <h3>Three steps</h3>
             <p>
-              <strong>One.</strong> Type the name you want to use — a subdomain such as{" "}
-              <code>meeting.yourcompany.com</code> or <code>book.yourcompany.com</code> — and press{" "}
+              <strong>One.</strong> Type the name you want to use, a subdomain such as{" "}
+              <code>meeting.yourcompany.com</code> or <code>book.yourcompany.com</code>, and press{" "}
               <strong>Claim</strong>. A domain can belong to one Meetrao account, so claiming it holds it
               for you.
             </p>
             <p>
-              <strong>Two.</strong> Add the CNAME record we show you at whoever manages your DNS — your
+              <strong>Two.</strong> Add the CNAME record we show you at whoever manages your DNS, your
               registrar, Cloudflare, your hosting provider. It points the subdomain at us.
             </p>
             <p>
@@ -739,15 +739,15 @@ export default async function HelpPage() {
             </p>
             <ul>
               <li>
-                <code>meeting.yourcompany.com/your-name</code> — your booking page. This is the one to put in
+                <code>meeting.yourcompany.com/your-name</code>. your booking page. This is the one to put in
                 a signature.
               </li>
               <li>
-                <code>meeting.yourcompany.com</code> — the same page. Someone who half-remembers the link
+                <code>meeting.yourcompany.com</code>, the same page. Someone who half-remembers the link
                 still arrives.
               </li>
               <li>
-                <code>meeting.yourcompany.com/intro</code> — straight to one meeting, using its own short
+                <code>meeting.yourcompany.com/intro</code>, straight to one meeting, using its own short
                 name.
               </li>
             </ul>
@@ -774,7 +774,7 @@ export default async function HelpPage() {
             <h2 id="settings">Settings and your account</h2>
             <p>
               Settings live behind your profile at the bottom of the sidebar. Click it and choose{" "}
-              <strong>Settings</strong> — or <strong>Log out</strong>. Each panel has its own address, so you can link straight to one.
+              <strong>Settings</strong>, or <strong>Log out</strong>. Each panel has its own address, so you can link straight to one.
             </p>
 
             <div className="mb-[16px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
@@ -798,7 +798,7 @@ export default async function HelpPage() {
                   Deleting your account is immediate and permanent.
                 </strong>{" "}
                 Your booking page stops working, every upcoming meeting is cancelled, your guests are notified,
-                and your data is erased — we keep no copy. Export anything you need first.
+                and your data is erased. We keep no copy. Export anything you need first.
               </span>
             </div>
           </section>

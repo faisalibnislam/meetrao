@@ -185,7 +185,7 @@ export const deleteSchedule = mutation({
     assertOwnerOrAdmin(me, target.user_id);
 
     const mine = await ctx.db.query("availability_schedules").withIndex("by_user", (q) => q.eq("user_id", target.user_id)).collect();
-    if (mine.length <= 1) fail("This is your only schedule — keep at least one.");
+    if (mine.length <= 1) fail("This is your only schedule: keep at least one.");
     // The app refuses this case before calling; refusing it here too means a
     // direct call cannot leave a host whose meetings point at a default that
     // no longer exists.

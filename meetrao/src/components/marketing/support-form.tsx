@@ -58,7 +58,7 @@ export function SupportForm({
         </div>
 
         <p className="m-0 text-[14px] leading-[1.6] text-ink-2">
-          Thanks — we have it. We reply to <strong className="font-semibold text-ink">{sent.to}</strong> within
+          Thanks. We have it. We reply to <strong className="font-semibold text-ink">{sent.to}</strong> within
           one working day, usually sooner.
         </p>
 
@@ -193,7 +193,7 @@ export function SupportForm({
         }
         htmlFor="support-message"
         error={
-          messageBad ? "A sentence or two is enough — we just need something to go on." : undefined
+          messageBad ? "A sentence or two is enough: we just need something to go on." : undefined
         }
       >
         <Textarea
