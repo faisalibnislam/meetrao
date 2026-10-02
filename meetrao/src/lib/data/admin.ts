@@ -223,3 +223,9 @@ export async function getAdminBooking(id: string): Promise<AdminBookingRow | nul
     upcoming: start.getTime() >= Date.now(),
   };
 }
+
+/** One account's plan, for the admin screen. Admin-gated inside Convex. */
+export async function getUserPlan(userId: string) {
+  const convex = await convexServer();
+  return await convex.query(api.admin.planFor, { userId });
+}

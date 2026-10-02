@@ -1,7 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { requireProfile } from "./lib/auth";
-import { planOf } from "./lib/plan";
+import { hasComp, hasSubscription, planOf } from "./lib/plan";
 import { logActivity } from "./lib/effects";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -79,7 +79,12 @@ export const mine = query({
     return {
       plan: planOf(me),
       plan_until: me.plan_until ? new Date(me.plan_until).toISOString() : null,
-      has_subscription: Boolean(me.polar_subscription_id),
+      has_subscription: hasSubscription(me),
+      /* Pro without paying for it. The host is told plainly rather than shown
+         a billing portal with nothing in it — and never shown the operator's
+         note, which is written for operators. */
+      complimentary: hasComp(me) && !hasSubscription(me),
+      comp_until: me.comp_until ? new Date(me.comp_until).toISOString() : null,
     };
   },
 });

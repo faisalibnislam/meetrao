@@ -33,6 +33,8 @@ export async function billingPanelData(): Promise<{
       plan: plan.plan,
       planUntil: plan.plan_until,
       hasSubscription: plan.has_subscription,
+      complimentary: plan.complimentary,
+      compUntil: plan.comp_until,
     },
     domain: { domain: domain.domain, verifiedAt: domain.verified_at },
     timing: {
