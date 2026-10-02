@@ -92,3 +92,61 @@ describe("the Google user data disclosures", () => {
     }
   });
 });
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The same claim in three places.
+
+   /privacy is written for a reviewer, /help for a host who is hesitating, and
+   the onboarding step for one who is about to click Allow. They are different
+   audiences and different lengths, and that is fine — but they cannot say
+   different things about what Meetrao does with the permission.
+
+   The failure this guards is the ordinary one: somebody improves the wording
+   in a single place, and the product now makes two promises.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+describe("what the Google permission does, said consistently", () => {
+  const help = readFileSync(path.join(process.cwd(), "src", "app", "help", "page.tsx"), "utf8");
+  const onboarding = readFileSync(
+    path.join(process.cwd(), "src", "components", "onboarding", "steps.tsx"),
+    "utf8",
+  );
+
+  it("reads all three surfaces", () => {
+    // Guards the guard: a renamed file passes every assertion below.
+    expect(PAGE.length).toBeGreaterThan(5000);
+    expect(help.length).toBeGreaterThan(5000);
+    expect(onboarding.length).toBeGreaterThan(2000);
+  });
+
+  it("names the three scopes on both the policy and the help page", () => {
+    for (const scope of ["calendar.freebusy", "calendar.events", "userinfo.email"]) {
+      expect(PAGE, `the policy no longer names ${scope}`).toContain(scope);
+      expect(help, `the help centre no longer names ${scope}`).toContain(scope);
+    }
+  });
+
+  /* Reading a guest's answer is the narrow exception to "only busy or free",
+     and it was added deliberately. All three have to carry it, or one of them
+     is making the old, wider promise. */
+  it("discloses the attendee read everywhere it is claimed", () => {
+    for (const [name, text] of [["policy", PAGE], ["help", help], ["onboarding", onboarding]] as const) {
+      expect(text.toLowerCase(), `${name} does not mention reading a guest's answer`).toMatch(
+        /accepted or declined|whether your guest accepted|accepted the invitation|accepted or declined it/,
+      );
+    }
+  });
+
+  it("says disconnecting revokes with Google, not only with us", () => {
+    for (const [name, text] of [["help", help], ["onboarding", onboarding]] as const) {
+      expect(text, `${name} does not say the permission is revoked with Google`).toMatch(
+        /revoke[sd]? (the permission )?with Google|not only with (us|Meetrao)|not just with (us|Meetrao)/i,
+      );
+    }
+  });
+
+  it("keeps the help centre's section reachable from its contents", () => {
+    expect(help).toMatch(/\{ id: "calendar", icon: "calendar", label: "Google Calendar" \}/);
+    expect(help).toContain('id="calendar"');
+  });
+});

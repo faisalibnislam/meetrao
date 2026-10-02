@@ -36,6 +36,7 @@ const PILLARS: { icon: IconName; title: string; text: string }[] = [
 const TOC: { id: string; icon: IconName; label: string }[] = [
   { id: "start", icon: "sign-in", label: "Getting started" },
   { id: "setup", icon: "rectangle-list", label: "Setting up" },
+  { id: "calendar", icon: "calendar", label: "Google Calendar" },
   { id: "dashboard", icon: "house", label: "Dashboard" },
   { id: "meetings", icon: "list", label: "Meetings" },
   { id: "availability", icon: "clock", label: "Availability" },
@@ -70,6 +71,79 @@ const STEPS: [string, string, string][] = [
   ],
 ];
 
+/* The three scopes, as Google's consent screen names them, with what each one
+   is actually used for. The names are Google's wording on purpose: a host
+   comparing this page to the dialog they are about to see should find the same
+   sentences, not a friendlier paraphrase they cannot match up. */
+const SCOPES: { scope: string; google: string; use: string }[] = [
+  {
+    scope: "calendar.freebusy",
+    google: "See when you are busy or free",
+    use: "Checked every time somebody opens your booking page, so a slot you already have something in is never offered. It returns busy periods — start and end times — and nothing else.",
+  },
+  {
+    scope: "calendar.events",
+    google: "See, edit and delete events on your calendar",
+    use: "Creating one event per booking with its Meet link, inviting your guest so it reaches their calendar, moving that event when a booking is rescheduled, and removing it when one is cancelled. It is also what lets Meetrao read whether your guest accepted that particular invitation.",
+  },
+  {
+    scope: "userinfo.email",
+    google: "Your Google account’s email address",
+    use: "Shown on the Calendar settings panel so you can tell which account is connected — a work one from a personal one.",
+  },
+];
+
+/* What a host actually wants to know, in the order they ask it. */
+const CALENDAR_FACTS: { icon: IconName; title: string; text: string }[] = [
+  {
+    icon: "eye",
+    title: "What is read",
+    text: "Busy periods — times, not titles. And, for an event Meetrao created itself, whether your guest accepted or declined it.",
+  },
+  {
+    icon: "calendar",
+    title: "What is written",
+    text: "One event per confirmed booking, with its Google Meet link and your guest as an attendee. Moved when a booking moves; removed when one is cancelled.",
+  },
+  {
+    icon: "lock",
+    title: "What is never read",
+    text: "The titles, descriptions, locations, attachments or guest lists of your other meetings. Meetrao never lists or searches your calendar.",
+  },
+  {
+    icon: "sign-out",
+    title: "How to stop it",
+    text: "Settings → Calendar → Disconnect. That revokes the permission with Google, not only with Meetrao, so it disappears from your Google account's third-party access list too.",
+  },
+];
+
+/* The failures a host meets in practice, and what each one means. Written from
+   the errors this product has actually produced — "Token has been expired or
+   revoked" is the common one, and it reads as a bug until somebody explains
+   that it is Google's seven-day rule for apps still in testing. */
+const CALENDAR_TROUBLE: [string, string][] = [
+  [
+    "“Connect” sends me back with an error",
+    "Almost always a redirect URI that is not registered on the Google OAuth client for the address you are using. The sign-in callback and the calendar callback are two different URIs and both must be registered for every domain the app runs on.",
+  ],
+  [
+    "It says my calendar needs reconnecting",
+    "Google refused the refresh token. The usual cause is that access was revoked from the Google account's security page, the password changed, or the app is still in testing mode — where refresh tokens expire after seven days. Reconnecting fixes it; publishing the OAuth consent screen stops it recurring.",
+  ],
+  [
+    "Guests were offered a time I was busy",
+    "Either the calendar is disconnected — the booking page says so — or the conflicting event is on a calendar other than the one you connected. Meetrao checks the calendar belonging to the connected account only.",
+  ],
+  [
+    "The booking is on my calendar but my guest never got it",
+    "Google sends the invitation, not Meetrao. Check the guest's spam folder, and that the address on the booking is right. The confirmation email Meetrao sends separately carries the same Meet link and an .ics file.",
+  ],
+  [
+    "I use Outlook or iCloud",
+    "Meetrao cannot see those. Google Calendar is the only provider, which is listed as a limitation on the pricing page rather than discovered here.",
+  ],
+];
+
 const RULES: [string, string][] = [
   [
     "Buffer between meetings",
@@ -89,6 +163,7 @@ const NOTICES: [string, string, "On" | "Off"][] = [
   ["New booking", "Someone books a time with you.", "On"],
   ["Booking changed", "A booking is rescheduled or edited.", "On"],
   ["Booking cancelled", "You or your guest cancels.", "On"],
+  ["Meeting reminders", "A nudge the day before and an hour before. Your guest is reminded either way.", "On"],
   ["Daily agenda", "One email each morning listing the day’s meetings.", "Off"],
   ["Product news", "Occasional updates about new Meetrao features.", "Off"],
 ];
@@ -294,6 +369,84 @@ export default async function HelpPage() {
             <p>
               Need to stop halfway? Use the account button at the top-right of the setup screen to log out. Your
               progress is saved and you can pick it up later.
+            </p>
+          </section>
+
+          <section>
+            <h2 id="calendar">Google Calendar — what the permission covers</h2>
+            <p>
+              Meetrao asks for one Google permission, at step two of setup. It is the part people hesitate
+              over, so here is the whole of it: what is read, what is written, what is never touched, and how
+              to take it back.
+            </p>
+            <p>
+              <strong>Why it is needed at all.</strong> A booking page that cannot see your calendar is a
+              booking page that offers times you are already busy. Meetrao checks your existing events before
+              it offers a slot, and writes each confirmed booking back so the meeting appears on both
+              calendars with a Meet link — rather than leaving you to copy it across.
+            </p>
+
+            <div className="mb-[18px] grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-[12px]">
+              {CALENDAR_FACTS.map((fact) => (
+                <div key={fact.title} className="flex flex-col gap-[7px] rounded-[10px] border border-line bg-fill px-[15px] py-[14px]">
+                  <span className="flex items-center gap-[8px] text-[13.5px] font-semibold text-ink">
+                    <Icon name={fact.icon} size={12} className="flex-none text-accent" />
+                    {fact.title}
+                  </span>
+                  <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">{fact.text}</span>
+                </div>
+              ))}
+            </div>
+
+            <h3>The three permissions, in Google’s own words</h3>
+            <p>
+              Google’s consent screen names scopes, not features. The middle one sounds broader than what
+              Meetrao does with it — that is Google’s vocabulary, and there is no narrower scope that can put
+              an event on your calendar and invite somebody to it.
+            </p>
+
+            <div className="mb-[16px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
+              {SCOPES.map((row) => (
+                <div key={row.scope} className="flex flex-col gap-[4px] bg-surface px-[15px] py-[13px]">
+                  <span className="text-[13.5px] font-semibold text-ink">{row.google}</span>
+                  <span className="text-[12px] text-ink-3">{row.scope}</span>
+                  <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">{row.use}</span>
+                </div>
+              ))}
+            </div>
+
+            <h3>Connecting it</h3>
+            <p>
+              At step two of setup, or any time afterwards from <strong>Settings → Calendar</strong>. You will
+              be sent to Google, asked to choose an account, and shown the three permissions above. Approving
+              returns you to Meetrao with the calendar connected; the panel then shows which Google account it
+              is, so a personal one connected by mistake is obvious.
+            </p>
+            <p>
+              You can skip it during setup and your link still works — but until a calendar is connected,
+              Meetrao cannot see conflicts, and your booking page says so.
+            </p>
+
+            <h3>Disconnecting it</h3>
+            <p>
+              <strong>Settings → Calendar → Disconnect.</strong> Meetrao revokes the token with Google rather
+              than only forgetting it, so the entry disappears from your Google account’s third-party access
+              list as well. Bookings already made stay where they are, on both calendars; new bookings stop
+              being checked for conflicts and stop creating events.
+            </p>
+
+            <h3>When something goes wrong</h3>
+            <div className="mb-[8px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
+              {CALENDAR_TROUBLE.map(([problem, answer]) => (
+                <div key={problem} className="flex flex-col gap-[4px] bg-surface px-[15px] py-[13px]">
+                  <span className="text-[13.5px] font-semibold text-ink">{problem}</span>
+                  <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">{answer}</span>
+                </div>
+              ))}
+            </div>
+            <p>
+              Anything else, <Link href="/support">tell us what happened</Link> — including the address you
+              were on and roughly when, which is usually enough to find it.
             </p>
           </section>
 
