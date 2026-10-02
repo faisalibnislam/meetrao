@@ -10,7 +10,7 @@
 
    The first version refused any colour under 3:1 against a white page, on the
    grounds that WCAG asks that of a UI component. That rejected plain orange
-   (2.94:1) and yellow (1.43:1) — both of which are somebody's actual brand,
+   (2.94:1) and yellow (1.43:1). Both of which are somebody's actual brand,
    and both of which make a perfectly readable button when it is FILLED with
    them and the text on top is chosen to suit. The 3:1 rule is about telling a
    component apart from its background, not about a solid button whose own
@@ -19,12 +19,12 @@
    So the choice is not restricted where it does not need to be. Instead:
 
    · as a FILL, any colour is allowed that is distinguishable from the page at
-     all, and the text on it is picked by measurement — white or ink;
+     all, and the text on it is picked by measurement, white or ink;
    · as TEXT, the colour is darkened until it clears 4.5:1 on white, because a
      host who picks yellow still needs their links to be readable.
 
    A HOST PICKS TWO COLOURS: the accent and the page background. The second
-   exists because the first was not enough — a booking page with a blue brand
+   exists because the first was not enough, a booking page with a blue brand
    still sat on Meetrao's warm grey, in Meetrao's cream panel, which read as
    our page wearing somebody's logo. So the whole neutral ramp is derived here
    too, and a branded page keeps none of our palette.
@@ -34,12 +34,12 @@
    because a card is what the booking form is read on. What the background does
    change is the ground behind that card, the quiet panel inside it, the
    borders, and the colour of the few pieces of text that sit directly on the
-   ground — which is the part that makes a dark background safe rather than
+   ground, which is the part that makes a dark background safe rather than
    unreadable.
 
    Two things are still refused, and only two:
 
-   · the near-white — #FFF9E6, #EAF6FF, a sand or a mint taken straight out of
+   · the near-white, #FFF9E6, #EAF6FF, a sand or a mint taken straight out of
      a logo. Those do not make a pale button, they make something the guest
      does not recognise as a button;
    · the narrow band of mid-tones, around #7A7A7A, where NEITHER white nor ink
@@ -136,7 +136,7 @@ export function validateBrandColor(value: string): { color: string } | { error: 
     };
   }
 
-  /* The thin band where a filled button has no readable label — neither white
+  /* The thin band where a filled button has no readable label, neither white
      nor ink clears 4.5:1 on it. Roughly #6E6E6E to #808080 and its neighbours
      in other hues. Refused with the way out, not just a no. */
   if (contrast(color, onBrand(color)) < MIN_LABEL) {
@@ -173,18 +173,18 @@ export type BrandTokens = {
   /** The page itself, behind everything. */
   ground: string;
   /**
-   * Text that sits directly ON the ground — the footer's legal links and the
+   * Text that sits directly ON the ground, the footer's legal links and the
    * "Booking page" eyebrow. Derived, not fixed, because a host may choose a
    * background darker than our ink, and `--ink-3` would then be invisible.
    */
   onGround: string;
-  /** The card. White, always — see the note at the top of this file. */
+  /** The card. White, always, see the note at the top of this file. */
   surface: string;
   /** The quiet panel inside the card, a step from the card toward the ground. */
   fill: string;
   fill2: string;
   /* The NEUTRAL borders, hue-matched to the ground. Distinct from `line`
-     above, which is the brand's own border — two different jobs that were one
+     above, which is the brand's own border. Two different jobs that were one
      word for an uncomfortable minute. */
   borderBase: string;
   borderSoft: string;
@@ -195,7 +195,7 @@ export function brandTokens(
   color: string | null,
   /**
    * The page background. Null means "derive one from the accent" rather than
-   * "use Meetrao's" — a host who picks one colour should not be left with our
+   * "use Meetrao's". a host who picks one colour should not be left with our
    * warm grey around their blue card. Only a host who sets no colour at all
    * keeps our palette, and then this function returns null and nothing is
    * overridden.
@@ -225,7 +225,7 @@ export function brandTokens(
     onAccent: onBrand(accent),
     /* Measured against the SOFT tint rather than the page, because that is the
        darker of the two backgrounds this colour is set on. Checking it against
-       white passes at 4.5 and then renders at 4.1 on the tint — which is how
+       white passes at 4.5 and then renders at 4.1 on the tint, which is how
        the first version of this shipped a highlight that failed AA. */
     accentText: readableOn(accent, soft),
     soft,
@@ -258,7 +258,7 @@ export function brandTokens(
  * Text that can be read on the ground, keeping the ground's own hue.
  *
  * Darkening is tried first, because a tonal dark-on-light page is what most
- * brands want. A ground too dark to darken further — a navy, a near-black —
+ * brands want. A ground too dark to darken further. A navy, a near-black,
  * cannot reach 4.5:1 that way at all, and the first version of this returned
  * our ink for those, which is invisible on navy. So lightening is tried next,
  * and plain white or ink is the floor.
@@ -281,7 +281,7 @@ export function readableOnGround(ground: string): string {
 }
 
 /**
- * The ground's hue at a fixed weight — for everything drawn ON the white card.
+ * The ground's hue at a fixed weight, for everything drawn ON the white card.
  *
  * Panels and borders alike are read against the card, never against the page,
  * so what they must inherit from the background is its COLOUR and not its
@@ -291,7 +291,7 @@ export function readableOnGround(ground: string): string {
  *
  * BIDIRECTIONAL, because the ground can be on either side of the target. A
  * dark ground has to be lightened toward it; a white one has to be darkened,
- * and the first version only lightened — so a host who chose a white
+ * and the first version only lightened, so a host who chose a white
  * background got white borders and a card with no edge at all.
  *
  * `hue` is the fallback to take colour from when the ground has none left to

@@ -9,7 +9,7 @@ import { hasCalendarWrite, revokeToken } from "@/convex/lib/googleApi";
    itself, which stays valid until it expires. The Privacy Policy says the grant
    ends; this is what makes that true.
 
-   The call now lives in Convex, next to the tokens — `convex/google.ts`
+   The call now lives in Convex, next to the tokens, `convex/google.ts`
    disconnect takes the refresh token out of the row and revokes it. The
    ordering that test used to guard (revoke before delete) is no longer a risk
    there, because the mutation RETURNS the token as it deletes, so the action
@@ -50,7 +50,7 @@ describe("revokeToken", () => {
   });
 
   /* Google answers 400 invalid_token for a token that is already revoked or
-     expired. The grant is gone, which is what we asked for — calling that a
+     expired. The grant is gone, which is what we asked for, calling that a
      failure would log a warning on the most ordinary case there is. */
   it("treats an already-invalid token as done, not failed", async () => {
     revokeResponse = () => new Response(JSON.stringify({ error: "invalid_token" }), { status: 400 });

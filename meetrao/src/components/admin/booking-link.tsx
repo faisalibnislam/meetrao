@@ -29,7 +29,7 @@ type AdminStatus = UsernameStatus | "retired";
 
 /**
  * Every piece of state here is about one username, so after a save the whole
- * lot has to go — the typed value, the status, the alternatives, the checkbox.
+ * lot has to go, the typed value, the status, the alternatives, the checkbox.
  * The page keys this component on the username for exactly that reason: a save
  * followed by router.refresh() remounts it, and React discards the state for
  * us. Syncing it back in an effect instead is both a cascading render and, in

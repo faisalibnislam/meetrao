@@ -16,7 +16,7 @@ import { api } from "@/convex/_generated/api";
    Moving a booking. Public: the guest has no account, only their reference.
 
    The same two independent guards the creation route carries, for the same
-   reason — the slot engine re-run here against fresh availability and busy
+   reason. The slot engine re-run here against fresh availability and busy
    periods, and Convex re-checking inside its own serializable mutation. The
    only difference is that a booking may not collide with the slot it is
    currently sitting in, which `ignoreBookingId` handles one layer down.

@@ -8,7 +8,7 @@ import { ImageFrame } from "./image-frame";
 import { cx } from "@/lib/cx";
 import { useMediaQuery } from "@/lib/use-client-value";
 
-/* Live replicas of the Meetings and Bookings screens. They are demonstrations —
+/* Live replicas of the Meetings and Bookings screens. They are demonstrations,
    toggling and copying here changes nothing, and the status line says so. */
 
 const MEET_COLS = "minmax(0,2.1fr) 68px minmax(0,1.45fr) 46px 152px";
@@ -21,7 +21,7 @@ const TYPES = [
 ] as const;
 
 /** Guest photo path from the guest's name. The asset filenames are the slugged
-    names, so the rows need no extra column — and an accent has to be stripped
+    names, so the rows need no extra column, and an accent has to be stripped
     for Tomás to find tomas-rivera.webp. */
 function guestPhoto(name: string): string {
   const slug = name

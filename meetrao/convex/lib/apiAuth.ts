@@ -40,7 +40,7 @@ export function keyPrefix(key: string): string {
  * `t=<unix seconds>,v1=<hex hmac of "t.body">`.
  *
  * The timestamp is inside the signed string, not beside it, so a captured
- * delivery cannot be replayed with a fresh timestamp — which is the whole
+ * delivery cannot be replayed with a fresh timestamp, which is the whole
  * reason to sign a timestamp at all. Stripe's scheme, and Resend's inbound
  * one in src/lib/email/inbound.ts, both work this way.
  */

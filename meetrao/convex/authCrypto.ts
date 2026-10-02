@@ -6,21 +6,21 @@ import { Scrypt } from "lucia";
 /* ─────────────────────────────────────────────────────────────────────────────
    Password hashing across the migration.
 
-   Supabase stores bcrypt — `$2a$10$`, 60 characters — in
+   Supabase stores bcrypt (`$2a$10$`, 60 characters) in
    `auth.users.encrypted_password`. Convex Auth hashes with Scrypt by default.
    Rather than force four people to reset their passwords, `verifySecret`
    accepts BOTH: a bcrypt hash is verified with bcrypt, anything else with
    Scrypt.
 
    `hashSecret` only ever writes Scrypt, so an imported bcrypt hash is a
-   one-way door in the right direction — the first password change moves that
+   one-way door in the right direction, the first password change moves that
    account to the modern hash and it never goes back.
 
    `bcryptjs` rather than `bcrypt`: the latter is a native binding and will not
    load in Convex's runtime.
 
    And `compareSync`, not `compare`. The async form yields with `setTimeout`,
-   which Convex forbids outside actions — sign-in fails with "Can't use
+   which Convex forbids outside actions, sign-in fails with "Can't use
    setTimeout in queries". The synchronous form does the same work without
    yielding. It is CPU-bound for a few milliseconds at cost 10, which is the
    point of a password hash.
@@ -31,7 +31,7 @@ const scrypt = new Scrypt();
 const isBcrypt = (hash: string) => /^\$2[aby]?\$/.test(hash);
 
 export const passwordCrypto = {
-  /** New and changed passwords. Never bcrypt — that is inbound only. */
+  /** New and changed passwords. Never bcrypt. That is inbound only. */
   async hashSecret(secret: string): Promise<string> {
     return await scrypt.hash(secret);
   },

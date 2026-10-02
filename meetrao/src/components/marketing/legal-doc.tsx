@@ -7,13 +7,13 @@ import { Icon } from "@/components/ui/icon";
    The shell both legal documents share: a context strip, a sticky contents rail
    and the prose column.
 
-   DraftNotice and NeedsDecision used to live here — an amber banner across the
+   DraftNotice and NeedsDecision used to live here, an amber banner across the
    top of each document and inline callouts for the open questions. Both are
    gone, along with the questions they held: the operator, the minimum age, the
    transfer mechanism, the liability cap and the consent banner have all been
    decided, and the documents are published rather than drafts. Do not
    reintroduce a "draft for legal review" banner on a page Google's OAuth
-   verification reads — a policy that announces it is not final reads as one
+   verification reads. A policy that announces it is not final reads as one
    that does not apply.
 
    The rail is `box-sizing: border-box` with a max-height budget that has to

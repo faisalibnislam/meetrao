@@ -9,8 +9,8 @@ import { internalQuery } from "./_generated/server";
    The only caller is `npx convex run`, which needs a deploy key.
 
    The scripts used to get privileged reads by talking to Postgres with the
-   service-role key. There is no such key any more — Convex has no ambient
-   admin client — so the reads they legitimately need live here instead, named
+   service-role key. There is no such key any more (Convex has no ambient
+   admin client) so the reads they legitimately need live here instead, named
    and enumerated, rather than as a general back door.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -42,7 +42,7 @@ export const visitKeys = internalQuery({
  *
  * The scripts DISCOVER their host rather than naming one:
  * src/lib/contact-address.test.ts forbids a real identity appearing in the
- * source, and hardcoding a username tripped it — correctly.
+ * source, and hardcoding a username tripped it, correctly.
  */
 export const hosts = internalQuery({
   args: {},
@@ -59,7 +59,7 @@ export const hosts = internalQuery({
  * What the booking triggers should have written, for one host.
  *
  * The equivalent of the host reading their own notifications and contacts,
- * without a session — the scripts have no way to mint one now that magic
+ * without a session. The scripts have no way to mint one now that magic
  * links are gone, and these two counts are all they ever wanted from it.
  */
 export const effectsFor = internalQuery({
@@ -85,7 +85,7 @@ export const effectsFor = internalQuery({
 /**
  * The tail of the audit log.
  *
- * `admin_activity` is the one record of who did what — account creation,
+ * `admin_activity` is the one record of who did what, account creation,
  * removal, suspension, calendar connects. When rows go missing this is the
  * first thing to read, and reading it should not require reconstructing the
  * day from memory.

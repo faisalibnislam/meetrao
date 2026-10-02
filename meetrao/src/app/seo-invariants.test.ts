@@ -9,7 +9,7 @@ import { DESCRIPTION, TITLE, TITLE_TEMPLATE } from "@/lib/seo";
 
    None of these break a page. A missing noindex renders perfectly; a missing
    og:image renders perfectly; a disallow left off a new route renders
-   perfectly. They are found weeks later, by someone else, in search results —
+   perfectly. They are found weeks later, by someone else, in search results,
    which is exactly the shape of thing worth pinning in a test rather than
    remembering.
 
@@ -33,7 +33,7 @@ function pages(glob: string): { file: string; text: string }[] {
 
 describe("pages that must never be indexed", () => {
   /* /booking/<reference> shows a named guest, a named host and a time. The
-     reference is unguessable, which is not the same as private — one shared
+     reference is unguessable, which is not the same as private. One shared
      link, one crawler, and a stranger's meeting is a search result. */
   const bookingPages = pages("(public)/booking/**/page.tsx");
 
@@ -83,7 +83,7 @@ describe("the signed-in product stays out of the index", () => {
  *
  * Brace counting rather than a regex, and not because it is elegant: the
  * obvious `/openGraph[\s\S]*?images/` test passes on a file that merely
- * *imports* OG_IMAGE at the top and never uses it — which is exactly the defect
+ * *imports* OG_IMAGE at the top and never uses it, which is exactly the defect
  * it is supposed to catch, and which it duly failed to catch when tried.
  */
 function openGraphBlocks(source: string): string[] {
@@ -125,7 +125,7 @@ describe("the root metadata", () => {
     expect(layout).toMatch(/metadataBase:\s*new URL\(/);
   });
 
-  /* A canonical at the root is inherited by every page that does not set one —
+  /* A canonical at the root is inherited by every page that does not set one,
      which pointed the whole signed-in app, and the guest booking pages, at the
      home page. Each public page declares its own instead. */
   it("does not set a site-wide canonical", () => {
@@ -175,7 +175,7 @@ const BRAND = "Meetrao";
  * Every page a stranger can reach, and the title Next actually renders for it.
  *
  * `template` pages get " · Meetrao" appended, because `title.template` in the
- * root layout applies to child segments. `absolute` pages do not — which is
+ * root layout applies to child segments. `absolute` pages do not, which is
  * both /vs pages and the home page's own default. Getting that backwards is
  * how a brand ends up in a title twice, so the two kinds are separated here
  * rather than assumed.
@@ -228,7 +228,7 @@ describe("page titles", () => {
     const canonical = pages("**/page.tsx")
       .filter((p) => /alternates:\s*\{\s*canonical/.test(p.text))
       /* Booking pages are canonical but generated per host and per team, not
-         authored — there is no fixed path to render and no fixed title to
+         authored. There is no fixed path to render and no fixed title to
          assert, so they carry their canonical in generateMetadata and are
          checked by the noindex block above instead. */
       .filter((p) => !p.file.includes("[username]") && !p.file.includes("/team/"))
@@ -243,7 +243,7 @@ describe("page titles", () => {
     expect(title.length).toBeGreaterThan(12);
   });
 
-  /* The defect this exists for: a page setting `title: "Help Centre — how
+  /* The defect this exists for: a page setting `title: "Help Centre, how
      Meetrao scheduling works"` renders as "… how Meetrao scheduling works ·
      Meetrao". Reads as a mistake, and wastes the scarcest line on the page. */
   it.each(RENDERED)("$path names the brand exactly once", ({ title }) => {
@@ -258,7 +258,7 @@ describe("page titles", () => {
 
   /* The home page has one line to say what the product is to somebody who has
      never heard of it. It spends it on the category and the price, not on the
-     name — the name goes last, and earns its place only once people search it. */
+     name. The name goes last, and earns its place only once people search it. */
   it("leads the home page with the category, not the brand", () => {
     expect(TITLE.toLowerCase()).toContain("free");
     expect(TITLE.toLowerCase()).toContain("scheduling");
@@ -303,7 +303,7 @@ describe("page descriptions", () => {
 describe("the sitemap", () => {
   const source = readFileSync(path.join(APP, "sitemap.ts"), "utf8");
 
-  /* Excluded on purpose, each for its own reason — not by oversight, which is
+  /* Excluded on purpose, each for its own reason, not by oversight, which is
      what the assertion below would otherwise let through. */
   const EXCLUDED: Record<string, string> = {
     "/login": "a sign-in form has nothing to rank for, and a crawler bounces off it",

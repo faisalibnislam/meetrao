@@ -1,6 +1,6 @@
 # Emails
 
-The six send-ready templates from the design handoff, copied in **as-is** —
+The six send-ready templates from the design handoff, copied in **as-is**,
 table-based, every style inlined, under 10KB each. They are not rebuilt in JSX
 and not passed through a mail-component library: a div-based rewrite breaks
 Outlook.
@@ -13,8 +13,8 @@ untouched.
 | File | Trigger | To | Honours prefs? |
 | --- | --- | --- | --- |
 | `welcome.html` | Email confirmed, or Google sign-up | Host | See note below |
-| `booking-new-host.html` | Guest confirms a slot | Host | Yes — "New booking" |
-| `booking-new-guest.html` | Same event | Guest | No — transactional |
+| `booking-new-host.html` | Guest confirms a slot | Host | Yes, "New booking" |
+| `booking-new-guest.html` | Same event | Guest | No, transactional |
 | `booking-changed.html` | Time/duration/meeting changed | Both | Host: "Booking changed" |
 | `booking-cancelled.html` | Cancelled by either party | Both | Host: "Booking cancelled" |
 
@@ -24,7 +24,7 @@ untouched.
 `src/lib/email/send.ts`**, which renders them, escapes every merge value and
 applies the preference rules below.
 
-**The two auth emails — confirm your email, and reset your password — live in
+**The two auth emails, confirm your email, and reset your password, live in
 `convex/lib/emails.ts` instead.** Convex Auth owns both flows and sends them
 from inside a Convex action, and Convex functions cannot read from disk, so
 `send.ts` cannot reach them. They are wired through `sendVerificationRequest`
@@ -33,13 +33,13 @@ Auth.js sends its own template, which is how both went out unbranded and with
 no postal address between the auth cutover and the fix.
 
 `verify-email.html` used to sit here as the design for the first of them, and
-has been deleted rather than left beside the Convex copy — two copies of one
+has been deleted rather than left beside the Convex copy, two copies of one
 template is exactly the trap the old Supabase version fell into. The design
 travelled into `convex/lib/emails.ts` unchanged apart from the footer; see
 below.
 
 Both are **transactional and carry no unsubscribe**. The handoff's footer has
-one, pointing at `/settings/notifications` — an account the recipient is in the
+one, pointing at `/settings/notifications`, an account the recipient is in the
 middle of confirming or recovering. An unsubscribe that cannot work is worse
 than none, and nobody may opt out of the email that lets them into their own
 account. The postal address stays, because that is the part the law asks for.
@@ -68,15 +68,15 @@ covers both.
   the Convex deployment's own environment and **throw if it is unset**, rather
   than sending a footer with no address in it. `npx convex env set
   EMAIL_POSTAL_ADDRESS "…"` on every deployment.
-- **`booking-changed.html` has no trigger.** There is no reschedule flow — guests
+- **`booking-changed.html` has no trigger.** There is no reschedule flow, guests
   cancel and rebook. `sendRescheduled()` exists and is unwired, so building
   reschedule later is a matter of calling it.
 - **The logo is drawn in type** (a green rounded square plus the wordmark)
   because a repo-relative asset will not resolve for a recipient. Swap in a
   hosted https PNG; the cell is sized for a 22px square.
 - **`EMAIL_POSTAL_ADDRESS` is empty by default** and falls back to "Meetrao",
-  which does not satisfy anti-spam law. It must be a full physical address —
-  street, city, state, postcode — and it prints in the footer of every template.
+  which does not satisfy anti-spam law. It must be a full physical address,
+  street, city, state, postcode, and it prints in the footer of every template.
 - **Welcome and preferences.** The design's table marks the welcome email as
   honouring preferences, but none of the five switches names it, and gating it
   on "Product news" (off by default) would silence a message the host's own

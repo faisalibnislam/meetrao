@@ -19,8 +19,8 @@ import { TIMEZONES } from "@/lib/timezones";
 /* ─────────────────────────────────────────────────────────────────────────────
    Availability, per named schedule.
 
-   A host has one or more schedules — "Working hours", "Client calls", whatever
-   they name them — and each meeting type points at one, or at none, which means
+   A host has one or more schedules ("Working hours", "Client calls", whatever
+   they name them) and each meeting type points at one, or at none, which means
    the default. Migration 0010 has the shape and the reasoning.
 
    Two invariants live here rather than in the UI, because the UI is not the
@@ -65,7 +65,7 @@ function nameTaken(message: string): boolean {
 }
 
 /**
- * The whole week for ONE schedule is replaced in one pass — a partial save is
+ * The whole week for ONE schedule is replaced in one pass. A partial save is
  * not a state a host should ever be able to see.
  *
  * The timezone still belongs to the profile rather than to a schedule. A host
@@ -129,7 +129,7 @@ export async function renameSchedule(input: { id: string; name: string }): Promi
  * Deleting is the one destructive action here, so it refuses two cases outright:
  * the last remaining schedule, and the default. A host with no schedule has no
  * bookable hours at all, and the meeting types that pointed at the deleted one
- * fall back to the default — which has to still exist for that to mean
+ * fall back to the default, which has to still exist for that to mean
  * anything. The foreign key does the reassignment (`on delete set null`), the
  * UI says how many meetings will move before asking.
  */
@@ -145,7 +145,7 @@ export async function deleteSchedule(input: { id: string }): Promise<SaveResult>
 
 /**
  * Exactly one default. The index in 0010 makes two impossible, so the old one
- * is cleared before the new one is set rather than after — the other order
+ * is cleared before the new one is set rather than after. The other order
  * fails on the constraint.
  */
 export async function setDefaultSchedule(input: { id: string }): Promise<SaveResult> {
@@ -167,7 +167,7 @@ export type TimeOffResult = { error?: string; id?: string };
  *
  * Validated here as well as in Convex for the reason every other action in
  * this file is: the form's checks are a convenience, and this is the boundary.
- * An empty `ranges` is the "away all day" case and is the common one — the
+ * An empty `ranges` is the "away all day" case and is the common one. The
  * screen sends it whenever the host does not choose custom hours.
  */
 export async function saveTimeOff(input: {

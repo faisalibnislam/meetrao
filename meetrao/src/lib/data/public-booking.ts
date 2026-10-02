@@ -27,7 +27,7 @@ export type PublicHost = {
   /**
    * Pro: their own logo and colour, or null for Meetrao's.
    *
-   * Already gated by plan in convex/publicBooking.ts — a lapsed host's rows
+   * Already gated by plan in convex/publicBooking.ts. A lapsed host's rows
    * are still in the table and do not come back from the query. Nothing here
    * re-checks, because there is nothing here to re-check with.
    */
@@ -132,7 +132,7 @@ export async function getPublicMeetings(username: string): Promise<PublicMeeting
 /**
  * The hours behind ONE meeting.
  *
- * Not the host's — a host can have several named schedules and each meeting
+ * Not the host's. A host can have several named schedules and each meeting
  * points at one, so asking by host would offer every window the host has ever
  * opened. The meeting's own schedule is resolved, or the host's default when it
  * has none. Only the hours come back: a schedule's name is the host's private
@@ -150,7 +150,7 @@ export async function getMeetingAvailability(meetingId: string): Promise<Availab
 /**
  * The days the meeting does not follow its weekly pattern on.
  *
- * Fetched beside the weekly rules and handed to the engine with them — a slot
+ * Fetched beside the weekly rules and handed to the engine with them, a slot
  * list built from one without the other offers a host's holiday as bookable.
  */
 export async function getMeetingOverrides(meetingId: string): Promise<DateOverride[]> {

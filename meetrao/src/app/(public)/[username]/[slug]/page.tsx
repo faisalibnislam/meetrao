@@ -41,11 +41,11 @@ export async function generateMetadata({
   const name = host.fullName || host.username;
   const title = `${meeting.name} with ${name}`;
   /* Absolute, and built from the domain this request arrived on. A Pro host's
-     page on their own domain must not canonicalise to meetrao.com — see
+     page on their own domain must not canonicalise to meetrao.com, see
      src/lib/public-origin.ts. */
   const here = await publicUrl(`/${host.username}/${meeting.slug}`);
   /* The host's own description when they wrote one, and a generated sentence
-     when they did not — an empty description leaves the search result to be
+     when they did not. An empty description leaves the search result to be
      filled in from whatever text the crawler happens to find first, which on
      this page is a list of times. */
   const description =
@@ -140,7 +140,7 @@ export default async function BookingPage({
     // A full slot is not on offer, however free the host's calendar looks.
     .filter((iso) => meeting.capacity <= 1 || (seats[iso] ?? 0) < meeting.capacity);
 
-  // Records that the page was opened, which is what "Avg. reply time" measures.
+  // Records that the page was opened, which is what "Avg. Reply time" measures.
   const pageViewId = await convexAnonymous().mutation(api.publicBooking.recordPageView, {
     hostId: host.id,
     meetingTypeId: meeting.id,

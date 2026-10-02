@@ -6,8 +6,8 @@ import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "./contact";
 /* ─────────────────────────────────────────────────────────────────────────────
    One operator, one postal address, one support inbox.
 
-   The contact address was scattered across six places — the Support page, two
-   sections each of Terms and Privacy, and two error messages — all carrying an
+   The contact address was scattered across six places (the Support page, two
+   sections each of Terms and Privacy, and two error messages) all carrying an
    address on a domain that no longer belongs to the product. Changing five of
    six is the obvious way to get this wrong, and the sixth only surfaces when
    somebody has already failed to reach us.
@@ -72,7 +72,7 @@ describe("the support address", () => {
 
     for (const page of pages) {
       const text = readFileSync(path.join(SRC, page), "utf8");
-      // Either spelled out, or read from lib/contact — which is the point of
+      // Either spelled out, or read from lib/contact, which is the point of
       // the rule in the next block.
       expect(
         text.includes(SUPPORT_EMAIL) || text.includes("SUPPORT_EMAIL"),
@@ -134,7 +134,7 @@ describe("one operator, one address", () => {
   });
 
   /* Every name and address Meetrao has been published under and no longer is.
-     Add to this list rather than removing from it — the point is that a retired
+     Add to this list rather than removing from it. The point is that a retired
      identity can never quietly come back. */
   const RETIRED = [
     "Airly",
@@ -170,8 +170,8 @@ describe("one operator, one address", () => {
 
   /* The rule above existed for the postal address and not for the support
      inbox, and the difference cost a commit. Four files spelled out the address
-     rather than importing it — the Support page, the support action's fallback,
-     the .ics organiser and the EMAIL_FROM default — and every one PASSED the
+     rather than importing it (the Support page, the support action's fallback,
+     the .ics organiser and the EMAIL_FROM default) and every one PASSED the
      "only one address on our domains" check above, because each literal was
      equal to the constant. Equal is not the same as single.
 
@@ -195,7 +195,7 @@ describe("one operator, one address", () => {
   });
 
   it("shows the address on both legal documents and in the footer", () => {
-    // Not by literal — by import, which is the point of the rule above.
+    // Not by literal, by import, which is the point of the rule above.
     for (const file of [
       path.join("src", "app", "(marketing)", "privacy", "page.tsx"),
       path.join("src", "app", "(marketing)", "terms", "page.tsx"),
@@ -222,7 +222,7 @@ describe("one operator, one address", () => {
     //
     // Matched loosely on purpose. The first version of this pinned the exact
     // zod spelling and broke the moment the schema was hardened against blank
-    // values — a test that fails when the code gets better is testing the
+    // values. a test that fails when the code gets better is testing the
     // wrong thing. The invariant is that the default comes from the shared
     // constant, not how it is wrapped; env.test.ts checks the behaviour.
     const env = FILES.find((f) => f.file === path.join("src", "lib", "env.ts"));

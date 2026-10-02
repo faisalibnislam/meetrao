@@ -13,8 +13,8 @@ import { api } from "@/convex/_generated/api";
        and count it in JavaScript" is a screen that works for a year and then
        times out
      · those functions are `security invoker`, so RLS is what decides who sees
-       numbers. A non-admin gets zeroes and empty lists rather than an error —
-       there is no second access rule in this file to keep in step with the
+       numbers. A non-admin gets zeroes and empty lists rather than an error.
+       There is no second access rule in this file to keep in step with the
        policy.
 
    Seven RPCs, all in one Promise.all. They are POSTs, so Next does not dedupe
@@ -118,7 +118,7 @@ function rows(data: unknown): TopRow[] {
  * "BD" → "Bangladesh".
  *
  * Intl carries the whole list, so there is no country table to maintain and go
- * stale. A code Intl does not recognise comes back unchanged — and "Unknown",
+ * stale. A code Intl does not recognise comes back unchanged, and "Unknown",
  * which the database uses for a null, is left alone for the same reason.
  */
 function countryName(code: string): string {

@@ -6,7 +6,7 @@ import { cx } from "@/lib/cx";
 
    Deliberately plain: the gallery's own chrome must not compete with the
    specimens, and it must never introduce a colour, size or radius that is not
-   already a token — otherwise the page stops being a truthful inventory.
+   already a token, otherwise the page stops being a truthful inventory.
 
    Server-safe on purpose. Everything here renders on the server so the gallery
    costs one request, and the stateful controls stay quarantined in the two
@@ -28,7 +28,7 @@ export function Section({ id, title, note, children }: { id: string; title: stri
 /**
  * One specimen: the rendered thing, over the props that produced it.
  *
- * The caption is the point of the gallery as much as the render is — it is what
+ * The caption is the point of the gallery as much as the render is. It is what
  * turns "that shade of green" into `variant="accent"`.
  */
 export function Specimen({

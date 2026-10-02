@@ -19,7 +19,7 @@ const IST = "Asia/Kolkata";
 /** 09:00–12:00 on Mondays, host-local. */
 const MON_MORNING: AvailabilityRule[] = [{ weekday: 1, startMinute: 540, endMinute: 720 }];
 
-/** Mon 09:00–12:00 and 14:00–17:00 — the design's default Monday. */
+/** Mon 09:00–12:00 and 14:00–17:00, the design's default Monday. */
 const MON_SPLIT: AvailabilityRule[] = [
   { weekday: 1, startMinute: 540, endMinute: 720 },
   { weekday: 1, startMinute: 840, endMinute: 1020 },
@@ -88,7 +88,7 @@ describe("computeSlots · availability", () => {
   });
 
   it("never offers a slot that would run past the end of a range", () => {
-    // 09:00–12:00 with a 45-minute meeting fits 09:00, 09:45, 10:30 — 11:15
+    // 09:00–12:00 with a 45-minute meeting fits 09:00, 09:45, 10:30, 11:15
     // would end at 12:00 exactly, so it fits too; 12:00 would not.
     const slots = computeSlots(
       input({ rules: { ...RULES, durationMinutes: 45 } }),
@@ -142,7 +142,7 @@ describe("computeSlots · rules", () => {
         busy: [{ start: at(NY, 2026, 9, 7, 10, 0), end: at(NY, 2026, 9, 7, 10, 30) }],
       }),
     );
-    // 09:30 ends at 10:00 and 10:30 starts at 10:30 — both inside the 15-minute
+    // 09:30 ends at 10:00 and 10:30 starts at 10:30, both inside the 15-minute
     // shadow, so both go.
     expect(hostClock(slots)).toEqual(["09:00", "11:00", "11:30"]);
   });
@@ -277,7 +277,7 @@ describe("computeSlots · date overrides", () => {
 
   it("replaces the weekly hours rather than adding to them", () => {
     // "I work 14:00–15:00 that Monday" means instead of 09:00–12:00, not as
-    // well as — the morning has to disappear.
+    // well as. The morning has to disappear.
     const slots = hostClock(
       computeSlots({
         ...input({ overrides: [{ date: MONDAY, ranges: [{ startMinute: 840, endMinute: 900 }] }] }),
@@ -313,7 +313,7 @@ describe("computeSlots · date overrides", () => {
 
   it("is keyed by the HOST's calendar date, not the guest's", () => {
     /* The host's Monday is still the host's Monday when the guest is in
-       Kolkata and reading it as Monday evening — and a date override the host
+       Kolkata and reading it as Monday evening, and a date override the host
        wrote as "2026-09-07" has to close exactly that day. */
     const slots = computeSlots(
       input({ guestTimezone: IST, overrides: [{ date: MONDAY, ranges: [] }] }),

@@ -4,19 +4,19 @@
 
    WHY THESE ARE HERE AND NOT IN src/emails. Convex Auth owns both flows and
    sends them from inside a Convex action, and Convex functions cannot import
-   from src/ or read from disk — `src/lib/email/send.ts` loads its templates
+   from src/ or read from disk, `src/lib/email/send.ts` loads its templates
    with readFileSync, which has nothing to read here. Until this file existed
    both messages went out with Auth.js's default template: unbranded, and with
    no postal address in the footer.
 
    `src/emails/verify-email.html` was the design for the first of them and has
    been deleted rather than left beside this. Two copies of one template is the
-   trap the old Supabase version fell into — it went out for weeks with a
+   trap the old Supabase version fell into, it went out for weeks with a
    footer reading "Meetrao" and nothing else, because nobody re-pasted it.
 
    ONE SHELL, TWO MESSAGES. The design's two layouts are the same table with
    different words in it, so the markup below is that table, filled by
-   `shell()`. Structure, styles and spacing are the handoff's verbatim — the
+   `shell()`. Structure, styles and spacing are the handoff's verbatim. The
    rule it is honouring is that a div-based rewrite breaks Outlook, not that
    the bytes may never be parameterised.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -51,7 +51,7 @@ type Shell = {
  *
  * The design's footer carries both, and the first version of this shipped with
  * them. They pointed at /settings/notifications, which requires the account the
- * recipient is in the middle of confirming or recovering — an unsubscribe that
+ * recipient is in the middle of confirming or recovering. An unsubscribe that
  * cannot work is worse than none. Both messages are transactional: nobody can
  * opt out of the email that lets them into their own account, so offering the
  * choice is a lie as well as a dead link.
@@ -129,9 +129,9 @@ function shell(v: Shell): string {
     .split("{{postal_address}}").join(escapeHtml(v.postalAddress));
 
   /* A token left unfilled would ship "{{action_url}}" to a real inbox. The
-     object above is typed, so a MISSING VALUE cannot happen — but a token
+     object above is typed, so a MISSING VALUE cannot happen, but a token
      added to the markup and not to the substitution list can, and this is the
-     only thing that would catch it. src/lib/email/send.ts throws on the same
+     only thing that would catch it. Src/lib/email/send.ts throws on the same
      condition, for the same reason. */
   const missed = html.match(/\{\{[a-z_]+\}\}/g);
   if (missed) throw new Error(`Email template has unfilled fields: ${[...new Set(missed)].join(", ")}`);
@@ -152,7 +152,7 @@ export function required(name: string): string {
   if (!value) {
     /* Deliberately fatal. The alternative is sending a real person a real
        email with a missing From address, or a footer with no postal address
-       in it — which is the exact defect this file was written to end, and
+       in it, which is the exact defect this file was written to end, and
        which looks fine right up until someone checks. */
     throw new Error(`${name} is not set on this Convex deployment (npx convex env set ${name} …).`);
   }
@@ -171,7 +171,7 @@ async function deliver(to: string, subject: string, html: string): Promise<void>
       Authorization: `Bearer ${required("AUTH_RESEND_KEY")}`,
       "Content-Type": "application/json",
     },
-    // No List-Unsubscribe header. Both messages are transactional — see the
+    // No List-Unsubscribe header. Both messages are transactional, see the
     // note above shell().
     body: JSON.stringify({ from: required("EMAIL_FROM"), to, subject, html }),
   });
@@ -189,7 +189,7 @@ export type Rendered = { subject: string; html: string };
 
 /* The pure half: no env, no network, no clock beyond the expiry handed in.
    Split out so src/lib/email/convex-templates.test.ts can render both messages
-   and assert the things that are easy to lose by accident — an escaped value,
+   and assert the things that are easy to lose by accident, an escaped value,
    an unfilled token, a missing postal address, a resurrected unsubscribe. */
 
 export function renderVerify(input: {
@@ -202,7 +202,7 @@ export function renderVerify(input: {
 }): Rendered {
   const site = input.site.replace(/\/$/, "");
   /* The link carries the code to the page that can spend it. Convex Auth
-     verifies with a CODE, not a link — there is no endpoint to click — so
+     verifies with a CODE, not a link (there is no endpoint to click) so
      /verify reads these two params and submits them for the recipient. */
   const url = `${site}/verify?email=${encodeURIComponent(input.to)}&code=${encodeURIComponent(input.code)}`;
   const expiresIn = humanExpiry(input.expires, input.now);
@@ -234,7 +234,7 @@ export function renderReset(input: {
   now?: number;
 }): Rendered {
   const site = input.site.replace(/\/$/, "");
-  // /reset already reads exactly these two params — see src/app/(auth)/reset.
+  // /reset already reads exactly these two params, see src/app/(auth)/reset.
   const url = `${site}/reset?email=${encodeURIComponent(input.to)}&code=${encodeURIComponent(input.code)}`;
   const expiresIn = humanExpiry(input.expires, input.now);
 

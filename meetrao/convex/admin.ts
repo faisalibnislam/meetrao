@@ -41,7 +41,7 @@ export const listAllBookings = query({
   },
 });
 
-/** Suspension is not self-service (migration 0006) — admin only, never a host. */
+/** Suspension is not self-service (migration 0006), admin only, never a host. */
 export const setSuspended = mutation({
   args: { userId: v.string(), suspended: v.boolean() },
   handler: async (ctx, a) => {
@@ -62,14 +62,14 @@ export const setSuspended = mutation({
    Giving Pro away, without pretending it was bought.
 
    The grant is its own field, read beside the subscription rather than
-   instead of it — see convex/lib/plan.ts for why. Three consequences worth
+   instead of it, see convex/lib/plan.ts for why. Three consequences worth
    knowing before editing this:
 
      · A granted account that later subscribes has both. The subscription is
        what the books should count; the grant just stops mattering.
      · A Polar event cannot erase a grant, and a grant cannot be mistaken for
        revenue by anything reading `plan`.
-     · Revoking is immediate and leaves the row — the audit line and the
+     · Revoking is immediate and leaves the row. The audit line and the
        reason are the point, and a deleted field answers no questions later.
 
    Every grant and revocation writes an admin_activity row, because "who gave
@@ -169,7 +169,7 @@ export const planFor = query({
 });
 
 /**
- * public.admin_set_username — returns BOTH names, as the RPC did.
+ * public.admin_set_username, returns BOTH names, as the RPC did.
  *
  * The caller writes the activity line from the pair, so it can say what the
  * link changed from as well as to.
@@ -205,7 +205,7 @@ export const setBookingLink = mutation({
  * public.admin_release_username.
  *
  * `profiles.username` is NOT NULL, so there is no state in which an account
- * has no booking link — retiring one necessarily means replacing it. The old
+ * has no booking link, retiring one necessarily means replacing it. The old
  * name is ALWAYS held back, or the host could claim it straight back from
  * Settings and the intervention would have achieved nothing.
  */
@@ -247,7 +247,7 @@ export const unreserveUsername = mutation({
   },
 });
 
-/** Whether a name is free for a given account — the admin form's live check. */
+/** Whether a name is free for a given account, the admin form's live check. */
 export const bookingLinkAvailable = query({
   args: { username: v.string(), forUser: v.union(v.string(), v.null()) },
   handler: async (ctx, a) => {
@@ -261,7 +261,7 @@ export const bookingLinkAvailable = query({
  *
  * A name lands here when an account is removed or an admin retires a link, so
  * that a dead `meetrao.com/<link>` cannot be claimed by the next person to
- * sign up — someone else's old meeting invitations still point at it.
+ * sign up, someone else's old meeting invitations still point at it.
  *
  * `heldBy` is the honest part. A reservation is only supposed to exist for a
  * name nobody holds, but the two are separate rows and nothing enforces it, so
@@ -298,14 +298,14 @@ export const listReservedUsernames = query({
  *
  * The SQL version also deleted the row from auth.users. Supabase still owns
  * identity (see docs/decisions/auth-provider.md), so THAT half remains a
- * service-role call in the application — this removes everything Convex holds
+ * service-role call in the application. This removes everything Convex holds
  * and reserves the username. The caller must do both.
  */
 /**
  * The whole fan-out for removing one account.
  *
  * Shared so that a host deleting themselves and an admin deleting them cannot
- * drift apart — the second copy is where the forgotten table lives. Postgres
+ * drift apart. The second copy is where the forgotten table lives. Postgres
  * had ON DELETE CASCADE; Convex has this function.
  */
 export async function purgeAccount(
@@ -344,8 +344,8 @@ export async function purgeAccount(
        function was written from the profile side only. So a removed account
        kept its `users` row, its password and its sessions:
 
-         · the person could still sign in, land with no profile, and — before
-           the proxy stopped bouncing them off /login — spin in a redirect
+         · the person could still sign in, land with no profile, and (before
+           the proxy stopped bouncing them off /login) spin in a redirect
            loop on every screen;
          · a removed address could be "signed up" again, which quietly set a
            password on the surviving identity rather than creating anything;
@@ -409,7 +409,7 @@ export const removeAccount = internalMutation({
   handler: async (ctx, a) => await purgeAccount(ctx, { userId: a.userId, actorId: a.actorId }),
 });
 
-/** public.avg_reply_minutes — how quickly a host confirms after a page view. */
+/** public.avg_reply_minutes, how quickly a host confirms after a page view. */
 export const avgReplyMinutes = query({
   args: { userId: v.optional(v.string()), days: v.optional(v.number()) },
   handler: async (ctx, a) => {
@@ -439,7 +439,7 @@ export const avgReplyMinutes = query({
 /* ── The admin console's reads ─────────────────────────────────────────────────
    Postgres answered these with count(*) and joins. Convex has neither, so each
    one is a bounded scan reduced in JS. These tables are small by construction
-   — one row per host, per meeting, per booking — and the alternative
+   (one row per host, per meeting, per booking) and the alternative
    (denormalised counters) is four more places that can go stale.
    ────────────────────────────────────────────────────────────────────────────── */
 
@@ -517,7 +517,7 @@ export const bookingsWithHosts = query({
     rows.sort((x, y) => y.starts_at - x.starts_at);
     rows = rows.slice(0, a.limit ?? 200);
 
-    // Admin-only, so the host's email is in scope here — the console lists it.
+    // Admin-only, so the host's email is in scope here, the console lists it.
     const hosts = new Map<string, { id: string; username: string; full_name: string; email: string; timezone: string }>();
     for (const p of await ctx.db.query("profiles").collect()) {
       hosts.set(p.id, { id: p.id, username: p.username, full_name: p.full_name, email: p.email, timezone: p.timezone });

@@ -32,7 +32,7 @@ describe("the attendee read", () => {
 
   it("narrows the response to the attendee list", () => {
     // Without `fields`, Google returns the summary and description of our own
-    // event too — more than the policy says we read.
+    // event too, more than the policy says we read.
     expect(api).toContain("fields=attendees(email,responseStatus)");
   });
 

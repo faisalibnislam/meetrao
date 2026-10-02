@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 /* The token table reads its own values out of the cascade rather than repeating
    them. A hardcoded hex here would be a second source of truth that drifts the
-   first time globals.css changes — and a gallery that lies about a token is
+   first time globals.css changes, and a gallery that lies about a token is
    worse than no gallery. */
 
 export function TokenSwatch({ name, on = "surface" }: { name: string; on?: "surface" | "ground" | "dark" }) {
@@ -32,7 +32,7 @@ export function TokenSwatch({ name, on = "surface" }: { name: string; on?: "surf
       <span className="flex min-w-0 flex-1 flex-col gap-[1px]">
         <code className="overflow-hidden text-[11.5px] text-ellipsis whitespace-nowrap text-ink">{name}</code>
         <code className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
-          {value || "—"}
+          {value || "–"}
         </code>
       </span>
     </div>
@@ -63,7 +63,7 @@ export function TokenValue({ name, sample }: { name: string; sample?: "shadow" |
       <span className="flex min-w-0 flex-col gap-[1px]">
         <code className="text-[11.5px] text-ink">{name}</code>
         <code className="overflow-hidden text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
-          {value || "—"}
+          {value || "–"}
         </code>
       </span>
     </div>

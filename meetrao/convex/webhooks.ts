@@ -11,8 +11,8 @@ import { requirePro } from "./lib/plan";
    Outgoing webhooks: booked, moved, cancelled.
 
    The events are the three things that happen to a booking, and they are
-   posted from the same place the notifications are written — convex/lib/
-   effects.ts — so a path that forgets to raise one forgets both, which is
+   posted from the same place the notifications are written (convex/lib/
+   effects.ts) so a path that forgets to raise one forgets both, which is
    noticeable, rather than silently posting nothing.
 
    ONE ATTEMPT, RECORDED. A delivery that fails is not retried: by the time a
@@ -60,7 +60,7 @@ export const add = mutation({
     const url = a.url.trim();
     /* https only. A signature over plaintext still hands the payload to
        anyone on the path, and the payload has a guest's name and address in
-       it. localhost is allowed so an integration can be built before it is
+       it. Localhost is allowed so an integration can be built before it is
        deployed. */
     const ok = /^https:\/\//.test(url) || /^http:\/\/localhost(:\d+)?\//.test(url);
     if (!ok) fail("The URL has to start with https://");

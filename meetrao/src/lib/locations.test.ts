@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { LOCATION_KINDS, LOCATION_OPTIONS, isLocationKind, needsMeetLink, whereText } from "./locations";
 
-/* The list is written twice — here and in convex/lib/locations.ts — because a
+/* The list is written twice (here and in convex/lib/locations.ts) because a
    Convex function cannot import from src/. The same arrangement the timezone
    list has, and the same failure if the two drift: a meeting saved as a phone
    call that the booking door does not recognise. */

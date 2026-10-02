@@ -3,7 +3,7 @@
 
    A plain `.ts`, not a `.tsx`, and not co-located with the component that
    renders it. A Server Component importing a plain value from a `"use client"`
-   module gets a client reference rather than the value — which looks fine until
+   module gets a client reference rather than the value, which looks fine until
    something calls `.map` on it and the page 500s. That happened once with the
    FAQ array; `lib/faq.ts` exists for the same reason this file does.
 
@@ -11,8 +11,8 @@
 
    This page used to say there was no paid tier at all, and its credibility
    came from that. There is one now, so the credibility has to come from
-   somewhere else: saying plainly what Free actually is — the whole booking
-   product, not a trial of it — and what Pro is, which is the parts a business
+   somewhere else: saying plainly what Free actually is (the whole booking
+   product, not a trial of it) and what Pro is, which is the parts a business
    needs rather than the parts a person does.
 
    The order is: Free and what it includes, then Pro and what it adds, then
@@ -20,7 +20,7 @@
    believable and it goes before any invitation to sign up.
 
    Every claim has to survive being read next to /terms §5. Nothing here says
-   "free forever" — it says free today, no card to use it, and that an
+   "free forever", it says free today, no card to use it, and that an
    existing free account is never billed without opting in, each of which is
    separately true and separately checkable.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -39,7 +39,7 @@ export const PRO_YEARLY = "$10 a year";
 export const PRO_MONTHLY = "$3 a month";
 
 /**
- * What Free is — the whole booking product, not a sample of it.
+ * What Free is, the whole booking product, not a sample of it.
  *
  * Written as capabilities rather than adjectives, and each one is a thing you
  * could go and check within a minute of signing up. A feature list on a
@@ -154,7 +154,7 @@ export const WHY: readonly string[] = [
 /**
  * The questions someone reads a pricing page to answer.
  *
- * The shape matches `FAQS` in lib/faq.ts — [id, question, answer] — so the same
+ * The shape matches `FAQS` in lib/faq.ts ([id, question, answer]) so the same
  * `faqLd()` builds the structured data from the array the page renders, and the
  * machine-readable answers cannot drift from the human ones.
  */

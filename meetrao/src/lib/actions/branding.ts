@@ -15,13 +15,13 @@ import { api } from "@/convex/_generated/api";
 
    The custom domain is NOT here. It is the other half of the same Pro
    feature, but its actions already live in src/lib/actions/billing.ts beside
-   the checkout — a second set of claim/verify/release actions would be two
+   the checkout. A second set of claim/verify/release actions would be two
    code paths writing one row.
    ───────────────────────────────────────────────────────────────────────────── */
 
 function refreshBookingPages() {
   // The booking pages are force-dynamic, so this is for the settings screen's
-  // own copy of the brand — and for the dashboard, which shows the plan.
+  // own copy of the brand, and for the dashboard, which shows the plan.
   revalidatePath("/settings", "layout");
 }
 
@@ -40,7 +40,7 @@ export async function logoUploadUrl(): Promise<{ url?: string; error?: string }>
  *
  * The argument is an opaque storage id, never a path: the client does not
  * choose where the bytes land, so there is nothing to forge. Size and format
- * are checked in the mutation, after the file exists — see convex/branding.ts
+ * are checked in the mutation, after the file exists, see convex/branding.ts
  * for why that is the only place it can be done honestly.
  */
 export async function saveLogo(storageId: string): Promise<{ url?: string | null; error?: string }> {

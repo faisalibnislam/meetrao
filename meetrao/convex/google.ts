@@ -13,7 +13,7 @@ import { needsMeetLink } from "./lib/locations";
    Google Calendar, entirely inside Convex.
 
    THE RULE: a refresh token never leaves this deployment. Nothing here returns
-   one, and nothing returns an access token either — the actions do the Google
+   one, and nothing returns an access token either. The actions do the Google
    call themselves and return only the result. `calendar_connections` therefore
    needs no privileged channel out, which is what kept it on Supabase.
 
@@ -72,7 +72,7 @@ export const flagReconnect = internalMutation({
 });
 
 /**
- * A usable access token for one host — INTERNAL, and it stays internal.
+ * A usable access token for one host, INTERNAL, and it stays internal.
  *
  * Mirrors accessTokenFor() in src/lib/google/connection.ts: use the stored one
  * while it has more than a minute left, otherwise refresh and store. A refusal
@@ -120,7 +120,7 @@ export const accessTokenFor = internalAction({
  *
  * Keyed by username + slug rather than a host id, and clamped, so it discloses
  * no more than the booking page already does by showing which slots are gone.
- * Returns [] rather than throwing when the calendar cannot be reached — the
+ * Returns [] rather than throwing when the calendar cannot be reached. The
  * caller says "we could not check Google" instead of failing the page.
  */
 export const busyForHost = action({
@@ -187,7 +187,7 @@ export const bookingByReference = internalQuery({
  * thank them for running a workshop.
  *
  * The seats share the event and its Meet link. Guests are not each added to
- * the event as attendees — they get the confirmation email and the .ics, which
+ * the event as attendees. They get the confirmation email and the .ics, which
  * is what puts it in their own calendar.
  */
 export const seatmateEvent = internalQuery({
@@ -223,7 +223,7 @@ export const attachEvent = internalMutation({
  * leaked reference cannot repoint a booking at another event.
  *
  * Returns a failure rather than throwing: the calendar write comes AFTER the
- * booking exists, and if Google refuses, the booking is still real — the host
+ * booking exists, and if Google refuses, the booking is still real. The host
  * is told which part failed rather than the guest losing a confirmed meeting.
  */
 export const createEventForBooking = action({
@@ -287,7 +287,7 @@ export const createEventForBooking = action({
  * Moves the event for a booking that has already been moved in our own data.
  *
  * Patches the existing event rather than replacing it, so the Meet link the
- * guest already holds keeps working — the promise booking-changed.html makes
+ * guest already holds keeps working, the promise booking-changed.html makes
  * in as many words. An event that has vanished from the host's calendar is
  * recreated instead, which is the one case where a new Meet link is the
  * honest outcome: there is no old event left to keep.
@@ -359,7 +359,7 @@ export const deleteEventForBooking = action({
         startsAt: found.booking.starts_at,
       });
       // seatmateEvent skips cancelled rows, so a match here is another seat
-      // that is still coming — this booking has already been cancelled by the
+      // that is still coming. This booking has already been cancelled by the
       // time the calendar is touched.
       if (stillHeld) {
         await ctx.runMutation(internal.google.attachEvent, { reference: a.reference, eventId: null, meetUrl: null });
@@ -427,7 +427,7 @@ export const upsertConnection = internalMutation({
 /**
  * The OAuth callback's other half: exchange the code and store the tokens.
  *
- * The CODE is what authorises this — it is single-use, arrives from Google via
+ * The CODE is what authorises this. It is single-use, arrives from Google via
  * our own registered redirect URI, and the caller must also be signed in, so
  * the tokens can only ever be attached to the caller's own account.
  */
@@ -475,7 +475,7 @@ export const takeTokensForRevoke = internalMutation({
  * `takeTokensForRevoke` reads and deletes in ONE transaction and hands the
  * token back, which is what makes the order safe. Deleting the row on its own
  * would leave the grant alive in the host's Google account with nothing left
- * to revoke it with — the UI would say "disconnected", the calendar would be
+ * to revoke it with. The UI would say "disconnected", the calendar would be
  * unreachable, and the grant would quietly survive.
  *
  * The revoke never throws and never hangs, so a bad afternoon at Google cannot
@@ -518,7 +518,7 @@ export const disconnectFor = action({
 /**
  * The caller's profile id, for use from an ACTION.
  *
- * Actions have no `ctx.db`, so they cannot call `currentUserId` themselves —
+ * Actions have no `ctx.db`, so they cannot call `currentUserId` themselves,
  * and `identity.subject` is "<userId>|<sessionId>", which is not what any row
  * in this database is keyed by. Three actions in this file used the raw
  * subject, and every one of them failed silently:

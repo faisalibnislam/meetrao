@@ -3,7 +3,7 @@ export function uuid(): string {
   return crypto.randomUUID();
 }
 
-/** bookings.reference was `encode(gen_random_bytes(16), 'hex')` — 32 hex chars. */
+/** bookings.reference was `encode(gen_random_bytes(16), 'hex')`, 32 hex chars. */
 export function reference(): string {
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);

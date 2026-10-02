@@ -6,14 +6,14 @@ import { useEffect, useRef } from "react";
 /* ─────────────────────────────────────────────────────────────────────────────
    The page-view beacon.
 
-   Sends two strings — the path and, once, the referrer — to
+   Sends two strings (the path and, once, the referrer) to
    /api/analytics/collect, which is where every decision about what is actually
    stored lives. Nothing is read from the browser and nothing is written to it:
    no cookie, no localStorage, no identifier. That is why this needs no consent
    banner, and it is a property of this file as much as of the route.
 
    Mounted in the root layout, which means it would otherwise fire on the host's
-   own dashboard too. It does not — see SKIP.
+   own dashboard too. It does not, see SKIP.
    ───────────────────────────────────────────────────────────────────────────── */
 
 const ENDPOINT = "/api/analytics/collect";
@@ -23,7 +23,7 @@ const ENDPOINT = "/api/analytics/collect";
    Two reasons, and the first is the one that matters: on a single-operator
    product the owner is most of the traffic, and a graph that counts their own
    tab-clicking tells them about their own habits instead of about visitors.
-   The second is that these paths carry ids — /meetings/<uuid>/edit — and a path
+   The second is that these paths carry ids (/meetings/<uuid>/edit) and a path
    column that accumulates them is a list of somebody's meetings.
 
    Anchored at the start and matched against the pathname only, so /booking and
@@ -60,9 +60,9 @@ export function AnalyticsBeacon() {
 
     /* The referrer goes with the FIRST view only.
 
-       document.referrer does not change during client-side navigation, so
+       Document.referrer does not change during client-side navigation, so
        sending it every time would credit google.com with the visitor's whole
-       session — five internal clicks reported as five arrivals from Google.
+       session, five internal clicks reported as five arrivals from Google.
        Subsequent views send nothing, which the route reads as direct. */
     const body = JSON.stringify({ path: pathname, referrer: first ? document.referrer : "" });
 
@@ -70,7 +70,7 @@ export function AnalyticsBeacon() {
       /* text/plain keeps the request CORS-simple, which is what lets
          sendBeacon send it at all; the body is still JSON and the route parses
          it as such. sendBeacon is preferred because it survives the page being
-         closed — a visitor who reads the landing page and leaves is the exact
+         closed. A visitor who reads the landing page and leaves is the exact
          visitor a fetch would lose. */
       const blob = new Blob([body], { type: "text/plain;charset=UTF-8" });
       if (navigator.sendBeacon?.(ENDPOINT, blob)) return;

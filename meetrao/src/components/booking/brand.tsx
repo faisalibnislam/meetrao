@@ -7,26 +7,26 @@ import { Logo } from "@/components/ui/logo";
 
    TWO PIECES, AND THEY ARE SEPARATE ON PURPOSE. `BrandMark` swaps the mark at
    the top of the page; `BrandScope` recolours everything else. A host may set
-   either without the other — a logo and our green, or their colours and no
-   logo — and each page composes the two it needs.
+   either without the other (a logo and our green, or their colours and no
+   logo) and each page composes the two it needs.
 
    HOW THE COLOURS ARE APPLIED: by rebinding the design's own CSS variables at
    `:root`, not by passing colours down through props. Every booking surface is
    already written in `bg-accent`, `text-accent-ink`, `border-line` and the
    rest, so rebinding the variables recolours the selected date, the confirm
-   button, the badges, the panels, the borders and the focus rings at once —
+   button, the badges, the panels, the borders and the focus rings at once,
    including parts nobody remembered to list.
 
    WHY `:root` AND NOT A WRAPPER. This used to be a `display: contents` div,
    which inherits its variables down to its children and no further. The page
-   background is painted by `html, body` — ANCESTORS of anything a page
-   renders — so the ground stayed Meetrao's warm grey no matter what the host
+   background is painted by `html, body` (ANCESTORS of anything a page
+   renders) so the ground stayed Meetrao's warm grey no matter what the host
    chose, and so did the cookie banner, which the root layout mounts outside
    the page entirely. A `:root` rule reaches both. One host owns one page here,
    so there is nothing for a page-wide rule to collide with.
 
    Nothing is wrapped, so the (public) layout's column still sees the card and
-   the footer as its own children — which is what a previous version of this
+   the footer as its own children, which is what a previous version of this
    file broke by introducing a box.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -77,7 +77,7 @@ export function BrandScope({ brand, children }: { brand: PublicBrand; children: 
  * looks like an afterthought on their own page.
  *
  * Height-constrained rather than width-constrained, and capped in width too,
- * because a host's logo can be any shape at all — a square avatar and a long
+ * because a host's logo can be any shape at all. A square avatar and a long
  * wordmark both have to sit on the same row without pushing the eyebrow beside
  * them off the page.
  */
@@ -97,7 +97,7 @@ export function BrandMark({
     return (
       // Plain <img>, as with avatars: the source is a Convex file-storage URL
       // that changes whenever the host re-uploads, and this is a ~27px-tall
-      // mark — there is nothing for the optimiser to save.
+      // mark. There is nothing for the optimiser to save.
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={brand.logoUrl}

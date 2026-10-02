@@ -31,8 +31,8 @@ export async function generateMetadata({
 /**
  * One link, several hosts.
  *
- * The times are the union of everyone's — a slot is offered when at least one
- * member could take it — and who actually takes it is decided by the rotation
+ * The times are the union of everyone's (a slot is offered when at least one
+ * member could take it) and who actually takes it is decided by the rotation
  * when the booking is made. Deciding here would mean holding a name in the
  * browser for as long as the guest hesitates, and honouring it afterwards even
  * if that person filled their morning in the meantime.

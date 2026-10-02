@@ -2,12 +2,12 @@ import { Fragment } from "react";
 import { Kicker } from "./site-chrome";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Use cases — concept 2e, "Marquee with faces".
+   Use cases, concept 2e, "Marquee with faces".
 
    A full-bleed dark band: one heading, a marquee of six named faces that never
-   stops, and three notes underneath. It replaced a carousel — a featured panel,
+   stops, and three notes underneath. It replaced a carousel (a featured panel,
    three strips, six dots and two arrows, all driven by an index in component
-   state — and the thing worth noticing is what went with it.
+   state) and the thing worth noticing is what went with it.
 
    There is no client state here at all. No `useState`, no handlers, no
    `"use client"`. The motion is one CSS animation on a static list, which means
@@ -25,7 +25,7 @@ import { Kicker } from "./site-chrome";
    it is the one thing that most needs to stop. It does, and without a rule of
    its own: `globals.css` already ends every animation at 0.001ms under
    `prefers-reduced-motion: reduce`, globally. A second guard here would be a
-   duplicate that can rot out of step with the first — `use-cases.test.ts`
+   duplicate that can rot out of step with the first, `use-cases.test.ts`
    asserts the global one still covers this band instead.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -50,7 +50,7 @@ export function UseCases() {
   return (
     <div className="overflow-hidden bg-accent-2 pt-[52px] pb-[56px] text-on-accent">
       <div className="mx-auto flex max-w-[1200px] flex-col gap-[13px] px-[26px] pb-[34px] max-[560px]:px-[18px]">
-        {/* Default tone, which is the teal — the same #7FD8C4 as the marquee
+        {/* Default tone, which is the teal, the same #7FD8C4 as the marquee
             dots and the eyebrows below, and what "The problem" band already
             uses over a white heading on this ground. */}
         <Kicker>Use cases</Kicker>
@@ -70,8 +70,8 @@ export function UseCases() {
           <div key={eyebrow} className="flex flex-col gap-[8px]">
             {/* The handoff specifies DM Mono here. This product removed
                 monospace on purpose and `no-monospace.test.ts` enforces it, so
-                the eyebrow keeps every other property — 10.5px, 0.12em, upper,
-                #7FD8C4 — in the sans it inherits. */}
+                the eyebrow keeps every other property (10.5px, 0.12em, upper,
+                #7FD8C4) in the sans it inherits. */}
             <span className="text-[10.5px] tracking-[0.12em] text-[#7FD8C4] uppercase">{eyebrow}</span>
             <span className="text-[14px] leading-[1.6] text-pretty text-white/86">{line}</span>
           </div>
@@ -85,7 +85,7 @@ export function UseCases() {
  * One pass of the six. Rendered twice by the track above.
  *
  * `duplicate` hides the copy from assistive technology and is the only
- * difference between the two — one array mapped twice, never twelve records.
+ * difference between the two, one array mapped twice, never twelve records.
  */
 function MarqueeRun({ duplicate = false }: { duplicate?: boolean }) {
   return (
@@ -94,7 +94,7 @@ function MarqueeRun({ duplicate = false }: { duplicate?: boolean }) {
       className="flex flex-none items-center gap-[30px] pr-[30px] max-[640px]:gap-[20px] max-[640px]:pr-[20px]"
     >
       {CASES.map(([id, name]) => (
-        /* Item then dot, every time — including after the last one. That
+        /* Item then dot, every time, including after the last one. That
            trailing dot is what separates "Remote teams" from the "Freelancers"
            of the next copy, so the joint reads as another gap rather than as
            the place the loop restarts. */
@@ -103,8 +103,8 @@ function MarqueeRun({ duplicate = false }: { duplicate?: boolean }) {
             <div className="h-[72px] w-[120px] flex-none overflow-hidden rounded-[999px] border border-white/28 bg-white/10 max-[640px]:h-[52px] max-[640px]:w-[84px]">
               {/* A plain <img>, not next/image: these are pre-cut at 240×142,
                   exactly 2× the pill, so the optimiser would re-encode an
-                  already-correct 10KB file for nothing. alt="" because the name
-                  sits beside it as real text — the photo is decorative. */}
+                  already-correct 10KB file for nothing. Alt="" because the name
+                  sits beside it as real text. The photo is decorative. */}
               {/* eslint-disable-next-line @next/next/no-img-element -- the
                   optimiser has nothing to do here: 240×142 is exactly 2× the
                   pill, already WebP, already ~10KB. */}

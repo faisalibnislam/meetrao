@@ -6,7 +6,7 @@ import { useMediaQuery } from "@/lib/use-client-value";
 
 /**
  * Reveal on scroll. Under `prefers-reduced-motion` the content is simply
- * visible from the first paint — the guard is not decoration, it is the whole
+ * visible from the first paint. The guard is not decoration, it is the whole
  * behaviour switched off.
  */
 export function Reveal({
@@ -21,7 +21,7 @@ export function Reveal({
   const ref = useRef<HTMLDivElement>(null);
   const [seen, setSeen] = useState(false);
 
-  // Under reduced motion the content is simply visible from the first paint —
+  // Under reduced motion the content is simply visible from the first paint,
   // the guard is not decoration, it is the whole behaviour switched off.
   const reduced = useMediaQuery("(prefers-reduced-motion: reduce)");
   const shown = seen || reduced;

@@ -8,12 +8,12 @@ import { DemoMonthGrid, DemoSlot, demoDayLabel } from "./demo-calendar";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The hero. A living ground of drifting colour fields behind a real, clickable
-   booking card — not a screenshot of one.
+   booking card, not a screenshot of one.
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* "Free" appears once here, not three times. The product has a paid tier now,
    and a hero that shouts free in every chip sets up a visitor to feel misled
-   when they meet it — the price belongs in the pricing section, stated once. */
+   when they meet it. The price belongs in the pricing section, stated once. */
 const PROOF = [
   "Free to take bookings",
   "No double bookings",

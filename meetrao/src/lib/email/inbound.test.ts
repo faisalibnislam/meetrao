@@ -136,7 +136,7 @@ describe("parseReceived", () => {
 
   /* The real DMARC-report delivery captured from this endpoint. Attachment
      metadata is the only part of the message the webhook does carry, so the
-     parser has to pick it up — the route needs the ids to fetch the files. */
+     parser has to pick it up. The route needs the ids to fetch the files. */
   it("reads attachment metadata off a real delivery", () => {
     const mail = parseReceived({
       type: "email.received",
@@ -176,8 +176,8 @@ describe("refuseToForward", () => {
   });
 
   it("refuses meetrao.com, which would loop back into Resend", () => {
-    // Receiving is enabled at the root, so every address on the domain — not
-    // only support@ — comes straight back through this webhook.
+    // Receiving is enabled at the root, so every address on the domain, not
+    // only support@, comes straight back through this webhook.
     expect(refuseToForward("hello@meetrao.com")).toContain("loop");
     expect(refuseToForward("anything@meetrao.com")).toContain("loop");
     expect(refuseToForward("Anything@Mail.Meetrao.com")).toContain("loop");
@@ -224,7 +224,7 @@ describe("forwardHtml", () => {
 
 /* ── attachments ───────────────────────────────────────────────────────────
    The bug these exist for: `email.received` carries the envelope and nothing
-   else — no body, no attachment bytes — so a forward built from the webhook
+   else (no body, no attachment bytes) so a forward built from the webhook
    alone is an empty notification. Every support email sent before this was
    written arrived that way. The route now fetches the message; these cover the
    pure half of what it does with the result. */
@@ -291,7 +291,7 @@ describe("chooseAttachments", () => {
 
   /* Inline images are already embedded as data: URIs by the html_format the
      route asks for. Attaching them again shows every signature logo twice. */
-  it("leaves inline images out — they are already in the body", () => {
+  it("leaves inline images out, they are already in the body", () => {
     const { send, skipped } = chooseAttachments([file({ inline: true }), file({ id: "a2" })]);
     expect(send.map((a) => a.id)).toEqual(["a2"]);
     expect(skipped).toEqual([]);

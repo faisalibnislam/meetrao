@@ -53,7 +53,7 @@ const SHORT_VERSION = [
 
 /* Every scope in CALENDAR_SCOPES (lib/google/oauth.ts), plus the three Convex
    Auth requests for Sign in with Google. Named in full because Google's
-   verification review compares this table against the consent screen — a policy
+   verification review compares this table against the consent screen, a policy
    that says "calendar access" where the grant says calendar.events is the
    single most common reason a review comes back. */
 const SCOPES: [string, string, string][] = [
@@ -93,7 +93,7 @@ const PURPOSES: [string, string][] = [
  *
  * Deliberately separate from PROCESSORS below. That list answers "who helps run
  * Meetrao"; this one answers the narrower question Google's verification review
- * asks — with whom is GOOGLE USER DATA shared — and the answers differ. Google
+ * asks (with whom is GOOGLE USER DATA shared) and the answers differ. Google
  * Analytics is on the first list and must never be on this one.
  */
 const GOOGLE_DATA_RECIPIENTS: [string, string][] = [
@@ -294,8 +294,8 @@ export default function PrivacyPage() {
         </p>
 
         {/* ── the two disclosures Google's reviewer checks for by name ──────
-            Both facts were already in this policy — §7 lists the processors,
-            §11 describes the protections — and the verification review still
+            Both facts were already in this policy (§7 lists the processors,
+            §11 describes the protections) and the verification review still
             came back saying the policy "does not state with whom you share
             Google user data" and "does not specify any data protection
             mechanisms for sensitive data".

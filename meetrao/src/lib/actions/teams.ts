@@ -6,8 +6,8 @@ import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 
-/* Teams: a booking link several hosts answer in turn. The invariants — one
-   owner, members must already have accounts, a product-wide unique link — are
+/* Teams: a booking link several hosts answer in turn. The invariants (one
+   owner, members must already have accounts, a product-wide unique link) are
    enforced in convex/teams.ts, which is the boundary; these actions are the
    form's side of the same rules. */
 

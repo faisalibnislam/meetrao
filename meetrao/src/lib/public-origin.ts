@@ -6,13 +6,13 @@ import { siteUrl } from "@/lib/env";
    Which origin a guest-facing page should call itself.
 
    WHY THIS EXISTS: metadataBase is meetrao.com, so `canonical: "/alex"` on a
-   booking page resolves to meetrao.com/alex — correct on our own domain, and
+   booking page resolves to meetrao.com/alex, correct on our own domain, and
    exactly wrong on a Pro host's. A custom domain whose pages tell Google the
    real address is somewhere else is a custom domain that does nothing for the
    host, which is one of the two reasons they bought it.
 
    The host header is NOT trusted for anything but this. It decides which of
-   two URLs a page calls itself; it never decides whose data is shown — that
+   two URLs a page calls itself; it never decides whose data is shown. That
    comes from the verified-domain lookup in the proxy and from the username in
    the path. A forged header can therefore make a page claim an odd canonical
    URL and nothing more.

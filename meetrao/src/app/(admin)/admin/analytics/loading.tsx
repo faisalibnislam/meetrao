@@ -2,8 +2,8 @@ import { AppScreen } from "@/components/app/app-screen";
 import { Bar } from "@/components/app/skeleton";
 import { Card } from "@/components/ui/panels";
 
-/* Analytics is the slowest admin screen — eight aggregate queries, in parallel
-   but still a round trip to Tokyo — and it is reached by a sidebar click, which
+/* Analytics is the slowest admin screen (eight aggregate queries, in parallel
+   but still a round trip to Tokyo) and it is reached by a sidebar click, which
    is exactly the case a missing loading boundary makes feel broken: Next skips
    prefetching a dynamic route that has none, so nothing paints until the whole
    response lands. The real title and the real tab row are here so only the

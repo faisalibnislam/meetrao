@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 export const dynamic = "force-dynamic";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   GET /api/v1/bookings — this key's own bookings.
+   GET /api/v1/bookings, this key's own bookings.
 
    Read-only, like the rest of v1: nothing here creates, moves or cancels
    anything. Every booking rule in this product is enforced at a door built for
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
    them again.
 
    `from` and `to` are ISO instants and default to the last thirty days plus
-   ninety ahead. `limit` is capped at 200 — a caller who wants everything pages
+   ninety ahead. `limit` is capped at 200. a caller who wants everything pages
    with `from`, which keeps one request from reading a whole history.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     limit: params.get("limit") ? Number(params.get("limit")) : undefined,
   });
 
-  // null means the key resolved to nobody — same answer as no key at all.
+  // null means the key resolved to nobody, same answer as no key at all.
   if (rows === null) return unauthorized();
   touch(hash);
 

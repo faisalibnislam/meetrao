@@ -94,7 +94,7 @@ export async function refreshAccessToken(refreshToken: string): Promise<GoogleTo
 /**
  * Never throws, and never waits long. The caller is in the middle of
  * disconnecting a calendar or deleting an account, and neither of those may
- * fail — or hang — because Google is having a bad afternoon.
+ * fail (or hang) because Google is having a bad afternoon.
  */
 export async function revokeToken(token: string): Promise<"revoked" | "already-invalid" | "failed"> {
   if (!token) return "already-invalid";
@@ -107,7 +107,7 @@ export async function revokeToken(token: string): Promise<"revoked" | "already-i
     });
     if (response.ok) return "revoked";
     // 400 invalid_token: already revoked, or expired. The grant is gone either
-    // way, which is the outcome we were asking for — not a failure.
+    // way, which is the outcome we were asking for, not a failure.
     if (response.status === 400) return "already-invalid";
     return "failed";
   } catch {
@@ -175,7 +175,7 @@ export async function createEvent(
     attendees: { email: string; name: string }[];
     /** Ask Google for a Meet link. False for a phone call or an address. */
     conference?: boolean;
-    /** Google's own "location" field — the address, the number, the note. */
+    /** Google's own "location" field, the address, the number, the note. */
     location?: string;
   },
 ): Promise<CreatedEvent> {
@@ -221,7 +221,7 @@ export async function createEvent(
  * PATCH rather than delete-and-recreate, because recreating mints a new Meet
  * link: the old one is already in the guest's calendar entry and in the
  * confirmation email, and booking-changed.html promises it still works. A
- * missing event (404/410) is reported rather than recreated here — the caller
+ * missing event (404/410) is reported rather than recreated here. The caller
  * knows whether recreating is the right answer.
  */
 export async function patchEventTime(
@@ -254,7 +254,7 @@ export async function patchEventTime(
  * Whether one named attendee has answered one named event.
  *
  * SCOPED TO AN EVENT MEETRAO CREATED. The caller passes an event id read from
- * a booking row, so this can only ever ask about an event this product wrote —
+ * a booking row, so this can only ever ask about an event this product wrote,
  * never a listing, never a search, never anything else in the host's calendar.
  * `fields` narrows the response to the attendee list, so even the title of the
  * event we made does not come back.

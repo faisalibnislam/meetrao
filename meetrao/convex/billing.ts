@@ -8,7 +8,7 @@ import { logActivity } from "./lib/effects";
    The plan, written by exactly one caller.
 
    `applyPolarSubscription` is reachable without a session, because the caller
-   is Polar's webhook arriving at a Next route handler — there is no user on
+   is Polar's webhook arriving at a Next route handler. There is no user on
    that request. What protects it is the signature check in
    src/app/api/polar/webhook, which happens BEFORE this is called and which
    refuses anything it cannot verify.
@@ -81,7 +81,7 @@ export const mine = query({
       plan_until: me.plan_until ? new Date(me.plan_until).toISOString() : null,
       has_subscription: hasSubscription(me),
       /* Pro without paying for it. The host is told plainly rather than shown
-         a billing portal with nothing in it — and never shown the operator's
+         a billing portal with nothing in it, and never shown the operator's
          note, which is written for operators. */
       complimentary: hasComp(me) && !hasSubscription(me),
       comp_until: me.comp_until ? new Date(me.comp_until).toISOString() : null,

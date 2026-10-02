@@ -5,7 +5,7 @@ import { api } from "@/convex/_generated/api";
 import type { PublicBrand } from "@/components/booking/brand";
 
 /* The guest's own view of their booking, reached by reference. The reference is
-   32 hex characters of CSPRNG and is the only credential the guest has — it
+   32 hex characters of CSPRNG and is the only credential the guest has, it
    opens exactly one booking and nothing else. */
 
 export type GuestBooking = {
@@ -23,7 +23,7 @@ export type GuestBooking = {
   /** Where it happens, as it was when the booking was made. */
   location: string;
   locationDetail: string;
-  /** The meeting's slug, or null when it can no longer be booked — and so
+  /** The meeting's slug, or null when it can no longer be booked, and so
       can no longer be moved. The cancel path stays open either way. */
   meetingSlug: string | null;
   /** How many times the booking has moved. The .ics SEQUENCE: a calendar
@@ -38,7 +38,7 @@ export type GuestBooking = {
    * Pro: the host's own logo and colour.
    *
    * Carried on the BOOKING, not looked up separately, because these screens
-   * are reached by reference with no username in the URL — and a guest who
+   * are reached by reference with no username in the URL, and a guest who
    * booked through a branded page and then lands on our green confirmation has
    * been handed off to a stranger halfway through.
    */

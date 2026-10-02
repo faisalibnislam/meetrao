@@ -8,8 +8,8 @@ import { uuid } from "./ids";
 
    Seventeen of them fired in Postgres without anyone asking. Convex has no
    triggers, so each one is a function here and every mutation that used to
-   cause one must call it explicitly. A missed call is a silent data bug — the
-   row simply never appears — which is why they all live in one file rather
+   cause one must call it explicitly. A missed call is a silent data bug (the
+   row simply never appears) which is why they all live in one file rather
    than being inlined at their call sites.
 
    Checklist, against docs/convex-migration.md §1.10:
@@ -27,7 +27,7 @@ import { uuid } from "./ids";
      calendar_connections_log_...  → logActivity("calendar_connected")
    ───────────────────────────────────────────────────────────────────────────── */
 
-/** public.local_when — the host's wall clock, formatted as the emails write it. */
+/** public.local_when, the host's wall clock, formatted as the emails write it. */
 export function localWhen(atMs: number, timezone: string): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: timezone || "UTC",
@@ -49,7 +49,7 @@ export function localWhen(atMs: number, timezone: string): string {
  * Scheduled rather than awaited: a mutation cannot make a network call, and
  * a booking must not wait on somebody's server to be written. runAfter(0)
  * means "once this transaction commits", which is also the guarantee a
- * receiver needs — it can call the API the moment it hears, and the booking
+ * receiver needs. It can call the API the moment it hears, and the booking
  * will be there.
  *
  * Raised from the same place the notification is written, so a path that
@@ -127,7 +127,7 @@ export async function notifyBookingCreated(ctx: MutationCtx, booking: Doc<"booki
 }
 
 /**
- * bookings_notify_changed — the other half, fired when a booking MOVES.
+ * bookings_notify_changed, the other half, fired when a booking MOVES.
  *
  * The kind, the schema's union and the screen's "Moved" row all existed from
  * the port; nothing wrote one, because nothing could move a booking. It reads
@@ -154,7 +154,7 @@ export async function notifyBookingChanged(
   });
 }
 
-/** bookings_notify_changed — fires on a status change to cancelled. */
+/** bookings_notify_changed, fires on a status change to cancelled. */
 export async function notifyBookingCancelled(ctx: MutationCtx, booking: Doc<"bookings">): Promise<void> {
   await emit(ctx, booking, "booking.cancelled");
   await notifyHost(ctx, {
@@ -171,7 +171,7 @@ export async function notifyBookingCancelled(ctx: MutationCtx, booking: Doc<"boo
  *
  * NOT a cancellation: the booking stands, the slot stays held, and the host
  * decides what to do. Declining in Google and cancelling through the link are
- * different acts and the host should be able to tell them apart — which is the
+ * different acts and the host should be able to tell them apart, which is the
  * whole reason this notification exists rather than a silent column.
  */
 export async function notifyBookingDeclined(ctx: MutationCtx, booking: Doc<"bookings">): Promise<void> {
@@ -189,7 +189,7 @@ export async function notifyBookingDeclined(ctx: MutationCtx, booking: Doc<"book
  * the name it already has unless that name is blank.
  *
  * Postgres did this with ON CONFLICT on a unique index. There is no unique
- * index here, so the read-then-write is what enforces it — safe because the
+ * index here, so the read-then-write is what enforces it, safe because the
  * whole mutation is serializable.
  */
 export async function upsertContact(

@@ -32,7 +32,7 @@ export function MeetingsTable({
   username,
 }: {
   meetings: MeetingRow[];
-  /** The origin the snippet points at — the deployed one, not the browser's. */
+  /** The origin the snippet points at, the deployed one, not the browser's. */
   siteUrl: string;
   username: string;
 }) {

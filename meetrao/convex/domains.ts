@@ -9,7 +9,7 @@ import { requirePro } from "./lib/plan";
 
    The row is the routing table: the proxy reads it on every request to an
    unknown hostname, and only a verified row resolves. Verification itself
-   happens against Vercel, in src/lib/vercel-domains.ts — this file holds the
+   happens against Vercel, in src/lib/vercel-domains.ts. This file holds the
    claim and the flag, not the DNS.
 
    ONE HOST PER DOMAIN, product-wide. Two accounts claiming book.acme.com is

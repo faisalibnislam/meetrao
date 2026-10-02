@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
    A server component that throws in production surfaces as an opaque digest in
    the browser and a line in a log nobody is watching. This executes the same
    code paths where the stack is readable. It deliberately stubs only the data
-   layer and the client runtime — the page, the step dispatch, the pure helpers
+   layer and the client runtime, the page, the step dispatch, the pure helpers
    and the components are all real. */
 
 const profile = {
@@ -39,14 +39,14 @@ vi.mock("@/components/ui/toast", async (orig) => ({
 }));
 
 /* A stand-in Convex client. These tests render the steps, not the data, so
-   every query answers with the empty shape its caller expects — a new host
+   every query answers with the empty shape its caller expects. a new host
    with nothing entered yet, which is the state step 1 through 5 are written
    for. The client must NOT be thenable, or `await convexServer()` unwraps it
    instead of returning it. */
 vi.mock("@/lib/convex/server", () => {
   /* One answer that satisfies every caller. A Convex function reference is an
      object that cannot be stringified, so the stub cannot dispatch on WHICH
-     query was asked — it returns an empty array carrying the named fields the
+     query was asked. It returns an empty array carrying the named fields the
      screen destructures. Every step then sees a new host with nothing entered
      yet, which is the state they are written for. */
   const answer = Object.assign([] as unknown[], { schedules: [], rules: [], meetings: [] });
@@ -73,7 +73,7 @@ describe("onboarding renders every step", () => {
   it("2 · connect a calendar", async () => expect(await render("2")).toMatch(/calendar/i));
 
   /* The permission is the step people hesitate over, and Google's own consent
-     screen says "See, edit and delete events on your calendar" — accurate and
+     screen says "See, edit and delete events on your calendar", accurate and
      alarming. The step has to answer the three questions that provokes BEFORE
      the button, or the honest answer only exists in a policy nobody opens.
      

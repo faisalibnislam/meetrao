@@ -11,12 +11,12 @@ import path from "node:path";
    guards a property that looks fine on screen when it is broken:
 
    1. The track translates -50% BECAUSE it holds the six items twice. Change
-      either number alone and the marquee still animates — it just jumps.
+      either number alone and the marquee still animates, it just jumps.
    2. The duplicate must stay aria-hidden, or a screen reader reads the six
       words twice and the second pass is a rendering trick, not content.
    3. A 26-second infinite translate is the only continuous motion on the page.
       It stops under prefers-reduced-motion through the GLOBAL rule in
-      globals.css, not a rule of its own — so this checks the global one still
+      globals.css, not a rule of its own, so this checks the global one still
       covers it. Narrow that rule and the marquee keeps running for exactly the
       people who asked it not to, with nothing else failing.
    ───────────────────────────────────────────────────────────────────────────── */

@@ -12,7 +12,7 @@ import { cx } from "@/lib/cx";
    who reached the Help centre from inside the product. This replaces them with
    the way back: their dashboard, support, and a way out.
 
-   Mirrors the sidebar's account menu rather than inventing a second pattern —
+   Mirrors the sidebar's account menu rather than inventing a second pattern,
    same trigger shape, same rows, same dismissal behaviour. */
 
 export function SiteAccountMenu({

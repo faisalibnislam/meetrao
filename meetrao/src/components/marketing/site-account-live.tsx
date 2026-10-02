@@ -9,7 +9,7 @@ import type { Account } from "@/lib/nav-account";
    The account menu, for pages that must not read the session on the server.
 
    /help and /support resolve the session in their own Server Component and hand
-   `account` straight to SiteNav — no flash, because the right chrome is in the
+   `account` straight to SiteNav, no flash, because the right chrome is in the
    HTML. The landing page, Terms and Privacy cannot do that: reading cookies
    would opt all three out of static rendering, and the landing page is the one
    page whose time-to-first-byte a search engine measures. Trading the site's
@@ -24,15 +24,15 @@ import type { Account } from "@/lib/nav-account";
 
    WHY A FETCH RATHER THAN THE CONVEX HOOKS. `useConvexAuth` needs a Convex auth
    provider above it, and the one Convex Auth ships for Next.js is an async
-   Server Component that reads the session cookie. Mounting it here — or at the
-   root, which is where it was — makes every page under it dynamic, which is
+   Server Component that reads the session cookie. Mounting it here (or at the
+   root, which is where it was) makes every page under it dynamic, which is
    precisely the thing this file exists to avoid. The standalone browser-only
    provider does not have that problem but has a worse one: it refreshes tokens
    by calling Convex directly, while the Next.js one refreshes through
    /api/auth, which also rewrites the session cookie. Running both would rotate
    the refresh token out from under the cookie.
 
-   The cost of the fetch is that this nav no longer updates live — sign out in
+   The cost of the fetch is that this nav no longer updates live, sign out in
    another tab and this one keeps showing the avatar until it is reloaded. On a
    marketing page that is a cosmetic staleness, and every private screen checks
    the session for itself.
@@ -43,7 +43,7 @@ import type { Account } from "@/lib/nav-account";
 
 export { accountFrom, type Account } from "@/lib/nav-account";
 
-/** Undecided and signed-out render identically — see the note below. */
+/** Undecided and signed-out render identically, see the note below. */
 type State = "unknown" | "signed-out" | Account;
 
 export function SiteAccountLive({
@@ -94,7 +94,7 @@ export function SiteAccountLive({
  * "Log in" and "Get started": what a visitor who has no account sees.
  *
  * Lives in this file rather than in site-chrome so there is one definition
- * rather than two — the client component above needs it for its first render,
+ * rather than two. The client component above needs it for its first render,
  * and the server nav needs it for every page that knows nobody is signed in.
  */
 export function SignedOutActions() {

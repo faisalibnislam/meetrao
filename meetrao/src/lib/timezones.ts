@@ -62,7 +62,7 @@ function label(zone: string, at: Date): string {
 
 /**
  * The full list, ordered west to east. Offsets are read at `at`, so a list
- * built in July and one built in January differ where DST applies — which is
+ * built in July and one built in January differ where DST applies, which is
  * correct, and why the result is not cached across requests.
  */
 export function timezoneOptions(at: Date = new Date()): TimezoneOption[] {
@@ -103,8 +103,8 @@ export function nearestSupportedTimezone(zone: string, at: Date = new Date()): s
 /**
  * A zone this app offers, or "UTC".
  *
- * Everything that reaches here came from a browser — a hidden form field or a
- * query parameter that travelled through Google — so it is checked against the
+ * Everything that reaches here came from a browser (a hidden form field or a
+ * query parameter that travelled through Google) so it is checked against the
  * list rather than trusted. The list is the same one the picker shows, which
  * keeps a detected zone and a chosen zone the same kind of value.
  */

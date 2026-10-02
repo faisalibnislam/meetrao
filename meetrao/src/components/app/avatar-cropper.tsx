@@ -44,7 +44,7 @@ export function AvatarCropper({
 
   const dragging = useRef<{ x: number; y: number; ox: number; oy: number } | null>(null);
 
-  // Only the image load lives here — setImage and setError happen in the
+  // Only the image load lives here, setImage and setError happen in the
   // callbacks, which is the effect subscribing to an external system rather
   // than driving a cascade. Zoom and offset need no reset: the parent gives
   // this component a fresh key per pick, so a new file remounts it.
@@ -63,7 +63,7 @@ export function AvatarCropper({
     };
   }, [file]);
 
-  /** Scale at which the image just covers the frame — zoom 1. */
+  /** Scale at which the image just covers the frame, zoom 1. */
   const coverScale = image ? Math.max(VIEW / image.width, VIEW / image.height) : 1;
 
   /** Keeps the frame full: the image can never be dragged off its own edge. */

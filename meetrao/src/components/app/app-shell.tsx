@@ -7,7 +7,7 @@ import { bookingLink } from "@/lib/username";
 import type { MeetingType, Profile } from "@/lib/types";
 
 /* The app shell: 218px sidebar beside a column that owns its own header and
-   scroll area. Built once — the prototypes duplicate their chrome because the
+   scroll area. Built once, the prototypes duplicate their chrome because the
    design tool has no layout primitive, which is not a pattern to copy.
 
    A component rather than only a layout, because /support is reachable both

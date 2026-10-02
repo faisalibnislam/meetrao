@@ -15,7 +15,7 @@ import type { Profile } from "@/lib/types";
    previous version spent most of its length doing.
 
    THE VERIFICATION GATE LIVES HERE, and only here. Convex Auth does not put
-   verification state in the token, so `src/proxy.ts` cannot see it — and this
+   verification state in the token, so `src/proxy.ts` cannot see it, and this
    was always the real boundary anyway; the proxy check was a convenience.
 
    Still wrapped in React `cache()`, and that is load-bearing rather than
@@ -28,7 +28,7 @@ export type Session = { userId: string; email: string; verified: boolean; profil
 /**
  * The signed-in user and their profile, or a redirect.
  *
- * Deduped per request by `cache()` — see the note at the top of the file. The
+ * Deduped per request by `cache()`, see the note at the top of the file. The
  * layout and every page call this, and only the first one does the work.
  */
 export const requireSession = cache(async function requireSession(): Promise<Session> {
@@ -39,7 +39,7 @@ export const requireSession = cache(async function requireSession(): Promise<Ses
 
   /* THE VERIFICATION GATE. Supabase put `email_confirmed_at` in the token, so
      src/proxy.ts could check it before a render; Convex Auth does not, so it
-     is checked where the profile is read — which was always the real boundary
+     is checked where the profile is read, which was always the real boundary
      anyway. The cost is one extra redirect, on a path taken once.
 
      Convex Auth already refuses to issue a session to an unverified account,
@@ -51,7 +51,7 @@ export const requireSession = cache(async function requireSession(): Promise<Ses
   if (!who.hasConvexProfile) {
     // Authenticated with no profile is a half-created account. The profile is
     // written by convex/auth.ts's afterUserCreatedOrUpdated callback, so this
-    // means that callback did not run — there is nothing to show them.
+    // means that callback did not run. There is nothing to show them.
     redirect("/login?error=no-profile");
   }
 
@@ -83,7 +83,7 @@ export async function requireAdmin(): Promise<Session> {
 /**
  * For screens that render differently when signed in but do not require it.
  *
- * ONE query, deliberately — this runs on the public pages, where almost every
+ * ONE query, deliberately. This runs on the public pages, where almost every
  * caller is signed out and there is no profile to fetch. It does NOT apply the
  * verification gate: these screens only decide which nav to draw, and an
  * unverified visitor should see their own name in it rather than be bounced

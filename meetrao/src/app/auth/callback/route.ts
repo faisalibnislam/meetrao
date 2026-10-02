@@ -8,7 +8,7 @@ import { api } from "@/convex/_generated/api";
  * OAuth return.
  *
  * Convex Auth owns "Sign in with Google", and its callback is on the CONVEX
- * deployment's own origin — not here. By the time the browser reaches this
+ * deployment's own origin, not here. By the time the browser reaches this
  * route the exchange is done and the session cookie is set; what is left is
  * the app-side housekeeping that used to share the handler.
  *

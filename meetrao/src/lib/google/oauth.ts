@@ -3,7 +3,7 @@ import "server-only";
 import { env, siteUrl } from "@/lib/env";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Google OAuth — calendar access.
+   Google OAuth, calendar access.
 
    Two separate concerns share one Google Cloud project, and confusing them
    costs a day:
@@ -12,7 +12,7 @@ import { env, siteUrl } from "@/lib/env";
        deployment's own HTTP origin (…convex.site/api/auth/callback/google),
        not on this app.
      · Calendar access is ours. Its redirect URI is the route below and must be
-       registered for EVERY origin — localhost, the Vercel preview domain and
+       registered for EVERY origin, localhost, the Vercel preview domain and
        production. A missing one fails as redirect_uri_mismatch and nothing else.
 
    BOTH must be listed as authorised redirect URIs on the same OAuth client.
@@ -23,22 +23,22 @@ import { env, siteUrl } from "@/lib/env";
    permission step than a read-only scope would see.
 
    Reading is freeBusy.query and nothing else, so calendar.freebusy is the
-   scope for it. calendar.readonly was requested here and has been dropped: it
+   scope for it. Calendar.readonly was requested here and has been dropped: it
    added read of the calendar list and settings and bought nothing.
 
-   Be careful about what this does and does not achieve. calendar.events is
-   read AND write — it already permits reading every event's title, guests and
+   Be careful about what this does and does not achieve. Calendar.events is
+   read AND write, it already permits reading every event's title, guests and
    description, and no scope grants attendee-writing without it. Verified
    against the live grant: with only events + freebusy, listing event details
    still returns 200.
 
-   So the product's promise —
+   So the product's promise,
 
      "Meetrao reads only whether a period is busy or free. Never event titles,
-      guests, descriptions, locations or attachments."   — /help, the FAQ, the footer
+      guests, descriptions, locations or attachments."   (/help, the FAQ, the footer
 
    is true of what this code does (busyPeriods is the only read, and it calls
-   freeBusy — now from convex/lib/googleApi.ts), but it is not enforced by the
+   freeBusy) now from convex/lib/googleApi.ts), but it is not enforced by the
    grant, and Google's consent screen
    will describe the broader access. That gap is a copy decision, not a code
    one; it is listed in README.md under "Still open".

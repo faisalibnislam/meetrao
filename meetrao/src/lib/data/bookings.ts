@@ -20,7 +20,7 @@ export type BookingView = {
   dayLabel: string;
   /** Host-local calendar day, for grouping. */
   dateKey: string;
-  /** "Thu 10 Sep" — the heading above a day's rows. */
+  /** "Thu 10 Sep", the heading above a day's rows. */
   dayHeading: string;
   timeRange: string;
   status: "Confirmed" | "Cancelled";
@@ -91,7 +91,7 @@ export function toView(row: Booking, timeZone: string, now: Date): BookingView {
  * then discarded all of it except the next few. Fine at six bookings; a page
  * that gets slower every month, forever, by construction.
  *
- * The Past tab reads backwards from now, so a cap is the natural shape — this
+ * The Past tab reads backwards from now, so a cap is the natural shape. This
  * is the most recent 250, not an arbitrary slice. A host who needs more than
  * their last 250 bookings needs an export, not a longer page.
  */
@@ -100,7 +100,7 @@ const PAST_LIMIT = 250;
 /**
  * Bookings for the host's screens.
  *
- * `history: false` fetches only what is still to come — that is all the
+ * `history: false` fetches only what is still to come. That is all the
  * dashboard has ever displayed, and it means the dashboard no longer pays for
  * a history it throws away.
  */

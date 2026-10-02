@@ -87,8 +87,8 @@ export function parseCsv(input: string): string[][] {
 /**
  * Rows keyed by header.
  *
- * Headers are matched loosely — case, spaces, underscores and hyphens are all
- * ignored — so "Phone number", "phone_number" and "PHONE NUMBER" are one
+ * Headers are matched loosely (case, spaces, underscores and hyphens are all
+ * ignored) so "Phone number", "phone_number" and "PHONE NUMBER" are one
  * column. People export from everywhere.
  */
 export function parseCsvRecords(input: string): Record<string, string>[] {

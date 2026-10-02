@@ -3,7 +3,7 @@
 import { cx } from "@/lib/cx";
 
 /* The month the marketing demos use. September 2026 starts on a Tuesday, so
-   the 1st sits in column 2. These are fabricated screens, not live data —
+   the 1st sits in column 2. These are fabricated screens, not live data,
    nothing here talks to the booking engine. */
 
 export const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];

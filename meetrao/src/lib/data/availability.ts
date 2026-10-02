@@ -12,7 +12,7 @@ import { api } from "@/convex/_generated/api";
  *
  * Scoped to the caller's own account, which is a quiet improvement on what it
  * replaced. `seed_default_availability` was SECURITY DEFINER and took the user
- * id as an argument, so it could only be granted to the service role — and the
+ * id as an argument, so it could only be granted to the service role, and the
  * previous caller used the host's own session, was rejected by PostgREST every
  * time, ignored the result, and silently showed an empty week. There is no
  * user id to pass here, so that class of mistake cannot recur.

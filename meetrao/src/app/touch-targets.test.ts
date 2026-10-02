@@ -6,13 +6,13 @@ import path from "node:path";
    Touch targets, and the two rules that make them work.
 
    A measured pass over the product at 320/360/390/430 found 360 controls under
-   44px — the whole design is drawn at 28–36px, which is right for a mouse and
-   wrong for a thumb. globals.css fixes that under `pointer: coarse`. This test
+   44px. The whole design is drawn at 28–36px, which is right for a mouse and
+   wrong for a thumb. Globals.css fixes that under `pointer: coarse`. This test
    guards the three things about that block that are easy to break silently:
 
    1. It is keyed on the POINTER, not a width breakpoint. A width query would
       give a narrow desktop window fat controls and leave a 1024px tablet with
-      mouse-sized ones — exactly backwards.
+      mouse-sized ones, exactly backwards.
 
    2. The slider override comes AFTER the base `.mr-range` rule. Same
       specificity, so source order decides; the first version of this sat above

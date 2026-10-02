@@ -3,8 +3,8 @@ import { Bar, BodySkeleton, CardsSkeleton, RowsSkeleton } from "@/components/app
 
 /* The one screen whose header cannot be rendered for real: the greeting needs
    the host's name and timezone, which is exactly what we are waiting for. So
-   the two lines are shimmered at the sizes DashboardHeader uses — clamp(30,38)
-   over a 12.5px date line, in the same 7px stack — and the header keeps its
+   the two lines are shimmered at the sizes DashboardHeader uses (clamp(30,38)
+   over a 12.5px date line, in the same 7px stack) and the header keeps its
    height when the real greeting replaces it. */
 export default function Loading() {
   return (

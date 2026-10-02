@@ -11,8 +11,8 @@ import { useEffect } from "react";
    between picking a time and filling in details, which is exactly when a fixed
    height looks broken.
 
-   The message is posted to "*" because we cannot know the embedding origin —
-   a host puts this on their own site, and the whole point is that we did not
+   The message is posted to "*" because we cannot know the embedding origin.
+   A host puts this on their own site, and the whole point is that we did not
    have to be told where. That is safe in this direction: the payload is a
    number this page already renders, and nothing is read back. The snippet on
    the host's side checks `event.source` against its own iframe before
@@ -27,7 +27,7 @@ export function EmbedHeight() {
        
        Inside an iframe the document, the body and any stretched wrapper are all
        as tall as the frame, so measuring one of those reports back the height
-       the parent already set — a feedback loop that can grow and never shrink.
+       the parent already set. A feedback loop that can grow and never shrink.
        It is a convincing loop, too: the number changes when the parent resizes,
        so it looks like it is working.
        

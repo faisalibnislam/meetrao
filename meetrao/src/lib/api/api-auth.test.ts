@@ -62,7 +62,7 @@ describe("webhook signatures", () => {
     expect(a).not.toBe(b);
   });
 
-  /* The timestamp is inside the signed string, not beside it — otherwise a
+  /* The timestamp is inside the signed string, not beside it, otherwise a
      captured delivery could be replayed with a fresh one. */
   it("cover the timestamp, so a delivery cannot be replayed with a new one", async () => {
     const a = await signPayload(SECRET, BODY, AT);

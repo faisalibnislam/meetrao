@@ -8,7 +8,7 @@ import { saveAvatarFromStorageId, avatarUploadUrl, clearAvatar } from "@/lib/act
 import { AvatarCropper } from "./avatar-cropper";
 
 /* The photo is uploaded from the browser, against the host's own session, so
-   the storage policy is what decides — not a server action holding the service
+   the storage policy is what decides, not a server action holding the service
    role. The path starts with their user id, which is exactly what
    `avatars_insert_own` checks. */
 
@@ -51,7 +51,7 @@ export function AvatarUpload({
       // the same URL. The old object is deleted server-side once this is saved.
       /* Convex: ask for a one-time upload URL, post the bytes, hand back the
          storage id. The client never names a path, so there is nothing to
-         forge — which is what replaces the old storage policy. */
+         forge, which is what replaces the old storage policy. */
       const ticket = await avatarUploadUrl();
       if (!ticket.url) {
         toast({ tone: "bad", title: "Upload failed", text: ticket.error ?? "Could not start the upload." });

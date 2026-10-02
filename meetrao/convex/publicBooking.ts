@@ -14,13 +14,13 @@ import { notifyBookingCancelled, logActivity } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   The guest path — every function here is reachable with NO session, exactly
+   The guest path. Every function here is reachable with NO session, exactly
    as the `anon` grants made the SQL RPCs reachable.
 
    Two things follow, and both were true in Postgres too:
 
    · These functions must never return anything a guest should not see. The
-     host projection below is deliberately narrow — it is not `profileOut`,
+     host projection below is deliberately narrow. It is not `profileOut`,
      because a profile carries an email, notification preferences and admin
      flags. `get_public_host` had the same shape for the same reason.
 
@@ -39,7 +39,7 @@ const DAY = 24 * 60 * MINUTE;
  *
  * GATED ON THE WAY OUT, not only where it is set. Branding is written behind
  * requirePro in convex/branding.ts, and the rows survive a lapsed plan on
- * purpose — so coming back costs the host nothing. This is what stops those
+ * purpose, so coming back costs the host nothing. This is what stops those
  * surviving rows from being a paid feature somebody keeps for free: the moment
  * `planOf` stops saying pro, every public page falls back to our mark.
  *
@@ -100,7 +100,7 @@ export const getMeetingTypes = query({
   },
 });
 
-/** public.get_meeting_availability — the rules a booking page renders from. */
+/** public.get_meeting_availability, the rules a booking page renders from. */
 export const getMeetingAvailability = query({
   args: { username: v.string(), slug: v.string() },
   handler: async (ctx, a) => {
@@ -133,7 +133,7 @@ export const getMeetingAvailability = query({
         location: meeting.location,
         location_detail: meeting.location_detail ?? "",
         capacity: meeting.capacity ?? 1,
-        /* The booking form has to know what to ask. Labels only — a question
+        /* The booking form has to know what to ask. Labels only. A question
            is written to be read by the guest it is put to. */
         questions: meeting.questions ?? [],
       },
@@ -142,7 +142,7 @@ export const getMeetingAvailability = query({
   },
 });
 
-/** The hours behind ONE meeting, by its id — a meeting's own schedule, or the
+/** The hours behind ONE meeting, by its id. A meeting's own schedule, or the
  *  host's default when it has none. Only hours; a schedule's name is the
  *  host's private note to themselves. */
 export const availabilityForMeeting = query({
@@ -156,7 +156,7 @@ export const availabilityForMeeting = query({
 });
 
 /**
- * The days that do not follow the weekly pattern — the host's time off, and
+ * The days that do not follow the weekly pattern. The host's time off, and
  * any day they have given different hours.
  *
  * Public, and it says only that a date is closed or carries these hours. The
@@ -184,12 +184,12 @@ export const overridesForMeetingPublic = query({
  * ARBITRARY window to anyone holding the publishable key. The internal version
  * below preserves that. But the booking page has no session, and a Convex
  * internalQuery cannot be reached from the app's server code without shipping
- * an admin key into the app — which would be worse than the problem.
+ * an admin key into the app, which would be worse than the problem.
  *
  * So this is public, and the teeth from 0003 are kept as constraints instead:
  *   · the host must exist and not be suspended
  *   · the window is clamped, and capped at 90 days of span
- *   · only start/end are returned — never a guest name, email or meeting
+ *   · only start/end are returned, never a guest name, email or meeting
  *
  * What it discloses is therefore what the booking page already discloses by
  * showing which slots are gone. The stricter alternative is to move slot
@@ -230,7 +230,7 @@ export const busyForHost = query({
  *
  * Migration 0003 revoked this from anon and authenticated after it was found
  * callable by anyone with the publishable key: it returns a host's occupied
- * blocks over an arbitrary window. internalQuery is the equivalent — it cannot
+ * blocks over an arbitrary window. internalQuery is the equivalent. It cannot
  * be called from a client at all, only by server code.
  */
 export const getBusyIntervals = internalQuery({
@@ -260,7 +260,7 @@ export const recordPageView = mutation({
 /**
  * A team's public face: who is in the rotation, and what they offer.
  *
- * Narrow in the same way `getHost` is — a name and a timezone per member, so
+ * Narrow in the same way `getHost` is. A name and a timezone per member, so
  * the page can say "one of three" and compute their hours. No emails, no
  * flags, nothing a guest has no use for.
  */
@@ -314,7 +314,7 @@ export const getTeam = query({
  *
  * Called by the proxy on every request to a hostname it does not recognise,
  * so it is deliberately the narrowest query in the file: one indexed read,
- * one field back. Only a VERIFIED domain resolves — an unverified one is a
+ * one field back. Only a VERIFIED domain resolves. An unverified one is a
  * claim, and serving somebody's booking page on an unproven name is how a
  * domain gets pointed somewhere it should not be.
  */
@@ -335,7 +335,7 @@ export const hostForDomain = query({
   },
 });
 
-/** One member's hours for a team meeting — their own schedule, their own zone. */
+/** One member's hours for a team meeting, their own schedule, their own zone. */
 export const teamMemberAvailability = query({
   args: { teamSlug: v.string(), meetingId: v.string() },
   handler: async (ctx, a) => {
@@ -353,7 +353,7 @@ export const teamMemberAvailability = query({
 
     for (const { profile } of members) {
       /* Each member's OWN default schedule. The meeting's schedule_id belongs
-         to the owner and means nothing to anybody else — pointing a member at
+         to the owner and means nothing to anybody else, pointing a member at
          it would offer their colleague's hours in their name. */
       const rules = await rulesForMeeting(ctx, profile.id, null);
       const from = zonedDateKey(Date.now() - DAY, profile.timezone);
@@ -375,7 +375,7 @@ export const teamMemberAvailability = query({
 /**
  * How many seats are taken at each instant of one group meeting.
  *
- * Public, and it says only how many — never who. A guest choosing a time is
+ * Public, and it says only how many, never who. A guest choosing a time is
  * entitled to know that four of six seats are gone; they are not entitled to
  * the names of the four.
  */
@@ -410,7 +410,7 @@ export const seatsForMeeting = query({
  *
  * The slot engine in src/lib/booking/slots.ts answers this on the way in, and
  * this answers it again on the way through, because anyone can call the
- * mutation directly — migration 0005 is what a missing re-check looks like.
+ * mutation directly, migration 0005 is what a missing re-check looks like.
  * Convex cannot import the engine (different tsconfig root and bundle), so
  * this is the second implementation and has to learn every rule the first one
  * learns. Date overrides are the most recent of those: a host's day off is a
@@ -443,7 +443,7 @@ async function fitsAvailability(
  * FAIRNESS IS A COUNT, NOT A CURSOR. The member with the fewest bookings of
  * this meeting in the last thirty days goes next, ties broken by whoever was
  * booked longest ago. A stored "next member" pointer would be one more thing
- * to keep true, and it drifts the moment somebody joins, leaves or cancels —
+ * to keep true, and it drifts the moment somebody joins, leaves or cancels,
  * a count re-derives the right answer from what actually happened.
  *
  * AVAILABILITY IS EACH MEMBER'S OWN. Their hours, their timezone, their days
@@ -616,7 +616,7 @@ export const createBooking = mutation({
 
     /* Limits are consumed only once the booking is known to be legitimate, so
        a guest cannot be locked out by someone else's malformed attempts at the
-       same host — but before the insert, so a flood cannot land rows. */
+       same host, but before the insert, so a flood cannot land rows. */
     const guestKey = a.guestEmail.trim().toLowerCase();
     await consume(ctx, [
       { key: `host:${host.id}`, limit: 30, windowMs: 60 * 60_000, message: "This host has taken too many bookings just now. Try again shortly." },
@@ -665,7 +665,7 @@ export const createBooking = mutation({
   },
 });
 
-/** public.get_booking_by_reference — the guest's own confirmation screen. */
+/** public.get_booking_by_reference, the guest's own confirmation screen. */
 export const getByReference = query({
   args: { reference: v.string() },
   handler: async (ctx, a) => {
@@ -686,7 +686,7 @@ export const getByReference = query({
       ...bookingOut(b),
       meeting_slug: meeting && meeting.is_active ? meeting.slug : null,
       /* The confirmation, reschedule and cancel screens are the host's pages
-         too — a guest who booked through a branded page and lands on our
+         too, a guest who booked through a branded page and lands on our
          green one has been handed off to a stranger. */
       host: host
         ? {
@@ -727,15 +727,15 @@ export const cancelByReference = mutation({
 
 /**
  * The guest moving their own booking. The reference IS the authorisation, as
- * it is for cancelling — and moving is the gentler of the two, so nothing
+ * it is for cancelling, and moving is the gentler of the two, so nothing
  * stricter is warranted.
  *
  * Every guard `createBooking` applies runs again here, for the same reason it
  * runs there: the slot engine filtered the times on the way in, and anyone can
  * call this directly. Migration 0005 is what a missing check looks like.
  *
- * A booking with no live meeting type behind it — a meeting the host has since
- * deleted, or one the host arranged themselves — is refused rather than moved
+ * A booking with no live meeting type behind it (a meeting the host has since
+ * deleted, or one the host arranged themselves) is refused rather than moved
  * against rules that no longer exist. The guest can still cancel.
  */
 export const rescheduleByReference = mutation({
@@ -808,7 +808,7 @@ export const rescheduleByReference = mutation({
 /**
  * Just enough of the host to address a cancellation email.
  *
- * Scoped by the booking's reference — the guest's own credential — and it
+ * Scoped by the booking's reference (the guest's own credential) and it
  * returns ONLY the fields the mail template needs. The host's email is in
  * that list because the mail is addressed to them; nothing else about the
  * account comes back.

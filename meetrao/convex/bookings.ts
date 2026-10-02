@@ -21,7 +21,7 @@ const LOOKBACK = 24 * 60 * MINUTE;
    inside ONE mutation, which Convex runs serializably. A concurrent insert
    landing in the index range below forces a retry, and the retry sees the row.
 
-   Verified under real contention — docs/spikes/convex-concurrency/ — 240
+   Verified under real contention (docs/spikes/convex-concurrency/) 240
    concurrent racers, 30 winners, 0 double-bookings.
 
    Two rules for anyone editing this file:
@@ -39,7 +39,7 @@ export async function findOverlap(
     ignoreBookingId?: string;
     /* A group meeting's own seats are not clashes with each other. Passing
        these two makes bookings of THAT meeting at THAT instant invisible to
-       this read — everything else, including the same meeting at a different
+       this read, everything else, including the same meeting at a different
        time, still refuses. The seat count is a separate question, asked by
        seatsTaken below, because "is this slot free" and "is this slot full"
        are different failures with different messages. */
@@ -190,7 +190,7 @@ export async function insertBooking(
 }
 
 /**
- * Moves a booking that already exists — shared by the guest's reschedule link
+ * Moves a booking that already exists, shared by the guest's reschedule link
  * and the host's own screen.
  *
  * The overlap read is the same guard `insertBooking` uses and carries the same
@@ -199,7 +199,7 @@ export async function insertBooking(
  * since the port for exactly this caller.
  *
  * The row keeps its id, its reference and its Google event. A moved booking is
- * the same meeting at a different time — cancelling and re-creating would send
+ * the same meeting at a different time, cancelling and re-creating would send
  * a cancellation the guest did not ask for, and mint a new Meet link.
  */
 export async function moveBooking(
@@ -285,7 +285,7 @@ export const rescheduleAsHost = mutation({
  * The host's list, in the shape the screen wants: everything still upcoming,
  * plus a capped tail of history.
  *
- * Mirrors the two bounded reads the Supabase version does — upcoming is a
+ * Mirrors the two bounded reads the Supabase version does, upcoming is a
  * calendar and stays small, history is an archive and is capped newest-first,
  * then flipped back into ascending order. Invitees come back attached rather
  * than as a second round trip.
@@ -397,7 +397,7 @@ export const createAsHost = mutation({
     for (const invitee of a.invitees ?? []) {
       const email = invitee.email.trim().toLowerCase();
       if (!email) continue;
-      // unique (booking_id, email) — no unique index here, so check first.
+      // unique (booking_id, email), no unique index here, so check first.
       const dupe = await ctx.db
         .query("booking_invitees")
         .withIndex("by_booking", (q) => q.eq("booking_id", booking.id))
@@ -449,7 +449,7 @@ export const cancelAsHost = mutation({
  * Google event linkage for the guest path.
  *
  * Keyed by the booking's reference, which is 32 hex characters of CSPRNG and is
- * the guest's only credential — the same thing that authorises reading and
+ * the guest's only credential, the same thing that authorises reading and
  * cancelling that booking. It sets two fields and nothing else, and refuses if
  * either is already set, so a leaked reference cannot be used to repoint a
  * booking at another calendar event.
@@ -465,7 +465,7 @@ export const attachGoogleEventByReference = mutation({
   },
 });
 
-/** Google event linkage — written by server code only, never by a browser. */
+/** Google event linkage, written by server code only, never by a browser. */
 export const attachGoogleEvent = internalMutation({
   args: { id: v.string(), googleEventId: v.union(v.string(), v.null()), meetUrl: v.union(v.string(), v.null()) },
   handler: async (ctx, a) => {

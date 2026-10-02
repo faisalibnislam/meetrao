@@ -83,7 +83,7 @@ export function Callout({
   children: ReactNode;
   action?: ReactNode;
   className?: string;
-  /** center puts the glyph, message and action on one line — the banner form. */
+  /** center puts the glyph, message and action on one line, the banner form. */
   align?: "start" | "center";
 }) {
   const c = CALLOUT[tone];

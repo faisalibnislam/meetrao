@@ -24,7 +24,7 @@ export default async function VerifyPage({
   let { expired } = await searchParams;
 
   /* Arriving from the emailed link. The code is spent in the browser, because
-     Convex Auth writes the session cookie there — see VerifyLink. */
+     Convex Auth writes the session cookie there, see VerifyLink. */
   const fromLink = Boolean(email && code);
   if (fromLink) expired = undefined; // VerifyLink says so itself, and better
 

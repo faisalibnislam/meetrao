@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 
    The rule this file exists to enforce: until someone presses Accept, no script
    from googletagmanager.com is on the page, no request reaches Google, and no
-   cookie is written. Not "loaded with consent mode set to denied" — not loaded.
+   cookie is written. Not "loaded with consent mode set to denied", not loaded.
    That is a stronger promise than the usual banner makes, it is the promise the
    Privacy Policy makes, and it is enforced here by the scripts simply not being
    rendered.
@@ -33,18 +33,18 @@ type Choice = "granted" | "denied";
 
 /* Three states, and the third is the one that makes this work.
 
-     "granted" / "denied" — the visitor has answered
-     "unanswered"         — read the browser, nothing stored, so ask
-     "unread"             — running on the server, or hydrating; ask nothing yet
+     "granted" / "denied" (the visitor has answered
+     "unanswered"        ) read the browser, nothing stored, so ask
+     "unread"            , running on the server, or hydrating; ask nothing yet
 
    Without "unread" the server would have to guess, and its only possible guess
-   is "unanswered" — which puts the banner in the HTML and flashes it at every
+   is "unanswered", which puts the banner in the HTML and flashes it at every
    returning visitor who already said no. */
 type Stored = Choice | "unanswered" | "unread";
 
 /* The answer given during this page load, when there was one.
    Consulted before storage so that a visitor whose browser refuses localStorage
-   — private mode, blocked site data — still gets the thing they just pressed.
+   (private mode, blocked site data) still gets the thing they just pressed.
    Without it, Accept in a private window writes nothing, reads back nothing,
    and leaves the banner sitting there as though the button were broken. */
 let answeredHere: Choice | null = null;
@@ -63,7 +63,7 @@ function readChoice(): Stored {
 }
 
 /* localStorage is an external store, so this is useSyncExternalStore's exact
-   job — and it is also the one way to read it without setting state inside an
+   job, and it is also the one way to read it without setting state inside an
    effect, which cascades a render on every page in the app.
 
    `storage` covers the same person answering in a second tab; CONSENT_EVENT
@@ -121,7 +121,7 @@ function Banner({ onDecide }: { onDecide: (choice: Choice) => void }) {
           "box-border flex w-full max-w-[620px] flex-wrap items-center gap-x-[16px] gap-y-[12px] " +
           "rounded-[9px] border border-line-strong bg-surface px-[16px] py-[14px] shadow-[0_6px_28px_rgba(26,25,23,0.14)] " +
           "max-[560px]:max-w-none max-[560px]:rounded-none max-[560px]:border-x-0 max-[560px]:border-b-0 " +
-          /* Edge to edge on a phone, and clear of the home-bar inset — a button
+          /* Edge to edge on a phone, and clear of the home-bar inset. A button
              half under iOS's gesture area is a button that cannot be pressed. */
           "max-[560px]:[padding-bottom:calc(14px_+_env(safe-area-inset-bottom))]"
         }
@@ -150,7 +150,7 @@ function Banner({ onDecide }: { onDecide: (choice: Choice) => void }) {
 
 /**
  * Puts the banner back up. Rendered in the Privacy Policy, because a consent
- * choice you cannot revisit is not a choice — and reloading the page to offer
+ * choice you cannot revisit is not a choice, and reloading the page to offer
  * it again would throw away the reader's position in a long document.
  *
  * Renders nothing when Google Analytics is not configured, matching the banner.
@@ -190,7 +190,7 @@ function GoogleAnalytics({ measurementId }: { measurementId: string }) {
   const pathname = usePathname();
 
   /* GA4's own page_view fires once, when the tag loads. This app is a client-
-     side router, so every navigation after the first would be invisible — the
+     side router, so every navigation after the first would be invisible. The
      landing page would look like the only page anyone reads. `send_page_view:
      false` below hands the job to this effect instead, which also covers the
      first view, so there is one code path and no double-count. */

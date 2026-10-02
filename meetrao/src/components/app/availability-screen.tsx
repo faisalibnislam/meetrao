@@ -34,8 +34,8 @@ import { cx } from "@/lib/cx";
 /* ─────────────────────────────────────────────────────────────────────────────
    Availability, with named schedules.
 
-   A host keeps as many weekly patterns as they need — "Working hours", "Client
-   calls", "Weekend slots" — and each meeting type points at one. This screen is
+   A host keeps as many weekly patterns as they need ("Working hours", "Client
+   calls", "Weekend slots") and each meeting type points at one. This screen is
    where the patterns are made; the picker on the meeting form is where they are
    assigned.
 

@@ -3,8 +3,8 @@
 import { useCallback, useRef, useSyncExternalStore } from "react";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Reading values only the browser can know — the visitor's timezone, a media
-   query, the current time — without a hydration mismatch and without a
+   Reading values only the browser can know (the visitor's timezone, a media
+   query, the current time) without a hydration mismatch and without a
    set-state-in-effect cascade.
 
    `useSyncExternalStore` is the right tool: it renders the server value during
@@ -15,7 +15,7 @@ const noopSubscribe = () => () => {};
 
 /**
  * A stable browser-only value. `compute` must return the same result for the
- * same browser state — it is called on every render.
+ * same browser state. It is called on every render.
  */
 export function useClientValue<T>(compute: () => T, serverValue: T): T {
   return useSyncExternalStore(noopSubscribe, compute, () => serverValue);
@@ -41,7 +41,7 @@ export function useMediaQuery(query: string): boolean {
 
 /**
  * The current time, re-read every `intervalMs`. The snapshot is cached in a ref
- * so repeated renders see the same Date object — returning a fresh one each
+ * so repeated renders see the same Date object, returning a fresh one each
  * call would loop forever.
  */
 export function useNow(intervalMs: number, serverNow: Date): Date {

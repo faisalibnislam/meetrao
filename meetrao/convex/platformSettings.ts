@@ -19,7 +19,7 @@ export const get = query({
  * The Polar products Pro is sold as.
  *
  * Admin-only, because an operator is the only person who has any use for a
- * product id — and because this is the pair a checkout is built from, which
+ * product id, and because this is the pair a checkout is built from, which
  * makes it worth keeping out of a public projection by habit.
  */
 export const products = query({
@@ -38,7 +38,7 @@ export const products = query({
  * What a checkout reads.
  *
  * Behind a session, because only a signed-in host can start one. A product id
- * is not a secret — it travels in the checkout URL — but a public function
+ * is not a secret (it travels in the checkout URL) but a public function
  * that hands out billing configuration is a habit worth not forming.
  */
 export const productsForCheckout = query({

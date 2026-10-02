@@ -15,7 +15,7 @@ export type Account = { name: string; email: string; avatarUrl: string | null };
  * What to show for a session, given whatever the profile read came back with.
  *
  * Its own function because it is the one part with a wrong answer available.
- * The profile read can fail — offline, a revoked session, a bad deploy — and
+ * The profile read can fail (offline, a revoked session, a bad deploy) and
  * the obvious code then builds an account with an empty name, which renders as
  * a blank avatar chip with blank initials next to a blank menu header. A
  * signed-in host would see a broken control where two perfectly good buttons

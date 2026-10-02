@@ -8,7 +8,7 @@ import type { Profile } from "@/lib/types";
    Who is signed in, for the nav on a statically rendered page.
 
    THIS ROUTE EXISTS SO THE LANDING PAGE CAN STAY STATIC. The marketing pages
-   must not read a cookie while rendering — that turns the landing page, Terms
+   must not read a cookie while rendering. That turns the landing page, Terms
    and Privacy dynamic, and the landing page is the one page whose
    time-to-first-byte a search engine measures. So the HTML ships with the
    signed-out nav, and the browser asks this route afterwards.
@@ -20,7 +20,7 @@ import type { Profile } from "@/lib/types";
    dynamic.
 
    Returns the caller's OWN account or null. It reads nothing it was asked to
-   read — there is no id parameter and no way to name another user.
+   read. There is no id parameter and no way to name another user.
    ───────────────────────────────────────────────────────────────────────────── */
 
 /** Per-user and cookie-dependent. Never cached, never shared. */
@@ -36,7 +36,7 @@ export async function GET() {
     return NextResponse.json(account === "signed-out" ? null : account, { headers: PRIVATE });
   } catch {
     // A nav that cannot resolve the session shows the signed-out one. It is
-    // not a security boundary — every private screen checks for itself.
+    // not a security boundary, every private screen checks for itself.
     return NextResponse.json(null, { headers: PRIVATE });
   }
 }

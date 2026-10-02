@@ -6,8 +6,8 @@ import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 
-/* API keys and webhook endpoints. The invariants — read-only keys, hashed
-   storage, https endpoints, the caps on both — are enforced in Convex; these
+/* API keys and webhook endpoints. The invariants (read-only keys, hashed
+   storage, https endpoints, the caps on both) are enforced in Convex; these
    are the form's side of them. */
 
 export type DeveloperResult = { error?: string; key?: string };

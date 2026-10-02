@@ -12,7 +12,7 @@ export type NotificationView = {
   body: string;
   bookingId: string | null;
   read: boolean;
-  /** "2 hours ago", "Yesterday" — relative, because that is how recency reads. */
+  /** "2 hours ago", "Yesterday", relative, because that is how recency reads. */
   when: string;
   at: string;
 };
@@ -51,7 +51,7 @@ type Row = {
   created_at: string;
 };
 
-/** One shape in, one shape out — so both backends land on the same view. */
+/** One shape in, one shape out, so both backends land on the same view. */
 function toView(rows: Row[]): NotificationView[] {
   const now = Date.now();
   return rows.map((n) => ({

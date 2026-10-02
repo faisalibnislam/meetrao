@@ -52,7 +52,7 @@ export async function saveTimezone(timezone: string): Promise<SettingsResult> {
   }
 
   await requireSession();
-  // Chosen, not detected — registration must never overwrite it.
+  // Chosen, not detected, registration must never overwrite it.
   const r = await onConvex((c) => c.mutation(api.profiles.updateOwn, { timezone, timezone_auto: false }));
   if (r.error) return { error: r.error };
   revalidatePath("/settings");
@@ -146,13 +146,13 @@ export async function deleteOwnAccount(): Promise<SettingsResult> {
   if (r.error) return { error: r.error };
 
   /* The account is gone; the session in this browser is not. Clearing it is
-     the caller's job — `signOut` redirects, and a redirect thrown from here
+     the caller's job, `signOut` redirects, and a redirect thrown from here
      would be swallowed by the form's error handling. */
   return {};
 }
 
 /**
- * When the two reminders go out. Pro only, and the server says so — the
+ * When the two reminders go out. Pro only, and the server says so. The
  * screen disabling a menu is a convenience.
  */
 export async function saveReminderTiming(input: { long: number; short: number }): Promise<SettingsResult> {

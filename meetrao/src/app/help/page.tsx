@@ -120,7 +120,7 @@ const CALENDAR_FACTS: { icon: IconName; title: string; text: string }[] = [
 ];
 
 /* The failures a host meets in practice, and what each one means. Written from
-   the errors this product has actually produced — "Token has been expired or
+   the errors this product has actually produced, "Token has been expired or
    revoked" is the common one, and it reads as a bug until somebody explains
    that it is Google's seven-day rule for apps still in testing. */
 const CALENDAR_TROUBLE: [string, string][] = [

@@ -12,7 +12,7 @@ import { ConvexHttpClient } from "convex/browser";
    before any function sees it.
 
    The token's `sub` is "<userId>|<sessionId>" rather than a bare id. Nothing
-   here needs to care — convex/lib/auth.ts resolves it to profiles.id, and that
+   here needs to care, convex/lib/auth.ts resolves it to profiles.id, and that
    resolution is the only thing authorization ever uses.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -27,7 +27,7 @@ function url(): string {
  *
  * Convex Auth owns the cookie; this reads it and refreshes it when needed.
  * Imported lazily because the module pulls in Next's middleware machinery,
- * which is not resolvable outside a Next build — a static import breaks every
+ * which is not resolvable outside a Next build. A static import breaks every
  * unit test that touches a server module.
  */
 export async function convexServer(): Promise<ConvexHttpClient> {

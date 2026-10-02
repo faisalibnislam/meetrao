@@ -12,7 +12,7 @@ import {
    Held to real user-agent strings, not to my recollection of them.
 
    Every string below is copied from an actual browser or crawler. That matters
-   more here than in most tests, because UA sniffing fails in exactly one way —
+   more here than in most tests, because UA sniffing fails in exactly one way,
    plausibly. "Android tablets are phones" and "every browser is Chrome" both
    produce a table that looks completely fine and is wrong, and neither shows up
    until someone acts on the numbers.
@@ -114,7 +114,7 @@ describe("classifyUserAgent · os and browser", () => {
 
   /* Every one of these also says "Chrome", and every one also says "Safari".
      Asking in the wrong order makes the browser table say Chrome for all of
-     them — which is a table that looks entirely reasonable. */
+     them, which is a table that looks entirely reasonable. */
   it("does not collapse Chrome-derived browsers into Chrome", () => {
     const families = [UA.edgeWindows, UA.operaWindows, UA.samsungPhone].map((ua) => classifyUserAgent(ua).browser);
     expect(families).toEqual(["Edge", "Opera", "Samsung Internet"]);

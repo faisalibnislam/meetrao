@@ -1,7 +1,7 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    What Meetrao says about the tools people are choosing between.
 
-   Three rules, and they are not politeness — they are what keeps a comparison
+   Three rules, and they are not politeness. They are what keeps a comparison
    page useful, rankable and out of court:
 
    1. Every claim about another product is a fact you could check, attributed to
@@ -14,7 +14,7 @@
       the section a reader trusts, and it is the reason they believe the rest.
 
    `checkedOn` is printed on the page. When it goes stale, it says so out loud
-   rather than quietly misleading somebody — see README § SEO for the re-check.
+   rather than quietly misleading somebody, see README § SEO for the re-check.
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type Edge = "meetrao" | "them" | "even";
@@ -52,7 +52,7 @@ const CHECKED = "September 2026";
 /* Figures below were taken from third-party pricing trackers rather than from
    each vendor's own page, which could not be reached from the machine that
    wrote this. They are consistent across sources and are the widely reported
-   numbers — and they are still second-hand, which is exactly why each page
+   numbers, and they are still second-hand, which is exactly why each page
    prints the date and links to the vendor so a reader can check. */
 
 export const CALENDLY: Comparison = {

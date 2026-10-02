@@ -3,13 +3,13 @@
 
    Data, not markup, and deliberately not inside faq.tsx. That file is a client
    component, and a Server Component importing a plain value from a "use client"
-   module does not get the value — it gets a client reference, which looks like
+   module does not get the value. It gets a client reference, which looks like
    an object right up until something calls .map on it. The FAQ JSON-LD on the
    landing page does exactly that, so the array lives here where both sides can
    really read it.
    ───────────────────────────────────────────────────────────────────────────── */
 
-/* The answers are deliberately plain about what Meetrao does not do — one
+/* The answers are deliberately plain about what Meetrao does not do, one
    calendar provider, one meeting location, one weekly schedule, no promise of
    "free forever" that could not be kept. */
 

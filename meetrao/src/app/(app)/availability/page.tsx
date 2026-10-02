@@ -29,7 +29,7 @@ export default async function AvailabilityPage() {
     isDefault: s.is_default,
     days: rulesToDays(rules.filter((r) => r.schedule_id === s.id)),
     // A meeting with no schedule of its own follows the default, so the default
-    // has to claim it too — otherwise the busiest schedule looks unused.
+    // has to claim it too, otherwise the busiest schedule looks unused.
     usedBy: meetings.filter((m) => m.schedule_id === s.id || (m.schedule_id === null && s.id === defaultId)).map((m) => m.name),
   }));
 

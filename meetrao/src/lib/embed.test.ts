@@ -64,7 +64,7 @@ describe("what the widget measures", () => {
   const layout = readFileSync(path.join(process.cwd(), "src/app/embed/layout.tsx"), "utf8");
 
   /* Measuring the document, the body or any stretched wrapper reports back the
-     height the parent already set — a loop that grows and never shrinks, and
+     height the parent already set, a loop that grows and never shrinks, and
      one that looks like it works because the number does change. */
   it("measures the content, not the frame", () => {
     expect(height).toContain("firstElementChild");

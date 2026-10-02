@@ -12,7 +12,7 @@ import { useMediaQuery } from "@/lib/use-client-value";
    clickable product screen.
 
    It advances itself every seven seconds until the visitor takes over. Any
-   manual pick stops the rotation for good — once someone is steering, moving
+   manual pick stops the rotation for good, once someone is steering, moving
    the card under them is hostile.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -217,7 +217,7 @@ export function Walkthrough() {
                     </span>
                   </div>
 
-                  {/* The countdown exists only while the rotation does — a static
+                  {/* The countdown exists only while the rotation does. A static
                       bar would falsely promise an advance that is not coming. */}
                   {auto ? (
                     <span className="block h-[3px] w-full overflow-hidden rounded-[2px] bg-line">

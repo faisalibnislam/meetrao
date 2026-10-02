@@ -9,13 +9,13 @@ import { rewriteForDomain } from "@/lib/custom-domain";
 
    This is an optimistic check, not the boundary. Every authenticated layout,
    server action and route handler re-checks the session and the verification
-   gate for itself — a proxy-only gate is a convenience.
+   gate for itself. A proxy-only gate is a convenience.
 
    ONE THING IT DELIBERATELY DOES NOT DO: the verification gate. Convex Auth
    does not put verification state in the token, so this file cannot see it,
    and guessing would either let unverified users through or trap verified
    ones. That gate lives entirely in src/lib/data/session.ts, which reads the
-   profile anyway — and that was always the real boundary. The cost is one
+   profile anyway, and that was always the real boundary. The cost is one
    extra redirect for an unverified user, on a path they take once.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -36,12 +36,12 @@ const PRIVATE_PREFIXES = ["/dashboard", "/bookings", "/meetings", "/availability
    Both sides call Convex, so "just ask the server" does not settle it. They
    disagree because the middleware refreshes the token and validates the FRESH
    one, while the page render reads the stale cookie from the original request
-   — so a session whose access token has expired while its refresh token is
+  , so a session whose access token has expired while its refresh token is
    still good can sit in exactly this gap.
 
    Sending an already-signed-in person to a login form is a small, visible,
    self-correcting oddity. A redirect loop is a blank page and a dead product.
-   The gate that matters — keeping signed-OUT visitors out of private screens —
+   The gate that matters, keeping signed-OUT visitors out of private screens,
    is below and is unaffected, and every private screen re-checks for itself
    anyway. */
 
@@ -55,7 +55,7 @@ const PRIVATE_PREFIXES = ["/dashboard", "/bookings", "/meetings", "/availability
  * this one entry covers both.
  *
  * Everything else carrying a `?code=` redeems it ITSELF and must be left
- * alone — see the note where this is used.
+ * alone, see the note where this is used.
  */
 const AUTH_CODE_ROUTE = "/auth/callback";
 
@@ -114,7 +114,7 @@ async function convexProxyOnce() {
       /* AN ALLOW-LIST, NOT A DENY-LIST, and that distinction is the whole
          lesson here.
 
-         Convex Auth claims EVERY `?code=` it sees — the option defaults to
+         Convex Auth claims EVERY `?code=` it sees. The option defaults to
          undefined, which means "handle all of them". When redemption fails it
          deletes the parameter AND CLEARS THE AUTH COOKIES on the way past (see
          the package's server/request.js). So any route that carries a code of
@@ -130,7 +130,7 @@ async function convexProxyOnce() {
 
          The first version of this named only the calendar callback and let
          everything else through. That fixed connecting a calendar and left
-         sign-up and password reset broken in exactly the same way — a real
+         sign-up and password reset broken in exactly the same way, a real
          person's confirmation link arrived correct, lost its code here, and
          landed on a page telling them they had not confirmed. Naming what may
          be claimed is the only version that does not need extending every
@@ -146,19 +146,19 @@ async function convexProxyOnce() {
 
    A Pro host can point meeting.acme.com at us. The request arrives with their
    host header and a path that may or may not already name them, so what the
-   path means is decided by rewriteForDomain in src/lib/custom-domain.ts —
+   path means is decided by rewriteForDomain in src/lib/custom-domain.ts,
    which is pure and tested, and which this file only has to call.
 
    The short of it: `meeting.acme.com/alex` and the bare domain both serve
    Alex's page, `/intro` is read as one of Alex's meeting slugs, and the shared
-   paths — a guest's /booking/<ref> link, the legal pages, the plumbing —
+   paths, a guest's /booking/<ref> link, the legal pages, the plumbing,
    are served unchanged.
 
    REWRITE, NEVER REDIRECT. A redirect would bounce the guest to
    meetrao.com/<username>, which is the opposite of what the host paid for.
 
    The lookup is a Convex query on every request to an unknown host, which is
-   why it runs LAST — after the known hosts are excluded — and why the result
+   why it runs LAST (after the known hosts are excluded) and why the result
    is cached per hostname for the life of the edge instance. A domain that has
    just been verified may take a minute to start working; a domain that has
    just been removed may take a minute to stop.
@@ -175,7 +175,7 @@ function isOwnHost(hostname: string): boolean {
   const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
   try {
     const own = new URL(site).hostname;
-    // The apex and any subdomain of it — previews included.
+    // The apex and any subdomain of it, previews included.
     return hostname === own || hostname.endsWith(".vercel.app") || hostname.endsWith(`.${own}`);
   } catch {
     return false;
@@ -222,7 +222,7 @@ export async function proxy(request: NextRequest, event?: NextFetchEvent): Promi
         url.pathname = to;
         return NextResponse.rewrite(url);
       }
-      /* null means the path already says what it means on this domain — the
+      /* null means the path already says what it means on this domain, the
          advertised /<username> shape, a guest's booking link, a legal page.
          It falls through to the session refresh like any other request. */
     }
@@ -235,11 +235,11 @@ export async function proxy(request: NextRequest, event?: NextFetchEvent): Promi
 export const config = {
   matcher: [
     /* Everything except static assets and image files. The public booking page
-       is matched too — it has no session, but the cookie refresh is harmless
+       is matched too. It has no session, but the cookie refresh is harmless
        and keeps a signed-in host's own header correct while previewing.
 
        Next serves the app icons as /icon.png, /icon1.png and /apple-icon.png,
-       so the extension rule below already excludes them — no session refresh
+       so the extension rule below already excludes them, no session refresh
        to hand back a 32px PNG. */
     "/((?!_next/static|_next/image|favicon.ico|brand/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff2?)$).*)",
   ],

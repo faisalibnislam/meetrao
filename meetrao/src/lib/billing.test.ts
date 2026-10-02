@@ -27,7 +27,7 @@ describe("who is on Pro", () => {
   });
 
   /* Somebody who cancels on day two of a year they paid for has not stopped
-     being a customer — they keep Pro until the period runs out. */
+     being a customer. They keep Pro until the period runs out. */
   it("survives a cancellation until the period ends", () => {
     expect(isPro({ plan: "pro", plan_until: Date.now() + HOUR })).toBe(true);
     expect(isPro({ plan: "pro", plan_until: Date.now() - HOUR })).toBe(false);
@@ -78,7 +78,7 @@ describe("Polar deliveries", () => {
     expect(verifyPolarSignature({ secret: SECRET, body: BODY, headers: { id: ID, timestamp: TS, signature }, now: NOW })).toBe(false);
   });
 
-  /* Without a freshness window a captured delivery replays forever — which is
+  /* Without a freshness window a captured delivery replays forever, which is
      the entire reason the timestamp is inside the signed string. */
   it("refuses a delivery replayed hours later", () => {
     const signature = sign(standardKey);
@@ -135,7 +135,7 @@ describe("only the webhook grants Pro", () => {
  * `plan:` anywhere. Two near-misses taught this: the first version used one
  * regex over the file and `\s*` backtracked, so `plan: "free"` matched the
  * exemption it was meant to escape; the second flagged convex/admin.ts, where
- * a QUERY returns `plan: planOf(p)` — a read, reported as a grant.
+ * a QUERY returns `plan: planOf(p)`. a read, reported as a grant.
  */
 function globWrites(): string[] {
   const files = ["convex/billing.ts", "convex/profiles.ts", "convex/admin.ts", "convex/teams.ts", "convex/apiKeys.ts"];
@@ -148,7 +148,7 @@ function globWrites(): string[] {
       // The call's arguments, up to the end of the statement.
       const from = match.index ?? 0;
       const body = text.slice(from, from + 600);
-      /* Both forms: `plan: something` and the shorthand `plan,`. billing.ts
+      /* Both forms: `plan: something` and the shorthand `plan,`. Billing.ts
          uses the shorthand, so a pattern that only knew the first found
          nothing anywhere and passed by being blind. */
       const assignment = /\bplan\s*(?::\s*([^,\n]+)|,)/.exec(body);
@@ -167,7 +167,7 @@ describe("Pro given away", () => {
 
   /* A grant is read BESIDE the subscription, never instead of it. The whole
      point of the separation is that nothing inside the app can write `plan`,
-     so a granted account and a paying one stay distinguishable — to the
+     so a granted account and a paying one stay distinguishable, to the
      product, and to anybody counting revenue. */
   it("makes somebody Pro without touching the plan field", () => {
     const granted = { plan: "free", plan_until: null, comp_until: Date.now() + HOUR };
@@ -183,7 +183,7 @@ describe("Pro given away", () => {
   });
 
   /* Somebody granted Pro who then subscribes has both. Removing the grant must
-     leave them Pro — the admin screen says so, and this is why. */
+     leave them Pro. The admin screen says so, and this is why. */
   it("does not take Pro away from somebody who also pays", () => {
     const both = { plan: "pro", plan_until: Date.now() + HOUR, comp_until: Date.now() - HOUR };
     expect(isPro(both)).toBe(true);

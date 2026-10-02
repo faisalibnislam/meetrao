@@ -4,14 +4,14 @@ import { POSTAL_ADDRESS } from "@/lib/contact";
 /* ─────────────────────────────────────────────────────────────────────────────
    "Set but blank" has to mean the same thing as "not set".
 
-   zod's `.default(x)` only fires on `undefined`. A dashboard field that exists
+   Zod's `.default(x)` only fires on `undefined`. A dashboard field that exists
    and is empty arrives as "", which is a perfectly good string, so the default
    never runs and the blank wins. Nothing throws.
 
    That matters because two of these defaults are real values, not placeholders.
    A blank EMAIL_FROM sends a message with no From address. A blank
    EMAIL_POSTAL_ADDRESS sends an email footer with no postal address in it,
-   which is the one thing anti-spam law requires be in there — and the old
+   which is the one thing anti-spam law requires be in there, and the old
    `|| "Meetrao"` fallback in send.ts turned that into a footer reading just
    "Meetrao", which looks fine and is not compliant.
 
@@ -60,7 +60,7 @@ describe("optional variables with a real default", () => {
     expect(e.EMAIL_FROM).toBe("Meetrao <hello@meetrao.com>");
   });
 
-  /* Overriding must still work — a deployment that genuinely wants a different
+  /* Overriding must still work. a deployment that genuinely wants a different
      sender or address is allowed to say so. */
   it("lets a real value override the default", async () => {
     const e = await envWith({

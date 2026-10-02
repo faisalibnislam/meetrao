@@ -10,7 +10,7 @@ import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Sidebar — 218px, #EFEDE7, one border to the right.
+   Sidebar, 218px, #EFEDE7, one border to the right.
 
    Below 820px it becomes a horizontal bar with a hamburger drawer. That switch
    is CSS, not JS: the DOM is identical either way, so there is no frame where
@@ -20,9 +20,9 @@ import { cx } from "@/lib/cx";
    Below the nav the rail carries two things the product already knows: a way to
    create a meeting, and every bookable link. Four nav rows left roughly 600px of
    bare #EFEDE7 above the account block; these fill it with work rather than
-   decoration. Nothing here is new state — the links are the meeting types.
+   decoration. Nothing here is new state (the links are the meeting types.
 
-   Settings is NOT a nav row — it lives in the account menu. The admin console
+   Settings is NOT a nav row) it lives in the account menu. The admin console
    keeps its own Settings row, because that is a different screen; an account
    menu offering Settings as well would give an admin two identical adjacent
    rows, the second dropping them out of the console.
@@ -42,7 +42,7 @@ export type NavItem = {
   count?: number | null;
   /** Extra paths that keep this row active (e.g. /meetings/new under Meetings). */
   match?: string[];
-  /** Only the exact path activates the row — for an index like /admin. */
+  /** Only the exact path activates the row, for an index like /admin. */
   exact?: boolean;
 };
 
@@ -133,7 +133,7 @@ export function Sidebar({
         "flex-none border-line",
         // desktop
         // pb mirrors pt. The design file says `padding:14px 12px 58px`, and 58px
-        // left the account block floating ~60px clear of the bottom edge —
+        // left the account block floating ~60px clear of the bottom edge,
         // measured, not guessed. Deliberate departure from the token.
         "box-border flex w-[218px] flex-col border-r bg-sidebar pt-[14px] pr-[12px] pb-[14px] pl-[12px]",
         // mobile: a bar above the content
@@ -152,7 +152,7 @@ export function Sidebar({
 
       {/* The everyday action gets the rail's one primary slot. Creating a
           meeting TYPE is setup, done rarely, and already has a button on the
-          Meetings screen, its empty state and the dashboard's — a second copy
+          Meetings screen, its empty state and the dashboard's. A second copy
           here would crowd out the thing a host does most days.
           Hidden on the mobile bar; the drawer below carries its own row. */}
       <Link
@@ -372,7 +372,7 @@ export function Sidebar({
  * A nav row's icon, which doubles as its pending indicator.
  *
  * Every app route now has a loading.tsx, so a click usually paints a skeleton
- * within a few milliseconds and this never becomes visible — the CSS holds it
+ * within a few milliseconds and this never becomes visible. The CSS holds it
  * back for 120ms for exactly that reason. It earns its place in the cases a
  * skeleton cannot cover: the first click after a cold start, or a prefetch that
  * has not finished on a slow connection, where the rail would otherwise sit

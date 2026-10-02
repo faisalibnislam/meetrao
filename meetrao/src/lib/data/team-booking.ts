@@ -12,7 +12,7 @@ import type { BookingQuestion } from "@/lib/types";
    The slot list is the UNION of its members: a time is offered when at least
    one person could take it, which is the whole promise of a team link. The
    engine is run once per member, against that member's own hours, own zone,
-   own days off and own calendar — not against some merged pseudo-host, which
+   own days off and own calendar, not against some merged pseudo-host, which
    would have to invent a timezone and would get DST wrong for everybody.
 
    That costs one Google call per member. A team is people, so the number is
@@ -116,7 +116,7 @@ export async function getTeamBusy(hours: MemberHours[], from: Date, to: Date): P
  * Every instant at least one member could take, for one guest-local day.
  *
  * De-duplicated: two members free at 10:00 is one slot on offer, and which of
- * them gets it is decided when the booking is made, by the rotation — not
+ * them gets it is decided when the booking is made, by the rotation, not
  * here, where nothing has been agreed yet.
  */
 export function teamSlotsForDay(args: {

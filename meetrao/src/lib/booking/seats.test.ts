@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 /* Group meetings: several bookings sharing one instant.
    
    The rules live in a Convex mutation and in three slot call sites, none of
-   which a test here can execute — so these read the source, in the style of
+   which a test here can execute. So these read the source, in the style of
    admin-booking-link.test.ts, and each one names the failure it prevents. */
 
 const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), "utf8");
@@ -49,7 +49,7 @@ describe("the seat guard", () => {
 
 describe("one calendar event between the seats", () => {
   /* Twenty identical entries stacked on a host's Tuesday makes their own
-     calendar unreadable — a strange way to thank them for running a workshop. */
+     calendar unreadable, a strange way to thank them for running a workshop. */
   it("joins a seatmate's event instead of making another", () => {
     expect(google).toContain("export const seatmateEvent");
     const create = google.slice(google.indexOf("export const createEventForBooking"));
@@ -68,7 +68,7 @@ describe("one calendar event between the seats", () => {
 
 describe("a full slot is not offered", () => {
   /* Three places compute times, and a slot missing the filter in any one of
-     them offers a seat that the mutation will then refuse — which reads to a
+     them offers a seat that the mutation will then refuse, which reads to a
      guest as the product losing their booking. */
   const sites = [
     ["the hosted page", read("src/app/(public)/[username]/[slug]/page.tsx")],

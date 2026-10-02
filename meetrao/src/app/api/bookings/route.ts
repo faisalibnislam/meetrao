@@ -111,7 +111,7 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
   else meetUrl = event.meetUrl;
 
   /* The assigned member is the host of this booking, so the confirmation is
-     addressed from them by name — a guest who booked "the sales team" still
+     addressed from them by name. A guest who booked "the sales team" still
      needs to know who is turning up. */
   const hostProfile = await convexAnonymous().query(api.publicBooking.hostForBookingMail, {
     reference: row.reference,
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
   const end = new Date(row.ends_at);
 
   /* The calendar write comes after the booking exists. If it fails the booking
-     is still real — the host is told, rather than the guest losing a meeting
+     is still real. The host is told, rather than the guest losing a meeting
      they were told they had. */
   let meetUrl: string | null = null;
   let calendarWarning: string | null = null;

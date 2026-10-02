@@ -18,14 +18,14 @@ import type { DomainView } from "./billing-panel";
    Make the booking page theirs: logo, colour, and their own domain.
 
    All three are Pro, and all three are shown to a free host rather than
-   hidden — a feature nobody can see is a feature nobody buys. What a free host
+   hidden. A feature nobody can see is a feature nobody buys. What a free host
    sees is the real panel with its controls disabled and a Pro badge on it, not
    a different screen.
 
    THE PREVIEW IS THE POINT OF THIS SCREEN. A hex field alone makes a host
    guess, save, open their booking page in another tab, and come back. The
    preview below is built from the same brandTokens() the booking page uses, so
-   what it shows is what a guest gets — including the derived label colour,
+   what it shows is what a guest gets, including the derived label colour,
    which is the part nobody predicts.
    ───────────────────────────────────────────────────────────────────────────── */
 
@@ -38,7 +38,7 @@ const ACCEPT = "image/png,image/jpeg,image/webp";
 const SUGGESTED = ["#14554a", "#1f3d7a", "#7a2048", "#8a4b1f", "#2f6d3a", "#1a1917"];
 
 /* Backgrounds, which are a different kind of choice: mostly near-white washes,
-   plus two dark ones to show that dark pages work — the text drawn on the
+   plus two dark ones to show that dark pages work. The text drawn on the
    ground flips to suit, so neither is a trap. */
 const SUGGESTED_BG = ["#f4f6fb", "#fbf7f1", "#f3f7f4", "#eef0f4", "#15213a", "#141414"];
 
@@ -57,7 +57,7 @@ export function BrandingPanel({
   background: string | null;
   domain: DomainView;
   username: string;
-  /** "meetrao.com" — for showing what the link looks like either way. */
+  /** "meetrao.com", for showing what the link looks like either way. */
   siteHost: string;
 }) {
   const router = useRouter();
@@ -529,7 +529,7 @@ export function BrandingPanel({
  *
  * THE GROUND IS DRAWN, not just the card. The background colour's whole job is
  * the area around the card, so a preview that showed only the card would be
- * blind to the one thing this control does — including whether the footer's
+ * blind to the one thing this control does, including whether the footer's
  * legal links are still readable on it, which is the case worth seeing.
  */
 function BrandPreview({

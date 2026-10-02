@@ -9,7 +9,7 @@ import { attachDomain, checkDomain, detachDomain, type DomainState } from "@/lib
 import { api } from "@/convex/_generated/api";
 import { env, siteUrl } from "@/lib/env";
 
-/* Billing and custom domains. The plan itself is never written here — only
+/* Billing and custom domains. The plan itself is never written here, only
    Polar's webhook does that. These actions start a checkout, open the portal,
    and hold a domain claim while Vercel is asked about its DNS. */
 
@@ -31,7 +31,7 @@ export async function startCheckout(cadence: Cadence): Promise<BillingResult> {
       productId: cadence === "yearly" ? products.yearly : products.monthly,
       profileId: session.profile.id,
       email: session.profile.email,
-      // Pro is granted by the webhook, not by arriving here — this page just
+      // Pro is granted by the webhook, not by arriving here, this page just
       // says thank you and reloads the plan.
       successUrl: `${siteUrl()}/settings/billing?welcome=1`,
     });

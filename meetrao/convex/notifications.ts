@@ -28,7 +28,7 @@ export const unreadCount = query({
   },
 });
 
-/** `read` both ways — the screen offers mark-as-unread too. */
+/** `read` both ways, the screen offers mark-as-unread too. */
 export const markRead = mutation({
   args: { id: v.string(), read: v.optional(v.boolean()) },
   handler: async (ctx, a) => {

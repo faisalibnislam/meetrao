@@ -21,7 +21,7 @@ export default async function NewBookingPage() {
     ...(data ?? []).map((m) => ({ value: m.id, label: `${m.name} · ${m.duration_minutes} min` })),
   ];
 
-  // The host's today, in their own zone — the date field must not open on
+  // The host's today, in their own zone, the date field must not open on
   // yesterday for anyone east of the server.
   const today = new Intl.DateTimeFormat("en-CA", {
     timeZone: profile.timezone,

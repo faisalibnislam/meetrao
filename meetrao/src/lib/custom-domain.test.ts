@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { rewriteForDomain } from "@/lib/custom-domain";
 
 /* null means "serve this path as it stands". A string means "serve that path
-   instead", and the proxy rewrites rather than redirects — a guest on
+   instead", and the proxy rewrites rather than redirects, a guest on
    meeting.acme.com must never be bounced to meetrao.com. */
 
 describe("the shape a host advertises", () => {
@@ -45,7 +45,7 @@ describe("a short link straight to a meeting", () => {
 describe("one domain, one account", () => {
   it("is not a door into somebody else's page", () => {
     /* The whole point: on Alex's domain, /dana is read as Alex's meeting named
-       "dana" — which does not exist, so it 404s. It must NOT resolve to Dana's
+       "dana", which does not exist, so it 404s. It must NOT resolve to Dana's
        booking page, or every custom domain becomes a mirror of the product. */
     expect(rewriteForDomain("/dana", "alex")).toBe("/alex/dana");
     expect(rewriteForDomain("/dana/intro", "alex")).toBe("/alex/dana/intro");

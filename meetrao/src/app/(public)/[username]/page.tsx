@@ -23,7 +23,7 @@ export async function generateMetadata({
 
   const name = host.fullName || host.username;
   /* Absolute, and built from the domain this request arrived on. A Pro host's
-     page on their own domain must not canonicalise to meetrao.com — see
+     page on their own domain must not canonicalise to meetrao.com, see
      src/lib/public-origin.ts. */
   const here = await publicUrl(`/${host.username}`);
 
@@ -64,8 +64,8 @@ export default async function HostPage({ params }: { params: Promise<{ username:
           <div className="flex items-center gap-[11px]">
             {/* <Avatar>, not hand-rolled initials. This page drew the initials
                 itself and never looked at host.avatarUrl, so a host with a
-                photograph — set on their own profile screen, and shown on
-                every OTHER booking surface — appeared here as two letters.
+                photograph (set on their own profile screen, and shown on
+                every OTHER booking surface) appeared here as two letters.
                 The component already falls back to initials when there is no
                 photograph, which is the whole of what this used to do. */}
             <Avatar name={host.fullName || host.username} size={38} src={host.avatarUrl} />

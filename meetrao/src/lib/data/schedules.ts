@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 /**
  * The schedule picker's options, with "Default" first.
  *
- * An empty value means NULL on meeting_types.schedule_id — follow whichever
+ * An empty value means NULL on meeting_types.schedule_id, follow whichever
  * schedule is the default, now and whenever it changes. That is a different
  * promise from pinning to the schedule that happens to be default today, so it
  * gets its own entry rather than being folded into the named list.

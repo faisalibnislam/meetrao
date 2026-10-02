@@ -5,7 +5,7 @@ import path from "node:path";
 /* ─────────────────────────────────────────────────────────────────────────────
    The two disclosures Google's OAuth verification checks for by name.
 
-   Both facts were already in this policy before the review — section 7 lists
+   Both facts were already in this policy before the review, section 7 lists
    every processor, section 11 describes TLS, encryption at rest and the
    row-level security on the token table. The verification response still said
    the policy "does not state with whom you share, transfer, or disclose Google
@@ -83,7 +83,7 @@ describe("the Google user data disclosures", () => {
 
   it("lists concrete protection mechanisms, not adjectives", () => {
     /* "row-level security" was here until the move off Postgres. The claim it
-       stood for — a token no browser session can read — is now made by
+       stood for (a token no browser session can read) is now made by
        function-level authorization instead, so the phrase to pin is the one
        that is still true. Pinning the old one would have kept a false
        sentence in a legal document green. */
@@ -98,7 +98,7 @@ describe("the Google user data disclosures", () => {
 
    /privacy is written for a reviewer, /help for a host who is hesitating, and
    the onboarding step for one who is about to click Allow. They are different
-   audiences and different lengths, and that is fine — but they cannot say
+   audiences and different lengths, and that is fine, but they cannot say
    different things about what Meetrao does with the permission.
 
    The failure this guards is the ordinary one: somebody improves the wording

@@ -1,7 +1,7 @@
 import { cronJobs } from "convex/server";
 import { internal } from "./_generated/api";
 
-/* Postgres had no scheduler — pg_cron was never installed, and analytics_prune
+/* Postgres had no scheduler, pg_cron was never installed, and analytics_prune
    rode on visitor traffic instead. This is the schedule that should always
    have existed. */
 const crons = cronJobs();

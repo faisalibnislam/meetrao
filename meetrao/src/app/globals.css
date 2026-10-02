@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Design tokens — transcribed verbatim from design_handoff_meetrao/README.md
+   Design tokens, transcribed verbatim from design_handoff_meetrao/README.md
    § "Design tokens". The values are irregular on purpose (13.5px, 12.5px,
    half-pixel steps). Do not re-derive or tidy them.
 
    One deliberate departure: the handoff's --mono (DM Mono) is gone. The
    product uses no monospace face anywhere, and that is a decision rather than
-   an oversight — see --font-mono below, and src/lib/no-monospace.test.ts.
+   an oversight, see --font-mono below, and src/lib/no-monospace.test.ts.
    ───────────────────────────────────────────────────────────────────────────── */
 :root {
   /* Surface + line */
@@ -19,13 +19,13 @@
   --line-soft: #edebe4;
   --line-strong: #cfcbc0;
 
-  /* Ink. --ink-3 was darkened to clear 4.5:1 on ground, surface and fill — do not lighten it. */
+  /* Ink. --ink-3 was darkened to clear 4.5:1 on ground, surface and fill, do not lighten it. */
   --ink: #1a1917;
   --ink-2: #575550;
   --ink-3: #66635c;
   /* Text drawn directly on --ground rather than on a card: the public footer's
      legal links and the "Booking page" eyebrow. Its own token because a Pro
-     host can set the background, and a dark one makes --ink-3 invisible —
+     host can set the background, and a dark one makes --ink-3 invisible,
      while --ink-3 itself must not move, since it is also read on white. */
   --on-ground: var(--ink-3);
 
@@ -36,7 +36,7 @@
   --accent-line: #c2d6d0;
   --accent-soft-hover: #d7e6e0;
   /* TWO TOKENS THAT EXIST FOR BRANDED BOOKING PAGES, and whose defaults are
-     exactly what the design already drew — nothing moves on an unbranded
+     exactly what the design already drew, nothing moves on an unbranded
      screen by their being here.
 
      A Pro host sets one colour and src/components/booking/brand.tsx rebinds
@@ -48,7 +48,7 @@
                      yellow or cyan.
        --accent-ink  the accent used AS text, on white or on its own tint.
                      Needs 4.5:1, which the raw colour of a vivid brand does
-                     not have — convex/lib/brand.ts darkens it until it does.
+                     not have, convex/lib/brand.ts darkens it until it does.
 
      So: `bg-accent` keeps the host's colour exactly as chosen, `text-on-accent`
      labels it, and `text-accent-ink` is the readable form for text. */
@@ -119,7 +119,7 @@
   --font-serif: var(--serif);
   /* No monospace anywhere in the product. This is not dead: Tailwind's
      preflight styles <code>, <kbd>, <samp> and <pre> with --font-mono, and
-     falls back to ui-monospace when it is undefined — so the token has to
+     falls back to ui-monospace when it is undefined. So the token has to
      exist and has to say sans. */
   --font-mono: var(--sans);
 
@@ -130,7 +130,7 @@
 
 /* These belong in @layer base and not outside it. Unlayered CSS beats every
    layered rule, so an unlayered `a { color: … }` silently overrode `text-white`
-   on every anchor in the product — the footer links and the nav's own call to
+   on every anchor in the product, the footer links and the nav's own call to
    action rendered ink-on-dark-green. Inside base, a utility class wins, which
    is the whole point of having them. */
 @layer base {
@@ -250,7 +250,7 @@
 
    The 120ms delay is the whole trick. With a loading.tsx on every route a
    transition normally paints in single-digit milliseconds, and the animation
-   never starts — so this appears only when something is genuinely slow, and
+   never starts. So this appears only when something is genuinely slow, and
    never flashes on a fast navigation.
    ───────────────────────────────────────────────────────────────────────────── */
 .nav-hint-slot[data-pending="true"] {
@@ -310,7 +310,7 @@
    live; 15% off that is 1.105, taken as 1.1.
 
    902px, not 820px, is the switch. The app's own breakpoint is 820px, media
-   queries do not see zoom, and 820 x 1.1 = 902 — so above this width the
+   queries do not see zoom, and 820 x 1.1 = 902. so above this width the
    zoomed layout is always at least 820px of CSS and the desktop arrangement is
    always the one in play. Below it nothing is scaled and 820px applies
    directly. The two rules meet exactly, with no band where a scaled layout is
@@ -323,7 +323,7 @@
    by zoom, so an unscaled `h-screen` inside a 1.3x box computes 130vh and the
    shell overflows the window. Dividing it back out is what keeps the app
    exactly one screen tall. It is unlayered, which is how it beats Tailwind's
-   layered `h-screen` — see the note on @layer base above. ── */
+   layered `h-screen`, see the note on @layer base above. ── */
 @media (min-width: 902px) {
   .app-scale {
     zoom: 1.1;
@@ -344,14 +344,14 @@
 /* ─────────────────────────────────────────────────────────────────────────────
    Touch targets.
 
-   The design's control heights — 28, 30, 32, 34, 36px — are drawn for a mouse,
+   The design's control heights (28, 30, 32, 34, 36px) are drawn for a mouse,
    and at a desk they are right. Under a fingertip they are not: a measured pass
    over the whole product found 360 controls below 44px across 22 screens, from
    the dashboard's buttons to the booking page's date cells.
 
    Keyed on `pointer: coarse`, deliberately, not on a width breakpoint. What
    decides how big a target must be is what is pointing at it, not how wide the
-   window is — so a narrow desktop window keeps its dense controls, and a tablet
+   window is. So a narrow desktop window keeps its dense controls, and a tablet
    at 1024px gets the roomy ones.
 
    44px is Apple's floor (WCAG 2.5.8 asks 24, Material 48). It is applied as
@@ -359,17 +359,17 @@
    wherever a control centres its content: what grows is the area a thumb can
    land on, not the ink.
 
-   min-height and not min-width, also deliberately. The booking page's date grid
-   is seven cells across a 320px screen — forcing each to 44px wide would push
+   Min-height and not min-width, also deliberately. The booking page's date grid
+   is seven cells across a 320px screen, forcing each to 44px wide would push
    the grid past the viewport and break the very layout this is meant to help.
    Height is the axis that is always free.
 
    Two exemptions, both marked rather than assumed:
-     · Links inside a sentence — `a` on its own is untouched, so only `a.unlink`
+     · Links inside a sentence, `a` on its own is untouched, so only `a.unlink`
        (the product's own link class, never used mid-sentence) grows. WCAG 2.5.8
        exempts inline links by name, and stretching one to 44px would blow out
        the line box around it. Inline boxes ignore min-height anyway.
-     · Controls whose smallness IS the design — the switch, the carousel dots,
+     · Controls whose smallness IS the design, the switch, the carousel dots,
        the slider track. Those keep their paint and take their hit area from a
        pseudo-element instead, right below.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -383,13 +383,13 @@
     min-height: 44px;
     /* The floor stretches the BOX; without this the content stays pinned to
        its top edge. That is how the marketing logo came to sit 25px high
-       inside its own 44px link — measured, 0px above the mark and 25px below.
-       align-content applies to block containers in current browsers and is
+       inside its own 44px link, measured, 0px above the mark and 25px below.
+       Align-content applies to block containers in current browsers and is
        inert where it does not, so it can only improve on the alternative. */
     align-content: center;
   }
 
-  /* The switch keeps its 34x20 pill — that size is the design, and its border
+  /* The switch keeps its 34x20 pill. That size is the design, and its border
      and radius mean padding would inflate the drawn shape rather than the
      target. So the target comes from a pseudo-element centred on it, painting
      nothing. `position: relative` on the switch is load-bearing here.
@@ -407,14 +407,14 @@
   }
 
   /* Icon-only buttons, opted in where there is room across. Width is not
-     raised globally for the reason given above — the date grid would break. */
+     raised globally for the reason given above. The date grid would break. */
   .tap-square {
     min-width: 44px;
   }
 
   /* The carousel dots take padding instead, deliberately. The same pseudo trick
      fails here: six dots sit 6px apart, so 44px-wide hit areas would overlap
-     three deep and a tap would land on whichever won the paint order — worse
+     three deep and a tap would land on whichever won the paint order, worse
      than a small target, because it would be a WRONG one. Padding grows the box
      and pushes the dots apart, and `background-clip: content-box` keeps the
      painted dot at its 8px. */
@@ -548,7 +548,7 @@ html {
    nav pinning.
 
    On html as well as body, because Safari does not reliably honour it on body
-   alone — the page still pans, which is what iPhone users were seeing. This is
+   alone. The page still pans, which is what iPhone users were seeing. This is
    a backstop, not the fix: the overflow that caused it was a non-shrinking flex
    row in the footer, and that is corrected at the source in site-chrome.tsx. A
    clip here only stops a future one from being able to drag the whole page
@@ -599,7 +599,7 @@ body {
 
 /* The slider on a finger. Must come AFTER the rules above, not inside the
    touch-target block further up: same specificity, so whichever is written last
-   wins — and the first attempt at this sat before them and did nothing.
+   wins, and the first attempt at this sat before them and did nothing.
 
    The 12px track is the design, so the control grows to 44px and the track is
    painted back as a centred background. The bar looks unchanged; the thumb is
@@ -614,7 +614,7 @@ body {
 
 /* ── Legal and help documents ─────────────────────────────────────────────────
    The sticky contents rail is border-box, and its max-height budget covers the
-   sticky offset as well as its own padding — otherwise it hangs off the bottom
+   sticky offset as well as its own padding, otherwise it hangs off the bottom
    of the viewport at every screen height. Below 880px it goes static and full
    width, and its list reverts to a wrapping chip row. ── */
 .doc-rail {
@@ -717,7 +717,7 @@ body {
 
    Reduced motion is already handled, by the global `*` block further up this
    file: it collapses every animation and transition to 0.001ms !important.
-   That is why all three carry `both` — the fill mode is what makes a collapsed
+   That is why all three carry `both`. The fill mode is what makes a collapsed
    animation land on its FINISHED state rather than its first frame. An
    animation that hides its content when it is switched off is a broken page,
    not a calm one, and that is the only thing these had to get right.

@@ -12,7 +12,7 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
  *
  * The tie-break is not decoration. A host whose contacts were all created by
  * one batch share a created_at to the millisecond, and `order by created_at
- * desc` alone leaves their order up to the storage engine — so the screen
+ * desc` alone leaves their order up to the storage engine, so the screen
  * reshuffled between backends, and in Postgres could reshuffle between reads.
  * Found by scripts/parity-check.mjs; the Supabase query carries the same
  * tie-break in src/lib/data/contacts.ts.
@@ -37,7 +37,7 @@ export const listOwn = query({
  *
  * NOTE for anyone comparing with the Supabase version: that one selected from
  * `booking_invitees` with NO user filter and let RLS scope it to the caller's
- * own bookings. There is no RLS here, so the scoping is explicit — invitees are
+ * own bookings. There is no RLS here, so the scoping is explicit, invitees are
  * gathered per booking of THIS host. An unscoped read would have returned every
  * invitee in the database.
  */
@@ -123,7 +123,7 @@ export const update = mutation({
  * Save by hand: update when an id is given, otherwise upsert on the identity.
  *
  * Typing an address that already exists means "this person", not "a second row
- * for this person" — the same reasoning as the Supabase upsert on
+ * for this person", the same reasoning as the Supabase upsert on
  * (user_id, email), which has no unique index to lean on here.
  */
 export const save = mutation({

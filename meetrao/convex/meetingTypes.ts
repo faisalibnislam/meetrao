@@ -55,7 +55,7 @@ const MAX_QUESTIONS = 5;
  *
  * An unknown kind falls back to Meet rather than failing: the alternative is a
  * meeting that cannot be saved because a value nobody typed is wrong. A kind
- * that needs a detail and has none is still allowed — the host may not know
+ * that needs a detail and has none is still allowed. The host may not know
  * the room yet, and the guest is told "details to follow" rather than being
  * refused a booking.
  */
@@ -63,7 +63,7 @@ const MAX_QUESTIONS = 5;
  * Seats, 1 to 100.
  *
  * One is the one-to-one meeting and the default. A hundred is not a technical
- * limit — it is the point past which a booking page is the wrong tool and a
+ * limit. It is the point past which a booking page is the wrong tool and a
  * webinar platform is the right one.
  */
 const MAX_CAPACITY = 100;
@@ -129,7 +129,7 @@ export const create = mutation({
     };
     validate(row);
 
-    // unique (user_id, slug) — Postgres had an index; this is the replacement.
+    // unique (user_id, slug), Postgres had an index; this is the replacement.
     const clash = await ctx.db
       .query("meeting_types")
       .withIndex("by_user_slug", (q) => q.eq("user_id", me.id).eq("slug", row.slug))
@@ -195,7 +195,7 @@ export const update = mutation({
 
     if (patch.capacity !== undefined) patch.capacity = validCapacity(patch.capacity as number, me);
 
-    /* Only a team you own, and only your own meeting — the ownership check
+    /* Only a team you own, and only your own meeting. The ownership check
        above has already run, so this is the other half: a meeting cannot be
        handed to somebody else's rotation. */
     if (patch.team_id) {

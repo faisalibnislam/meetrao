@@ -12,7 +12,7 @@ import { COMPARISONS } from "./comparisons";
    The specific defect that prompted this file: the Calendly row read "paid
    plans published from $10/seat/month". Ten dollars is the ANNUAL rate. The
    monthly rate is twelve. Quoting the lower number bare is the classic
-   comparison-page sleight of hand — technically sourced, practically
+   comparison-page sleight of hand, technically sourced, practically
    misleading, and exactly the kind of thing that gets a page distrusted in
    whole rather than in part.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -39,7 +39,7 @@ describe("competitor pricing", () => {
   });
 
   /* A per-seat price is two numbers, not one, and which one you quote changes
-     the comparison by 20%. Any figure has to say which it is — and that now
+     the comparison by 20%. Any figure has to say which it is, and that now
      includes Meetrao's own price, which is quoted per YEAR. */
   it.each(claims().filter((c) => /\$\d/.test(c.text)))(
     "$where states the billing basis alongside the price",

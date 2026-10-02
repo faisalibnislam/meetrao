@@ -6,7 +6,7 @@
  * and an issuer we no longer control is an issuer nobody should be able to
  * present a token from.
  *
- * `CONVEX_SITE_URL` is set by Convex itself on every deployment — nothing to
+ * `CONVEX_SITE_URL` is set by Convex itself on every deployment. Nothing to
  * configure, and nothing that can drift between dev and production.
  */
 const authConfig = {

@@ -7,7 +7,7 @@ import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
    A missing variable fails at boot with a useful message rather than at runtime
    in production. `npm run setup:check` runs the same validation from the CLI.
 
-   Never put a secret in a tracked file — not in vercel.json, not in a README,
+   Never put a secret in a tracked file, not in vercel.json, not in a README,
    not in a commit message. `.env.local` is gitignored and does not travel to
    Vercel; every variable has to be set in the dashboard too.
    ───────────────────────────────────────────────────────────────────────────── */
@@ -20,7 +20,7 @@ import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
  * valid string, so the default never fires and the empty value wins. That is
  * not hypothetical: EMAIL_FROM blank produces a message with no From address,
  * and EMAIL_POSTAL_ADDRESS blank produces an email footer with no postal
- * address in it — which is the one thing anti-spam law requires be there.
+ * address in it, which is the one thing anti-spam law requires be there.
  *
  * The same trap is already documented on NEXT_PUBLIC_SITE_URL below. This makes
  * "set but blank" mean the same thing as "not set", which is what everyone
@@ -39,7 +39,7 @@ const serverSchema = z.object({
   NEXT_PUBLIC_CONVEX_URL: z.string().url(),
 
   /* Calendar access is ours to handle. Sign-in with Google is Convex Auth's,
-     and its callback is on the Convex deployment's own origin — two separate
+     and its callback is on the Convex deployment's own origin, two separate
      concerns that share one Google Cloud project, and one OAuth client that
      must list BOTH redirect URIs. */
   GOOGLE_CLIENT_ID: z.string().min(10),
@@ -53,7 +53,7 @@ const serverSchema = z.object({
    * is the address the Support page tells people to write TO. A reply then
    * lands where a reply should, and there is one mailbox rather than two.
    *
-   * This is only the default. Set on Vercel, the variable wins — and a value
+   * This is only the default. Set on Vercel, the variable wins, and a value
    * left in that dashboard disagreeing with this line is exactly how mail kept
    * going out under a retired address for a week.
    */
@@ -80,7 +80,7 @@ const serverSchema = z.object({
   /**
    * Secret that salts the daily visitor hash. See lib/analytics/visit.ts.
    *
-   * Optional, and the default is not a placeholder — `analyticsSalt()` falls
+   * Optional, and the default is not a placeholder, `analyticsSalt()` falls
    * back to the service-role key, which is already a stable server-only secret
    * that never reaches a browser. Setting this explicitly buys one thing:
    * rotating the service-role key then stops resetting the day's unique-visitor
@@ -91,8 +91,8 @@ const serverSchema = z.object({
   /**
    * GA4 measurement ID ("G-XXXXXXXXXX").
    *
-   * Unset, Google Analytics is not loaded at all — no script, no request to
-   * google-analytics.com — and the consent banner does not appear either. That
+   * Unset, Google Analytics is not loaded at all (no script, no request to
+   * google-analytics.com) and the consent banner does not appear either. That
    * is not a shortcut: the banner exists because GA writes cookies, and the
    * first-party counter is cookie-free and needs no permission. A banner asking
    * consent for nothing is a dark pattern in the other direction.
@@ -103,7 +103,7 @@ const serverSchema = z.object({
      Billing. All optional, and the product is a working free tier without
      them: an unset key means the upgrade button says billing is not
      configured rather than the whole app refusing to boot. What must never
-     be optional is the webhook secret's USE — an unsigned delivery is
+     be optional is the webhook secret's USE. An unsigned delivery is
      rejected whether or not a secret is set, in src/app/api/polar/webhook. */
 
   /** polar_oat_… or polar_pat_…, with checkouts:write and customer_sessions:write. */
@@ -154,7 +154,7 @@ export function env(): Env {
 /**
  * The origin this deployment is reachable at. Every OAuth redirect URI and
  * every link inside an email is built from it, so it has to be an address that
- * actually serves this app — and one that can be registered ahead of time in
+ * actually serves this app, and one that can be registered ahead of time in
  * Google's authorised redirect URIs.
  *
  * `VERCEL_URL` is the per-deployment host (meetrao-a1b2c3-….vercel.app). It
@@ -168,7 +168,7 @@ export function env(): Env {
  * "/" produces a double slash, and an allow-list match is exact.
  */
 export function siteUrl(): string {
-  // Not `??` — an env var set to "" in a dashboard is empty, not undefined,
+  // Not `??`. An env var set to "" in a dashboard is empty, not undefined,
   // and would otherwise win and produce relative redirects.
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim();
   if (configured) return configured.replace(/\/+$/, "");

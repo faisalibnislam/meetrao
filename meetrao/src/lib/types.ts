@@ -14,7 +14,7 @@ export type Profile = {
   notify_booking_changed: boolean;
   notify_booking_cancelled: boolean;
   /** Absent on every profile written before reminders existed, and absent
-      reads as on — the server applies the same rule. */
+      reads as on, the server applies the same rule. */
   notify_reminders?: boolean;
   notify_daily_agenda: boolean;
   notify_product_news: boolean;

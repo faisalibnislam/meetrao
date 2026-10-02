@@ -10,7 +10,7 @@ import { v } from "convex/values";
    written as Scrypt, so nobody is asked to reset anything.
 
    `supabase_id` is the load-bearing field: it is what convex/lib/auth.ts
-   resolves to keep `profiles.id` — and therefore every user-keyed row —
+   resolves to keep `profiles.id`, and therefore every user-keyed row,
    valid across the issuer change.
 
    Idempotent. Re-running updates rather than duplicating, because the import
@@ -84,7 +84,7 @@ export const importUsers = internalMutation({
           )
           .unique();
         // Google accounts are matched on verified email at first sign-in, so
-        // only the link is seeded here — never a token.
+        // only the link is seeded here, never a token.
         if (!account) {
           await ctx.db.insert("authAccounts", {
             userId, provider: "google", providerAccountId: email, emailVerified: email,
@@ -149,7 +149,7 @@ export const purgePasswordAccount = internalMutation({
  * Migration-only, and internal: it hands out a code that would let the caller
  * complete a password reset, which is exactly why no client may reach it. It
  * exists so the reset flow can be verified end to end without anyone's inbox
- * — the delivery half is Resend's, and Resend is already proven.
+ *. The delivery half is Resend's, and Resend is already proven.
  */
 export const latestVerificationCode = internalMutation({
   args: { email: v.string() },
@@ -204,7 +204,7 @@ export const purgeNewUser = internalMutation({
 
 /** The profile belonging to an address. Verification only. */
 /**
- * What KIND of password an account holds — never the hash itself.
+ * What KIND of password an account holds, never the hash itself.
  *
  * Answers "should this password still work?" without anyone having to reason
  * from a changelog. A bcrypt secret came in from Supabase at the cutover and

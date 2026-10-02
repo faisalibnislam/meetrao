@@ -8,7 +8,7 @@ import { internal } from "./_generated/api";
    Avatars.
 
    Supabase used a PUBLIC bucket with a storage policy requiring the first path
-   segment to be the uploader's own id — the client uploaded directly, and the
+   segment to be the uploader's own id. The client uploaded directly, and the
    policy was the guard. Convex has no path-based policies, so the shape
    changes: the client cannot choose a path at all. It asks for a one-time
    upload URL (which requires a session), posts the bytes, and hands back an

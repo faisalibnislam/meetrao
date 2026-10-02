@@ -29,7 +29,7 @@ export async function cancelAsGuest(formData: FormData): Promise<void> {
   }
 
   /* Already cancelled: show the same screen rather than an error. Cancelling
-     twice is not a failure from the guest's side — only the first time should
+     twice is not a failure from the guest's side, only the first time should
      send mail or touch Google. */
   if (wasOpen && booking) {
     if (booking.google_event_id) {
@@ -40,7 +40,7 @@ export async function cancelAsGuest(formData: FormData): Promise<void> {
         }
       } catch (cause) {
         // Already gone is fine; anything else is logged and the cancellation
-        // still stands — the guest is not made to try again.
+        // still stands. The guest is not made to try again.
         if (!(cause instanceof CalendarError) || cause.kind !== "already-deleted") {
           console.error("calendar delete failed", cause);
         }

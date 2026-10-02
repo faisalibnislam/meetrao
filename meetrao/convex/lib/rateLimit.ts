@@ -4,7 +4,7 @@ import { fail } from "./errors";
 /* ─────────────────────────────────────────────────────────────────────────────
    Rate limiting for the guest path.
 
-   Convex ships none, and `createBooking` is internet-callable by anyone — the
+   Convex ships none, and `createBooking` is internet-callable by anyone. The
    same exposure `create_booking` had with its `anon` grant, which nothing
    limited either. This is a fixed-window counter: cheap, one row per key, and
    good enough to stop a script hammering a host's calendar.
@@ -21,7 +21,7 @@ export type Limit = { key: string; limit: number; windowMs: number; message: str
  * Consumes one unit against each limit, or refuses.
  *
  * Runs inside the caller's mutation, so the counter increments in the same
- * transaction as the booking — a refused booking never leaves its count behind,
+ * transaction as the booking. A refused booking never leaves its count behind,
  * and two racing callers cannot both read the same pre-increment value.
  */
 export async function consume(ctx: MutationCtx, limits: Limit[]): Promise<void> {

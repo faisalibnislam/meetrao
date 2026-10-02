@@ -5,14 +5,14 @@ import { dayPhraseTitle } from "./reminderWindow";
    The reminder: "this is tomorrow", and "this is in an hour".
 
    HERE RATHER THAN src/emails FOR THE SAME REASON THE AUTH MAILS ARE. Reminders
-   are sent by a Convex cron, and a Convex function cannot read from disk — the
+   are sent by a Convex cron, and a Convex function cannot read from disk. The
    templates in src/emails are loaded with readFileSync and have nothing to
    read here. The alternative was a Vercel cron, which on the Hobby plan runs
    once a day: a once-a-day cron cannot send something an hour before a
    meeting.
 
-   The markup is the auth shell's, minus the parts a reminder has no use for —
-   there is no code to expire and nothing to confirm — and plus the detail rows
+   The markup is the auth shell's, minus the parts a reminder has no use for.
+   There is no code to expire and nothing to confirm, and plus the detail rows
    a reminder is mostly made of. It is a separate template rather than a
    parameter on that one because "This link expires in …" is load-bearing there
    and a lie here.
@@ -34,7 +34,7 @@ export type ReminderInput = {
   whenLong: string;
   /** "later today" · "tomorrow" · "on Friday", in the recipient's own zone.
       A claim about the calendar, so it is computed rather than assumed from
-      the lead time — see dayPhrase in ./reminderWindow. */
+      the lead time, see dayPhrase in ./reminderWindow. */
   dayPhrase: string;
   timezoneLabel: string;
   durationLabel: string;
@@ -57,7 +57,7 @@ export function renderReminder(input: ReminderInput): Rendered {
   const phrase = input.lead === "1h" ? "in an hour" : input.dayPhrase;
 
   // The button goes to Meet when there is a link, and to the booking when
-  // there is not — a CTA that opens nothing is worse than a different CTA.
+  // there is not. A CTA that opens nothing is worse than a different CTA.
   const ctaUrl = input.meetUrl || bookingUrl;
   const ctaLabel = input.meetUrl ? "Join Google Meet" : "View your booking";
 
@@ -161,7 +161,7 @@ export function renderReminder(input: ReminderInput): Rendered {
   /* Same guard as the auth shell and as src/lib/email/send.ts: a token added
      to the markup and not to the list above would otherwise ship as literal
      braces to a real inbox. `details` is built from escaped values above, so
-     it is inserted as markup deliberately — everything else is escaped. */
+     it is inserted as markup deliberately, everything else is escaped. */
   const missed = html.match(/\{\{[a-z_]+\}\}/g);
   if (missed) throw new Error(`Reminder template has unfilled fields: ${[...new Set(missed)].join(", ")}`);
 

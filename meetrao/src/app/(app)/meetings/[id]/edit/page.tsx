@@ -15,7 +15,7 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
   const { id } = await params;
   const { profile } = await requireOnboardedSession();
   const convex = await convexServer();
-  // Scoped by the caller's own identity inside the query — an id belonging to
+  // Scoped by the caller's own identity inside the query, an id belonging to
   // another host comes back null rather than someone else's meeting.
   const data = await convex.query(api.meetingTypes.getOwn, { id });
 
