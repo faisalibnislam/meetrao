@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/controls";
 import { Callout, SectionHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
-import { createPolarProducts, savePolarProducts } from "@/lib/actions/admin";
-import { PRO_MONTHLY, PRO_YEARLY } from "@/lib/pricing";
+import { createPolarProduct, createPolarProducts, savePolarProducts } from "@/lib/actions/admin";
+import { PRO_MONTHLY, PRO_PRICES, PRO_YEARLY } from "@/lib/pricing";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The two products Pro is sold as.
@@ -38,8 +38,28 @@ export function BillingProducts({
   const [busy, startBusy] = useTransition();
   const [draftMonthly, setDraftMonthly] = useState(monthly ?? "");
   const [draftYearly, setDraftYearly] = useState(yearly ?? "");
+  /* Which row is asking "are you sure". Replacing a product repoints the next
+     checkout, so it is two clicks rather than one. */
+  const [confirming, setConfirming] = useState<"monthly" | "yearly" | null>(null);
 
   const ready = Boolean(monthly && yearly);
+
+  function create(cadence: "monthly" | "yearly") {
+    startBusy(async () => {
+      const result = await createPolarProduct(cadence);
+      setConfirming(null);
+      if (result.error) {
+        toast({ tone: "bad", title: "Polar refused that", text: result.error });
+        return;
+      }
+      toast({
+        tone: "ok",
+        title: `New ${cadence} product`,
+        text: "Checkout uses it from now on. Archive the old one in Polar.",
+      });
+      router.refresh();
+    });
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[560px] flex-col gap-[12px] pt-[26px]">
@@ -74,14 +94,29 @@ export function BillingProducts({
       ) : null}
 
       <div className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
-        <div className="flex flex-wrap items-center gap-[10px]">
-          <span className="min-w-[90px] text-[12.5px] text-ink-3">Monthly</span>
-          <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">{monthly ?? "–"}</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-[10px] border-t border-line-soft pt-[9px]">
-          <span className="min-w-[90px] text-[12.5px] text-ink-3">Yearly</span>
-          <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">{yearly ?? "–"}</span>
-        </div>
+        <Row
+          label="Monthly"
+          id={monthly}
+          price={`$${PRO_PRICES.monthly.amount} a month`}
+          cadence="monthly"
+          tokenConfigured={tokenConfigured}
+          busy={busy}
+          confirming={confirming === "monthly"}
+          onAsk={() => setConfirming(confirming === "monthly" ? null : "monthly")}
+          onCreate={() => create("monthly")}
+        />
+        <Row
+          label="Yearly"
+          id={yearly}
+          price={`$${PRO_PRICES.yearly.amount} a year`}
+          cadence="yearly"
+          tokenConfigured={tokenConfigured}
+          busy={busy}
+          confirming={confirming === "yearly"}
+          onAsk={() => setConfirming(confirming === "yearly" ? null : "yearly")}
+          onCreate={() => create("yearly")}
+          divided
+        />
       </div>
 
       {!ready && tokenConfigured ? (
@@ -145,6 +180,75 @@ export function BillingProducts({
           </div>
         </div>
       </details>
+    </div>
+  );
+}
+
+/**
+ * One cadence: what it costs, which product is selling it, and a way to make a
+ * new one at the price the code now names.
+ *
+ * The button is here rather than once at the bottom because the two cadences
+ * move independently: raising the yearly price should not touch monthly, and a
+ * single "create" that did both would make a duplicate of the one that had not
+ * changed.
+ */
+function Row({
+  label,
+  id,
+  price,
+  cadence,
+  tokenConfigured,
+  busy,
+  confirming,
+  onAsk,
+  onCreate,
+  divided = false,
+}: {
+  label: string;
+  id: string | null;
+  price: string;
+  cadence: "monthly" | "yearly";
+  tokenConfigured: boolean;
+  busy: boolean;
+  confirming: boolean;
+  onAsk: () => void;
+  onCreate: () => void;
+  divided?: boolean;
+}) {
+  return (
+    <div className={divided ? "flex flex-col gap-[8px] border-t border-line-soft pt-[9px]" : "flex flex-col gap-[8px]"}>
+      <div className="flex flex-wrap items-center gap-[10px]">
+        <span className="min-w-[90px] text-[12.5px] text-ink-3">
+          {label}
+          <span className="block text-[11px] text-ink-3">{price}</span>
+        </span>
+        <span className="min-w-0 flex-1 text-[12.5px] break-all text-ink">{id ?? "–"}</span>
+
+        {tokenConfigured ? (
+          <Button variant="ghost" size={28} disabled={busy} onClick={onAsk}>
+            {id ? "Replace" : "Create"}
+          </Button>
+        ) : null}
+      </div>
+
+      {confirming ? (
+        <div className="flex flex-col gap-[8px] rounded-[6px] border border-amber-line bg-amber-soft px-[12px] py-[10px]">
+          <span className="text-[12px] leading-[1.5] text-amber-ink">
+            {id
+              ? `Makes a new ${cadence} product in Polar at ${price} and points checkout at it. The one above keeps running for anybody already subscribed; archive it in Polar so nothing new reaches it.`
+              : `Makes the ${cadence} product in Polar at ${price} and points checkout at it.`}
+          </span>
+          <div className="flex flex-wrap gap-[8px]">
+            <Button variant="accent" size={30} busy={busy} onClick={onCreate}>
+              {id ? `Create a new one at ${price}` : `Create it at ${price}`}
+            </Button>
+            <Button variant="ghost" size={30} disabled={busy} onClick={onAsk}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
