@@ -84,26 +84,6 @@ const AFTER: [string, string, string, IconName][] = [
   ["03", "Booked", "On both calendars, with a Meet link attached.", "check"],
 ];
 
-/* Six more, and then a link.
-
-   NOT A FULL INVENTORY, ON PURPOSE. This was sixteen cards across two grids
-   under two headings, and it was a wall: by the fourth row a reader has
-   stopped reading and started scrolling. A landing page answers "is this the
-   kind of thing I want"; the full answer to "does it do X" belongs on the page
-   built to be read that way.
-
-   So these are six a visitor evaluating a scheduler actually asks about. The
-   four worth WATCHING are acted out by <ProductShowcase> above. Everything
-   else is one click away, in the comparison table on /pricing. */
-const ALSO: [IconName, string, string][] = [
-  ["link", "They book themselves", "Send the link. Stop negotiating over email."],
-  ["globe", "Timezones handled", "Guests see your hours in their own timezone."],
-  ["video", "Meet links automatically", "Every online booking creates the event and its Meet link."],
-  ["rotate-left", "Moving, not cancelling", "Guests pick a new time from their confirmation, keeping the same link."],
-  ["sliders", "Your hours protected", "Buffers, minimum notice, a booking window, and days off."],
-  ["user-plus", "Sessions several people share", "A class, a workshop, an office hour. Seats count down."],
-];
-
 export default function LandingPage() {
   // Read off disk at build time: a photo dropped into public/use-cases/ shows up
   // on the next deploy, with no code change.
@@ -398,9 +378,12 @@ export default function LandingPage() {
       </section>
 
       {/* ── What you get ─────────────────────────────────────────────────
-          One section where there were two. The four features worth watching
-          are acted out by <ProductShowcase>; six more are a dense list under
-          it, and the rest live on /pricing. */}
+          The showcase and nothing else. This section was two grids of sixteen
+          cards, then one grid of twelve, then six: each round made it shorter
+          and it was still a wall. A reader scanning a landing page is deciding
+          whether this is the kind of thing they want, not auditing a feature
+          list, and the four panels answer that. "Does it do X" is a different
+          question and /pricing is built to answer it. */}
       <section id="product" className="mx-auto max-w-[1200px] px-[26px] py-[72px] max-[560px]:px-[18px]">
         <Reveal>
           <div className="flex max-w-[620px] flex-col gap-[11px]">
@@ -415,36 +398,31 @@ export default function LandingPage() {
           <ProductShowcase />
         </Reveal>
 
-        <Reveal className="mt-[38px]">
-          <div className="border-t border-line pt-[10px]">
-            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(290px,100%),1fr))] gap-x-[26px]">
-              {ALSO.map(([glyph, title, text]) => (
-                <div key={title} className="flex items-start gap-[11px] border-b border-line-soft py-[14px]">
-                  <Icon name={glyph} size={14} className="mt-[3px] flex-none text-accent-ink" />
-                  <span className="flex min-w-0 flex-col gap-[2px]">
-                    <span className="text-[13.5px] font-semibold tracking-[-0.005em] text-ink">{title}</span>
-                    <span className="text-[12.5px] leading-[1.5] text-pretty text-ink-2">{text}</span>
-                  </span>
-                </div>
-              ))}
+        <Reveal className="mt-[22px]">
+          <Link
+            href="/pricing#compare"
+            className="unlink inline-flex min-h-[40px] items-center gap-[7px] text-[13.5px] font-semibold text-accent-ink"
+          >
+            See all features
+            <Icon name="arrow-right" size={12} className="flex-none" />
+          </Link>
+        </Reveal>
+      </section>
+
+      {/* ── The live tables ───────────────────────────────────────────────
+          Full-bleed on the before-and-after band's ground, so the one part of
+          the page that is the real product rather than a description of it
+          reads as its own thing. A centred section cannot carry a background
+          that reaches the window, so the band holds the column. */}
+      <section className="bg-[#E7E3DC]">
+        <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
+          <Reveal>
+            <div className="flex flex-col gap-[16px]">
+              <LiveMeetingsTable />
+              <LiveBookingsTable />
             </div>
-
-            <Link
-              href="/pricing#compare"
-              className="unlink mt-[16px] inline-flex min-h-[40px] items-center gap-[7px] text-[13.5px] font-semibold text-accent-ink"
-            >
-              See all features
-              <Icon name="arrow-right" size={12} className="flex-none" />
-            </Link>
-          </div>
-        </Reveal>
-
-        <Reveal className="mt-[34px]">
-          <div className="flex flex-col gap-[16px]">
-            <LiveMeetingsTable />
-            <LiveBookingsTable />
-          </div>
-        </Reveal>
+          </Reveal>
+        </div>
       </section>
 
       {/* ── Use cases ─────────────────────────────────────────────────────
@@ -475,7 +453,7 @@ export default function LandingPage() {
             <div className="flex max-w-[640px] flex-col gap-[10px]">
               <Kicker>Pricing</Kicker>
               <h2 className="m-0 font-serif text-[clamp(26px,3.4vw,38px)] leading-[1.05] font-normal tracking-[-0.02em] text-balance text-white">
-                Free to take bookings. $10 a year to make it yours.
+                Free to take bookings. $30 a year to make it yours.
               </h2>
               <p className="m-0 max-w-[52ch] text-[14.5px] leading-[1.6] text-pretty text-white/70">
                 The whole booking product is free: link, calendar, reminders, rescheduling. Pro is for

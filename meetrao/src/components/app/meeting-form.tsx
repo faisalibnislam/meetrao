@@ -222,7 +222,7 @@ export function MeetingForm({
           <Callout tone="accent" title="Sessions several guests share are part of Pro">
             A class, a workshop, an office hour, one slot, several seats.{" "}
             <Link href="/settings/billing" className="font-semibold">
-              See Pro, $10 a year
+              See Pro, $30 a year
             </Link>
             .
           </Callout>

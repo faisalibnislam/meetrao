@@ -22,7 +22,7 @@ export const FAQS: [string, string, string][] = [
   [
     "free",
     "What is free, and what costs money?",
-    "Taking bookings is free: your link, your meeting types, calendar conflict checks, Meet links, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is $10 a year (or $3 a month) and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API.",
+    "Taking bookings is free: your link, your meeting types, calendar conflict checks, Meet links, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is $30 a year (or $3 a month) and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API.",
   ],
   [
     "forever",
@@ -82,6 +82,6 @@ export const FAQS: [string, string, string][] = [
   [
     "compare",
     "How does it compare with paid tools?",
-    "Taking bookings is free and always has been, the link, the calendar checks, reminders, rescheduling and time off, with no card. Pro is $10 a year for a custom domain, your own branding, team links, shared sessions and the API. It is still deliberately narrow: one calendar provider, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
+    "Taking bookings is free and always has been, the link, the calendar checks, reminders, rescheduling and time off, with no card. Pro is $30 a year for a custom domain, your own branding, team links, shared sessions and the API. It is still deliberately narrow: one calendar provider, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
   ],
 ];

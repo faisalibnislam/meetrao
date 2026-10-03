@@ -8,6 +8,7 @@ import { Field, Input } from "@/components/ui/controls";
 import { Callout, SectionHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { createPolarProducts, savePolarProducts } from "@/lib/actions/admin";
+import { PRO_MONTHLY, PRO_YEARLY } from "@/lib/pricing";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The two products Pro is sold as.
@@ -49,9 +50,22 @@ export function BillingProducts({
       />
 
       <span className="text-[12.5px] leading-[1.55] text-ink-2">
-        Pro is sold as two Polar products, $3 a month and $10 a year. Create them here, or paste the ids of
-        products you made in Polar.
+        Pro is sold as two Polar products, {PRO_MONTHLY} and {PRO_YEARLY}. Create them here, or paste the ids
+        of products you made in Polar.
       </span>
+
+      {/* THE PRICE ON A POLAR PRODUCT CANNOT BE EDITED FROM HERE, and Create
+          skips anything that already has an id. Without this, raising a price
+          in the code looks like it worked (every page says the new number)
+          while checkout keeps charging the old one, and the only clue is a
+          Polar invoice nobody reads until a customer does. */}
+      {ready ? (
+        <Callout tone="amber" title="Changing a price means a new product">
+          Create only fills an empty slot, and Polar will not re-price a product that has already sold. To move
+          a price: make the new product in Polar, paste its id over the one below, and archive the old one
+          there. Anybody already subscribed keeps the price they signed up at.
+        </Callout>
+      ) : null}
 
       {!tokenConfigured ? (
         <Callout tone="amber" title="No Polar token on this deployment">

@@ -61,7 +61,7 @@ export const TITLE_TEMPLATE = "%s · Meetrao";
  */
 export const DESCRIPTION =
   "Share one link, guests pick a time you're free, every booking gets a Google Meet link. " +
-  "Free to use; Pro is $10 a year for your own domain and a team link.";
+  "Free to use; Pro is $30 a year for your own domain and a team link.";
 
 /**
  * The social card, spelled out on every page that declares its own openGraph.

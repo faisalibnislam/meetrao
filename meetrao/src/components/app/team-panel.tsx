@@ -106,7 +106,7 @@ export function TeamPanel({
             <Callout tone="accent" title="Team links are part of Pro">
               One link the whole team answers, rotating to whoever is free.{" "}
               <Link href="/settings/billing" className="font-semibold">
-                See Pro, $10 a year
+                See Pro, $30 a year
               </Link>
               .
             </Callout>

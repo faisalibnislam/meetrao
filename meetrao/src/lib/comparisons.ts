@@ -118,7 +118,7 @@ export const CALENDLY: Comparison = {
     ],
     [
       "What is the catch?",
-      "Free is the whole booking product, not a trial of it: your link, unlimited meeting types and bookings, reminders, rescheduling and time off, with no card. Pro is $10 a year and adds a custom domain, your own branding, team links, shared sessions and the API. A free account is never billed automatically. The real limits are the ones on this page: Google Calendar only, no payments at booking, no Zoom or Teams integration, round-robin without collective availability, email-only reminders.",
+      "Free is the whole booking product, not a trial of it: your link, unlimited meeting types and bookings, reminders, rescheduling and time off, with no card. Pro is $30 a year and adds a custom domain, your own branding, team links, shared sessions and the API. A free account is never billed automatically. The real limits are the ones on this page: Google Calendar only, no payments at booking, no Zoom or Teams integration, round-robin without collective availability, email-only reminders.",
     ],
     [
       "Can I move from Calendly to Meetrao?",
@@ -166,7 +166,7 @@ export const CAL_COM: Comparison = {
   meetraoWins: [
     ["Less to set up", "Connect Google, describe one meeting, tick your hours. Three screens and the link works."],
     ["One obvious way to do each thing", "There is one weekly schedule, one meeting location and one calendar. Fewer choices is the feature, and it is the wrong feature for some people."],
-    ["The free plan is not a demo", "Taking bookings (link, calendar, reminders, rescheduling, time off) costs nothing and always has. Pro is $10 a year for branding, a domain, team links and the API."],
+    ["The free plan is not a demo", "Taking bookings (link, calendar, reminders, rescheduling, time off) costs nothing and always has. Pro is $30 a year for branding, a domain, team links and the API."],
     ["Explicit about what it reads", "The Privacy Policy names every Google permission requested, says plainly that calendar.events is broader than the use made of it, and carries the Limited Use disclosure."],
   ],
   chooseThem: [

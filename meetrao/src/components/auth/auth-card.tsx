@@ -61,7 +61,7 @@ export function AuthCard({
               afternoon feels misled, even when nothing was hidden. */}
           <div className="mt-[6px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px]">
             <span className="text-[12.5px] leading-[1.55] text-ink-2">
-              <strong className="font-semibold text-ink">Free to take bookings.</strong> Pro is $10 a year
+              <strong className="font-semibold text-ink">Free to take bookings.</strong> Pro is $30 a year
               when you want your own domain, your own branding or a team link.{" "}
               <Link href="/pricing" className="font-semibold">
                 Compare
