@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { ButtonLink } from "@/components/ui/button";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -90,7 +91,14 @@ export function ProductShowcase() {
         if (!holding.current) setPaused(false);
       }}
     >
-      {/* The four, as a list you can also just read. */}
+      {/* The four, as a list you can also just read, with the way out of the
+          section under them.
+
+          THE BUTTON IS IN THIS COLUMN ON PURPOSE. It used to sit below the
+          whole grid, which left the stage's bottom edge floating well above
+          it. Here the column is tabs-then-button and the grid stretches both
+          columns to the same height, so the stage ends exactly where the
+          button does without either height being hard-coded. */}
       <div className="flex flex-col gap-[6px]">
         {PANELS.map((panel, i) => {
           const on = i === index;
@@ -154,6 +162,13 @@ export function ProductShowcase() {
             </button>
           );
         })}
+
+        {/* mt-auto, so the gap is whatever the stage leaves rather than a
+            number that stops being right when a panel changes height. */}
+        <ButtonLink href="/pricing#compare" variant="accent" size={44} className="mt-auto w-fit">
+          See all features
+          <Icon name="arrow-right" size={12} className="flex-none" />
+        </ButtonLink>
       </div>
 
       {/* The stage. Dark, so the white cards inside it read as the product
