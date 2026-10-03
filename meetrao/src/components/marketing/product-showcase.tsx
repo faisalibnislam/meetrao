@@ -418,7 +418,7 @@ function BrandPanel({ active }: { active: boolean }) {
       style={{ background: brand.ground }}
     >
       <span className="transition-colors duration-[500ms]" style={{ color: brand.ink }}>
-        <DemoBrandLogo brand={brand.key} name={brand.name} />
+        <DemoBrandLogo brand={brand.key} />
       </span>
 
       {/* The address, in place of a "Booking page" label. It is the half of
