@@ -30,6 +30,8 @@ export const products = query({
     return {
       monthly: row?.polar_product_monthly ?? null,
       yearly: row?.polar_product_yearly ?? null,
+      businessMonthly: row?.polar_product_business_monthly ?? null,
+      businessYearly: row?.polar_product_business_yearly ?? null,
     };
   },
 });
@@ -49,6 +51,8 @@ export const productsForCheckout = query({
     return {
       monthly: row?.polar_product_monthly ?? null,
       yearly: row?.polar_product_yearly ?? null,
+      businessMonthly: row?.polar_product_business_monthly ?? null,
+      businessYearly: row?.polar_product_business_yearly ?? null,
     };
   },
 });
@@ -69,6 +73,8 @@ export const update = mutation({
     support_email: v.optional(v.string()),
     polar_product_monthly: v.optional(v.string()),
     polar_product_yearly: v.optional(v.string()),
+    polar_product_business_monthly: v.optional(v.string()),
+    polar_product_business_yearly: v.optional(v.string()),
   },
   handler: async (ctx, a) => {
     await requireAdmin(ctx);
@@ -89,11 +95,15 @@ function strip(a: {
   support_email?: string;
   polar_product_monthly?: string;
   polar_product_yearly?: string;
+  polar_product_business_monthly?: string;
+  polar_product_business_yearly?: string;
 }) {
   const out: Record<string, string> = {};
   if (a.app_name !== undefined) out.app_name = a.app_name;
   if (a.support_email !== undefined) out.support_email = a.support_email;
   if (a.polar_product_monthly !== undefined) out.polar_product_monthly = a.polar_product_monthly;
   if (a.polar_product_yearly !== undefined) out.polar_product_yearly = a.polar_product_yearly;
+  if (a.polar_product_business_monthly !== undefined) out.polar_product_business_monthly = a.polar_product_business_monthly;
+  if (a.polar_product_business_yearly !== undefined) out.polar_product_business_yearly = a.polar_product_business_yearly;
   return out;
 }

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createProduct } from "@/lib/polar";
+import { createProduct, type Cadence, type Tier } from "@/lib/polar";
 import { env } from "@/lib/env";
 import { requireAdmin } from "@/lib/data/session";
 import { disconnect } from "@/lib/google/connection";
@@ -351,7 +351,39 @@ export async function saveAdminAccount(input: { fullName: string }): Promise<Adm
 
 /* ── billing products ──────────────────────────────────────────────────────── */
 
-export type ProductResult = { error?: string; monthly?: string | null; yearly?: string | null };
+export type ProductResult = {
+  error?: string;
+  monthly?: string | null;
+  yearly?: string | null;
+  businessMonthly?: string | null;
+  businessYearly?: string | null;
+};
+
+/**
+ * Which settings field holds each product id.
+ *
+ * One map rather than a conditional at every call site: four slots across two
+ * tiers is exactly the shape where a stray ternary records a Business id in
+ * the Pro field, and the webhook then grants Pro to somebody paying for
+ * Business.
+ */
+const SLOT: Record<Tier, Record<Cadence, keyof ProductIds>> = {
+  pro: { monthly: "polar_product_monthly", yearly: "polar_product_yearly" },
+  business: { monthly: "polar_product_business_monthly", yearly: "polar_product_business_yearly" },
+};
+
+type ProductIds = {
+  polar_product_monthly: string;
+  polar_product_yearly: string;
+  polar_product_business_monthly: string;
+  polar_product_business_yearly: string;
+};
+
+/** The settings query's shape, keyed the way the slots are. */
+const READ: Record<Tier, Record<Cadence, "monthly" | "yearly" | "businessMonthly" | "businessYearly">> = {
+  pro: { monthly: "monthly", yearly: "yearly" },
+  business: { monthly: "businessMonthly", yearly: "businessYearly" },
+};
 
 /**
  * Creates ONE Pro product at the price the code currently names, and points
@@ -369,7 +401,8 @@ export type ProductResult = { error?: string; monthly?: string | null; yearly?: 
  * next checkout goes to whatever this returns.
  */
 export async function createPolarProduct(
-  cadence: "monthly" | "yearly",
+  cadence: Cadence,
+  tier: Tier = "pro",
 ): Promise<ProductResult & { created?: string }> {
   await requireAdmin();
 
@@ -377,26 +410,25 @@ export async function createPolarProduct(
 
   let id: string;
   try {
-    id = (await createProduct(cadence)).id;
+    id = (await createProduct(tier, cadence)).id;
   } catch (cause) {
     return { error: cause instanceof Error ? cause.message : "Polar refused the product." };
   }
 
   const convex = await convexServer();
-  await convex.mutation(api.platformSettings.update, {
-    ...(cadence === "monthly" ? { polar_product_monthly: id } : { polar_product_yearly: id }),
-  });
+  await convex.mutation(api.platformSettings.update, { [SLOT[tier][cadence]]: id });
 
   revalidatePath("/admin/settings");
   const after = await convex.query(api.platformSettings.products, {});
-  return { created: id, monthly: after.monthly, yearly: after.yearly };
+  return { created: id, ...after };
 }
 
 /**
- * Creates the two Pro products in Polar and records their ids.
+ * Creates every product that does not have one yet, across both tiers, and
+ * records their ids.
  *
- * Admin-only, and idempotent in the way that matters: a cadence that already
- * has an id is left alone rather than creating a second product at the same
+ * Admin-only, and idempotent in the way that matters: a slot that already has
+ * an id is left alone rather than creating a second product at the same
  * price. Two live products for one plan is how a customer ends up subscribed
  * to the one nobody is watching.
  */
@@ -408,37 +440,51 @@ export async function createPolarProducts(): Promise<ProductResult> {
   const convex = await convexServer();
   const existing = await convex.query(api.platformSettings.products, {});
 
-  const made: { monthly?: string; yearly?: string } = {};
+  const patch: Partial<ProductIds> = {};
   try {
-    if (!existing.monthly) made.monthly = (await createProduct("monthly")).id;
-    if (!existing.yearly) made.yearly = (await createProduct("yearly")).id;
+    for (const tier of ["pro", "business"] as const) {
+      for (const cadence of ["monthly", "yearly"] as const) {
+        if (existing[READ[tier][cadence]]) continue;
+        patch[SLOT[tier][cadence]] = (await createProduct(tier, cadence)).id;
+      }
+    }
   } catch (cause) {
     return { error: cause instanceof Error ? cause.message : "Polar refused the product." };
   }
 
-  if (made.monthly || made.yearly) {
-    await convex.mutation(api.platformSettings.update, {
-      ...(made.monthly ? { polar_product_monthly: made.monthly } : {}),
-      ...(made.yearly ? { polar_product_yearly: made.yearly } : {}),
-    });
+  if (Object.keys(patch).length > 0) {
+    await convex.mutation(api.platformSettings.update, patch);
   }
 
   revalidatePath("/admin/settings");
-  return { monthly: made.monthly ?? existing.monthly, yearly: made.yearly ?? existing.yearly };
+  return { ...existing, ...(await convex.query(api.platformSettings.products, {})) };
 }
 
-/** Records ids for products made in Polar's own dashboard. */
-export async function savePolarProducts(input: { monthly: string; yearly: string }): Promise<ProductResult> {
+/**
+ * Records ids for products made in Polar's own dashboard.
+ *
+ * A blank field clears nothing: it is left as it was. An operator filling in
+ * the two Pro boxes should not wipe the Business ids by not typing in them.
+ */
+export async function savePolarProducts(input: {
+  monthly?: string;
+  yearly?: string;
+  businessMonthly?: string;
+  businessYearly?: string;
+}): Promise<ProductResult> {
   await requireAdmin();
   const convex = await convexServer();
 
-  await convex.mutation(api.platformSettings.update, {
-    polar_product_monthly: input.monthly.trim(),
-    polar_product_yearly: input.yearly.trim(),
-  });
+  const patch: Partial<ProductIds> = {};
+  if (input.monthly?.trim()) patch.polar_product_monthly = input.monthly.trim();
+  if (input.yearly?.trim()) patch.polar_product_yearly = input.yearly.trim();
+  if (input.businessMonthly?.trim()) patch.polar_product_business_monthly = input.businessMonthly.trim();
+  if (input.businessYearly?.trim()) patch.polar_product_business_yearly = input.businessYearly.trim();
+
+  if (Object.keys(patch).length > 0) await convex.mutation(api.platformSettings.update, patch);
 
   revalidatePath("/admin/settings");
-  return { monthly: input.monthly.trim(), yearly: input.yearly.trim() };
+  return await convex.query(api.platformSettings.products, {});
 }
 
 /* ── complimentary Pro ─────────────────────────────────────────────────────── */

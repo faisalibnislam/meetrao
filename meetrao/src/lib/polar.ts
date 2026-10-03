@@ -51,26 +51,48 @@ async function polar<T>(path: string, body: unknown): Promise<T> {
 }
 
 export type Cadence = "monthly" | "yearly";
+export type Tier = "pro" | "business";
 
-/** What Pro is sold as. One place, so the page and the product agree. */
-export const PRICES: Record<Cadence, { name: string; amount: number; interval: "month" | "year" }> = {
-  monthly: { name: "Meetrao Pro: Monthly", amount: 300, interval: "month" },
-  yearly: { name: "Meetrao Pro: Yearly", amount: 3000, interval: "year" },
+type Spec = { name: string; amount: number; interval: "month" | "year"; description: string };
+
+const PRO_BLURB =
+  "Everything in Meetrao, plus a custom domain, your own branding, team links, shared sessions and the API.";
+const BUSINESS_BLURB =
+  "Everything in Pro, across up to ten companies, each with its own domain, its own branding and its own people.";
+
+/**
+ * What each plan is sold as. One place, so the page and the product agree.
+ *
+ * Amounts are in cents, which is Polar's unit: $3 is 300. Getting that wrong
+ * by a factor of a hundred is the kind of mistake that only shows up on
+ * somebody's card statement.
+ */
+export const PRICES: Record<Tier, Record<Cadence, Spec>> = {
+  pro: {
+    monthly: { name: "Meetrao Pro: Monthly", amount: 300, interval: "month", description: PRO_BLURB },
+    yearly: { name: "Meetrao Pro: Yearly", amount: 3000, interval: "year", description: PRO_BLURB },
+  },
+  business: {
+    monthly: { name: "Meetrao Business: Monthly", amount: 900, interval: "month", description: BUSINESS_BLURB },
+    yearly: { name: "Meetrao Business: Yearly", amount: 9900, interval: "year", description: BUSINESS_BLURB },
+  },
 };
 
 /**
- * Creates the two products, so an operator never has to leave the admin
- * console or copy a UUID by hand.
+ * Creates one product, so an operator never has to leave the admin console or
+ * copy a UUID by hand.
  *
- * Amounts are in cents, which is Polar's unit, $3 is 300, and getting that
- * wrong by a factor of a hundred is the kind of mistake that only shows up on
- * somebody's card statement.
+ * A POLAR PRICE CANNOT BE CHANGED once something has sold against it, so the
+ * amount in PRICES has to be right the first time. The admin console refuses
+ * to create a second product for a tier that already has one, for the same
+ * reason: two live products for one plan is how a customer ends up subscribed
+ * to the one nobody is watching.
  */
-export async function createProduct(cadence: Cadence): Promise<{ id: string; name: string }> {
-  const spec = PRICES[cadence];
+export async function createProduct(tier: Tier, cadence: Cadence): Promise<{ id: string; name: string }> {
+  const spec = PRICES[tier][cadence];
   const product = await polar<{ id: string; name: string }>("/v1/products/", {
     name: spec.name,
-    description: "Everything in Meetrao, plus a custom domain, your own branding, team links, shared sessions and the API.",
+    description: spec.description,
     recurring_interval: spec.interval,
     prices: [{ amount_type: "fixed", price_amount: spec.amount, price_currency: "usd" }],
   });
@@ -86,6 +108,7 @@ export async function createProduct(cadence: Cadence): Promise<{ id: string; nam
  * have to type an address we already know.
  */
 export async function createCheckout(args: {
+  tier: Tier;
   cadence: Cadence;
   profileId: string;
   email: string;
@@ -94,9 +117,13 @@ export async function createCheckout(args: {
      vars remain as a fallback, for a deployment that would rather pin them. */
   productId?: string | null;
 }): Promise<{ id: string; url: string }> {
-  const fromEnv = args.cadence === "yearly" ? env().POLAR_PRODUCT_YEARLY : env().POLAR_PRODUCT_MONTHLY;
+  /* The env fallback only ever covered Pro. A Business checkout with no
+     product id recorded is a misconfiguration to say out loud, not one to
+     quietly resolve into the cheaper plan. */
+  const fromEnv =
+    args.tier === "pro" ? (args.cadence === "yearly" ? env().POLAR_PRODUCT_YEARLY : env().POLAR_PRODUCT_MONTHLY) : null;
   const product = args.productId || fromEnv;
-  if (!product) throw new Error(`No Polar product configured for ${args.cadence}.`);
+  if (!product) throw new Error(`No Polar product configured for ${args.tier} ${args.cadence}.`);
 
   return await polar<{ id: string; url: string }>("/v1/checkouts/", {
     products: [product],

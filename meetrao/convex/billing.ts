@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { requireProfile } from "./lib/auth";
 import { hasComp, hasSubscription, planOf } from "./lib/plan";
 import { logActivity } from "./lib/effects";
@@ -19,8 +20,31 @@ import { logActivity } from "./lib/effects";
    home.
    ───────────────────────────────────────────────────────────────────────────── */
 
-/** Polar statuses that mean "this account has paid and should have Pro". */
+/** Polar statuses that mean "this account has paid and should have a plan". */
 const PAID = ["active", "trialing", "past_due"];
+
+/**
+ * Which tier a Polar product id is.
+ *
+ * The product ids live in `platform_settings` because an operator creates the
+ * products from the admin console. Anything not recognised as a Business
+ * product is Pro, deliberately: an unrecognised id means somebody created a
+ * product outside the console, and granting the LOWER tier in that case is
+ * the mistake that costs a support message rather than a refund.
+ *
+ * It also keeps every subscription written before this existed correct. Those
+ * events carry no product id at all and were all Pro.
+ */
+async function tierForProduct(
+  ctx: { db: { query: (t: "platform_settings") => { first: () => Promise<Doc<"platform_settings"> | null> } } },
+  productId: string | null,
+): Promise<"pro" | "business"> {
+  if (!productId) return "pro";
+  const settings = await ctx.db.query("platform_settings").first();
+  if (!settings) return "pro";
+  const business = [settings.polar_product_business_monthly, settings.polar_product_business_yearly];
+  return business.includes(productId) ? "business" : "pro";
+}
 
 export const applyPolarSubscription = mutation({
   args: {
@@ -29,6 +53,9 @@ export const applyPolarSubscription = mutation({
     subscriptionId: v.string(),
     status: v.string(),
     currentPeriodEnd: v.union(v.number(), v.null()),
+    /* Optional: a delivery from before this existed carries none, and every
+       one of those was Pro. */
+    productId: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, a) => {
     const byId = a.profileId
@@ -51,7 +78,7 @@ export const applyPolarSubscription = mutation({
     /* past_due keeps Pro deliberately: Polar retries a failed renewal for
        days before revoking, and turning the product off mid-retry punishes
        somebody whose card expired rather than somebody who left. */
-    const plan = paid ? "pro" : "free";
+    const plan = paid ? await tierForProduct(ctx, a.productId ?? null) : "free";
 
     await ctx.db.patch(profile._id, {
       plan,
@@ -63,7 +90,7 @@ export const applyPolarSubscription = mutation({
 
     await logActivity(ctx, {
       actorId: profile.id,
-      kind: paid ? "plan_pro" : "plan_free",
+      kind: paid ? (plan === "business" ? "plan_business" : "plan_pro") : "plan_free",
       summary: `${profile.email} is now ${plan} (${a.status})`,
     });
 

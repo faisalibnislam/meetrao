@@ -8,29 +8,92 @@ import { Field, Input } from "@/components/ui/controls";
 import { Callout, SectionHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { createPolarProduct, createPolarProducts, savePolarProducts } from "@/lib/actions/admin";
-import { PRO_MONTHLY, PRO_PRICES, PRO_YEARLY } from "@/lib/pricing";
+import { BUSINESS_PRICES, PRO_PRICES } from "@/lib/pricing";
+import type { Cadence, Tier } from "@/lib/polar";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   The two products Pro is sold as.
+   The four products the two paid plans are sold as.
 
    An operator can make them here or paste ids made in Polar's own dashboard.
    Either way they land in platform_settings rather than the environment: an
-   admin creating a product cannot set an env var, and a redeploy to record two
+   admin creating a product cannot set an env var, and a redeploy to record
    ids somebody just generated is a strange way to start selling a plan.
+
+   WHICH SLOT AN ID GOES IN DECIDES WHICH TIER THE WEBHOOK GRANTS. A Business
+   id pasted into a Pro box means somebody paying $99 gets Pro, and nothing on
+   this screen would look wrong. That is why the two plans are separate blocks
+   with their own headings rather than four inputs in a row.
 
    The ACCESS TOKEN is not here and never will be. A credential is not
    configuration, and a screen that can print one is a screen that can be
    talked into printing it.
    ───────────────────────────────────────────────────────────────────────────── */
 
+export type Products = {
+  monthly: string | null;
+  yearly: string | null;
+  businessMonthly: string | null;
+  businessYearly: string | null;
+};
+
+const PLANS = [
+  {
+    tier: "pro" as const,
+    title: "Pro products",
+    prices: PRO_PRICES,
+    blurb: "Pro is sold as two Polar products.",
+    keys: { monthly: "monthly", yearly: "yearly" } as const,
+  },
+  {
+    tier: "business" as const,
+    title: "Business products",
+    prices: BUSINESS_PRICES,
+    blurb: "Business is sold as two more, and must never share a product with Pro.",
+    keys: { monthly: "businessMonthly", yearly: "businessYearly" } as const,
+  },
+];
+
 export function BillingProducts({
+  products,
+  tokenConfigured,
+}: {
+  products: Products;
+  /** Whether POLAR_ACCESS_TOKEN is set on this deployment. */
+  tokenConfigured: boolean;
+}) {
+  return (
+    <>
+      {PLANS.map((plan) => (
+        <PlanProducts
+          key={plan.tier}
+          tier={plan.tier}
+          title={plan.title}
+          blurb={plan.blurb}
+          prices={plan.prices}
+          monthly={products[plan.keys.monthly]}
+          yearly={products[plan.keys.yearly]}
+          tokenConfigured={tokenConfigured}
+        />
+      ))}
+    </>
+  );
+}
+
+function PlanProducts({
+  tier,
+  title,
+  blurb,
+  prices,
   monthly,
   yearly,
   tokenConfigured,
 }: {
+  tier: Tier;
+  title: string;
+  blurb: string;
+  prices: { monthly: { amount: number }; yearly: { amount: number } };
   monthly: string | null;
   yearly: string | null;
-  /** Whether POLAR_ACCESS_TOKEN is set on this deployment. */
   tokenConfigured: boolean;
 }) {
   const router = useRouter();
@@ -40,13 +103,15 @@ export function BillingProducts({
   const [draftYearly, setDraftYearly] = useState(yearly ?? "");
   /* Which row is asking "are you sure". Replacing a product repoints the next
      checkout, so it is two clicks rather than one. */
-  const [confirming, setConfirming] = useState<"monthly" | "yearly" | null>(null);
+  const [confirming, setConfirming] = useState<Cadence | null>(null);
 
   const ready = Boolean(monthly && yearly);
+  const money = (cadence: Cadence) =>
+    cadence === "monthly" ? `$${prices.monthly.amount} a month` : `$${prices.yearly.amount} a year`;
 
-  function create(cadence: "monthly" | "yearly") {
+  function create(cadence: Cadence) {
     startBusy(async () => {
-      const result = await createPolarProduct(cadence);
+      const result = await createPolarProduct(cadence, tier);
       setConfirming(null);
       if (result.error) {
         toast({ tone: "bad", title: "Polar refused that", text: result.error });
@@ -54,7 +119,7 @@ export function BillingProducts({
       }
       toast({
         tone: "ok",
-        title: `New ${cadence} product`,
+        title: `New ${tier} ${cadence} product`,
         text: "Checkout uses it from now on. Archive the old one in Polar.",
       });
       router.refresh();
@@ -64,14 +129,14 @@ export function BillingProducts({
   return (
     <div className="mx-auto flex w-full max-w-[560px] flex-col gap-[12px] pt-[26px]">
       <SectionHeading
-        title="Pro products"
+        title={title}
         meta={ready ? undefined : "Not set up"}
         right={ready ? <Badge tone="ok">Selling</Badge> : <Badge tone="warn">Needed</Badge>}
       />
 
       <span className="text-[12.5px] leading-[1.55] text-ink-2">
-        Pro is sold as two Polar products, {PRO_MONTHLY} and {PRO_YEARLY}. Create them here, or paste the ids
-        of products you made in Polar.
+        {blurb} {money("monthly")} and {money("yearly")}. Create them here, or paste the ids of products you
+        made in Polar.
       </span>
 
       {/* THE PRICE ON A POLAR PRODUCT CANNOT BE EDITED FROM HERE, and Create
@@ -97,7 +162,7 @@ export function BillingProducts({
         <Row
           label="Monthly"
           id={monthly}
-          price={`$${PRO_PRICES.monthly.amount} a month`}
+          price={money("monthly")}
           cadence="monthly"
           tokenConfigured={tokenConfigured}
           busy={busy}
@@ -108,7 +173,7 @@ export function BillingProducts({
         <Row
           label="Yearly"
           id={yearly}
-          price={`$${PRO_PRICES.yearly.amount} a year`}
+          price={money("yearly")}
           cadence="yearly"
           tokenConfigured={tokenConfigured}
           busy={busy}
@@ -128,17 +193,20 @@ export function BillingProducts({
             icon="plus"
             onClick={() =>
               startBusy(async () => {
+                /* Fills every empty slot across BOTH plans, which is what an
+                   operator setting the product up actually wants. A slot that
+                   already has an id is left alone. */
                 const result = await createPolarProducts();
                 if (result.error) {
                   toast({ tone: "bad", title: "Could not create", text: result.error });
                   return;
                 }
-                toast({ tone: "ok", title: "Products created", text: "Pro is ready to sell." });
+                toast({ tone: "ok", title: "Products created", text: "Every empty slot is filled." });
                 router.refresh();
               })
             }
           >
-            Create both in Polar
+            Create everything missing in Polar
           </Button>
         </div>
       ) : null}
@@ -148,11 +216,21 @@ export function BillingProducts({
           Paste ids from Polar instead
         </summary>
         <div className="mt-[11px] flex flex-col gap-[10px]">
-          <Field label="Monthly product id" htmlFor="polar-monthly">
-            <Input id="polar-monthly" height={34} value={draftMonthly} onChange={(e) => setDraftMonthly(e.target.value)} />
+          <Field label={`${title}: monthly id`} htmlFor={`polar-${tier}-monthly`}>
+            <Input
+              id={`polar-${tier}-monthly`}
+              height={34}
+              value={draftMonthly}
+              onChange={(e) => setDraftMonthly(e.target.value)}
+            />
           </Field>
-          <Field label="Yearly product id" htmlFor="polar-yearly">
-            <Input id="polar-yearly" height={34} value={draftYearly} onChange={(e) => setDraftYearly(e.target.value)} />
+          <Field label={`${title}: yearly id`} htmlFor={`polar-${tier}-yearly`}>
+            <Input
+              id={`polar-${tier}-yearly`}
+              height={34}
+              value={draftYearly}
+              onChange={(e) => setDraftYearly(e.target.value)}
+            />
           </Field>
           <div>
             <Button
@@ -162,10 +240,16 @@ export function BillingProducts({
               onClick={() =>
                 startBusy(async () => {
                   if (!draftMonthly.trim() || !draftYearly.trim()) {
-                    toast({ tone: "bad", title: "Both are needed", text: "Pro is sold in two cadences." });
+                    toast({ tone: "bad", title: "Both are needed", text: "Each plan is sold in two cadences." });
                     return;
                   }
-                  const result = await savePolarProducts({ monthly: draftMonthly, yearly: draftYearly });
+                  /* Only this plan's two fields are sent. A blank one is left
+                     as it was, so saving Pro cannot wipe Business. */
+                  const result = await savePolarProducts(
+                    tier === "business"
+                      ? { businessMonthly: draftMonthly, businessYearly: draftYearly }
+                      : { monthly: draftMonthly, yearly: draftYearly },
+                  );
                   if (result.error) {
                     toast({ tone: "bad", title: "Could not save", text: result.error });
                     return;
@@ -208,7 +292,7 @@ function Row({
   label: string;
   id: string | null;
   price: string;
-  cadence: "monthly" | "yearly";
+  cadence: Cadence;
   tokenConfigured: boolean;
   busy: boolean;
   confirming: boolean;
