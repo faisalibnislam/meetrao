@@ -65,9 +65,7 @@ const PANELS: Panel[] = [
     key: "brand",
     icon: "palette",
     title: "Your brand, on your own domain",
-    text:
-      "Your mark instead of ours, an accent and a page background, and the page served from a name you own. " +
-      "None of our palette is left, and nor is our address.",
+    text: "Your logo, your colours, and a domain you own. Nothing of ours is left on the page.",
     render: (active) => <BrandPanel active={active} />,
   },
 ];
@@ -368,14 +366,18 @@ function BrandPanel({ active }: { active: boolean }) {
      These are files, which is what the feature actually takes: a host uploads
      a PNG or an SVG, and that is what these are.
 
-     ONE BRAND WAS ASKED FOR AND LEFT OUT: the studio this product used to be
-     published under. src/lib/contact-address.test.ts keeps every retired
-     identity off the site on purpose, down to the raw text of a comment, which
-     is why this paragraph does not name it either. A Google verification
-     reviewer compares the site against the OAuth consent screen, and the Terms
-     two clicks away say there is no company behind this and no team. That
-     studio's mark on the homepage contradicts it whether or not the caption
-     calls it a customer.
+     AIRLY IS HERE BY DECISION, not by oversight. Meetrao used to be published
+     under that studio's name, and src/lib/contact-address.test.ts keeps every
+     retired operator identity off the site: a Google verification reviewer
+     compares the site against the OAuth consent screen, and the Terms say
+     there is no company behind this and no team. That guard now exempts this
+     one file by name, which is the narrowest shape the exception can take.
+
+     The distinction it rests on: these are examples of what a HOST puts on
+     their own page, drawn inside a mock of somebody else's booking page. The
+     operator's name is not here and nothing says these businesses run
+     anything. All three belong to the person this is built for, who asked for
+     the third having seen the argument against it.
 
      The colours are sampled from the logos rather than chosen to suit them,
      and the rest of each palette comes from brandTokens, the same function the
@@ -384,6 +386,7 @@ function BrandPanel({ active }: { active: boolean }) {
      its yellow is the case the contrast code exists for, and it gets a dark
      label where the other two get white. */
   const BRANDS = [
+    { key: "airly", name: "Airly", logo: "/demo-brands/airly.png", ratio: 2100 / 1024, accent: "#013e88", domain: "meet.airlystudio.com/alex" },
     { key: "involets", name: "Involets", logo: "/demo-brands/involets.png", ratio: 2550 / 512, accent: "#12100c", domain: "book.involets.com/alex" },
     { key: "taskeni", name: "Taskeni", logo: "/demo-brands/taskeni.svg", ratio: 1884 / 512, accent: "#f8e77f", domain: "meet.taskeni.app/alex" },
   ];
