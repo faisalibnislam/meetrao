@@ -83,7 +83,7 @@ export const CALENDLY: Comparison = {
     { feature: "Timezone conversion for guests", meetrao: "Yes", them: "Yes", edge: "even" },
     { feature: "Buffers, notice period, booking window", meetrao: "Yes", them: "Yes", edge: "even" },
     { feature: "Branding on your booking page", meetrao: "Meetrao wordmark; your own logo on Pro", them: "Calendly badge on free, removable on paid", edge: "even" },
-    { feature: "Custom domain for your link", meetrao: "Yes, on Pro at $30 a year", them: "Not offered", edge: "meetrao" },
+    { feature: "Custom domain for your link", meetrao: "Yes, on Pro at $30 a year", them: "Not offered: the link stays on calendly.com", edge: "meetrao" },
     { feature: "Reschedule flow", meetrao: "Yes", them: "Yes", edge: "even" },
     { feature: "Reminders", meetrao: "Email, the day before and an hour before", them: "Email and SMS, configurable", edge: "them" },
     { feature: "Take payment at booking", meetrao: "No", them: "Yes, on paid plans", edge: "them" },
@@ -101,7 +101,7 @@ export const CALENDLY: Comparison = {
   meetraoWins: [
     ["No limit that exists to sell you something", "Taking bookings is free and has no cap on it. The paid tier adds a domain, branding and team links, not the ability to book."],
     ["Unlimited meeting types, free", "Calendly's free plan allows one. If you run a 15-minute intro and a 60-minute deep dive, that is the wall most people hit first."],
-    ["A domain of your own, for $30 a year", "Calendly does not offer a custom domain on any published plan. Meetrao does, at $30 a year, so your link reads meet.yourcompany.com rather than somebody else's address."],
+    ["A domain of your own, for $30 a year", "Calendly has no custom-domain feature on any published plan, so the link stays on calendly.com whatever you pay. Meetrao's is $30 a year, and your link reads meet.yourcompany.com instead."],
     ["It reads busy and free, never what your meetings are", "Meetrao asks Google which periods are busy. It never requests event titles, guests, descriptions or attachments, see the Privacy Policy, which names every permission."],
     ["No card, no trial countdown", "Nothing expires, and there is no card on file to forget about."],
   ],
@@ -233,7 +233,7 @@ export const ACUITY: Comparison = {
     { feature: "Guests need an account", meetrao: "No", them: "No", edge: "even" },
     { feature: "Timezone conversion for guests", meetrao: "Yes", them: "Yes", edge: "even" },
     { feature: "Video link on every booking", meetrao: "Google Meet, always", them: "Meet, Zoom and GoToMeeting", edge: "them" },
-    { feature: "Custom domain for your link", meetrao: "Yes, on Pro at $30 a year", them: "Not offered", edge: "meetrao" },
+    { feature: "Custom domain for your link", meetrao: "Yes, on Pro at $30 a year", them: "Not offered: embed the scheduler in a site you own", edge: "meetrao" },
     { feature: "Remove the vendor's logo", meetrao: "On Pro, with your own logo and colours", them: "On the Premium plan", edge: "meetrao" },
     { feature: "HIPAA BAA", meetrao: "No", them: "Yes, on the Premium plan", edge: "them" },
     { feature: "Reads your event titles", meetrao: "Never: busy and free only", them: "See their privacy policy", edge: "meetrao" },
@@ -248,7 +248,7 @@ export const ACUITY: Comparison = {
   meetraoWins: [
     ["There is a free plan at all", "Acuity's entry tier is $20 a month, or $16 a month billed annually, after a seven-day trial. Meetrao's booking product is free and stays free, which matters most to the people for whom a scheduling link is not a revenue line."],
     ["It is a link, not a system", "No client records to maintain, no forms to design, no packages to configure. Three screens and the link works, which is the right amount of tool when nobody is paying you at the point of booking."],
-    ["A domain of your own, for $30 a year", "Acuity does not offer a custom domain on any published plan. Meetrao does, at $30 a year, alongside your own logo and colours."],
+    ["A domain of your own, for $30 a year", "Acuity's help centre says you cannot point a domain you own at your scheduling page; the supported route is to embed the scheduler in a site you own, and the hosted page keeps an .as.me address. Meetrao serves your booking page from your own domain, for $30 a year."],
     ["It reads busy and free, never what your meetings are", "Meetrao asks Google which periods are busy. It never requests event titles, guests, descriptions or attachments."],
   ],
   chooseThem: [
