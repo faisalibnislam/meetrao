@@ -9,6 +9,7 @@ import { Callout, PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { openPortal, startCheckout } from "@/lib/actions/billing";
 import { saveReminderTiming } from "@/lib/actions/settings";
+import type { Plan } from "@/convex/lib/plan";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Plan, and the reminder timing that lives nowhere else.
@@ -22,7 +23,7 @@ import { saveReminderTiming } from "@/lib/actions/settings";
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type PlanView = {
-  plan: "free" | "pro";
+  plan: Plan;
   planUntil: string | null;
   hasSubscription: boolean;
   /** Pro given by an operator rather than bought. */

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
 import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
-import { createCheckout, customerPortalUrl, type Cadence } from "@/lib/polar";
+import { createCheckout, customerPortalUrl, type Cadence, type Tier } from "@/lib/polar";
 import { attachDomain, checkDomain, detachDomain, type DomainState } from "@/lib/vercel-domains";
 import { api } from "@/convex/_generated/api";
 import { env, siteUrl } from "@/lib/env";
@@ -15,7 +15,7 @@ import { env, siteUrl } from "@/lib/env";
 
 export type BillingResult = { error?: string; url?: string };
 
-export async function startCheckout(cadence: Cadence): Promise<BillingResult> {
+export async function startCheckout(cadence: Cadence, tier: Tier = "pro"): Promise<BillingResult> {
   const session = await requireSession();
 
   if (!env().POLAR_ACCESS_TOKEN) {
@@ -26,13 +26,17 @@ export async function startCheckout(cadence: Cadence): Promise<BillingResult> {
   const products = await convex.query(api.platformSettings.productsForCheckout, {});
 
   try {
+    const businessId = cadence === "yearly" ? products.businessYearly : products.businessMonthly;
+    const proId = cadence === "yearly" ? products.yearly : products.monthly;
+
     const checkout = await createCheckout({
+      tier,
       cadence,
-      productId: cadence === "yearly" ? products.yearly : products.monthly,
+      productId: tier === "business" ? businessId : proId,
       profileId: session.profile.id,
       email: session.profile.email,
-      // Pro is granted by the webhook, not by arriving here, this page just
-      // says thank you and reloads the plan.
+      // The plan is granted by the webhook, not by arriving here, this page
+      // just says thank you and reloads it.
       successUrl: `${siteUrl()}/settings/billing?welcome=1`,
     });
     return { url: checkout.url };

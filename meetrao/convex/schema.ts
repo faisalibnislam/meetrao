@@ -510,6 +510,12 @@ export default defineSchema({
        TOKEN stays in the environment. A credential is not configuration. */
     polar_product_monthly: v.optional(nullableString),
     polar_product_yearly: v.optional(nullableString),
+    /* And the two Business is sold as. Separate fields rather than a map,
+       because the webhook compares an incoming product id against these to
+       decide which tier was bought, and a typo'd key in a map would silently
+       grant the lower one. */
+    polar_product_business_monthly: v.optional(nullableString),
+    polar_product_business_yearly: v.optional(nullableString),
     updated_at: v.number(),
   }),
 

@@ -10,6 +10,7 @@ import { Modal } from "@/components/ui/modal";
 import { SectionHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { grantProToUser, revokeProFromUser } from "@/lib/actions/admin";
+import type { Plan } from "@/convex/lib/plan";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    One account's plan, and giving Pro away.
@@ -21,7 +22,7 @@ import { grantProToUser, revokeProFromUser } from "@/lib/actions/admin";
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type PlanInfo = {
-  plan: "free" | "pro";
+  plan: Plan;
   subscribed: boolean;
   comp: boolean;
   compUntil: string | null;

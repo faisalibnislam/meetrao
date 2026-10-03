@@ -53,11 +53,36 @@ export const PRO_PRICES = {
 
 export type Cadence = keyof typeof PRO_PRICES;
 
-/** What a year on the yearly plan saves against twelve monthly payments. */
-export function yearlySaving(): { dollars: number; percent: number } {
-  const monthlyYear = PRO_PRICES.monthly.amount * 12;
-  const dollars = monthlyYear - PRO_PRICES.yearly.amount;
+/** What Business costs. Same shape as Pro, so a card can render either. */
+export const BUSINESS_YEARLY = "$99 a year";
+export const BUSINESS_MONTHLY = "$9 a month";
+
+export const BUSINESS_PRICES = {
+  monthly: { amount: 9, unit: "a month", suffix: "/mo" },
+  yearly: { amount: 99, unit: "a year", suffix: "/yr" },
+} as const;
+
+/** The caps Business buys. Printed on the pricing page and enforced in Convex. */
+export const BUSINESS_LIMITS = { companies: 10, membersPerCompany: 100 } as const;
+
+/**
+ * What a year saves against twelve monthly payments, for either plan.
+ *
+ * Computed rather than written down, because a hand-typed discount is the
+ * first thing to go stale, and now there are two of them to go stale.
+ */
+export function savingFor(prices: { monthly: { amount: number }; yearly: { amount: number } }): {
+  dollars: number;
+  percent: number;
+} {
+  const monthlyYear = prices.monthly.amount * 12;
+  const dollars = monthlyYear - prices.yearly.amount;
   return { dollars, percent: Math.round((dollars / monthlyYear) * 100) };
+}
+
+/** What a year on Pro's yearly plan saves against twelve monthly payments. */
+export function yearlySaving(): { dollars: number; percent: number } {
+  return savingFor(PRO_PRICES);
 }
 
 /**

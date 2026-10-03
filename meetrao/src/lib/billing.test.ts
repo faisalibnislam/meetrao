@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { hasComp, hasSubscription, isPro, planOf } from "@/convex/lib/plan";
+import { hasComp, hasSubscription, isBusiness, isPro, planOf } from "@/convex/lib/plan";
 import { verifyPolarSignature } from "@/lib/polar";
 
 const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), "utf8");
@@ -210,5 +210,59 @@ describe("Pro given away", () => {
   it("offers only the lengths it knows", () => {
     expect(admin).toMatch(/COMP_DAYS: Record<string, number \| null>/);
     expect(admin).toContain("Pick one of the offered lengths.");
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The third tier.
+
+   Business is a SUPERSET of Pro, so the thing most worth asserting is not that
+   `planOf` returns the new string. It is that every gate already written
+   against Pro keeps letting a Business account through. There are dozens of
+   `requirePro` calls and none of them were touched when Business was added;
+   if `isPro` ever goes back to an equality check, they all start refusing the
+   most expensive customers the product has.
+   ───────────────────────────────────────────────────────────────────────────── */
+describe("who is on Business", () => {
+  const live = { plan: "business", plan_until: Date.now() + HOUR };
+
+  it("is anybody Polar says bought it", () => {
+    expect(planOf(live)).toBe("business");
+    expect(isBusiness(live)).toBe(true);
+  });
+
+  it("passes every gate written for Pro", () => {
+    expect(isPro(live)).toBe(true);
+  });
+
+  it("is not granted by a Pro subscription", () => {
+    const pro = { plan: "pro", plan_until: Date.now() + HOUR };
+    expect(isBusiness(pro)).toBe(false);
+    expect(isPro(pro)).toBe(true);
+  });
+
+  it("ends when the period it was paid for ends", () => {
+    expect(planOf({ plan: "business", plan_until: Date.now() - HOUR })).toBe("free");
+  });
+
+  it("survives an absent end date, like Pro does", () => {
+    expect(planOf({ plan: "business", plan_until: null })).toBe("business");
+    expect(hasSubscription({ plan: "business", plan_until: undefined })).toBe(true);
+  });
+
+  /* `comp_until` is one date with no tier beside it. Reading Business out of a
+     field that does not carry a tier is how a free grant quietly becomes the
+     most expensive plan, so a grant stops at Pro. */
+  it("is never granted by a complimentary date alone", () => {
+    const comped = { plan: "free", plan_until: null, comp_until: Date.now() + HOUR };
+    expect(hasComp(comped)).toBe(true);
+    expect(planOf(comped)).toBe("pro");
+    expect(isBusiness(comped)).toBe(false);
+  });
+
+  /* A lapsed Business subscription with a live grant falls back to Pro rather
+     than to free: the grant is still real. */
+  it("falls back to a live grant when the subscription lapses", () => {
+    expect(planOf({ plan: "business", plan_until: Date.now() - HOUR, comp_until: Date.now() + HOUR })).toBe("pro");
   });
 });

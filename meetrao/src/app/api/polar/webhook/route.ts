@@ -32,6 +32,10 @@ type SubscriptionEvent = {
     ends_at?: string | null;
     customer_id?: string | null;
     customer?: { id?: string | null; external_id?: string | null; email?: string | null } | null;
+    /* Which product was bought, and therefore which tier. Polar sends it flat
+       on some events and nested on others, so both are read. */
+    product_id?: string | null;
+    product?: { id?: string | null } | null;
     external_customer_id?: string | null;
     metadata?: Record<string, unknown> | null;
   };
@@ -84,6 +88,7 @@ export async function POST(request: NextRequest) {
     subscriptionId: data.id,
     status: data.status,
     currentPeriodEnd: endsAt ? Date.parse(endsAt) : null,
+    productId: data.product_id ?? data.product?.id ?? null,
   });
 
   return NextResponse.json({ ok: true, ...result });

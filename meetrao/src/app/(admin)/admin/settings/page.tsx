@@ -33,11 +33,7 @@ export default async function AdminSettingsPage() {
         adminEmail={profile.email}
         onSignOut={signOut}
       />
-      <BillingProducts
-        monthly={products.monthly}
-        yearly={products.yearly}
-        tokenConfigured={Boolean(env().POLAR_ACCESS_TOKEN)}
-      />
+      <BillingProducts products={products} tokenConfigured={Boolean(env().POLAR_ACCESS_TOKEN)} />
 
       <div className="mx-auto flex w-full max-w-[560px] flex-col">
         <HeldLinks links={held} siteHost={siteHost} />
