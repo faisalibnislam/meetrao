@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { ButtonLink } from "@/components/ui/button";
+import { DemoBrandLogo } from "@/components/marketing/demo-brand-logos";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -360,14 +361,44 @@ function TeamPanel({ active }: { active: boolean }) {
 
 /** The same booking page, wearing three different businesses. */
 function BrandPanel({ active }: { active: boolean }) {
-  /* The domain rides along with the colours because the two are one decision:
-     a host making the page theirs wants the address to be theirs as well. It
-     also puts the feature on screen rather than only in the sentence beside
-     it, which is the point of this panel. */
+  /* Three invented businesses, each with a drawn mark rather than its name in
+     our font. A page showing a name in the page's own typeface is what a host
+     who has NOT uploaded a logo sees, which is the state this panel exists to
+     say you can leave.
+
+     Meetrao is not among them on purpose. Our own brand in a rotation meant to
+     show somebody else's is the one entry that proves nothing.
+
+     The domain rides along with the colours because the two are one decision:
+     a host making the page theirs wants the address to be theirs as well. */
   const BRANDS = [
-    { name: "Meetrao", domain: "meetrao.com/alex", accent: "#14554a", ground: "#e7e4dc", ink: "#14554a", on: "#ffffff" },
-    { name: "airly", domain: "meeting.airly.studio/alex", accent: "#003e88", ground: "#dbe4ee", ink: "#1e3a63", on: "#ffffff" },
-    { name: "Sunfold", domain: "book.sunfold.co/alex", accent: "#b4521e", ground: "#f6e7dc", ink: "#8a3f17", on: "#ffffff" },
+    {
+      key: "sunfold" as const,
+      name: "Sunfold",
+      domain: "book.sunfold.co/alex",
+      accent: "#b4521e",
+      ground: "#f6e7dc",
+      ink: "#8a3f17",
+      on: "#ffffff",
+    },
+    {
+      key: "brightwell" as const,
+      name: "Brightwell",
+      domain: "meet.brightwell.io/alex",
+      accent: "#1f3d7a",
+      ground: "#e4e9f4",
+      ink: "#1b3465",
+      on: "#ffffff",
+    },
+    {
+      key: "marlowe" as const,
+      name: "Marlowe",
+      domain: "calendar.marlowe.studio/alex",
+      accent: "#7a2048",
+      ground: "#f4e4ea",
+      ink: "#5e1838",
+      on: "#ffffff",
+    },
   ];
   const [which, setWhich] = useState(0);
 
@@ -386,11 +417,8 @@ function BrandPanel({ active }: { active: boolean }) {
       className="flex w-full max-w-[330px] flex-col gap-[10px] rounded-[12px] p-[14px] transition-colors duration-[500ms] ease-[ease]"
       style={{ background: brand.ground }}
     >
-      <span
-        className="text-[13px] font-bold tracking-[-0.01em] transition-colors duration-[500ms]"
-        style={{ color: brand.ink }}
-      >
-        {brand.name}
+      <span className="transition-colors duration-[500ms]" style={{ color: brand.ink }}>
+        <DemoBrandLogo brand={brand.key} name={brand.name} />
       </span>
 
       {/* The address, in place of a "Booking page" label. It is the half of
