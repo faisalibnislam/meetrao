@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
+import { PlanPrice } from "@/components/marketing/plan-price";
 import { Kicker } from "./site-chrome";
 import { Reveal } from "./reveal";
 import { DENIALS, HEADLINE, PRICING_FAQ, PRO_MONTHLY, PRO_YEARLY } from "@/lib/pricing";
@@ -31,10 +32,18 @@ export function PricingPage() {
               {HEADLINE}
             </h1>
             <p className="m-0 text-[16px] leading-[1.6] text-pretty text-ink-2">
-              Taking bookings is free, and that is the whole booking product, not a sample of it. Pro is{" "}
-              {PRO_YEARLY} and adds the parts a business needs: your own domain, your own branding, a team
-              link, and the API.
+              Taking bookings is free, and that is the whole booking product, not a sample of it. Pro adds
+              the parts a business needs: your own domain, your own branding, a team link, and the API.
             </p>
+
+            {/* The figure, with the cadence a reader picks. Same control as the
+                landing band, so the two cannot quote different numbers. */}
+            <div className="mt-[4px] rounded-[12px] border border-line bg-surface px-[20px] pt-[18px] pb-[20px]">
+              <span className="mb-[10px] block text-[11px] font-semibold tracking-[0.1em] text-ink-3 uppercase">
+                Pro
+              </span>
+              <PlanPrice />
+            </div>
 
             <div className="mt-[6px] flex flex-wrap gap-[10px]">
               {DENIALS.map(([title, body]) => (

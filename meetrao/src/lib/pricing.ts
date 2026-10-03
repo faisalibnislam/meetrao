@@ -31,12 +31,34 @@ export const HEADLINE = "Book meetings free. Pay only to make it yours.";
 export const DENIALS: readonly [string, string][] = [
   ["No credit card to start", "Free needs no card, at sign-up or later. Taking bookings costs nothing."],
   ["No trial clock", "Free is not a countdown. Nothing you set up stops working in 14 days."],
-  ["No per-seat pricing", "Pro is $10 a year for the account, not per person and not per booking."],
+  ["No per-seat pricing", "Pro is $30 a year for the account, not per person and not per booking."],
 ];
 
 /** What Pro costs, in both cadences. Rendered, and used in the copy below. */
-export const PRO_YEARLY = "$10 a year";
+export const PRO_YEARLY = "$30 a year";
 export const PRO_MONTHLY = "$3 a month";
+
+/**
+ * The two cadences, as the numbers rather than as sentences.
+ *
+ * The strings above read well mid-paragraph; a price card needs the figure and
+ * its unit apart so it can set them at different sizes. Both come from here so
+ * a change lands in one place, and `saving` is COMPUTED rather than written
+ * down, because a hand-typed discount is the first thing to go stale.
+ */
+export const PRO_PRICES = {
+  monthly: { amount: 3, unit: "a month", suffix: "/mo" },
+  yearly: { amount: 30, unit: "a year", suffix: "/yr" },
+} as const;
+
+export type Cadence = keyof typeof PRO_PRICES;
+
+/** What a year on the yearly plan saves against twelve monthly payments. */
+export function yearlySaving(): { dollars: number; percent: number } {
+  const monthlyYear = PRO_PRICES.monthly.amount * 12;
+  const dollars = monthlyYear - PRO_PRICES.yearly.amount;
+  return { dollars, percent: Math.round((dollars / monthlyYear) * 100) };
+}
 
 /**
  * What Free is, the whole booking product, not a sample of it.

@@ -80,7 +80,7 @@ export function DeveloperPanel({
         <Callout tone="accent" title="The API is part of Pro">
           A read-only key for your bookings and meetings, and a signed webhook when one changes.{" "}
           <Link href="/settings/billing" className="font-semibold">
-            See Pro, $10 a year
+            See Pro, $30 a year
           </Link>
           .
         </Callout>

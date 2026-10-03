@@ -133,7 +133,7 @@ export default function TermsPage() {
         <p>
           There are two plans. <strong>Free</strong> covers taking bookings, your link, your meeting types,
           your calendar, reminders, rescheduling and cancellation, with no card and no limit on how many
-          bookings you take. <strong>Pro</strong> is $10 a year, or $3 a month, and adds a custom domain,
+          bookings you take. <strong>Pro</strong> is $30 a year, or $3 a month, and adds a custom domain,
           removal of Meetrao branding, team links, shared sessions, the API and control over reminder timing.
         </p>
         <p>

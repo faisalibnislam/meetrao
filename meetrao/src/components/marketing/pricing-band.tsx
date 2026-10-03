@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { ButtonLink } from "@/components/ui/button";
-import { PRO_MONTHLY, PRO_YEARLY } from "@/lib/pricing";
+import { PlanPrice } from "@/components/marketing/plan-price";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Pricing, on the landing page.
@@ -46,9 +46,7 @@ export function PricingBand() {
       />
       <Plan
         name="Pro"
-        price={PRO_YEARLY.replace(" a year", "")}
-        per="a year"
-        note={`Everything in Free, plus the parts a business needs. Or ${PRO_MONTHLY}.`}
+        note="Everything in Free, plus the parts a business needs."
         points={PRO}
         tone="loud"
       />
@@ -65,8 +63,10 @@ function Plan({
   tone,
 }: {
   name: string;
-  price: string;
-  per: string;
+  /* Absent on Pro, which renders <PlanPrice> instead: its figure depends on a
+     cadence the reader chooses, so it cannot be a string passed in. */
+  price?: string;
+  per?: string;
   note: string;
   points: readonly string[];
   /* `loud` is the paid card. Both sit on the same dark ground, so the
@@ -95,18 +95,17 @@ function Plan({
         >
           {name}
         </span>
-        <span className="flex items-baseline gap-[7px]">
-          <span
-            className={
-              loud
-                ? "font-serif text-[40px] leading-none font-normal tracking-[-0.02em] text-ink"
-                : "font-serif text-[40px] leading-none font-normal tracking-[-0.02em] text-white"
-            }
-          >
-            {price}
+
+        {price ? (
+          <span className="flex items-baseline gap-[7px]">
+            <span className="font-serif text-[40px] leading-none font-normal tracking-[-0.02em] text-white">
+              {price}
+            </span>
+            <span className="text-[13px] text-white/60">{per}</span>
           </span>
-          <span className={loud ? "text-[13px] text-ink-3" : "text-[13px] text-white/60"}>{per}</span>
-        </span>
+        ) : (
+          <PlanPrice />
+        )}
         <span className={loud ? "text-[13px] leading-[1.5] text-ink-2" : "text-[13px] leading-[1.5] text-white/70"}>
           {note}
         </span>

@@ -146,7 +146,7 @@ export function Hero() {
         <div className="mx-auto mt-[6px] flex w-full max-w-[1019px] flex-wrap items-center justify-center gap-x-[16px] gap-y-[12px] border-t border-white/20 pt-[20px]">
           <span className="inline-flex items-center gap-[9px] text-[15.5px] font-semibold tracking-[-0.008em] text-white">
             <Icon name="check" weight="solid" size={12} className="text-[#7FD8C4]" />
-            Free to start. Pro is $10 a year.
+            Free to start. Pro is $30 a year.
           </span>
           <span aria-hidden="true" className="h-[20px] w-[1px] flex-none bg-white/20" />
           <span className="inline-flex items-baseline gap-[8px] text-[13.5px] text-white/75">

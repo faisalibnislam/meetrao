@@ -122,7 +122,7 @@ export function BillingPanel({
                 $3 / month
               </Button>
               <Button variant="accent" size={32} busy={busy} onClick={() => go(() => startCheckout("yearly"))}>
-                $10 / year
+                $30 / year
               </Button>
             </div>
           )}
