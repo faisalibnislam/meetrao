@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { ButtonLink } from "@/components/ui/button";
-import { DemoBrandLogo } from "@/components/marketing/demo-brand-logos";
 import { cx } from "@/lib/cx";
+import { brandTokens } from "@/convex/lib/brand";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The product section's lead: four things it does, shown rather than listed.
@@ -361,45 +361,33 @@ function TeamPanel({ active }: { active: boolean }) {
 
 /** The same booking page, wearing three different businesses. */
 function BrandPanel({ active }: { active: boolean }) {
-  /* Three invented businesses, each with a drawn mark rather than its name in
-     our font. A page showing a name in the page's own typeface is what a host
-     who has NOT uploaded a logo sees, which is the state this panel exists to
-     say you can leave.
+  /* REAL BUSINESSES, with their own logos and their own brand colours.
 
-     Meetrao is not among them on purpose. Our own brand in a rotation meant to
-     show somebody else's is the one entry that proves nothing.
+     Invented ones were tried first and their logotypes had to be drawn, which
+     went three rounds and never stopped looking like a typeface exercise.
+     These are files, which is what the feature actually takes: a host uploads
+     a PNG or an SVG, and that is what these are.
 
-     The domain rides along with the colours because the two are one decision:
-     a host making the page theirs wants the address to be theirs as well. */
+     ONE BRAND WAS ASKED FOR AND LEFT OUT: the studio this product used to be
+     published under. src/lib/contact-address.test.ts keeps every retired
+     identity off the site on purpose, down to the raw text of a comment, which
+     is why this paragraph does not name it either. A Google verification
+     reviewer compares the site against the OAuth consent screen, and the Terms
+     two clicks away say there is no company behind this and no team. That
+     studio's mark on the homepage contradicts it whether or not the caption
+     calls it a customer.
+
+     The colours are sampled from the logos rather than chosen to suit them,
+     and the rest of each palette comes from brandTokens, the same function the
+     real booking page runs. The panel is not an illustration of the feature,
+     it is the feature with three inputs. Taskeni earns its place twice over:
+     its yellow is the case the contrast code exists for, and it gets a dark
+     label where the other two get white. */
   const BRANDS = [
-    {
-      key: "sunfold" as const,
-      name: "Sunfold",
-      domain: "book.sunfold.co/alex",
-      accent: "#b4521e",
-      ground: "#f6e7dc",
-      ink: "#8a3f17",
-      on: "#ffffff",
-    },
-    {
-      key: "halden" as const,
-      name: "Halden",
-      domain: "meet.halden.co/alex",
-      accent: "#1f3d7a",
-      ground: "#e4e9f4",
-      ink: "#1b3465",
-      on: "#ffffff",
-    },
-    {
-      key: "lumen" as const,
-      name: "Lumen",
-      domain: "calendar.lumen.studio/alex",
-      accent: "#7a2048",
-      ground: "#f4e4ea",
-      ink: "#5e1838",
-      on: "#ffffff",
-    },
+    { key: "involets", name: "Involets", logo: "/demo-brands/involets.png", ratio: 2550 / 512, accent: "#12100c", domain: "book.involets.com/alex" },
+    { key: "taskeni", name: "Taskeni", logo: "/demo-brands/taskeni.svg", ratio: 1884 / 512, accent: "#f8e77f", domain: "meet.taskeni.app/alex" },
   ];
+
   const [which, setWhich] = useState(0);
 
   useEffect(() => {
@@ -412,20 +400,34 @@ function BrandPanel({ active }: { active: boolean }) {
 
   const brand = BRANDS[which];
 
+  /* The same derivation the booking page runs: one colour in, a ground, a
+     readable label and a tint out. Hand-picking them here would make the panel
+     a drawing of the feature rather than the feature. */
+  const tokens = brandTokens(brand.accent)!;
+  const LOGO_H = 22;
+
   return (
     <div
-      className="flex w-full max-w-[330px] flex-col gap-[10px] rounded-[12px] p-[14px] transition-colors duration-[500ms] ease-[ease]"
-      style={{ background: brand.ground }}
+      className="flex w-full max-w-[340px] flex-col gap-[10px] rounded-[12px] p-[14px] transition-colors duration-[500ms] ease-[ease]"
+      style={{ background: tokens.ground }}
     >
-      <span className="transition-colors duration-[500ms]" style={{ color: brand.ink }}>
-        <DemoBrandLogo brand={brand.key} />
-      </span>
+      {/* The host's own file, at the size the real page shows it. Plain <img>,
+          as everywhere else a host's logo is drawn: these are a PNG and an SVG
+          from somebody's brand folder, not assets of ours to optimise. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={brand.logo}
+        alt={brand.name}
+        height={LOGO_H}
+        width={Math.round(LOGO_H * brand.ratio)}
+        style={{ height: LOGO_H, width: Math.round(LOGO_H * brand.ratio) }}
+        className="block object-contain object-left"
+      />
 
-      {/* The address, in place of a "Booking page" label. It is the half of
-          this feature a sentence cannot show. */}
+      {/* The address, which is the half of this feature a sentence cannot show. */}
       <span
-        className="flex items-center gap-[7px] rounded-[7px] bg-white/70 px-[9px] py-[6px] text-[11px] transition-colors duration-[500ms]"
-        style={{ color: brand.ink }}
+        className="flex items-center gap-[7px] rounded-[7px] bg-white/70 px-[9px] py-[6px] text-[11px]"
+        style={{ color: tokens.accentText }}
       >
         <Icon name="lock" size={9} className="flex-none opacity-60" />
         <span className="min-w-0 truncate font-medium">{brand.domain}</span>
@@ -439,7 +441,7 @@ function BrandPanel({ active }: { active: boolean }) {
               className="inline-flex h-[29px] w-[29px] items-center justify-center rounded-[6px] text-[12px] font-semibold transition-colors duration-[500ms]"
               style={
                 day === 14
-                  ? { background: brand.accent, color: brand.on }
+                  ? { background: tokens.accent, color: tokens.onAccent }
                   : { background: "#ffffff", color: "#1a1917", boxShadow: "inset 0 0 0 1px #e5e5e5" }
               }
             >
@@ -450,7 +452,7 @@ function BrandPanel({ active }: { active: boolean }) {
 
         <span
           className="inline-flex h-[31px] items-center justify-center rounded-[7px] text-[12px] font-semibold transition-colors duration-[500ms]"
-          style={{ background: brand.accent, color: brand.on }}
+          style={{ background: tokens.accent, color: tokens.onAccent }}
         >
           Confirm
         </span>
