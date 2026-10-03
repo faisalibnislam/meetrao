@@ -1,5 +1,7 @@
 import { Fragment } from "react";
+import Link from "next/link";
 import { Kicker } from "./site-chrome";
+import { AUDIENCES } from "@/lib/audiences";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Use cases, concept 2e, "Marquee with faces".
@@ -75,6 +77,22 @@ export function UseCases() {
             <span className="text-[10.5px] tracking-[0.12em] text-[#7FD8C4] uppercase">{eyebrow}</span>
             <span className="text-[14px] leading-[1.6] text-pretty text-white/86">{line}</span>
           </div>
+        ))}
+      </div>
+
+      {/* The marquee is decorative and aria-hidden in half, so it cannot be
+          what carries a crawler to the audience pages. This row is the real
+          link out of the band, in text, on every page the home page is. */}
+      <div className="mx-auto flex max-w-[1200px] flex-wrap items-center gap-[9px] px-[26px] pt-[30px] max-[560px]:px-[18px]">
+        <span className="text-[13px] text-white/70">Written up for</span>
+        {AUDIENCES.map((a) => (
+          <Link
+            key={a.slug}
+            href={`/for/${a.slug}`}
+            className="unlink inline-flex items-center rounded-[7px] border border-white/28 px-[11px] py-[6px] text-[13px] font-semibold text-white no-underline capitalize hover:border-white/55 hover:text-white"
+          >
+            {a.slug}
+          </Link>
         ))}
       </div>
     </div>

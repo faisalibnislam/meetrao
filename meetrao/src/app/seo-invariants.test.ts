@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { globSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { AUDIENCES } from "@/lib/audiences";
 import { COMPARISONS } from "@/lib/comparisons";
 import { DESCRIPTION, TITLE, TITLE_TEMPLATE } from "@/lib/seo";
 import sitemap from "./sitemap";
@@ -188,6 +189,13 @@ const RENDERED: { path: string; file: string; title: string }[] = [
     file: `(marketing)/vs/${c.slug}/page.tsx`,
     title: c.title,
   })),
+  /* The audience pages use the template, so the brand is appended rather than
+     carried in the string, unlike the comparisons just above. */
+  ...AUDIENCES.map((a) => ({
+    path: `/for/${a.slug}`,
+    file: `(marketing)/for/${a.slug}/page.tsx`,
+    title: TITLE_TEMPLATE.replace("%s", a.title),
+  })),
   ...(
     [
       ["/pricing", "(marketing)/pricing/page.tsx"],
@@ -275,6 +283,7 @@ describe("page descriptions", () => {
   const DESCRIBED: { path: string; description: string }[] = [
     { path: "/", description: DESCRIPTION },
     ...COMPARISONS.map((c) => ({ path: `/vs/${c.slug}`, description: c.description })),
+    ...AUDIENCES.map((a) => ({ path: `/for/${a.slug}`, description: a.description })),
     ...(
       [
         ["/pricing", "(marketing)/pricing/page.tsx"],

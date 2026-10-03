@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { AUDIENCES } from "@/lib/audiences";
 import { COMPARISONS } from "@/lib/comparisons";
 import { absoluteUrl } from "@/lib/seo";
 
@@ -22,6 +23,9 @@ const PAGES: [path: string, priority: number, changeFrequency: MetadataRoute.Sit
   ["/pricing", 0.9, "monthly"],
   ["/alternatives", 0.9, "monthly"],
   ["/custom-domain", 0.8, "monthly"],
+  /* Same arrangement as the comparisons: the data decides, not a second list
+     that has to be kept in step with it. */
+  ...AUDIENCES.map((a) => [`/for/${a.slug}`, 0.7, "monthly"] as (typeof PAGES)[number]),
   ["/guides/calendar-privacy", 0.7, "yearly"],
   /* The comparison pages come from the data rather than being listed again.
      Adding one is a line in comparisons.ts, and forgetting to list it here is
