@@ -163,12 +163,26 @@ export function ProductShowcase() {
           );
         })}
 
-        {/* mt-auto, so the gap is whatever the stage leaves rather than a
-            number that stops being right when a panel changes height. */}
-        <ButtonLink href="/pricing#compare" variant="accent" size={44} className="mt-auto w-fit">
-          See all features
-          <Icon name="arrow-right" size={12} className="flex-none" />
-        </ButtonLink>
+        {/* `mt-auto` on the WRAPPER, padding inside it.
+
+            mt-auto alone pushed the button to the bottom and let the gap above
+            be whatever the stage left over, which is right when the open panel
+            is short and nothing at all when the last tab is open: the button
+            ended up touching the panel above it.
+
+            Padding on the wrapper is a floor for that gap. It cannot go on the
+            button, whose height is fixed and border-box, so padding there
+            squashes the label instead of moving it. And it cannot be a margin
+            on the button, which is the property mt-auto is already using.
+
+            The wrapper's bottom is still the column's bottom, so the stage and
+            the button keep their shared edge. */}
+        <div className="mt-auto w-fit pt-[22px]">
+          <ButtonLink href="/pricing#compare" variant="accent" size={44}>
+            See all features
+            <Icon name="arrow-right" size={12} className="flex-none" />
+          </ButtonLink>
+        </div>
       </div>
 
       {/* The stage. Dark, so the white cards inside it read as the product
