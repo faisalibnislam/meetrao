@@ -354,6 +354,45 @@ export async function saveAdminAccount(input: { fullName: string }): Promise<Adm
 export type ProductResult = { error?: string; monthly?: string | null; yearly?: string | null };
 
 /**
+ * Creates ONE Pro product at the price the code currently names, and points
+ * the plan at it.
+ *
+ * Separate from createPolarProducts, which deliberately leaves a filled slot
+ * alone so an operator cannot make two live products at the same price by
+ * pressing a button twice. That rule is right for setting the plan up and
+ * wrong for changing a price, which is the only way to change one: Polar will
+ * not re-price a product that has already sold.
+ *
+ * So this one REPLACES. The old product keeps running in Polar for anybody
+ * already subscribed to it, and should be archived there so nothing new
+ * reaches it. Admin-only, and the screen asks before calling it, because the
+ * next checkout goes to whatever this returns.
+ */
+export async function createPolarProduct(
+  cadence: "monthly" | "yearly",
+): Promise<ProductResult & { created?: string }> {
+  await requireAdmin();
+
+  if (!env().POLAR_ACCESS_TOKEN) return { error: "No Polar access token is set on this deployment." };
+
+  let id: string;
+  try {
+    id = (await createProduct(cadence)).id;
+  } catch (cause) {
+    return { error: cause instanceof Error ? cause.message : "Polar refused the product." };
+  }
+
+  const convex = await convexServer();
+  await convex.mutation(api.platformSettings.update, {
+    ...(cadence === "monthly" ? { polar_product_monthly: id } : { polar_product_yearly: id }),
+  });
+
+  revalidatePath("/admin/settings");
+  const after = await convex.query(api.platformSettings.products, {});
+  return { created: id, monthly: after.monthly, yearly: after.yearly };
+}
+
+/**
  * Creates the two Pro products in Polar and records their ids.
  *
  * Admin-only, and idempotent in the way that matters: a cadence that already
