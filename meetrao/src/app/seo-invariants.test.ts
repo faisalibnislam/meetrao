@@ -3,6 +3,7 @@ import { globSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { COMPARISONS } from "@/lib/comparisons";
 import { DESCRIPTION, TITLE, TITLE_TEMPLATE } from "@/lib/seo";
+import sitemap from "./sitemap";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The SEO rules that fail silently.
@@ -311,8 +312,12 @@ describe("the sitemap", () => {
     "/login": "a sign-in form has nothing to rank for, and a crawler bounces off it",
   };
 
+  /* Calls the sitemap rather than reading its source. The comparison entries
+     are spread in from COMPARISONS, so the paths are no longer written out as
+     literals and a regex over the file would miss every one of them while
+     still passing on the rest. */
   it("lists every public page that is not deliberately excluded", () => {
-    const listed = [...source.matchAll(/\["(\/[a-z0-9/-]*)"/g)].map((m) => m[1]);
+    const listed = sitemap().map((entry) => new URL(entry.url).pathname.replace(/(.)\/$/, "$1"));
     const expected = RENDERED.map((r) => r.path).filter((p) => !(p in EXCLUDED));
 
     expect(listed.sort()).toEqual(expected.sort());

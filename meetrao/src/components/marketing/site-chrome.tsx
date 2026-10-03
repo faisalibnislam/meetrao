@@ -133,6 +133,7 @@ export function SiteFooter() {
         ["Calendly alternatives", "/alternatives"],
         ["Meetrao vs Calendly", "/vs/calendly"],
         ["Meetrao vs Cal.com", "/vs/cal-com"],
+        ["Meetrao vs Acuity", "/vs/acuity-scheduling"],
         ["FAQ", "/#faq"],
       ],
     },

@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { COMPARISONS } from "@/lib/comparisons";
 import { absoluteUrl } from "@/lib/seo";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -20,8 +21,13 @@ const PAGES: [path: string, priority: number, changeFrequency: MetadataRoute.Sit
   ["/", 1.0, "weekly"],
   ["/pricing", 0.9, "monthly"],
   ["/alternatives", 0.9, "monthly"],
-  ["/vs/calendly", 0.9, "monthly"],
-  ["/vs/cal-com", 0.9, "monthly"],
+  /* The comparison pages come from the data rather than being listed again.
+     Adding one is a line in comparisons.ts, and forgetting to list it here is
+     the kind of omission nobody notices until the page has not been crawled
+     for a quarter. */
+  ...COMPARISONS.map(
+    (c) => [`/vs/${c.slug}`, 0.9, "monthly"] as (typeof PAGES)[number],
+  ),
   ["/help", 0.7, "monthly"],
   ["/signup", 0.6, "yearly"],
   ["/support", 0.4, "yearly"],
