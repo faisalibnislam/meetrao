@@ -10,10 +10,10 @@ import { OG_IMAGE, breadcrumbLd, graph } from "@/lib/seo";
 /* ─────────────────────────────────────────────────────────────────────────────
    The hub the comparison pages were missing.
 
-   /vs/calendly and /vs/cal-com existed and linked to nothing, which is two
-   pages on their own rather than a cluster. This is the pillar: one page for
-   the plural query, pointing at each comparison and carrying the part that is
-   true whichever tool somebody is leaving.
+   The comparison pages linked to nothing, which is a handful of pages on
+   their own rather than a cluster. This is the pillar: one page for the plural
+   query, pointing at each comparison and carrying the part that is true
+   whichever tool somebody is leaving.
 
    IT REPEATS THE LIMITS. A page called "alternatives" is read by somebody
    deciding whether to switch, and the fastest way to lose that reader is to
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
   /* The plural query ("calendly alternatives") is the one this page exists
      for, so it leads. The template appends " · Meetrao", which is why the
      brand is not in the string. */
-  title: "Free alternatives to Calendly and Cal.com",
+  title: "Free Calendly, Cal.com and Acuity alternatives",
   description:
     "Honest comparisons with the schedulers people leave, including where each of them is still " +
     "the better choice. Free to take bookings, $30 a year for Pro.",
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   openGraph: {
     images: [OG_IMAGE],
     type: "website",
-    title: "Meetrao: free alternatives to Calendly and Cal.com",
+    title: "Meetrao: a free alternative to the big schedulers",
     description:
       "Comparisons that say where the other tool is better, first. Free to take bookings, $30 a year for a domain and your own branding.",
     url: "/alternatives",
@@ -65,8 +65,8 @@ export default function AlternativesPage() {
             </h1>
             <p className="m-0 text-[16px] leading-[1.6] text-pretty text-ink-2">
               Each comparison below says where the other tool is better, first,
-              before it says anything else. Meetrao is smaller than both. That
-              is the argument, not a thing to admit at the end.
+              before it says anything else. Meetrao is smaller than most of
+              them. That is the argument, not a thing to admit at the end.
             </p>
           </div>
 
