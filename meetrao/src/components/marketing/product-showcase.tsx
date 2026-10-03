@@ -63,8 +63,10 @@ const PANELS: Panel[] = [
   {
     key: "brand",
     icon: "palette",
-    title: "Your logo, your colours",
-    text: "Your mark instead of ours, an accent and a page background. None of our palette is left.",
+    title: "Your brand, on your own domain",
+    text:
+      "Your mark instead of ours, an accent and a page background, and the page served from a name you own. " +
+      "None of our palette is left, and nor is our address.",
     render: (active) => <BrandPanel active={active} />,
   },
 ];
@@ -358,10 +360,14 @@ function TeamPanel({ active }: { active: boolean }) {
 
 /** The same booking page, wearing three different businesses. */
 function BrandPanel({ active }: { active: boolean }) {
+  /* The domain rides along with the colours because the two are one decision:
+     a host making the page theirs wants the address to be theirs as well. It
+     also puts the feature on screen rather than only in the sentence beside
+     it, which is the point of this panel. */
   const BRANDS = [
-    { name: "Meetrao", accent: "#14554a", ground: "#e7e4dc", ink: "#14554a", on: "#ffffff" },
-    { name: "airly", accent: "#003e88", ground: "#dbe4ee", ink: "#1e3a63", on: "#ffffff" },
-    { name: "Sunfold", accent: "#b4521e", ground: "#f6e7dc", ink: "#8a3f17", on: "#ffffff" },
+    { name: "Meetrao", domain: "meetrao.com/alex", accent: "#14554a", ground: "#e7e4dc", ink: "#14554a", on: "#ffffff" },
+    { name: "airly", domain: "meeting.airly.studio/alex", accent: "#003e88", ground: "#dbe4ee", ink: "#1e3a63", on: "#ffffff" },
+    { name: "Sunfold", domain: "book.sunfold.co/alex", accent: "#b4521e", ground: "#f6e7dc", ink: "#8a3f17", on: "#ffffff" },
   ];
   const [which, setWhich] = useState(0);
 
@@ -380,20 +386,22 @@ function BrandPanel({ active }: { active: boolean }) {
       className="flex w-full max-w-[330px] flex-col gap-[10px] rounded-[12px] p-[14px] transition-colors duration-[500ms] ease-[ease]"
       style={{ background: brand.ground }}
     >
-      <div className="flex items-center justify-between">
-        <span
-          className="text-[13px] font-bold tracking-[-0.01em] transition-colors duration-[500ms]"
-          style={{ color: brand.ink }}
-        >
-          {brand.name}
-        </span>
-        <span
-          className="text-[9px] font-semibold tracking-[0.08em] uppercase transition-colors duration-[500ms]"
-          style={{ color: brand.ink, opacity: 0.6 }}
-        >
-          Booking page
-        </span>
-      </div>
+      <span
+        className="text-[13px] font-bold tracking-[-0.01em] transition-colors duration-[500ms]"
+        style={{ color: brand.ink }}
+      >
+        {brand.name}
+      </span>
+
+      {/* The address, in place of a "Booking page" label. It is the half of
+          this feature a sentence cannot show. */}
+      <span
+        className="flex items-center gap-[7px] rounded-[7px] bg-white/70 px-[9px] py-[6px] text-[11px] transition-colors duration-[500ms]"
+        style={{ color: brand.ink }}
+      >
+        <Icon name="lock" size={9} className="flex-none opacity-60" />
+        <span className="min-w-0 truncate font-medium">{brand.domain}</span>
+      </span>
 
       <div className="flex flex-col gap-[9px] rounded-[9px] bg-white px-[12px] py-[11px]">
         <div className="flex items-center gap-[6px]">
