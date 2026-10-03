@@ -144,11 +144,34 @@ describe("one operator, one address", () => {
     "22314",
   ];
 
+  /* ONE EXEMPT FILE, and the distinction it rests on.
+
+     This rule is about who OPERATES Meetrao. A retired operator identity
+     reappearing in the footer, the Terms or an email is the defect: a Google
+     verification reviewer compares the site against the OAuth consent screen,
+     and the Terms say there is no company behind this and no team.
+
+     The branding showcase is a different claim. The logos in it are examples
+     of what a HOST can put on their own booking page, captioned as such and
+     sitting inside a mock of somebody else's page. The operator's name does
+     not appear, and the page does not say these businesses run anything.
+
+     The exemption is one named file rather than a relaxed needle, so a retired
+     identity still cannot reach any of the places this rule was written for.
+     The owner of all three brands asked for this one, having been shown the
+     verification argument against it. */
+  const DEMO_LOGOS = "src/components/marketing/product-showcase.tsx";
+
   it.each(RETIRED)("has no trace of %s", (needle) => {
-    const found = FILES.filter((f) => f.text.includes(needle)).map(
+    const found = FILES.filter((f) => f.file !== DEMO_LOGOS && f.text.includes(needle)).map(
       (f) => f.file,
     );
     expect(found).toEqual([]);
+  });
+
+  it("still guards the file the showcase is exempt from", () => {
+    // Guards the exemption: a renamed component would silently widen it.
+    expect(FILES.map((f) => f.file)).toContain(DEMO_LOGOS);
   });
 
   /* Was: an exception for src/emails/supabase/confirm-signup.html, a static
