@@ -200,15 +200,54 @@ export function webSiteLd(): Json {
   };
 }
 
-/** Built from the real FAQ array, so the two can never drift apart. */
-export function faqLd(entries: readonly (readonly [string, string, string])[]): Json {
+/**
+ * Built from the real FAQ array, so the two can never drift apart.
+ *
+ * Two shapes are accepted. The landing page and /pricing carry an anchor id in
+ * front of each pair; /help and the comparison pages do not. The id never
+ * reaches the output, so taking both beats making the callers that have no id
+ * invent one.
+ */
+export function faqLd(
+  entries: readonly (
+    | readonly [question: string, answer: string]
+    | readonly [id: string, question: string, answer: string]
+  )[],
+): Json {
   return {
     "@type": "FAQPage",
-    mainEntity: entries.map(([, question, answer]) => ({
-      "@type": "Question",
-      name: question,
-      acceptedAnswer: { "@type": "Answer", text: answer },
-    })),
+    mainEntity: entries.map((entry) => {
+      const [question, answer] = entry.length === 3 ? [entry[1], entry[2]] : entry;
+      return {
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer },
+      };
+    }),
+  };
+}
+
+/**
+ * A long explanatory page, as an Article.
+ *
+ * The Help Centre is fourteen sections of real instruction and was carrying no
+ * article markup at all, so a consumer had nothing to say what the page is
+ * beyond the sitewide SoftwareApplication. `headline` rather than `name`,
+ * because that is the property Article takes, and the publisher points at the
+ * Organization node in the same graph rather than restating it.
+ *
+ * No `datePublished`. The page changes with the product and nothing in the
+ * repo records when any section of it was written, so a date here would be a
+ * number invented to fill a field consumers do read.
+ */
+export function articleLd(input: { headline: string; description: string; path: string }): Json {
+  return {
+    "@type": "Article",
+    headline: input.headline,
+    description: input.description,
+    mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(input.path) },
+    publisher: { "@id": absoluteUrl("/#organization") },
+    inLanguage: "en",
   };
 }
 

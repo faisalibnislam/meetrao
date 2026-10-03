@@ -170,7 +170,7 @@ export const LIMITS: readonly [string, string][] = [
 export const WHY: readonly string[] = [
   "Meetrao is built and run by one person. There is no sales team to fund and no investor expecting a return this quarter, which is why the free plan is the real product rather than a demonstration of one.",
   "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free, never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
-  "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; hosting a logo means storage and bandwidth on every page view; a team link means several calendars checked on every page load. Ten dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
+  "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; hosting a logo means storage and bandwidth on every page view; a team link means several calendars checked on every page load. Thirty dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
 ];
 
 /**

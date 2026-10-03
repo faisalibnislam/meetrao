@@ -29,7 +29,7 @@ export default function Page() {
           answers "what is the catch" with the actual catches. */}
       <JsonLd
         json={graph(
-          faqLd(DATA.faq.map(([q, a], i) => [`q${i}`, q, a] as const)),
+          faqLd(DATA.faq),
           breadcrumbLd([
             ["Meetrao", "/"],
             [`Meetrao vs ${DATA.competitor}`, `/vs/${DATA.slug}`],

@@ -4,10 +4,22 @@ import { AuthCard } from "@/components/auth/auth-card";
 import { AuthForm } from "@/components/auth/auth-form";
 import { Callout } from "@/components/ui/panels";
 
+/* NOINDEX, FOLLOW. A sign-in form has nothing for somebody arriving from a
+   search, and a thin page in the index is a thin page counted against the
+   site. It is not in the sitemap, but a sitemap does not keep a page out of
+   the index: the homepage links here twice, and a link is enough.
+
+   `follow` rather than `noindex, nofollow`, because the links out of this page
+   go to /signup, /forgot and the legal pages, and there is no reason to stop
+   crawlers walking them.
+
+   /signup stays indexable on purpose. Somebody searching for the product by
+   name and landing on the page that creates an account is a good outcome. */
 export const metadata: Metadata = {
   title: "Log in",
   description: "Sign in to your Meetrao account.",
   alternates: { canonical: "/login" },
+  robots: { index: false, follow: true },
 };
 
 export default async function LoginPage({

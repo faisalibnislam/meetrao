@@ -130,6 +130,7 @@ export function SiteFooter() {
          late, if at all, and the footer is on every page of the site. */
       title: "Compare",
       links: [
+        ["Calendly alternatives", "/alternatives"],
         ["Meetrao vs Calendly", "/vs/calendly"],
         ["Meetrao vs Cal.com", "/vs/cal-com"],
         ["FAQ", "/#faq"],

@@ -3,6 +3,7 @@ import { Icon } from "@/components/ui/icon";
 import { Kicker } from "./site-chrome";
 import { Reveal } from "./reveal";
 import { cx } from "@/lib/cx";
+import { COMPARISONS } from "@/lib/comparisons";
 import type { Comparison, Edge } from "@/lib/comparisons";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -191,6 +192,32 @@ export function ComparisonPage({ data }: { data: Comparison }) {
                 </div>
               ))}
             </div>
+
+            {/* The cluster. A comparison page with nothing pointing out of it
+                is a dead end for a reader still deciding, and for a crawler
+                working out that these pages belong together. */}
+            <nav
+              aria-label="Other comparisons"
+              className="mt-[30px] flex max-w-[760px] flex-wrap items-center gap-[10px]"
+            >
+              <Link
+                href="/alternatives"
+                className="unlink inline-flex items-center gap-[7px] rounded-[8px] border border-line bg-fill px-[13px] py-[8px] text-[13px] font-semibold text-ink no-underline hover:bg-surface"
+              >
+                All alternatives
+                <Icon name="arrow-right" size={11} className="flex-none" />
+              </Link>
+              {COMPARISONS.filter((c) => c.slug !== data.slug).map((c) => (
+                <Link
+                  key={c.slug}
+                  href={`/vs/${c.slug}`}
+                  className="unlink inline-flex items-center gap-[7px] rounded-[8px] border border-line bg-fill px-[13px] py-[8px] text-[13px] font-semibold text-ink no-underline hover:bg-surface"
+                >
+                  Meetrao vs {c.competitor}
+                  <Icon name="arrow-right" size={11} className="flex-none" />
+                </Link>
+              ))}
+            </nav>
 
             <div className="mt-[32px] flex flex-wrap items-center gap-[12px] rounded-[10px] border border-accent-line bg-accent-soft px-[18px] py-[16px]">
               <span className="min-w-[220px] flex-1 text-[14.5px] leading-[1.5] text-ink">
