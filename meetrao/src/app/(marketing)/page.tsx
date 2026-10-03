@@ -12,6 +12,7 @@ import { Kicker } from "@/components/marketing/site-chrome";
 import { UseCases } from "@/components/marketing/use-cases";
 import { Walkthrough } from "@/components/marketing/walkthrough";
 import { Icon, type IconName } from "@/components/ui/icon";
+import { ButtonLink } from "@/components/ui/button";
 import { cx } from "@/lib/cx";
 import { DESCRIPTION, OG_IMAGE, faqLd, graph } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -398,14 +399,14 @@ export default function LandingPage() {
           <ProductShowcase />
         </Reveal>
 
-        <Reveal className="mt-[22px]">
-          <Link
-            href="/pricing#compare"
-            className="unlink inline-flex min-h-[40px] items-center gap-[7px] text-[13.5px] font-semibold text-accent-ink"
-          >
+        {/* A filled button, not a text link. It is the only way out of this
+            section for somebody who wants the full list, and a quiet link under
+            a dark panel was not reading as the next step. */}
+        <Reveal className="mt-[24px]">
+          <ButtonLink href="/pricing#compare" variant="accent" size={44}>
             See all features
             <Icon name="arrow-right" size={12} className="flex-none" />
-          </Link>
+          </ButtonLink>
         </Reveal>
       </section>
 
