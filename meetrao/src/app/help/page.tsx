@@ -6,6 +6,8 @@ import { optionalSession } from "@/lib/data/session";
 import { Eyebrow } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
+import { JsonLd } from "@/components/seo/json-ld";
+import { articleLd, breadcrumbLd, faqLd, graph } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Help Centre: how scheduling works",
@@ -270,6 +272,26 @@ export default async function HelpPage() {
 
   return (
     <div className="min-h-screen bg-[#F4F3ED]">
+      {/* The Help Centre carried no article markup, so a consumer had nothing
+          to say what this page is beyond the sitewide SoftwareApplication. The
+          questions come from the same array the page renders below, so the
+          machine-readable answers and the ones a person reads cannot drift. */}
+      <JsonLd
+        json={graph(
+          articleLd({
+            headline: "Help Centre: how Meetrao scheduling works",
+            description:
+              "Connecting Google Calendar, setting your hours, sharing your link, branding your " +
+              "booking page, and what a guest sees when they book.",
+            path: "/help",
+          }),
+          faqLd(FAQS),
+          breadcrumbLd([
+            ["Meetrao", "/"],
+            ["Help Centre", "/help"],
+          ]),
+        )}
+      />
       <SiteNav account={chrome} />
     <div className="mx-auto max-w-[1148px] px-[26px] pt-[40px] pb-[64px] max-[560px]:px-[18px]">
       <div className="flex max-w-[680px] flex-col gap-[12px]">
