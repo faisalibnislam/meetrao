@@ -421,6 +421,12 @@ function BrandPanel({ active }: { active: boolean }) {
       <img
         src={brand.logo}
         alt={brand.name}
+        /* The showcase is four sections down. Without this the one logo
+           rendered on the server is fetched during the initial load, ahead of
+           things the reader can actually see. The other two arrive when the
+           panel rotates to them, which is already after first paint. */
+        loading="lazy"
+        decoding="async"
         height={LOGO_H}
         width={Math.round(LOGO_H * brand.ratio)}
         style={{ height: LOGO_H, width: Math.round(LOGO_H * brand.ratio) }}
