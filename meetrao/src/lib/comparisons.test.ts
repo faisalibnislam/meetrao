@@ -40,12 +40,18 @@ describe("competitor pricing", () => {
 
   /* A per-seat price is two numbers, not one, and which one you quote changes
      the comparison by 20%. Any figure has to say which it is, and that now
-     includes Meetrao's own price, which is quoted per YEAR. */
+     includes Meetrao's own price, which is quoted per YEAR.
+
+     "one-time" and "lifetime" count as a basis. TidyCal sells a perpetual
+     licence, and $29 once is not an unlabelled rate waiting to be mistaken for
+     a monthly one, it is the complete price. Leaving them out of this pattern
+     would have forced the honest phrasing to carry a per-month figure it does
+     not have. */
   it.each(claims().filter((c) => /\$\d/.test(c.text)))(
     "$where states the billing basis alongside the price",
     ({ text }) => {
       expect(text.toLowerCase(), `"${text}" quotes a price with no billing basis`).toMatch(
-        /annual|monthly|a month|per month|\/month|a year|per year|yearly|\/year/,
+        /annual|monthly|a month|per month|\/month|a year|per year|yearly|\/year|one-time|one time|lifetime/,
       );
     },
   );
