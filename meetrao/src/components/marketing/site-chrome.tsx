@@ -112,6 +112,7 @@ export function SiteFooter() {
         ["How it works", "/#how"],
         ["Use cases", "/#usecases"],
         ["What you get", "/#product"],
+        ["Your own domain", "/custom-domain"],
         demo ? ["See a booking page", demo] : ["Read the FAQ", "/#faq"],
       ],
     },
@@ -142,6 +143,7 @@ export function SiteFooter() {
       links: [
         ["Help centre", "/help"],
         ["Contact support", "/support"],
+        ["Calendar privacy", "/guides/calendar-privacy"],
       ],
     },
     {

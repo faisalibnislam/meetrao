@@ -21,6 +21,8 @@ const PAGES: [path: string, priority: number, changeFrequency: MetadataRoute.Sit
   ["/", 1.0, "weekly"],
   ["/pricing", 0.9, "monthly"],
   ["/alternatives", 0.9, "monthly"],
+  ["/custom-domain", 0.8, "monthly"],
+  ["/guides/calendar-privacy", 0.7, "yearly"],
   /* The comparison pages come from the data rather than being listed again.
      Adding one is a line in comparisons.ts, and forgetting to list it here is
      the kind of omission nobody notices until the page has not been crawled

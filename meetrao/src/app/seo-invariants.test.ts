@@ -192,6 +192,8 @@ const RENDERED: { path: string; file: string; title: string }[] = [
     [
       ["/pricing", "(marketing)/pricing/page.tsx"],
       ["/alternatives", "(marketing)/alternatives/page.tsx"],
+      ["/custom-domain", "(marketing)/custom-domain/page.tsx"],
+      ["/guides/calendar-privacy", "(marketing)/guides/calendar-privacy/page.tsx"],
       ["/help", "help/page.tsx"],
       ["/support", "support/page.tsx"],
       ["/privacy", "(marketing)/privacy/page.tsx"],
@@ -277,6 +279,8 @@ describe("page descriptions", () => {
       [
         ["/pricing", "(marketing)/pricing/page.tsx"],
         ["/alternatives", "(marketing)/alternatives/page.tsx"],
+        ["/custom-domain", "(marketing)/custom-domain/page.tsx"],
+        ["/guides/calendar-privacy", "(marketing)/guides/calendar-privacy/page.tsx"],
         ["/help", "help/page.tsx"],
         ["/support", "support/page.tsx"],
         ["/privacy", "(marketing)/privacy/page.tsx"],
