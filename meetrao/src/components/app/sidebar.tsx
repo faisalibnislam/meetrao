@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
 import { SidebarUpgrade } from "./upgrade";
+import { ContextSwitcher, type ContextOption } from "./context-switcher";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Sidebar, 218px, #EFEDE7, one border to the right.
@@ -56,6 +57,8 @@ export function Sidebar({
   links = [],
   onSignOut,
   showUpgrade = false,
+  contexts = [],
+  activeContextId = null,
 }: {
   items: NavItem[];
   name: string;
@@ -63,6 +66,9 @@ export function Sidebar({
   isAdmin: boolean;
   /** Free accounts only. The single standing upsell in the whole app. */
   showUpgrade?: boolean;
+  /** Personal plus every company. Renders nothing when there is only one. */
+  contexts?: ContextOption[];
+  activeContextId?: string | null;
   avatarUrl?: string | null;
   /** Account link first, then one row per active meeting type. */
   links?: BookingLink[];
@@ -159,6 +165,8 @@ export function Sidebar({
           Meetings screen, its empty state and the dashboard's. A second copy
           here would crowd out the thing a host does most days.
           Hidden on the mobile bar; the drawer below carries its own row. */}
+      <ContextSwitcher options={contexts} activeId={activeContextId} />
+
       <Link
         href="/bookings/new"
         className="unlink mb-[12px] box-border inline-flex h-[32px] w-full items-center justify-center gap-[7px] rounded-[6px] border border-accent bg-accent px-[11px] text-[12.5px] font-semibold text-on-accent transition-colors duration-[120ms] hover:border-accent-2 hover:bg-accent-2 hover:text-on-accent max-[820px]:hidden"

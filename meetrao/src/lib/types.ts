@@ -50,6 +50,8 @@ export type MeetingType = {
   is_active: boolean;
   /** null = the host's default schedule. See migration 0010. */
   schedule_id: string | null;
+  /** Which company this meeting belongs to; null or absent is personal. */
+  company_id?: string | null;
   questions?: BookingQuestion[];
   created_at: string;
 };

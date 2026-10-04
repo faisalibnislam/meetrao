@@ -10,13 +10,21 @@ import { siteUrl } from "@/lib/env";
 import { api } from "@/convex/_generated/api";
 import { bookingLink } from "@/lib/username";
 import type { MeetingType } from "@/lib/types";
+import { activeContext } from "@/lib/data/context";
 
 export const metadata: Metadata = { title: "Meetings" };
 
 export default async function MeetingsPage() {
   const { profile } = await requireOnboardedSession();
   const convex = await convexServer();
-  const meetings = (await convex.query(api.meetingTypes.listOwn, {})) as unknown as MeetingType[];
+  const all = (await convex.query(api.meetingTypes.listOwn, {})) as unknown as MeetingType[];
+
+  /* Only the meetings belonging to the context in force. Showing all of them
+     under a company heading would make it look as though a personal meeting
+     is published on that company's domain, which is the one thing company
+     scoping exists to make false. */
+  const context = await activeContext();
+  const meetings = all.filter((m) => (m.company_id ?? null) === context.companyId);
 
   const rows: MeetingRow[] = meetings.map((m) => ({
     id: m.id,
