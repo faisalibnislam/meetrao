@@ -78,3 +78,25 @@ describe("toCsv", () => {
     expect(parseCsv(toCsv(headers, rows))).toEqual([headers, ...rows]);
   });
 });
+
+describe("an export cannot carry a formula", () => {
+  it.each(["=HYPERLINK(\"http://evil.example\",\"x\")", "+cmd|' /C calc'!A0", "-2+3+cmd|' /C calc'!A0", "@SUM(A1)", "\t=1+1"])(
+    "defuses %s",
+    (value) => {
+      const cell = toCsvCell(value);
+      expect(cell.replace(/^"/, "").startsWith("'")).toBe(true);
+    },
+  );
+
+  it.each(["+44 20 7946 0958", "-", "(555) 010-0100", "Sam Jones", "Acme, Inc."])("leaves %s readable", (value) => {
+    expect(toCsvCell(value).replace(/^"|"$/g, "")).toBe(value);
+  });
+
+  it("imports what it exported", () => {
+    const csv = toCsv(["name", "email"], [["=1+1", "a@example.com"], ["O'Brien", "b@example.com"]]);
+    expect(parseCsvRecords(csv)).toEqual([
+      { name: "=1+1", email: "a@example.com" },
+      { name: "O'Brien", email: "b@example.com" },
+    ]);
+  });
+});
