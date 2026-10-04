@@ -88,6 +88,20 @@ export function BillingPanel({
     <div className="flex flex-col gap-[15px]">
       <PanelHeading title="Plan" subtitle="Meetrao is free. Pro adds the parts a business needs." />
 
+      {/* What they are on, said once and said plainly, before any card tries
+          to sell them the next one. A paid account reads it on its own card,
+          beside the renewal date; a free account had it nowhere, because the
+          card below it is the Pro card. */}
+      {!pro ? (
+        <div className="flex flex-wrap items-center gap-[9px] rounded-[8px] border border-line bg-fill px-[14px] py-[11px]">
+          <span className="text-[13px] font-semibold text-ink">Your plan</span>
+          <Badge tone="off" dot={false}>
+            Free
+          </Badge>
+          <span className="text-[12px] text-ink-3">Nothing to pay, and nothing expires.</span>
+        </div>
+      ) : null}
+
       {welcome && !pro ? (
         <Callout tone="amber" title="Payment received: just finishing up">
           Polar confirms subscriptions in the background. Reload in a moment and Pro will be on.
@@ -97,8 +111,14 @@ export function BillingPanel({
       <div className="flex flex-col gap-[12px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
         <div className="flex flex-wrap items-center justify-between gap-[10px]">
           <div className="flex min-w-0 flex-col gap-[3px]">
+            {/* The card is named for what it is. On a paid account that is
+                the plan they hold; on a free one the body below is the Pro
+                list and the Pro prices, so heading it "Free" put the word
+                Free above seven things Free does not include. What they are
+                on now is in the line underneath, where it reads as a fact
+                rather than as a label for somebody else's features. */}
             <span className="flex items-center gap-[8px] text-[14px] font-semibold text-ink">
-              {PLAN_NAME[plan.plan]}
+              {pro ? PLAN_NAME[plan.plan] : "Pro"}
               {pro ? (
                 <Badge tone="ok" dot={false}>{plan.complimentary ? "On the house" : "Active"}</Badge>
               ) : null}
@@ -112,7 +132,7 @@ export function BillingPanel({
                   ? plan.planUntil
                     ? `Renews ${new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(plan.planUntil))}`
                     : "Active"
-                  : "Everything you need to take bookings, at no cost."}
+                  : "Everything below, on top of what Free already does."}
             </span>
           </div>
 
@@ -123,16 +143,7 @@ export function BillingPanel({
           ) : plan.complimentary ? (
             // Nothing to manage: there is no subscription behind this.
             <span className="text-[12.5px] text-ink-3">No payment method needed.</span>
-          ) : (
-            <div className="flex flex-wrap gap-[8px]">
-              <Button variant="secondary" size={32} busy={busy} onClick={() => go(() => startCheckout("monthly"))}>
-                ${PRO_PRICES.monthly.amount} / month
-              </Button>
-              <Button variant="accent" size={32} busy={busy} onClick={() => go(() => startCheckout("yearly"))}>
-                ${PRO_PRICES.yearly.amount} / year
-              </Button>
-            </div>
-          )}
+          ) : null}
         </div>
 
         {!pro ? (
@@ -153,6 +164,20 @@ export function BillingPanel({
             ))}
           </ul>
         ) : null}
+
+        {/* After the list, not before it. The price is the last thing to read
+            on this card because it is the only thing worth deciding once the
+            seven lines above have been read. */}
+        {!(pro && plan.hasSubscription) && !plan.complimentary ? (
+          <div className="flex flex-wrap gap-[8px]">
+            <Button variant="secondary" size={32} busy={busy} onClick={() => go(() => startCheckout("monthly"))}>
+              ${PRO_PRICES.monthly.amount} / month
+            </Button>
+            <Button variant="accent" size={32} busy={busy} onClick={() => go(() => startCheckout("yearly"))}>
+              ${PRO_PRICES.yearly.amount} / year
+            </Button>
+          </div>
+        ) : null}
       </div>
 
       {/* Business, as its own card rather than a line in Pro's.
@@ -168,28 +193,36 @@ export function BillingPanel({
               <span className="text-[14px] font-semibold text-ink">Business</span>
               <span className="text-[12px] leading-[1.5] text-ink-3">{BUSINESS_PITCH}</span>
             </div>
-            <div className="flex flex-wrap gap-[8px]">
-              <Button
-                variant="secondary"
-                size={32}
-                busy={busy}
-                onClick={() => go(() => startCheckout("monthly", "business"))}
-              >
-                ${BUSINESS_PRICES.monthly.amount} / month
-              </Button>
-              <Button
-                variant="secondary"
-                size={32}
-                busy={busy}
-                onClick={() => go(() => startCheckout("yearly", "business"))}
-              >
-                ${BUSINESS_PRICES.yearly.amount} / year
-              </Button>
-            </div>
           </div>
-          <span className="text-[12px] leading-[1.5] text-ink-3">
+          {/* The same bullet as the Pro list above, because this line is the
+              same kind of claim and was the only one on the card reading as
+              small print. */}
+          <span className="flex items-start gap-[8px] text-[12px] leading-[1.5] text-ink-3">
+            <span aria-hidden="true" className="mt-[6px] h-[4px] w-[4px] flex-none rounded-full bg-accent" />
             Everything in Pro, across every company. People you add keep their own accounts and pay nothing.
           </span>
+
+          <div className="flex flex-wrap gap-[8px]">
+            <Button
+              variant="secondary"
+              size={32}
+              busy={busy}
+              onClick={() => go(() => startCheckout("monthly", "business"))}
+            >
+              ${BUSINESS_PRICES.monthly.amount} / month
+            </Button>
+            {/* Accent on the year, as on Pro above. The cheaper-per-month
+                option is the one we want taken and the one that keeps a
+                customer for twelve months rather than one. */}
+            <Button
+              variant="accent"
+              size={32}
+              busy={busy}
+              onClick={() => go(() => startCheckout("yearly", "business"))}
+            >
+              ${BUSINESS_PRICES.yearly.amount} / year
+            </Button>
+          </div>
         </div>
       ) : null}
 

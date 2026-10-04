@@ -1,10 +1,10 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { fail } from "./lib/errors";
-import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
+import { requireProfile, AuthError } from "./lib/auth";
 import { isPro } from "./lib/plan";
 import { normaliseHex, validateBrandColor } from "./lib/brand";
-import { ownerOf } from "./companies";
+import { ownerOf, roleIn } from "./companies";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -40,14 +40,29 @@ const MAX_LOGO_BYTES = 1_000_000;
    raster formats cannot. Somebody with only an SVG exports a PNG once. */
 const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
-async function requireCompanyOwner(ctx: MutationCtx, companyId: string) {
+/**
+ * Owner or admin of this company, plus the owner's profile.
+ *
+ * TWO DIFFERENT PEOPLE, and keeping them apart is the whole point of this
+ * helper. WHO may act is the caller's role here: an admin was given the
+ * company's face to look after, which is this file. WHAT they may set is the
+ * OWNER's plan, because the owner is who pays. Reading the caller's plan
+ * would let an admin on Free strip a paying customer's branding, or a
+ * Business admin set branding on a Free account's company.
+ */
+async function requireCompanyManager(ctx: MutationCtx, companyId: string) {
   const me = await requireProfile(ctx);
   const company = await ctx.db
     .query("companies")
     .withIndex("by_uuid", (q) => q.eq("id", companyId))
     .unique();
   if (!company) AuthError("No such company.", "NOT_FOUND");
-  assertOwnerOrAdmin(me, company.owner_id);
+
+  const role = await roleIn(ctx, company, me);
+  /* NOT_FOUND, not a refusal: somebody outside this company should not learn
+     from the error that it exists. */
+  if (!role) AuthError("No such company.", "NOT_FOUND");
+  if (role === "member") fail("Only an owner or admin of this company can do that.", "FORBIDDEN");
 
   /* The OWNER, which may not be the caller when an admin is acting. Reading
      the caller's plan here would let an admin on Free strip a paying
@@ -98,7 +113,7 @@ export const get = query({
 export const generateUploadUrl = mutation({
   args: { id: v.string() },
   handler: async (ctx, a) => {
-    const { owner } = await requireCompanyOwner(ctx, a.id);
+    const { owner } = await requireCompanyManager(ctx, a.id);
     if (!isPro(owner)) fail("A company logo is part of Pro.", "PRO_REQUIRED");
     return await ctx.storage.generateUploadUrl();
   },
@@ -123,7 +138,7 @@ const kindArg = v.union(v.literal("logo"), v.literal("avatar"));
 export const saveImage = mutation({
   args: { id: v.string(), storageId: v.id("_storage"), kind: kindArg },
   handler: async (ctx, a) => {
-    const { company, owner } = await requireCompanyOwner(ctx, a.id);
+    const { company, owner } = await requireCompanyManager(ctx, a.id);
     const field = FIELDS[a.kind];
     if (!isPro(owner)) fail(`${field.what} is part of Pro.`, "PRO_REQUIRED");
 
@@ -163,7 +178,7 @@ export const saveImage = mutation({
 export const removeImage = mutation({
   args: { id: v.string(), kind: kindArg },
   handler: async (ctx, a) => {
-    const { company } = await requireCompanyOwner(ctx, a.id);
+    const { company } = await requireCompanyManager(ctx, a.id);
     const field = FIELDS[a.kind];
     /* No plan check. Taking a picture down is not a paid feature, and an owner
        whose plan has lapsed must still be able to clear what they set. */
@@ -191,7 +206,7 @@ export const setLogoHidden = mutation({
 export const setColor = mutation({
   args: { id: v.string(), color: v.string() },
   handler: async (ctx, a) => {
-    const { company, owner } = await requireCompanyOwner(ctx, a.id);
+    const { company, owner } = await requireCompanyManager(ctx, a.id);
 
     // Empty clears it, and clearing is never gated, see removeLogo.
     if (a.color.trim() === "") {
@@ -221,7 +236,7 @@ export const setColor = mutation({
 export const setBackground = mutation({
   args: { id: v.string(), color: v.string() },
   handler: async (ctx, a) => {
-    const { company, owner } = await requireCompanyOwner(ctx, a.id);
+    const { company, owner } = await requireCompanyManager(ctx, a.id);
 
     if (a.color.trim() === "") {
       await ctx.db.patch(company._id, { brand_background: null, updated_at: Date.now() });

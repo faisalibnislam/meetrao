@@ -47,15 +47,21 @@ describe("a company's brand is gated on its owner", () => {
     expect(body, `${name} must not gate on the caller`).not.toMatch(/isPro\(me\)|requirePro\(me/);
   });
 
-  /* requireCompanyOwner is where the owner is resolved once for everything
+  /* requireCompanyManager is where the owner is resolved once for everything
      above. If it ever returns the caller as the owner, all four gates above
-     quietly start asking the wrong question while still mentioning `owner`. */
+     quietly start asking the wrong question while still mentioning `owner`.
+
+     It answers TWO questions that must not collapse into one: who may act
+     (the caller's role in this company, which admins now pass) and what they
+     may set (the owner's plan, because the owner is who pays). */
   it("resolves the owner from the company, not from the session", () => {
     const helper = BRANDING.slice(
-      BRANDING.indexOf("async function requireCompanyOwner"),
+      BRANDING.indexOf("async function requireCompanyManager"),
       BRANDING.indexOf("async function readable"),
     );
     expect(helper).toContain("company.owner_id === me.id ? me : await ownerOf(ctx, company)");
+    expect(helper, "who may act is the caller's role here").toContain("roleIn(ctx, company, me)");
+    expect(helper, "a plain member must not get past it").toContain('role === "member"');
   });
 
   /* Clearing is never gated. Somebody whose plan lapsed must still be able to
