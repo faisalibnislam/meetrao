@@ -27,6 +27,7 @@ const read = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 
 const MUTATION = read("convex/meetingTypes.ts");
 const ACTION = read("src/lib/actions/meetings.ts");
+const FORM = read("src/components/app/meeting-form.tsx");
 const TABLE = read("src/components/app/meetings-table.tsx");
 
 describe("the mutation is reachable at all", () => {
@@ -38,14 +39,21 @@ describe("the mutation is reachable at all", () => {
   });
 
   it("has a control that calls the action", () => {
-    expect(TABLE).toContain("deleteMeeting");
-    expect(TABLE).toContain("await deleteMeeting(target.id)");
+    expect(FORM).toContain("deleteMeeting");
+    expect(FORM).toContain("await deleteMeeting(initial.id as string)");
   });
 
-  /* Both layouts. The table is desktop and there is a separate card list
-     under 640px, so a control added to one is missing on a phone. */
-  it("is in the table and in the card list", () => {
-    expect((TABLE.match(/onClick=\{\(\) => setDeleting\(m\)\}/g) ?? []).length).toBe(2);
+  /* On the edit screen, not the list. A fourth text button in the row pushed
+     that column past the viewport at 1161px and put a horizontal scrollbar on
+     the page, and the icon set has no trash glyph to shrink it to. */
+  it("is not a fourth button in the list row", () => {
+    expect(TABLE, "the row already carries Embed, Preview and Edit").not.toContain("deleteMeeting");
+  });
+
+  /* Only when there is something to delete. A new meeting has no id, and the
+     button would call the mutation with undefined. */
+  it("is absent while creating one", () => {
+    expect(FORM).toContain("{editing ? (");
   });
 });
 
@@ -83,25 +91,25 @@ describe("what deleting does not do", () => {
 describe("the dialog", () => {
   /* "Delete this meeting?" gets confirmed without being read. */
   it("names the meeting it is about to delete", () => {
-    expect(TABLE).toContain("title={deleting ? `Delete ${deleting.name}?`");
+    expect(FORM).toContain("title={`Delete ${initial.name || \"this meeting\"}?`}");
   });
 
-  /* Holding the row, not a boolean: a flag plus a separate "current" variable
-     is how a dialog ends up naming one thing and deleting another. */
-  it("deletes the row it named", () => {
-    expect(TABLE).toContain("const [deleting, setDeleting] = useState<MeetingRow | null>(null);");
-    expect(TABLE).toContain("const target = deleting;");
+  /* The dialog and the mutation read the same `initial`, so there is no
+     second variable that could drift from what the title says. */
+  it("deletes the meeting it named", () => {
+    expect(FORM).toContain("deleteMeeting(initial.id as string)");
   });
 
   /* A host who thinks this cancels their week finds out when somebody turns
      up. The subtitle is the only place that can say otherwise. */
   it("says the bookings survive and nobody is told", () => {
-    expect(TABLE).toContain("Bookings already made stay where they are");
-    expect(TABLE).toContain("nobody is cancelled and no guest is told");
+    expect(FORM).toContain("Bookings already made stay where they are");
+    expect(FORM).toContain("nobody is cancelled and no guest is told");
   });
 
   it("is a confirm step rather than a one-click delete", () => {
-    expect(TABLE).toContain('primary={{ label: "Delete", variant: "danger"');
-    expect(TABLE).toContain('secondary={{ label: "Keep it"');
+    expect(FORM).toContain('label: "Delete",');
+    expect(FORM).toContain('variant: "danger",');
+    expect(FORM).toContain('secondary={{ label: "Keep it"');
   });
 });

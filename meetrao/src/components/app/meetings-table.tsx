@@ -8,7 +8,7 @@ import { TableCard } from "@/components/ui/panels";
 import { Table, Td, Th, Tr } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
 import { CopyLinkChip } from "./copy-link";
-import { deleteMeeting, setMeetingActive } from "@/lib/actions/meetings";
+import { setMeetingActive } from "@/lib/actions/meetings";
 import { embedSnippet } from "@/lib/embed";
 import { Modal } from "@/components/ui/modal";
 import { cx } from "@/lib/cx";
@@ -45,26 +45,6 @@ export function MeetingsTable({
   const isActive = (m: MeetingRow) => optimistic[m.id] ?? m.active;
   const [embedding, setEmbedding] = useState<MeetingRow | null>(null);
   const [copied, setCopied] = useState(false);
-  /* The row being deleted, which is also what the dialog reads its name from.
-     Holding the ROW rather than a boolean is what makes it impossible for the
-     dialog to name one meeting and delete another. */
-  const [deleting, setDeleting] = useState<MeetingRow | null>(null);
-  const [removing, startRemove] = useTransition();
-
-  function confirmDelete() {
-    const target = deleting;
-    if (!target) return;
-    startRemove(async () => {
-      const result = await deleteMeeting(target.id);
-      if (result.error) {
-        toast({ tone: "bad", title: "Could not delete", text: result.error });
-        return;
-      }
-      setDeleting(null);
-      toast({ tone: "neutral", title: "Meeting deleted", text: `${target.name} is gone from your links.` });
-      router.refresh();
-    });
-  }
 
   const snippet = embedding
     ? embedSnippet({ siteUrl, username, slug: embedding.slug })
@@ -157,25 +137,17 @@ export function MeetingsTable({
                   >
                     Preview
                   </Button>
+                  {/* Deleting lives on the edit screen, not here. A fourth
+                      text button pushed this column past the viewport at
+                      1161px and put a horizontal scrollbar on the page, and
+                      there is no trash glyph in the set to shrink it to. */}
                   <Button
                     variant="secondary"
                     size={26}
-                    className="mr-[4px] hover:bg-fill-2"
+                    className="hover:bg-fill-2"
                     onClick={() => router.push(`/meetings/${m.id}/edit`)}
                   >
                     Edit
-                  </Button>
-                  {/* Last, and ghost rather than danger-red: a red button in
-                      every row turns the whole screen into a warning. The
-                      dialog is where the weight belongs. */}
-                  <Button
-                    variant="ghost"
-                    size={26}
-                    className="hover:bg-red-soft hover:text-red"
-                    aria-label={`Delete ${m.name}`}
-                    onClick={() => setDeleting(m)}
-                  >
-                    Delete
                   </Button>
                 </Td>
               </Tr>
@@ -225,9 +197,6 @@ export function MeetingsTable({
               <Button variant="secondary" size={36} onClick={() => router.push(`/meetings/${m.id}/edit`)}>
                 Edit
               </Button>
-              <Button variant="ghost" size={36} aria-label={`Delete ${m.name}`} onClick={() => setDeleting(m)}>
-                Delete
-              </Button>
             </div>
           </div>
         ))}
@@ -236,17 +205,6 @@ export function MeetingsTable({
       <span className="text-[12.5px] text-ink-3">
         Inactive meetings stay in this list but can&rsquo;t be booked from your link.
       </span>
-
-      {/* Names the meeting in the title, because a dialog that says "this
-          meeting" is a dialog somebody confirms without reading. */}
-      <Modal
-        open={Boolean(deleting)}
-        onClose={() => setDeleting(null)}
-        title={deleting ? `Delete ${deleting.name}?` : "Delete this meeting?"}
-        subtitle="The link stops working and the meeting goes from your list. Bookings already made stay where they are and keep their times: nobody is cancelled and no guest is told."
-        primary={{ label: "Delete", variant: "danger", busy: removing, onClick: confirmDelete }}
-        secondary={{ label: "Keep it", onClick: () => setDeleting(null) }}
-      />
 
       <Modal
         open={Boolean(embedding)}
