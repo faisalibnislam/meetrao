@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { ButtonLink } from "@/components/ui/button";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { Icon } from "@/components/ui/icon";
 import { StatusPage } from "@/components/ui/status-page";
 
 export const metadata: Metadata = { title: "Account suspended" };
@@ -10,7 +11,7 @@ export const metadata: Metadata = { title: "Account suspended" };
 export default function SuspendedPage() {
   return (
     <StatusPage
-      icon="lock"
+      mark={<Icon name="lock" size={16} />}
       tone="red"
       title="This account is suspended"
       actions={
