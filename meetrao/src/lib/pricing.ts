@@ -99,7 +99,7 @@ export function yearlySaving(): { dollars: number; percent: number } {
  * could go and check within a minute of signing up. A feature list on a
  * pricing page is a promise with a receipt attached.
  *
- * The things NOT on this list are on PRO_ADDS, and the split is deliberate:
+ * The things NOT on this list are Pro's, see COMPARISON, and the split is deliberate:
  * nothing a guest experiences is paid for. Reminders, rescheduling, timezone
  * handling and cancellation are all free, because charging a host to stop
  * letting their guests down is the wrong business.
@@ -153,28 +153,6 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
   { feature: "Team link, rotating to whoever is free", free: false, pro: true, business: true },
   { feature: "Sessions several guests share", free: false, pro: true, business: true },
   { feature: "API keys and webhooks", free: false, pro: true, business: true },
-];
-
-/**
- * What Pro adds, and why each one is on this side of the line.
- *
- * Two themes only: looking like your own business, and working as more than
- * one person. If a feature is neither, it belongs in Free.
- */
-export const PRO_ADDS: readonly [string, string][] = [
-  [
-    "Your logo and your colours",
-    "Your mark in place of ours, and two colours (an accent and a page background) that carry through the calendar, the buttons, the panels and the confirmation. Nothing of our palette is left. We work out the readable shades, so a guest can always read the page, dark backgrounds included.",
-  ],
-  [
-    "Your own domain",
-    "meeting.yourcompany.com/your-name, certificate handled. The bare domain works too, and so does a link straight to one meeting.",
-  ],
-  ["No Meetrao badge", "Your booking page and your embed stop mentioning us."],
-  ["Team links", "One link several people answer, rotating to whoever is free and least recently booked."],
-  ["Sessions several guests share", "A class, a workshop, an office hour: one slot, several seats, counting down."],
-  ["API keys and webhooks", "Read your bookings from your own tools, and get a signed POST when one changes."],
-  ["Reminder timing", "Choose when both reminders land, instead of a day and an hour before."],
 ];
 
 /**

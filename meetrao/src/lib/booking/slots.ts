@@ -80,12 +80,12 @@ export function zonedInstant(
 }
 
 /** The calendar date an instant falls on, in a given zone. */
-export function plainDateIn(instant: Date, timeZone: string): PlainDate {
+function plainDateIn(instant: Date, timeZone: string): PlainDate {
   const d = new TZDate(instant.getTime(), timeZone);
   return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
 }
 
-export function weekdayIn(instant: Date, timeZone: string): number {
+function weekdayIn(instant: Date, timeZone: string): number {
   return new TZDate(instant.getTime(), timeZone).getDay();
 }
 
@@ -97,7 +97,7 @@ export function addDays(date: PlainDate, days: number): PlainDate {
   return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() };
 }
 
-export function sameDate(a: PlainDate, b: PlainDate): boolean {
+function sameDate(a: PlainDate, b: PlainDate): boolean {
   return a.year === b.year && a.month === b.month && a.day === b.day;
 }
 

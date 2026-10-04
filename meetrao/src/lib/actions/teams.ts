@@ -39,14 +39,6 @@ export async function createTeam(input: { name: string; slug: string }): Promise
   return { id: value?.id, slug: value?.slug };
 }
 
-export async function renameTeam(input: { id: string; name: string; slug: string }): Promise<TeamResult> {
-  await requireSession();
-  const { error } = await viaConvex((c) => c.mutation(api.teams.rename, input));
-  if (error) return { error };
-  revalidatePath("/settings/team");
-  return {};
-}
-
 export async function addTeamMember(input: { id: string; email: string }): Promise<TeamResult> {
   await requireSession();
   if (!input.email.includes("@")) return { error: "That is not an email address." };

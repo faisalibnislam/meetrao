@@ -24,6 +24,15 @@ function instant(value: string | null): number | undefined {
   return Number.isNaN(parsed) ? undefined : parsed;
 }
 
+/* `?limit=abc` is NaN, which survives Convex's number validator and the
+   clamp after it (Math.max(NaN, 1) is NaN), and took the query down with a
+   500. Anything that is not a finite number is the default. */
+function count(value: string | null): number | undefined {
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 export async function GET(request: NextRequest) {
   const hash = await presentedKeyHash(request);
   if (!hash) return unauthorized();
@@ -33,7 +42,7 @@ export async function GET(request: NextRequest) {
     hash,
     from: instant(params.get("from")),
     to: instant(params.get("to")),
-    limit: params.get("limit") ? Number(params.get("limit")) : undefined,
+    limit: count(params.get("limit")),
   });
 
   // null means the key resolved to nobody, same answer as no key at all.

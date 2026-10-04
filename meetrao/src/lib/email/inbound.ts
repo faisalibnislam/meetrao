@@ -192,7 +192,7 @@ export function parseReceived(payload: unknown): ReceivedEmail | null {
    that times out and gets retried, three times, moving it again each time. */
 
 /** Total bytes we will re-send. Well under Resend's 40 MB ceiling, on purpose. */
-export const ATTACHMENT_BUDGET = 15 * 1024 * 1024;
+const ATTACHMENT_BUDGET = 15 * 1024 * 1024;
 
 /**
  * Which files travel with the forward, and which are only named in it.

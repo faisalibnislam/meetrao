@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { safePath } from "@/lib/safe-path";
 
 /**
  * Kept as a redirect, not deleted.
@@ -11,7 +12,5 @@ import { NextResponse, type NextRequest } from "next/server";
  */
 export async function GET(request: NextRequest) {
   const { origin, searchParams } = request.nextUrl;
-  const next = searchParams.get("next");
-  const target = next?.startsWith("/") ? next : "/login";
-  return NextResponse.redirect(new URL(target, origin));
+  return NextResponse.redirect(new URL(safePath(searchParams.get("next"), "/login"), origin));
 }

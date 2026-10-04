@@ -6,6 +6,8 @@
    so they follow DST rather than being frozen into a table.
    ───────────────────────────────────────────────────────────────────────────── */
 
+import { dateFormat } from "./intl";
+
 export const TIMEZONES = [
   "Pacific/Midway", "Pacific/Honolulu", "America/Anchorage", "America/Los_Angeles",
   "America/Vancouver", "America/Tijuana", "America/Denver", "America/Phoenix",
@@ -35,10 +37,7 @@ export type TimezoneOption = { value: string; label: string };
 
 function offsetMinutes(zone: string, at: Date): number {
   try {
-    const parts = new Intl.DateTimeFormat("en-US", {
-      timeZone: zone,
-      timeZoneName: "shortOffset",
-    }).formatToParts(at);
+    const parts = dateFormat("en-US", { timeZone: zone, timeZoneName: "shortOffset" }).formatToParts(at);
     const raw = parts.find((p) => p.type === "timeZoneName")?.value ?? "GMT";
     const m = /GMT([+-])(\d{1,2})(?::(\d{2}))?/.exec(raw);
     if (!m) return 0;

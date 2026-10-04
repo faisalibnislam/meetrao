@@ -99,19 +99,35 @@ export function parseCsvRecords(input: string): Record<string, string>[] {
   return rows.slice(1).map((cells) => {
     const record: Record<string, string> = {};
     headers.forEach((h, i) => {
-      if (h) record[h] = (cells[i] ?? "").trim();
+      if (h) record[h] = undefuse((cells[i] ?? "").trim());
     });
     return record;
   });
+}
+
+/** What toCsvCell added, taken off again, so an export imports as it was. */
+function undefuse(cell: string): string {
+  return cell.startsWith("'") && FORMULA_START.test(cell.slice(1)) ? cell.slice(1) : cell;
 }
 
 export function normaliseHeader(raw: string): string {
   return raw.trim().toLowerCase().replace(/[\s_-]+/g, "");
 }
 
-/** Quotes a cell only when it has to be quoted. */
+/* A cell a spreadsheet would run as a formula. Guests choose their own names
+   and answers, so a booking from "=HYPERLINK(...)" became a live formula in
+   the host's spreadsheet the moment they opened their contacts export. */
+const FORMULA_START = /^[=+\-@\t\r]/;
+
+/* Digits, spaces and phone punctuation only. "+44 20 7946 0958" starts with a
+   formula character but cannot do anything as one, and a phone column full of
+   apostrophes would be a worse export. */
+const PHONE_LIKE = /^[+\-]?[\d\s().-]+$/;
+
+/** Quotes a cell only when it has to, and defuses one that would run as a formula. */
 export function toCsvCell(value: string): string {
-  const v = value ?? "";
+  let v = value ?? "";
+  if (FORMULA_START.test(v) && !PHONE_LIKE.test(v)) v = `'${v}`;
   return /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
 }
 

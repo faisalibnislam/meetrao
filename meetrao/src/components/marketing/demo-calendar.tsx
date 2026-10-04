@@ -6,7 +6,7 @@ import { cx } from "@/lib/cx";
    the 1st sits in column 2. These are fabricated screens, not live data,
    nothing here talks to the booking engine. */
 
-export const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const FIRST_DOW = 2;
 const DAYS = 30;
@@ -15,7 +15,7 @@ const LAST_BOOKABLE = 30;
 
 export type DemoCell = { day: number | null; closed: boolean; today: boolean };
 
-export function demoMonth(): DemoCell[] {
+function demoMonth(): DemoCell[] {
   const cells: DemoCell[] = Array.from({ length: FIRST_DOW }, () => ({
     day: null,
     closed: true,

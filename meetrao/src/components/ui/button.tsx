@@ -83,11 +83,9 @@ export function ButtonLink({
   children,
   ...rest
 }: ButtonLinkProps) {
-  return (
-    <Link
-      className={cx("unlink no-underline", buttonClass(variant, size, cx(full && "w-full", className)))}
-      {...rest}
-    >
+  const classes = cx("unlink no-underline", buttonClass(variant, size, cx(full && "w-full", className)));
+  const body = (
+    <>
       <Leading icon={icon} iconWeight={iconWeight} iconSize={iconSize} variant={variant} size={size} />
       {/* `contents`, not a plain span. The span exists to keep a text label as
           one flex item, but an inline box also traps a block-level child, a
@@ -96,6 +94,25 @@ export function ButtonLink({
           is exactly the design's shape: the mark, then the label. */}
       {children != null ? <span className="contents">{children}</span> : null}
       {trailingIcon ? <Icon name={trailingIcon} size={10} /> : null}
+    </>
+  );
+
+  /* A route handler is not a page. <Link> prefetches whatever it points at
+     as soon as it scrolls into view, and "Connect Google Calendar" points at
+     /api/google/connect, which starts the OAuth flow: every view of the
+     calendar settings ran a Convex query and overwrote the OAuth state cookie
+     before anybody clicked. A plain anchor is fetched only when followed. */
+  if (typeof rest.href === "string" && rest.href.startsWith("/api/")) {
+    return (
+      <a href={rest.href} className={classes} target={rest.target} rel={rest.rel}>
+        {body}
+      </a>
+    );
+  }
+
+  return (
+    <Link className={classes} {...rest}>
+      {body}
     </Link>
   );
 }

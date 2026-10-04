@@ -434,19 +434,28 @@ export const avgReplyMinutes = query({
     if (userId !== me.id && !me.is_admin) fail("Not permitted.");
 
     const from = Date.now() - (a.days ?? 30) * 24 * 60 * 60 * 1000;
+    /* Bounded by start as well as filtered by creation. A booking made in the
+       window starts after it was made, so it starts in the window too, and
+       the index range skips the host's whole history, which this read on
+       every dashboard load. */
     const bookings = await ctx.db
       .query("bookings")
-      .withIndex("by_host_starts", (q) => q.eq("host_id", userId))
+      .withIndex("by_host_starts", (q) => q.eq("host_id", userId).gte("starts_at", from))
       .collect();
 
+    const recent = bookings.filter((b) => b.created_at >= from && b.page_view_id);
+    const views = await Promise.all(
+      recent.map((b) =>
+        ctx.db.query("booking_page_views").withIndex("by_uuid", (q) => q.eq("id", b.page_view_id!)).unique(),
+      ),
+    );
     const deltas: number[] = [];
-    for (const b of bookings) {
-      if (b.created_at < from || !b.page_view_id) continue;
-      const pv = await ctx.db.query("booking_page_views").withIndex("by_uuid", (q) => q.eq("id", b.page_view_id!)).unique();
-      if (!pv) continue;
+    recent.forEach((b, i) => {
+      const pv = views[i];
+      if (!pv) return;
       const minutes = (b.created_at - pv.opened_at) / 60000;
       if (minutes >= 0) deltas.push(minutes);
-    }
+    });
     if (!deltas.length) return null;
     return Math.round(deltas.reduce((s, d) => s + d, 0) / deltas.length);
   },

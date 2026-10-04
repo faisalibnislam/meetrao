@@ -38,34 +38,6 @@ export class CalendarError extends Error {
   }
 }
 
-/** Copy the UI shows for each failure. Never a raw Google message. */
-export const FAILURE_COPY: Record<CalendarFailure, { title: string; text: string }> = {
-  "not-connected": {
-    title: "Google Calendar isn't connected",
-    text: "The booking is confirmed, but it is not on a calendar. Connect Google Calendar to fix this.",
-  },
-  "token-expired": {
-    title: "Google Calendar needs reconnecting",
-    text: "Google stopped accepting our access. Reconnect from Settings, bookings still work in the meantime.",
-  },
-  "scope-insufficient": {
-    title: "Calendar permission is missing",
-    text: "Reconnect and allow calendar access, including inviting guests.",
-  },
-  "api-unavailable": {
-    title: "Google Calendar didn't respond",
-    text: "The booking is confirmed. We could not reach Google to add it, and it is worth adding by hand.",
-  },
-  "already-deleted": {
-    title: "That event is already gone",
-    text: "Nothing to remove from the calendar: the booking is cancelled either way.",
-  },
-  "rate-limited": {
-    title: "Google is rate-limiting us",
-    text: "The booking is confirmed. The calendar event will need adding by hand.",
-  },
-};
-
 export async function busyPeriods(userId: string, from: Date, to: Date): Promise<Interval[]> {
   // The guest path has no session, so this goes through the anonymous client.
   // The action clamps the window and never returns a token.

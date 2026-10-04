@@ -197,16 +197,25 @@ export const mine = query({
       .withIndex("by_user", (q) => q.eq("user_id", me.id))
       .collect();
 
-    const rows = [];
-    for (const m of memberships) {
-      const company = await ctx.db
-        .query("companies")
-        .withIndex("by_uuid", (q) => q.eq("id", m.company_id))
-        .unique();
-      if (!company) continue;
+    /* Every page of the app runs this. Each membership's reads are
+       independent of every other's, so they go together rather than three
+       at a time in turn. */
+    const resolved = await Promise.all(
+      memberships.map(async (m) => {
+        const company = await ctx.db
+          .query("companies")
+          .withIndex("by_uuid", (q) => q.eq("id", m.company_id))
+          .unique();
+        if (!company) return null;
+        const [owner, members] = await Promise.all([ownerOf(ctx, company), membersOf(ctx, company.id)]);
+        return { m, company, owner, members };
+      }),
+    );
 
-      const owner = await ownerOf(ctx, company);
-      const members = await membersOf(ctx, company.id);
+    const rows = [];
+    for (const found of resolved) {
+      if (!found) continue;
+      const { m, company, owner, members } = found;
 
       rows.push({
         id: company.id,

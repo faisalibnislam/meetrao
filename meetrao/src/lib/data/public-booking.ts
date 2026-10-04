@@ -131,9 +131,9 @@ function toMeeting(row: MeetingRow): PublicMeeting {
 /**
  * ONE meeting with its booking rules, in one round trip.
  *
- * The booking page used getPublicMeetings and picked one out, which listed
- * every meeting the host has and then fetched the rules for each, two trips
- * in sequence for a page that shows a single meeting. The rules query is
+ * Every caller used to list every meeting the host has, fetch the rules for
+ * each, and pick one out: two trips in sequence for a page that shows a
+ * single meeting. The rules query is
  * keyed by username and slug already, and refuses exactly what the list did:
  * a suspended host, or a meeting that is switched off.
  */
@@ -144,18 +144,6 @@ export const getPublicMeeting = cache(async function getPublicMeeting(
   const row = await convexAnonymous().query(api.publicBooking.getMeetingAvailability, { username, slug });
   return row ? toMeeting(row.meeting as MeetingRow) : null;
 });
-
-export async function getPublicMeetings(username: string): Promise<PublicMeeting[]> {
-  // getMeetingTypes is the listing shape and omits the booking rules, which
-  // only matter once a meeting is chosen; getMeetingAvailability carries them.
-  const list = await convexAnonymous().query(api.publicBooking.getMeetingTypes, { username });
-  const full = await Promise.all(
-    list.map((m) => convexAnonymous().query(api.publicBooking.getMeetingAvailability, { username, slug: m.slug })),
-  );
-  return full
-    .filter((r): r is NonNullable<typeof r> => r !== null)
-    .map((r) => toMeeting(r.meeting as MeetingRow));
-}
 
 /**
  * The hours behind ONE meeting.

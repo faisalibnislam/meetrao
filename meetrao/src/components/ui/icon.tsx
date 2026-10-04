@@ -197,57 +197,6 @@ export const ICON_NAMES = Object.keys(G) as IconName[];
 /** The seven glyphs drawn as fills; the rest are stroked. */
 export const FILLED_ICONS = (Object.keys(G) as IconName[]).filter((n) => "fill" in G[n]);
 
-/** Every codepoint the design files reference, mapped to a name in this set. */
-export const FA_CODEPOINTS: Record<string, IconName> = {
-  f002: "search",
-  f007: "user",
-  f00c: "check",
-  f00d: "xmark",
-  f013: "gear",
-  f015: "house",
-  f017: "clock",
-  f019: "download",
-  f023: "lock",
-  f02b: "tag",
-  f03a: "list",
-  f03d: "video",
-  f04b: "play",
-  f053: "chevron-left",
-  f054: "chevron-right",
-  f057: "circle-xmark",
-  f058: "circle-check",
-  f059: "circle-question",
-  f05a: "circle-info",
-  f061: "arrow-right",
-  f063: "arrow-down",
-  f06a: "circle-exclamation",
-  f06e: "eye",
-  f070: "eye-slash",
-  f071: "triangle-exclamation",
-  f078: "chevron-down",
-  f08e: "external-link",
-  f090: "sign-in",
-  f093: "upload",
-  f0ac: "globe",
-  f0ae: "rectangle-list",
-  f0c0: "users",
-  f0c1: "link",
-  f0c5: "copy",
-  f0e0: "envelope",
-  f0e2: "rotate-left",
-  f0e7: "bolt",
-  f0eb: "lightbulb",
-  f0ee: "cloud-upload",
-  f133: "calendar",
-  f19d: "graduation-cap",
-  f1de: "sliders",
-  f201: "chart-line",
-  f234: "user-plus",
-  f292: "hashtag",
-  f2bb: "address-card",
-  f2f5: "sign-out",
-};
-
 export type IconProps = {
   name: IconName;
   /** Rendered box in px. The design references glyphs at 8–18px. */

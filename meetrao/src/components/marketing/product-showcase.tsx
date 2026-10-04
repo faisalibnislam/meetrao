@@ -415,8 +415,9 @@ function BrandPanel({ active }: { active: boolean }) {
       style={{ background: tokens.ground }}
     >
       {/* The host's own file, at the size the real page shows it. Plain <img>,
-          as everywhere else a host's logo is drawn: these are a PNG and an SVG
-          from somebody's brand folder, not assets of ours to optimise. */}
+          as everywhere else a host's logo is drawn. The two PNGs are stored at
+          three times LOGO_H rather than as supplied (1024 and 512px tall,
+          106KB between them for a 22px mark); the SVG needs nothing. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={brand.logo}

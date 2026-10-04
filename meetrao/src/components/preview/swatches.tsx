@@ -1,19 +1,27 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 /* The token table reads its own values out of the cascade rather than repeating
    them. A hardcoded hex here would be a second source of truth that drifts the
    first time globals.css changes, and a gallery that lies about a token is
-   worse than no gallery. */
+   worse than no gallery.
+
+   Read during render on the client, and "" on the server, which has no
+   cascade to read. Nothing changes a token while the page is open, so there
+   is nothing to subscribe to. */
+const noSubscription = () => () => {};
+
+function useToken(name: string): string {
+  return useSyncExternalStore(
+    noSubscription,
+    () => getComputedStyle(document.documentElement).getPropertyValue(name).trim(),
+    () => "",
+  );
+}
 
 export function TokenSwatch({ name, on = "surface" }: { name: string; on?: "surface" | "ground" | "dark" }) {
-  const [value, setValue] = useState<string>("");
-
-  useEffect(() => {
-    const read = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    setValue(read);
-  }, [name]);
+  const value = useToken(name);
 
   const chip =
     on === "dark"
@@ -41,11 +49,7 @@ export function TokenSwatch({ name, on = "surface" }: { name: string; on?: "surf
 
 /** Shadow and font tokens are not colours; they get their own read-back row. */
 export function TokenValue({ name, sample }: { name: string; sample?: "shadow" | "font" }) {
-  const [value, setValue] = useState<string>("");
-
-  useEffect(() => {
-    setValue(getComputedStyle(document.documentElement).getPropertyValue(name).trim());
-  }, [name]);
+  const value = useToken(name);
 
   return (
     <div className="flex min-w-0 flex-col gap-[8px] rounded-[8px] border border-line bg-surface p-[12px]">

@@ -59,11 +59,6 @@ function cleanName(raw: string): string {
   return raw.trim().replace(/\s+/g, " ").slice(0, MAX_NAME);
 }
 
-/** Postgres 23505 is a unique violation; here it can only be the name index. */
-function nameTaken(message: string): boolean {
-  return message.includes("availability_schedules_name_unique") || message.includes("duplicate key");
-}
-
 /**
  * The whole week for ONE schedule is replaced in one pass. A partial save is
  * not a state a host should ever be able to see.
@@ -77,7 +72,7 @@ export async function saveAvailability(input: {
   timezone: string;
   rules: Rule[];
 }): Promise<SaveResult> {
-  const session = await requireSession();
+  await requireSession();
 
   if (!TIMEZONES.includes(input.timezone as (typeof TIMEZONES)[number])) {
     return { error: "Pick a timezone from the list." };
@@ -101,7 +96,7 @@ export async function saveAvailability(input: {
 
 /** A new schedule starts Monday–Friday 09:00–17:00 rather than empty. */
 export async function createSchedule(input: { name: string; copyFrom?: string }): Promise<ScheduleResult> {
-  const session = await requireSession();
+  await requireSession();
   const name = cleanName(input.name);
   if (!name) return { error: "Give the schedule a name." };
 
@@ -114,7 +109,7 @@ export async function createSchedule(input: { name: string; copyFrom?: string })
 }
 
 export async function renameSchedule(input: { id: string; name: string }): Promise<SaveResult> {
-  const session = await requireSession();
+  await requireSession();
   const name = cleanName(input.name);
   if (!name) return { error: "Give the schedule a name." };
 
@@ -134,7 +129,7 @@ export async function renameSchedule(input: { id: string; name: string }): Promi
  * UI says how many meetings will move before asking.
  */
 export async function deleteSchedule(input: { id: string }): Promise<SaveResult> {
-  const session = await requireSession();
+  await requireSession();
 
   const r = await viaConvex((c) => c.mutation(api.availability.deleteSchedule, { scheduleId: input.id }));
   if (r.error) return { error: r.error };
@@ -149,7 +144,7 @@ export async function deleteSchedule(input: { id: string }): Promise<SaveResult>
  * fails on the constraint.
  */
 export async function setDefaultSchedule(input: { id: string }): Promise<SaveResult> {
-  const session = await requireSession();
+  await requireSession();
 
   const r = await viaConvex((c) => c.mutation(api.availability.setDefaultSchedule, { scheduleId: input.id }));
   if (r.error) return { error: r.error };

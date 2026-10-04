@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { redirectUri } from "@/lib/google/oauth";
+import { safePath } from "@/lib/safe-path";
 
 /**
  * Where Google returns after the calendar consent screen.
@@ -17,12 +18,13 @@ export async function GET(request: NextRequest) {
   const expected = store.get("google_oauth_state")?.value ?? null;
   store.delete("google_oauth_state");
 
+  /* The return path is read from `state` before `state` is checked, because
+     a failed check still has to land somewhere, so it is validated on its own
+     terms: anyone can send a browser here with any state they like. */
   const state = searchParams.get("state");
-  const returnTo = state?.includes(":") ? state.slice(state.indexOf(":") + 1) : "/settings/calendar";
+  const returnTo = safePath(state?.includes(":") ? state.slice(state.indexOf(":") + 1) : null, "/settings/calendar");
   const back = (reason?: string) =>
-    NextResponse.redirect(
-      new URL(`${returnTo.startsWith("/") ? returnTo : "/settings/calendar"}${reason ? `?calendar=${reason}` : "?calendar=connected"}`, origin),
-    );
+    NextResponse.redirect(new URL(`${returnTo}${reason ? `?calendar=${reason}` : "?calendar=connected"}`, origin));
 
   if (!state || !expected || state !== expected) return back("state");
   if (searchParams.get("error")) return back("denied");

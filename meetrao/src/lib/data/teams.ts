@@ -9,6 +9,8 @@ import { isPaid } from "@/convex/lib/plan";
 import type { CompanyRole, CompanyView } from "@/components/app/companies-panel";
 import type { Plan } from "@/convex/lib/plan";
 import { activeContext, contextChoices } from "@/lib/data/context";
+import { ownMeetings, ownPlan } from "@/lib/data/own";
+import { requireSession } from "@/lib/data/session";
 import { siteUrl } from "@/lib/env";
 
 /* What the Team settings panel needs, in one place: the teams this host owns
@@ -17,8 +19,7 @@ import { siteUrl } from "@/lib/env";
 
 /** Whether the signed-in host is on Pro. For screens that only need the flag. */
 export async function isProNow(): Promise<boolean> {
-  const convex = await convexServer();
-  return isPaid((await convex.query(api.billing.mine, {})).plan);
+  return isPaid((await ownPlan()).plan);
 }
 
 export async function billingPanelData(): Promise<{
@@ -26,11 +27,13 @@ export async function billingPanelData(): Promise<{
   domain: DomainView;
   timing: TimingView;
 }> {
+  /* The profile is the session's, which every settings page has already
+     read; asking Convex for it again was a third query for the same row. */
   const convex = await convexServer();
-  const [plan, domain, profile] = await Promise.all([
-    convex.query(api.billing.mine, {}),
+  const [plan, domain, { profile }] = await Promise.all([
+    ownPlan(),
     convex.query(api.domains.mine, {}),
-    convex.query(api.profiles.current, {}),
+    requireSession(),
   ]);
 
   return {
@@ -44,8 +47,8 @@ export async function billingPanelData(): Promise<{
     domain: { domain: domain.domain, verifiedAt: domain.verified_at },
     timing: {
       // Absent is the free schedule, which is also where Pro starts.
-      long: profile?.reminder_long_minutes ?? 1440,
-      short: profile?.reminder_short_minutes ?? 60,
+      long: profile.reminder_long_minutes ?? 1440,
+      short: profile.reminder_short_minutes ?? 60,
     },
   };
 }
@@ -100,13 +103,15 @@ export async function brandingPanelData(): Promise<{
     };
   }
 
-  const [brand, domain] = await Promise.all([
+  /* The username comes from the session, already read for this request. It
+     used to be a profile query of its own, made after the two above had
+     finished: a whole round trip in sequence for one field. */
+  const [brand, domain, { profile }] = await Promise.all([
     convex.query(api.branding.mine, {}),
     convex.query(api.domains.mine, {}),
+    requireSession(),
   ]);
-
-  const me = await convex.query(api.profiles.current, {});
-  const username = (me?.username as string | undefined) ?? "";
+  const username = profile.username;
   return {
     pro: brand.live,
     logoUrl: brand.logo_url,
@@ -140,7 +145,7 @@ export async function developerPanelData(): Promise<{
   const [keys, hooks, plan] = await Promise.all([
     convex.query(api.apiKeys.list, {}),
     convex.query(api.webhooks.list, {}),
-    convex.query(api.billing.mine, {}),
+    ownPlan(),
   ]);
 
   return {
@@ -172,8 +177,8 @@ export async function teamPanelData(userId: string): Promise<{
   const { companyId } = await activeContext();
   const [rows, meetings, plan] = await Promise.all([
     convex.query(api.teams.mine, { companyId }),
-    convex.query(api.meetingTypes.listOwn, {}),
-    convex.query(api.billing.mine, {}),
+    ownMeetings(),
+    ownPlan(),
   ]);
   void userId;
 

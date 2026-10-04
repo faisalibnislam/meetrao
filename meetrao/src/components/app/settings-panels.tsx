@@ -117,7 +117,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
     <div className="flex flex-col gap-[15px]">
       <PanelHeading title="Profile" subtitle="How you appear to guests on your booking page." />
 
-      <AvatarUpload userId={profile.id} name={fullName || profile.username} initialUrl={profile.avatar_url} />
+      <AvatarUpload name={fullName || profile.username} initialUrl={profile.avatar_url} />
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(196px,1fr))] gap-[13px]">
         <Field label="Name" htmlFor="prof-name">

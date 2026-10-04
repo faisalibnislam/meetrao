@@ -1,22 +1,9 @@
 import { notFound } from "next/navigation";
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { Eyebrow } from "@/components/ui/badge";
-import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
-import {
-  getBusy,
-  meetingIsOnCompany,
-  getMeetingAvailability,
-  getMeetingOverrides,
-  getSeatMap,
-  getPublicHost,
-  getPublicMeeting,
-} from "@/lib/data/public-booking";
-import { convexAnonymous } from "@/lib/convex/server";
-import { api } from "@/convex/_generated/api";
+import { bookingStart } from "@/lib/data/booking-start";
 import { PublicFooter } from "@/components/booking/public-footer";
 import { BrandMark, BrandScope } from "@/components/booking/brand";
-
-const DAY = 86_400_000;
 
 /** A company, however the route worked out which one. */
 export type CompanyContext = {
@@ -51,88 +38,14 @@ export async function MeetingPage({
   /** Already resolved by the route, from the path or from the hostname. */
   company: CompanyContext | null;
 }) {
-  /* TWO PHASES, NOT A CHAIN. Every read here was awaited one after the other,
-     up to nine database round trips in sequence, and the app's functions sit
-     a long way from the database, so each one was a cross-region hop that
-     everything after it waited for. This is the page every guest sees, which
-     makes it the one where the wait cost the most.
-
-     Phase one is everything that needs only the address. Phase two is
-     everything that needs the host or the meeting from phase one. Nothing in
-     either phase depends on anything else in the same phase. */
-  const [host, meeting, onCompany] = await Promise.all([
-    getPublicHost(username),
-    getPublicMeeting(username, slug),
-    /* A company's address serves only that company's meetings. Without this,
-       a guest who guessed a slug could reach a member's PERSONAL meeting
-       through somebody else's branded address, which is the whole thing
-       company scoping exists to prevent. */
-    company ? meetingIsOnCompany(username, slug, company.slug) : Promise.resolve(true),
-  ]);
-  if (!host) notFound();
-  if (!meeting) notFound();
-  if (!onCompany) notFound();
+  /* The reads are bookingStart's, in two phases, shared with the embed
+     widget so the two can never offer different times. */
+  const start = await bookingStart(username, slug, company?.slug ?? null);
+  if (!start) notFound();
+  const { host, meeting, seats, initial, pageViewId } = start;
 
   const brand = company ? company.brand : host.brand;
   const unbranded = company ? company.unbranded : host.unbranded;
-
-  // The first paint is rendered in the host's zone, because the server cannot
-  // know the guest's. The client corrects it on mount.
-  const now = new Date();
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: host.timezone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  })
-    .format(now)
-    .split("-")
-    .map(Number);
-
-  const [year, month, day] = today;
-  const windowStart = new Date(Date.UTC(year, month - 1, 1) - DAY);
-  const windowEnd = new Date(Date.UTC(year, month, 1) + DAY);
-
-  const [availability, overrides, { busy }, seats, pageViewId] = await Promise.all([
-    getMeetingAvailability(meeting.id),
-    getMeetingOverrides(meeting.id),
-    getBusy(
-      host.id,
-      windowStart,
-      windowEnd,
-      // A workshop's own seats are not conflicts with themselves.
-      meeting.capacity > 1 ? meeting.id : undefined,
-    ),
-    meeting.capacity > 1 ? getSeatMap(meeting.id, windowStart, windowEnd) : Promise.resolve({} as Record<string, number>),
-    // Records that the page was opened, which is what "Avg. Reply time" measures.
-    convexAnonymous().mutation(api.publicBooking.recordPageView, {
-      hostId: host.id,
-      meetingTypeId: meeting.id,
-    }),
-  ]);
-
-  const shared = {
-    guestTimezone: host.timezone,
-    hostTimezone: host.timezone,
-    availability,
-    overrides,
-    rules: meeting.rules,
-    busy,
-    now,
-  };
-
-  const openDates = [...bookableDatesInMonth({ ...shared, year, month })];
-
-  // Land on the first bookable day rather than an empty "pick a date" panel.
-  const firstOpen = openDates
-    .map((key) => Number(key.slice(8)))
-    .filter((d) => d >= day)
-    .sort((a, b) => a - b)[0];
-
-  const times = (firstOpen ? computeSlots({ ...shared, date: { year, month, day: firstOpen } }) : [])
-    .map((d) => d.toISOString())
-    // A full slot is not on offer, however free the host's calendar looks.
-    .filter((iso) => meeting.capacity <= 1 || (seats[iso] ?? 0) < meeting.capacity);
 
   return (
     <BrandScope brand={brand}>
@@ -158,15 +71,8 @@ export async function MeetingPage({
         locationDetail={meeting.locationDetail}
         capacity={meeting.capacity}
         seats={seats}
-        initial={{
-          year,
-          month,
-          openDates,
-          day: firstOpen ?? null,
-          times,
-          timezone: host.timezone,
-        }}
-        pageViewId={typeof pageViewId === "string" ? pageViewId : null}
+        initial={initial}
+        pageViewId={pageViewId}
       />
     </div>
       <PublicFooter badge={!unbranded} />

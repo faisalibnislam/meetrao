@@ -20,7 +20,7 @@ import { siteUrl } from "@/lib/env";
 export const SITE_NAME = "Meetrao";
 
 /** The one-line answer to "what is this". Used in JSON-LD and as the fallback description. */
-export const TAGLINE = "Free appointment booking and meeting scheduling";
+const TAGLINE = "Free appointment booking and meeting scheduling";
 
 /**
  * The suffix every page title carries, and the whole title of the home page.

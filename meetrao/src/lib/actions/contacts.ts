@@ -31,7 +31,7 @@ export type ContactInput = {
 };
 
 export async function saveContact(input: ContactInput): Promise<ContactResult> {
-  const { userId } = await requireOnboardedSession();
+  await requireOnboardedSession();
 
   const email = input.email.trim().toLowerCase();
   if (!EMAIL.test(email)) return { error: "That is not an email address." };
@@ -63,7 +63,7 @@ export async function saveContact(input: ContactInput): Promise<ContactResult> {
 }
 
 export async function deleteContact(id: string): Promise<ContactResult> {
-  const { userId } = await requireOnboardedSession();
+  await requireOnboardedSession();
 
   try {
     const convex = await convexServer();

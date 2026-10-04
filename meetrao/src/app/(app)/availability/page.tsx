@@ -13,13 +13,17 @@ export const metadata: Metadata = { title: "Availability" };
 export default async function AvailabilityPage() {
   const { profile } = await requireOnboardedSession();
 
-  // Idempotent, and it is what guarantees the invariant the whole screen rests
-  // on: a host always has at least one schedule. An account created before
-  // migration 0010 was backfilled; one created after is seeded here.
-  await ensureDefaultAvailability(profile.id);
-
   const convex = await convexServer();
-  const { schedules: scheduleRows, rules, meetings, overrides } = await convex.query(api.availability.screen, {});
+  let screen = await convex.query(api.availability.screen, {});
+
+  /* The invariant the whole screen rests on: a host always has at least one
+     schedule. Seeding guarantees it, and is idempotent, but it is a write and
+     a whole round trip, and it used to run before the read on every visit.
+     Reading first means it runs only for the host who actually has none. */
+  if (screen.schedules.length === 0 && (await ensureDefaultAvailability(profile.id))) {
+    screen = await convex.query(api.availability.screen, {});
+  }
+  const { schedules: scheduleRows, rules, meetings, overrides } = screen;
 
   const defaultId = scheduleRows.find((s) => s.is_default)?.id ?? null;
 

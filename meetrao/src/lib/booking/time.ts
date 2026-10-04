@@ -1,11 +1,10 @@
 import { TZDate } from "@date-fns/tz";
 import type { PlainDate } from "./slots";
+import { dateFormat } from "@/lib/intl";
 
 /* Formatting. Every function takes an explicit timezone. Nothing here reads
    the ambient one, because "the host's hours in the guest's zone" is the whole
    product and an implicit zone is how that goes wrong. */
-
-const MINUTE = 60_000;
 
 function parts(instant: Date, timeZone: string) {
   return new TZDate(instant.getTime(), timeZone);
@@ -13,7 +12,7 @@ function parts(instant: Date, timeZone: string) {
 
 /** "3:00 PM" */
 export function formatTime(instant: Date, timeZone: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     hour: "numeric",
     minute: "2-digit",
     timeZone,
@@ -35,7 +34,7 @@ export function formatTimeRange(start: Date, end: Date, timeZone: string): strin
 
 /** "Monday, September 7", the public booking page and confirmation. */
 export function formatLongDate(instant: Date, timeZone: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     weekday: "long",
     month: "long",
     day: "numeric",
@@ -50,14 +49,14 @@ export function formatPlainLongDate(date: PlainDate, timeZone: string): string {
 
 /** "September 2026", the calendar's month label. */
 export function formatMonth(year: number, month: number): string {
-  return new Intl.DateTimeFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(
+  return dateFormat("en-US", { month: "long", year: "numeric", timeZone: "UTC" }).format(
     new Date(Date.UTC(year, month - 1, 1)),
   );
 }
 
 /** "Sep 7, 2026", admin tables and the joined column. */
 export function formatShortDate(instant: Date, timeZone: string): string {
-  return new Intl.DateTimeFormat("en-US", {
+  return dateFormat("en-US", {
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -77,7 +76,7 @@ export function formatDayLabel(instant: Date, timeZone: string, now: Date = new 
   if (days === -1) return "Yesterday";
 
   const withWeekday = days > 1 && days < 7;
-  return new Intl.DateTimeFormat("en-GB", {
+  return dateFormat("en-GB", {
     weekday: withWeekday ? "short" : undefined,
     day: "numeric",
     month: "short",
@@ -86,7 +85,7 @@ export function formatDayLabel(instant: Date, timeZone: string, now: Date = new 
 }
 
 /** Whole calendar days from `from` to `to`, counted in `timeZone`. */
-export function calendarDaysBetween(from: Date, to: Date, timeZone: string): number {
+function calendarDaysBetween(from: Date, to: Date, timeZone: string): number {
   const a = parts(from, timeZone);
   const b = parts(to, timeZone);
   const aUtc = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
@@ -124,10 +123,6 @@ export function timeOptions(includeMidnightEnd = false): { value: string; label:
   for (let m = 0; m < 1440; m += 30) out.push({ value: String(m), label: minutesToLabel(m) });
   if (includeMidnightEnd) out.push({ value: "1440", label: "12:00 AM" });
   return out;
-}
-
-export function addMinutes(instant: Date, minutes: number): Date {
-  return new Date(instant.getTime() + minutes * MINUTE);
 }
 
 /** "30 min" · "1 hr" · "1 hr 30 min", used where space allows a long form. */

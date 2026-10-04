@@ -9,12 +9,13 @@ export const metadata: Metadata = { title: "New meeting" };
 
 export default async function NewMeetingPage() {
   const { profile } = await requireOnboardedSession();
+  const [pro, schedules] = await Promise.all([isProNow(), scheduleOptions(profile.id)]);
 
   return (
     <AppScreen title="New meeting" crumb={{ label: "Meetings", href: "/meetings" }} crumbCurrent="New">
       <MeetingForm
-        pro={await isProNow()}
-        schedules={await scheduleOptions(profile.id)}
+        pro={pro}
+        schedules={schedules}
         initial={{
           name: "",
           description: "",

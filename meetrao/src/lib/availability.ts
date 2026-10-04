@@ -34,33 +34,13 @@ export type ScheduleView = {
   usedBy: string[];
 };
 
-/** The week a brand-new schedule starts with: Monday to Friday, 09:00-17:00.
-    An empty week would be a schedule that silently books nothing. */
-export function starterWeek(): Day[] {
-  return WEEK_ORDER.map((weekday) => ({
-    weekday,
-    label: DAY_LABELS[weekday],
-    on: weekday >= 1 && weekday <= 5,
-    ranges: [{ ...DEFAULT_RANGE }],
-  }));
-}
-
-export const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const DAY_LABELS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 /** Monday first. The working week is what a host is setting. */
-export const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 /** The default range a day gets when it is switched on: 09:00 to 17:00. */
 const DEFAULT_RANGE: Range = { start: 540, end: 1020 };
-
-export function emptyWeek(): Day[] {
-  return WEEK_ORDER.map((weekday) => ({
-    weekday,
-    label: DAY_LABELS[weekday],
-    on: false,
-    ranges: [{ ...DEFAULT_RANGE }],
-  }));
-}
 
 /** Database rows to the seven days the editor shows. */
 export function rulesToDays(rules: AvailabilityRow[]): Day[] {

@@ -21,6 +21,8 @@
    decides for itself whether to count them, and the ones that do not say so.
    ───────────────────────────────────────────────────────────────────────────── */
 
+import { dateFormat } from "./intl";
+
 export type AnalyticsBooking = {
   hostId: string;
   startsAt: number;
@@ -113,7 +115,7 @@ const DAY_MS = 86_400_000;
 
 /** The day a moment falls on, where the viewer lives. "2026-10-04". */
 export function dayKey(ts: number, timezone: string): string {
-  return new Intl.DateTimeFormat("en-CA", {
+  return dateFormat("en-CA", {
     timeZone: timezone,
     year: "numeric",
     month: "2-digit",
@@ -123,7 +125,7 @@ export function dayKey(ts: number, timezone: string): string {
 
 /** The hour of the day, 0 to 23, where the viewer lives. */
 function hourIn(ts: number, timezone: string): number {
-  const text = new Intl.DateTimeFormat("en-GB", {
+  const text = dateFormat("en-GB", {
     timeZone: timezone,
     hour: "2-digit",
     hour12: false,
@@ -135,13 +137,13 @@ function hourIn(ts: number, timezone: string): number {
 
 /** Weekday index where the viewer lives, Sunday 0, to match Date.getDay(). */
 function weekdayIn(ts: number, timezone: string): number {
-  const name = new Intl.DateTimeFormat("en-US", { timeZone: timezone, weekday: "short" }).format(new Date(ts));
+  const name = dateFormat("en-US", { timeZone: timezone, weekday: "short" }).format(new Date(ts));
   return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
 }
 
 /** "4 Oct", for a column nobody should have to decode. */
 function dayLabel(ts: number, timezone: string): string {
-  return new Intl.DateTimeFormat("en-GB", { timeZone: timezone, day: "numeric", month: "short" }).format(
+  return dateFormat("en-GB", { timeZone: timezone, day: "numeric", month: "short" }).format(
     new Date(ts),
   );
 }

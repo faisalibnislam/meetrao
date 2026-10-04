@@ -1,10 +1,7 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Callout } from "@/components/ui/panels";
-import { BUSINESS_PRICES, PRO_PRICES } from "@/lib/pricing";
-import { BUSINESS_LIMITS } from "@/lib/pricing";
-import { cx } from "@/lib/cx";
+import { BUSINESS_LIMITS, BUSINESS_PRICES, PRO_PRICES } from "@/lib/pricing";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Asking for money, without becoming the product.
@@ -42,12 +39,12 @@ const PLAN = {
 } as const;
 
 /** "$3 a month, or $30 a year". The only place either number is formatted. */
-export function priceLine(to: UpgradeTo): string {
+function priceLine(to: UpgradeTo): string {
   const { prices } = PLAN[to];
   return `$${prices.monthly.amount} a month, or $${prices.yearly.amount} a year`;
 }
 
-export function planLabel(to: UpgradeTo): string {
+function planLabel(to: UpgradeTo): string {
   return PLAN[to].label;
 }
 
@@ -110,24 +107,6 @@ export function UpgradeCallout({
         </Link>
       </span>
     </Callout>
-  );
-}
-
-/**
- * A badge beside a control that exists but is not yours yet.
- *
- * The control stays rendered and disabled. Somebody who cannot use a setting
- * should still be able to see that it is there, which is the difference
- * between a product with a paid tier and a product that looks like it is
- * missing features.
- */
-export function LockedBadge({ to = "pro", className }: { to?: UpgradeTo; className?: string }) {
-  return (
-    <span className={cx("inline-flex", className)}>
-      <Badge tone="off" dot={false}>
-        {planLabel(to)}
-      </Badge>
-    </span>
   );
 }
 
