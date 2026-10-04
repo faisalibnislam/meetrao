@@ -344,15 +344,18 @@ export const listForScreen = query({
 
     const rows = [...past, ...upcoming];
 
+    // Only a host-scheduled booking has invitees (createAsHost is the one
+    // writer), and each lookup is independent of the others.
+    const scheduled = rows.filter((b) => b.host_created);
+    const lists = await Promise.all(
+      scheduled.map((b) =>
+        ctx.db.query("booking_invitees").withIndex("by_booking", (q) => q.eq("booking_id", b.id)).collect(),
+      ),
+    );
     const invitees: Record<string, Array<{ name: string; email: string }>> = {};
-    for (const b of rows) {
-      if (!b.host_created) continue;
-      const list = await ctx.db
-        .query("booking_invitees")
-        .withIndex("by_booking", (q) => q.eq("booking_id", b.id))
-        .collect();
-      if (list.length) invitees[b.id] = list.map((i) => ({ name: i.name, email: i.email }));
-    }
+    scheduled.forEach((b, i) => {
+      if (lists[i].length) invitees[b.id] = lists[i].map((x) => ({ name: x.name, email: x.email }));
+    });
 
     return { rows: rows.map(bookingOut), invitees, elsewhere };
   },

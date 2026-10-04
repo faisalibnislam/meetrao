@@ -100,12 +100,15 @@ export const listForScreen = query({
           )
         : [];
 
-    const invitees: Array<{ email: string; booking_id: string }> = [];
-    for (const b of bookings) {
-      for (const i of await ctx.db.query("booking_invitees").withIndex("by_booking", (q) => q.eq("booking_id", b.id)).collect()) {
-        invitees.push({ email: i.email, booking_id: i.booking_id });
-      }
-    }
+    /* One lookup per host-scheduled booking, all at once. This awaited one
+       per booking of every kind, in turn, though only createAsHost ever
+       writes an invitee. */
+    const lists = await Promise.all(
+      bookings
+        .filter((b) => b.host_created)
+        .map((b) => ctx.db.query("booking_invitees").withIndex("by_booking", (q) => q.eq("booking_id", b.id)).collect()),
+    );
+    const invitees = lists.flat().map((i) => ({ email: i.email, booking_id: i.booking_id }));
 
     return {
       contacts: contacts.map(contactOut),
