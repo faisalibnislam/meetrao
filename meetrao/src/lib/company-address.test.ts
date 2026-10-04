@@ -151,13 +151,18 @@ describe("the screens that hand links out", () => {
      standing in, so Personal handed out the company's links and the company
      handed out your own. It disagreed with the Meetings screen, which has
      always been scoped. */
+  /* The scoping and the address now live in one shared builder, which the
+     rail calls; the builder's own behaviour is tested with real inputs in
+     design-system.test.ts. These assert the rail actually uses it. */
   it("the rail lists only the workspace in force", () => {
-    expect(RAIL).toContain("(m.company_id ?? null) === context.companyId");
+    expect(RAIL).toContain("workspaceLinks(active, placeOf(here), profile.username)");
+    expect(read("src/lib/workspace-links.ts")).toContain(".filter((m) => (m.company_id ?? null) === place.companyId)");
   });
 
   it("the rail builds the workspace's own kind of address", () => {
-    expect(RAIL).toContain("companyBookingLink(");
-    expect(RAIL).toContain("bookingLink(profile.username, m.slug)");
+    const builder = read("src/lib/workspace-links.ts");
+    expect(builder).toContain("companyBookingLink(");
+    expect(builder).toContain("bookingLink(username, slug)");
   });
 
   it("the personal dashboard drops anything filed under a company", () => {
@@ -167,7 +172,7 @@ describe("the screens that hand links out", () => {
   /* The Meetings list was already scoped, but every row still showed
      meetrao.com/<username>/<meeting>, including the Preview link. */
   it("the Meetings screen shows and previews the company's address", () => {
-    expect(MEETINGS).toContain("companyBookingLink(");
+    expect(MEETINGS).toContain("addressFor(place, profile.username, slug)");
     expect(MEETINGS).toContain("`/${here.slug}/${here.handle}/${m.slug}`");
   });
 });
