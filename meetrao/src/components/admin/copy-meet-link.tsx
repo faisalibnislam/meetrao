@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
+import { copyText } from "@/lib/clipboard";
 
 export function CopyMeetLink({ url }: { url: string }) {
   const toast = useToast();
@@ -19,7 +20,7 @@ export function CopyMeetLink({ url }: { url: string }) {
         icon={copied ? "check" : "copy"}
         iconWeight={copied ? "solid" : "light"}
         onClick={async () => {
-          await navigator.clipboard?.writeText(url).catch(() => {});
+          if (!(await copyText(url))) return;
           clearTimeout(timer.current);
           setCopied(true);
           toast({ tone: "ok", title: "Copied", text: url.replace(/^https?:\/\//, "") });

@@ -98,9 +98,14 @@ describe("the workspace menu", () => {
   });
 
   /* Settings belong to the workspace in force, which is the reason these two
-     controls had to become one. */
-  it("names the workspace on the settings link", () => {
-    expect(SWITCHER).toContain("label={`${active.name} settings`}");
+     controls had to become one. The label says WHICH KIND of workspace rather
+     than pasting its name: "<company> settings" reads as a thing belonging to
+     that company, and the row changes width on every switch. */
+  it("labels the settings link by workspace kind, not by name", () => {
+    expect(SWITCHER).toContain('active.id ? "Company settings" : "Personal settings"');
+    expect(SWITCHER, "the company's name must not be pasted into the label").not.toContain(
+      "`${active.name} settings`",
+    );
   });
 
   it("says where you are and whose account it is", () => {

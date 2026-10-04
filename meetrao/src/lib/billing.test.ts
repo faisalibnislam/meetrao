@@ -137,6 +137,28 @@ describe("only the webhook grants Pro", () => {
  * exemption it was meant to escape; the second flagged convex/admin.ts, where
  * a QUERY returns `plan: planOf(p)`. a read, reported as a grant.
  */
+/**
+ * The text between a call's brackets, and nothing after them.
+ *
+ * This used to take a fixed 600 characters from the call, which reached past
+ * the end of the statement: a `return { plan: tier }` several lines below a
+ * patch counted as that patch writing the plan. A fixed window is only ever
+ * right by luck, and when it is wrong it is wrong in the direction that
+ * accuses working code.
+ */
+function argsOf(text: string, openParen: number): string {
+  let depth = 0;
+  for (let i = openParen; i < text.length; i++) {
+    const c = text[i];
+    if (c === "(") depth++;
+    else if (c === ")") {
+      depth--;
+      if (depth === 0) return text.slice(openParen + 1, i);
+    }
+  }
+  return text.slice(openParen + 1);
+}
+
 function globWrites(): string[] {
   const files = ["convex/billing.ts", "convex/profiles.ts", "convex/admin.ts", "convex/teams.ts", "convex/apiKeys.ts"];
 
@@ -145,13 +167,18 @@ function globWrites(): string[] {
     const writes = [...text.matchAll(/ctx\.db\.(patch|insert)\(/g)];
 
     return writes.some((match) => {
-      // The call's arguments, up to the end of the statement.
+      // The call's arguments, exactly: balanced to the closing bracket.
       const from = match.index ?? 0;
-      const body = text.slice(from, from + 600);
+      const body = argsOf(text, from + match[0].length - 1);
       /* Both forms: `plan: something` and the shorthand `plan,`. Billing.ts
          uses the shorthand, so a pattern that only knew the first found
          nothing anywhere and passed by being blind. */
-      const assignment = /\bplan\s*(?::\s*([^,\n]+)|,)/.exec(body);
+      /* `\bplan` also matched `comp_plan`, which is a GRANT's tier and not
+         the subscription field this guard is about. A grant is written by the
+         admin console on purpose; what must have one writer is the plan Polar
+         pays for. The lookbehind keeps the word boundary and rules out any
+         field merely ending in "plan". */
+      const assignment = /(?<![a-z_])plan\s*(?::\s*([^,\n]+)|,)/.exec(body);
       if (!assignment) return false;
 
       const value = (assignment[1] ?? "shorthand").trim();

@@ -12,6 +12,7 @@ import { saveReminderTiming } from "@/lib/actions/settings";
 import { isBusinessPlan, isPaid, type Plan } from "@/convex/lib/plan";
 import { BUSINESS_PRICES, PRO_PRICES } from "@/lib/pricing";
 import { BUSINESS_PITCH, UpgradeHint } from "./upgrade";
+import { PlanComparison } from "@/components/marketing/plan-comparison";
 
 /* The plan's real name. A ternary here said "Pro" for anybody who paid, which
    is the bug the no-plan-equality guard exists for. */
@@ -225,6 +226,22 @@ export function BillingPanel({
           </div>
         </div>
       ) : null}
+
+      {/* The three plans line by line, the same component /pricing renders.
+
+          An upgrade prompt elsewhere in the app sends somebody here, and two
+          price cards do not answer the question they arrived with, which is
+          what the difference actually is. Pointing them at the marketing page
+          instead would mean leaving the app to decide something about their
+          own account. */}
+      <details className="rounded-[8px] border border-line bg-surface px-[15px] py-[12px]">
+        <summary className="cursor-pointer text-[12.5px] font-semibold text-ink">
+          Compare every plan, line by line
+        </summary>
+        <div className="mt-[12px]">
+          <PlanComparison footnote={false} />
+        </div>
+      </details>
 
       {/* ── their own domain, which lives on the Branding screen now ──
           Moved rather than duplicated: the logo, the colour and the domain are

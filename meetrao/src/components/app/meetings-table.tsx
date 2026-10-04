@@ -12,6 +12,7 @@ import { setMeetingActive } from "@/lib/actions/meetings";
 import { embedSnippet } from "@/lib/embed";
 import { Modal } from "@/components/ui/modal";
 import { cx } from "@/lib/cx";
+import { copyText } from "@/lib/clipboard";
 
 export type MeetingRow = {
   id: string;
@@ -51,7 +52,7 @@ export function MeetingsTable({
 
   async function copySnippet() {
     try {
-      await navigator.clipboard.writeText(snippet);
+      if (!(await copyText(snippet))) throw new Error("clipboard refused");
       setCopied(true);
       toast({ tone: "ok", title: "Snippet copied", text: "Paste it where the booking form should appear." });
     } catch {

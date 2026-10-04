@@ -20,6 +20,7 @@ import { completeOnboarding, saveFirstMeeting } from "@/lib/actions/onboarding";
 import type { TimezoneOption } from "@/lib/timezones";
 import { bookingLink } from "@/lib/username";
 import Link from "next/link";
+import { copyText } from "@/lib/clipboard";
 
 /* ── what the Google permission is for ────────────────────────────────────────
 
@@ -407,7 +408,7 @@ export function StepReady({
               icon={copied ? "check" : "copy"}
               className="flex-none rounded-[5px]"
               onClick={async () => {
-                await navigator.clipboard?.writeText(`https://${link}`).catch(() => {});
+                if (!(await copyText(`https://${link}`))) return;
                 setCopied(true);
                 toast({ tone: "ok", title: "Copied", text: link });
                 setTimeout(() => setCopied(false), 1800);

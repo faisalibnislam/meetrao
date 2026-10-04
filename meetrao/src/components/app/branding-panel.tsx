@@ -390,12 +390,12 @@ export function BrandingPanel({
       {isCompany ? (
         <section className="flex flex-col gap-[11px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
           <div className="flex flex-wrap items-center justify-between gap-[10px]">
-            <span className="text-[13px] font-semibold text-ink">Company picture</span>
+            <span className="text-[13px] font-semibold text-ink">Company avatar</span>
           </div>
           <Help>
-            A square mark, shown beside this company&rsquo;s name inside Meetrao. Separate from the logo
-            because a wide wordmark is unreadable at this size. Without one, the company&rsquo;s initials on
-            its colour are used.
+            Shown beside this company&rsquo;s name inside Meetrao. Square, and cropped to fill, so upload a
+            square image rather than the wide logo above. Without one, the company&rsquo;s initials on its
+            colour are used.
           </Help>
 
           <div className="flex flex-wrap items-center gap-[14px]">
@@ -418,7 +418,7 @@ export function BrandingPanel({
                 input.current?.click();
               }}
             >
-              {avatar ? "Change picture" : "Upload picture"}
+              {avatar ? "Change avatar" : "Upload avatar"}
             </Button>
 
             {avatar ? (
@@ -426,7 +426,7 @@ export function BrandingPanel({
                 variant="ghost"
                 size={32}
                 disabled={busy}
-                aria-label="Remove the company picture"
+                aria-label="Remove the company avatar"
                 onClick={() =>
                   startBusy(async () => {
                     const result = await removeLogo("avatar");
@@ -435,7 +435,7 @@ export function BrandingPanel({
                       return;
                     }
                     setAvatar(null);
-                    toast({ tone: "neutral", title: "Picture removed", text: "Initials are shown instead." });
+                    toast({ tone: "neutral", title: "Avatar removed", text: "Initials are shown instead." });
                     router.refresh();
                   })
                 }

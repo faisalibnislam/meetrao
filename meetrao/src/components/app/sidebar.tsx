@@ -10,6 +10,7 @@ import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
 import { SidebarUpgrade } from "./upgrade";
 import { WorkspaceMenu, type WorkspaceOption } from "./workspace-menu";
+import { copyText } from "@/lib/clipboard";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Sidebar, 218px, #EFEDE7, one border to the right.
@@ -82,7 +83,11 @@ export function Sidebar({
   useEffect(() => () => clearTimeout(copyTimer.current), []);
 
   async function copyLink(row: BookingLink) {
-    await navigator.clipboard?.writeText(`https://${row.link}`).catch(() => {});
+    const ok = await copyText(`https://${row.link}`);
+    if (!ok) {
+      toast({ tone: "warn", title: "Copy it by hand", text: `https://${row.link}` });
+      return;
+    }
     clearTimeout(copyTimer.current);
     setCopied(row.id);
     toast({ tone: "ok", title: "Copied", text: row.link });
