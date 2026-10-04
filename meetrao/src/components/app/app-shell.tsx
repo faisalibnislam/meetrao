@@ -5,6 +5,7 @@ import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { bookingLink } from "@/lib/username";
 import type { MeetingType, Profile } from "@/lib/types";
+import { isPaid } from "@/convex/lib/plan";
 
 /* The app shell: 218px sidebar beside a column that owns its own header and
    scroll area. Built once, the prototypes duplicate their chrome because the
@@ -23,12 +24,14 @@ export async function AppShell({
 }) {
   const convex = await convexServer();
 
-  // Three reads, in parallel, for chrome that is on every screen: the Bookings
-  // badge, the rail's link list, and the unread count on Notifications.
-  const [count, meetingRows, unread] = await Promise.all([
+  // Four reads, in parallel, for chrome that is on every screen: the Bookings
+  // badge, the rail's link list, the unread count on Notifications, and the
+  // plan, which decides only whether the rail carries an upgrade button.
+  const [count, meetingRows, unread, plan] = await Promise.all([
     convex.query(api.bookings.upcomingCount, {}),
     convex.query(api.meetingTypes.listOwn, { activeOnly: true }),
     unreadNotifications(profile.id),
+    convex.query(api.billing.mine, {}),
   ]);
 
   const active = meetingRows as Pick<MeetingType, "id" | "name" | "slug">[];
@@ -58,6 +61,7 @@ export async function AppShell({
         email={profile.email}
         avatarUrl={profile.avatar_url}
         isAdmin={false}
+        showUpgrade={!isPaid(plan.plan)}
         links={links}
         onSignOut={signOut}
       />

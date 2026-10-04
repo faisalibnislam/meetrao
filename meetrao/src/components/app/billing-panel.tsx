@@ -9,7 +9,13 @@ import { Callout, PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { openPortal, startCheckout } from "@/lib/actions/billing";
 import { saveReminderTiming } from "@/lib/actions/settings";
-import { isPaid, type Plan } from "@/convex/lib/plan";
+import { isBusinessPlan, isPaid, type Plan } from "@/convex/lib/plan";
+import { BUSINESS_PRICES, PRO_PRICES } from "@/lib/pricing";
+import { BUSINESS_PITCH, UpgradeHint } from "./upgrade";
+
+/* The plan's real name. A ternary here said "Pro" for anybody who paid, which
+   is the bug the no-plan-equality guard exists for. */
+const PLAN_NAME: Record<Plan, string> = { free: "Free", pro: "Pro", business: "Business" };
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Plan, and the reminder timing that lives nowhere else.
@@ -92,7 +98,7 @@ export function BillingPanel({
         <div className="flex flex-wrap items-center justify-between gap-[10px]">
           <div className="flex min-w-0 flex-col gap-[3px]">
             <span className="flex items-center gap-[8px] text-[14px] font-semibold text-ink">
-              {pro ? "Pro" : "Free"}
+              {PLAN_NAME[plan.plan]}
               {pro ? (
                 <Badge tone="ok" dot={false}>{plan.complimentary ? "On the house" : "Active"}</Badge>
               ) : null}
@@ -120,10 +126,10 @@ export function BillingPanel({
           ) : (
             <div className="flex flex-wrap gap-[8px]">
               <Button variant="secondary" size={32} busy={busy} onClick={() => go(() => startCheckout("monthly"))}>
-                $3 / month
+                ${PRO_PRICES.monthly.amount} / month
               </Button>
               <Button variant="accent" size={32} busy={busy} onClick={() => go(() => startCheckout("yearly"))}>
-                $30 / year
+                ${PRO_PRICES.yearly.amount} / year
               </Button>
             </div>
           )}
@@ -148,6 +154,44 @@ export function BillingPanel({
           </ul>
         ) : null}
       </div>
+
+      {/* Business, as its own card rather than a line in Pro's.
+
+          Shown to free accounts too: somebody running an agency should not
+          have to buy Pro first to discover the plan that actually fits them.
+          Hidden only from accounts already on it, where it would be an advert
+          for what they have. */}
+      {!isBusinessPlan(plan.plan) ? (
+        <div className="flex flex-col gap-[12px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
+          <div className="flex flex-wrap items-center justify-between gap-[10px]">
+            <div className="flex min-w-0 flex-col gap-[3px]">
+              <span className="text-[14px] font-semibold text-ink">Business</span>
+              <span className="text-[12px] leading-[1.5] text-ink-3">{BUSINESS_PITCH}</span>
+            </div>
+            <div className="flex flex-wrap gap-[8px]">
+              <Button
+                variant="secondary"
+                size={32}
+                busy={busy}
+                onClick={() => go(() => startCheckout("monthly", "business"))}
+              >
+                ${BUSINESS_PRICES.monthly.amount} / month
+              </Button>
+              <Button
+                variant="secondary"
+                size={32}
+                busy={busy}
+                onClick={() => go(() => startCheckout("yearly", "business"))}
+              >
+                ${BUSINESS_PRICES.yearly.amount} / year
+              </Button>
+            </div>
+          </div>
+          <span className="text-[12px] leading-[1.5] text-ink-3">
+            Everything in Pro, across every company. People you add keep their own accounts and pay nothing.
+          </span>
+        </div>
+      ) : null}
 
       {/* ── their own domain, which lives on the Branding screen now ──
           Moved rather than duplicated: the logo, the colour and the domain are
@@ -191,6 +235,7 @@ export function BillingPanel({
           </div>
         </div>
 
+        {!pro ? <UpgradeHint to="pro" feature="Choosing when reminders land" /> : null}
         {pro ? (
           <div>
             <Button
