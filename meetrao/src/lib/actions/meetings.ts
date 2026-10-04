@@ -127,6 +127,28 @@ export async function setMeetingActive(id: string, active: boolean): Promise<Mee
 
 }
 
+/**
+ * Delete a meeting.
+ *
+ * BOOKINGS ALREADY MADE SURVIVE. convex/meetingTypes.ts nulls their
+ * `meeting_type_id` rather than deleting them: a booking is a record that two
+ * people agreed on a time, and the host changing their mind about which link
+ * it came from does not unmake that. Nobody is cancelled and no guest is
+ * told, which is also why the dialog has to say so.
+ */
+export async function deleteMeeting(id: string): Promise<MeetingResult> {
+  await requireSession();
+  try {
+    const convex = await convexServer();
+    await convex.mutation(api.meetingTypes.remove, { id });
+    revalidatePath("/meetings");
+    revalidatePath("/dashboard");
+    return { id };
+  } catch (cause) {
+    return { error: convexMessage(cause, "That meeting could not be deleted.") };
+  }
+}
+
 async function uniqueSlug(userId: string, name: string): Promise<string> {
   const base = slugify(name);
   const convex = await convexServer();
