@@ -35,7 +35,10 @@ function fn(source: string, name: string): string {
   return source.slice(at, next === -1 ? source.length : next);
 }
 
-const GATED_BRANDING = ["generateUploadUrl", "saveLogo", "setColor", "setBackground"];
+/* saveLogo and removeLogo became saveImage and removeImage when the company
+   avatar arrived: the two pictures do different jobs and every rule around
+   storing them is identical, so one code path takes a `kind`. */
+const GATED_BRANDING = ["generateUploadUrl", "saveImage", "setColor", "setBackground"];
 
 describe("a company's brand is gated on its owner", () => {
   it.each(GATED_BRANDING)("%s resolves the owner, not the caller", (name) => {
@@ -57,8 +60,8 @@ describe("a company's brand is gated on its owner", () => {
 
   /* Clearing is never gated. Somebody whose plan lapsed must still be able to
      take their own logo down, and a gate here would trap it up forever. */
-  it("never gates taking a logo down", () => {
-    const body = fn(BRANDING, "removeLogo");
+  it("never gates taking a picture down", () => {
+    const body = fn(BRANDING, "removeImage");
     expect(body).not.toContain("isPro(");
   });
 
@@ -81,12 +84,12 @@ describe("a company's brand is gated on its owner", () => {
      file exists by the time this runs. A refused one is deleted rather than
      left behind to be paid for. */
   it("deletes a refused upload", () => {
-    const body = fn(BRANDING, "saveLogo");
+    const body = fn(BRANDING, "saveImage");
     expect((body.match(/ctx\.storage\.delete/g) ?? []).length).toBeGreaterThanOrEqual(3);
   });
 
   it("replaces the stored file only after the row points at the new one", () => {
-    const body = fn(BRANDING, "saveLogo");
+    const body = fn(BRANDING, "saveImage");
     const patch = body.indexOf("ctx.db.patch");
     const deleteOld = body.indexOf("previous && previous !== a.storageId");
     expect(patch).toBeGreaterThan(-1);

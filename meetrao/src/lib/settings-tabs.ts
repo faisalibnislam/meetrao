@@ -9,8 +9,16 @@
    editing that company's brand, its domain and its people; in Personal you
    are editing your own profile, calendar and account. Showing both lists at
    once would mean a Profile tab inside a company that is not the company's
-   profile, and a Branding tab in Personal that edits something a company
-   domain no longer serves.
+   profile.
+
+   BRANDING IS IN BOTH, and that is not an oversight. A Pro account has its
+   own branding and its own domain on meetrao.com/<name>/<meeting>, AND a
+   company with its own. They are two brands on two addresses, so each
+   workspace edits its own; brandingPanelData reads whichever is in force.
+
+   TEAM IS A COMPANY'S. A rota is one link several of a company's people
+   answer, so an agency running two clients wants one client's rota out of the
+   other's settings.
 
    PLAN AND COMPANIES STAY PERSONAL. Billing is per ACCOUNT, not per company:
    one subscription covers every company somebody owns, so putting it inside
@@ -20,9 +28,9 @@ export const PERSONAL_TABS = [
   { key: "profile", label: "Profile" },
   { key: "calendar", label: "Calendar" },
   { key: "booking", label: "Booking" },
+  { key: "branding", label: "Branding" },
   { key: "billing", label: "Plan" },
   { key: "companies", label: "Companies" },
-  { key: "team", label: "Team" },
   { key: "developer", label: "Developer" },
   { key: "notifications", label: "Notifications" },
   { key: "account", label: "Account" },
@@ -35,10 +43,16 @@ export const PERSONAL_TABS = [
 export const COMPANY_TABS = [
   { key: "branding", label: "Branding" },
   { key: "people", label: "People" },
+  { key: "team", label: "Team" },
 ] as const;
 
-/** Every tab that exists, for validating a URL segment. */
-export const SETTINGS_TABS = [...PERSONAL_TABS, ...COMPANY_TABS] as const;
+/* Every tab that exists, for validating a URL segment. Branding is in both
+   sets, so the list is de-duplicated: a repeated key would make the `some`
+   check below pass twice and say nothing. */
+export const SETTINGS_TABS = [
+  ...PERSONAL_TABS,
+  ...COMPANY_TABS.filter((c) => !PERSONAL_TABS.some((p) => p.key === c.key)),
+] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]["key"];
 

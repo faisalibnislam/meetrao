@@ -59,6 +59,8 @@ export async function billingPanelData(): Promise<{
  */
 export async function brandingPanelData(): Promise<{
   pro: boolean;
+  isCompany?: boolean;
+  avatarUrl?: string | null;
   logoUrl: string | null;
   color: string | null;
   background: string | null;
@@ -77,6 +79,8 @@ export async function brandingPanelData(): Promise<{
     ]);
     return {
       pro: brand?.live ?? false,
+      isCompany: true,
+      avatarUrl: brand?.avatar_url ?? null,
       logoUrl: brand?.logo_url ?? null,
       color: brand?.color ?? null,
       background: brand?.background ?? null,
@@ -136,8 +140,9 @@ export async function teamPanelData(userId: string): Promise<{
   pro: boolean;
 }> {
   const convex = await convexServer();
+  const { companyId } = await activeContext();
   const [rows, meetings, plan] = await Promise.all([
-    convex.query(api.teams.mine, {}),
+    convex.query(api.teams.mine, { companyId }),
     convex.query(api.meetingTypes.listOwn, {}),
     convex.query(api.billing.mine, {}),
   ]);

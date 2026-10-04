@@ -55,12 +55,22 @@ export async function logoUploadUrl(): Promise<{ url?: string; error?: string }>
  * are checked in the mutation, after the file exists, see convex/branding.ts
  * for why that is the only place it can be done honestly.
  */
-export async function saveLogo(storageId: string): Promise<{ url?: string | null; error?: string }> {
+export async function saveLogo(
+  storageId: string,
+  kind: "logo" | "avatar" = "logo",
+): Promise<{ url?: string | null; error?: string }> {
   try {
     const convex = await convexServer();
     const { companyId } = await activeContext();
+    /* A person has one picture and it is their avatar, so `kind` only means
+       anything inside a company. In Personal an avatar is set from the
+       Profile tab, not from here. */
     const url = companyId
-      ? await convex.mutation(api.companyBranding.saveLogo, { id: companyId, storageId: storageId as never })
+      ? await convex.mutation(api.companyBranding.saveImage, {
+          id: companyId,
+          storageId: storageId as never,
+          kind,
+        })
       : await convex.mutation(api.branding.saveLogo, { storageId: storageId as never });
     refreshBookingPages();
     return { url };
@@ -69,11 +79,11 @@ export async function saveLogo(storageId: string): Promise<{ url?: string | null
   }
 }
 
-export async function removeLogo(): Promise<{ error?: string }> {
+export async function removeLogo(kind: "logo" | "avatar" = "logo"): Promise<{ error?: string }> {
   try {
     const { companyId } = await activeContext();
     const convex = await convexServer();
-    if (companyId) await convex.mutation(api.companyBranding.removeLogo, { id: companyId });
+    if (companyId) await convex.mutation(api.companyBranding.removeImage, { id: companyId, kind });
     else await convex.mutation(api.branding.removeLogo, {});
   } catch (cause) {
     return { error: convexMessage(cause, "That logo could not be removed.") };

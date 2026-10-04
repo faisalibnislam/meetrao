@@ -6,6 +6,7 @@ import { uuid } from "./lib/ids";
 import { logActivity } from "./lib/effects";
 import { requirePro } from "./lib/plan";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Teams: one booking link that several hosts answer, in turn.
@@ -83,8 +84,23 @@ async function slugIsFree(ctx: MutationCtx, slug: string, exceptTeamId?: string)
   return !team || team.id === exceptTeamId;
 }
 
+/** The company a rota belongs to, refusing one the caller is not in. */
+async function companyForTeam(
+  ctx: MutationCtx,
+  me: Doc<"profiles">,
+  companyId: string | null | undefined,
+): Promise<string | null> {
+  if (!companyId) return null;
+  const rows = await ctx.db
+    .query("company_members")
+    .withIndex("by_user", (q) => q.eq("user_id", me.id))
+    .collect();
+  if (!rows.some((r) => r.company_id === companyId)) fail("That is not one of your companies.");
+  return companyId;
+}
+
 export const create = mutation({
-  args: { name: v.string(), slug: v.string() },
+  args: { name: v.string(), slug: v.string(), company_id: v.optional(v.union(v.string(), v.null())) },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
     requirePro(me, "A team link");
@@ -100,7 +116,8 @@ export const create = mutation({
     const now = Date.now();
     const id = uuid();
     await ctx.db.insert("teams", {
-      id, owner_id: me.id, name, slug, slug_lower: slug, created_at: now, updated_at: now,
+      id, owner_id: me.id, company_id: await companyForTeam(ctx, me, a.company_id),
+      name, slug, slug_lower: slug, created_at: now, updated_at: now,
     });
     // The owner is a member, not a special case: they take their turn like
     // everybody else unless they remove themselves.
@@ -199,11 +216,16 @@ export const remove = mutation({
 
 /** The owner's own screen: their team, its members and its meetings. */
 export const mine = query({
-  args: {},
-  handler: async (ctx) => {
+  /* Null and absent both mean personal. A rota shows in the workspace it was
+     made in, so an agency's client rotas stay out of each other's settings. */
+  args: { companyId: v.optional(v.union(v.string(), v.null())) },
+  handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
+    const companyId = a.companyId ?? null;
 
-    const owned = await ctx.db.query("teams").withIndex("by_owner", (q) => q.eq("owner_id", me.id)).collect();
+    const owned = (
+      await ctx.db.query("teams").withIndex("by_owner", (q) => q.eq("owner_id", me.id)).collect()
+    ).filter((t) => (t.company_id ?? null) === companyId);
     const memberships = await ctx.db.query("team_members").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
 
     const teamIds = new Set([...owned.map((t) => t.id), ...memberships.map((m) => m.team_id)]);
@@ -212,6 +234,10 @@ export const mine = query({
     for (const id of teamIds) {
       const team = await ctx.db.query("teams").withIndex("by_uuid", (q) => q.eq("id", id)).unique();
       if (!team) continue;
+      /* Rotas somebody was ADDED to are filtered here rather than above: the
+         membership rows carry no company, so the only place to ask is the
+         team itself. */
+      if ((team.company_id ?? null) !== companyId) continue;
       const members = await membersOf(ctx, team.id);
       const meetings = (
         await ctx.db.query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", team.owner_id)).collect()

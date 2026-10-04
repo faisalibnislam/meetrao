@@ -28,7 +28,15 @@ export type WorkContext = {
   name: string;
 };
 
-export type ContextChoice = { id: string | null; name: string };
+export type ContextChoice = {
+  id: string | null;
+  name: string;
+  /** A company's own square mark, for the workspace menu. Null for Personal,
+      which wears the person's photograph instead. */
+  avatarUrl: string | null;
+  /** Its accent, used to tint the fallback initial when there is no logo. */
+  color: string | null;
+};
 
 /**
  * Every context this account may work in, personal first.
@@ -41,8 +49,13 @@ export async function contextChoices(): Promise<ContextChoice[]> {
   const convex = await convexServer();
   const data = await convex.query(api.companies.mine, {});
   return [
-    { id: null, name: "Personal" },
-    ...data.companies.map((c) => ({ id: c.id, name: c.name })),
+    { id: null, name: "Personal", avatarUrl: null, color: null },
+    ...data.companies.map((c) => ({
+      id: c.id,
+      name: c.name,
+      avatarUrl: c.avatar_url,
+      color: c.brand_color,
+    })),
   ];
 }
 
