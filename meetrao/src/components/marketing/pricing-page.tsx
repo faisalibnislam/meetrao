@@ -3,7 +3,15 @@ import { Icon } from "@/components/ui/icon";
 import { PlanPrice } from "@/components/marketing/plan-price";
 import { Kicker } from "./site-chrome";
 import { Reveal } from "./reveal";
-import { DENIALS, HEADLINE, PRICING_FAQ, PRO_MONTHLY, PRO_YEARLY } from "@/lib/pricing";
+import {
+  BUSINESS_LIMITS,
+  BUSINESS_YEARLY,
+  DENIALS,
+  HEADLINE,
+  PRICING_FAQ,
+  PRO_MONTHLY,
+  PRO_YEARLY,
+} from "@/lib/pricing";
 import { PlanComparison } from "./plan-comparison";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -34,15 +42,36 @@ export function PricingPage() {
             <p className="m-0 text-[16px] leading-[1.6] text-pretty text-ink-2">
               Taking bookings is free, and that is the whole booking product, not a sample of it. Pro adds
               the parts a business needs: your own domain, your own branding, a team link, and the API.
+              Business runs that across up to {BUSINESS_LIMITS.companies} companies.
             </p>
 
-            {/* The figure, with the cadence a reader picks. Same control as the
-                landing band, so the two cannot quote different numbers. */}
-            <div className="mt-[4px] rounded-[12px] border border-line bg-surface px-[20px] pt-[18px] pb-[20px]">
-              <span className="mb-[10px] block text-[11px] font-semibold tracking-[0.1em] text-ink-3 uppercase">
-                Pro
-              </span>
-              <PlanPrice />
+            {/* Two figures, each with the cadence a reader picks. Same control
+                as the landing band, so no two surfaces can quote different
+                numbers. Side by side rather than stacked: the question on this
+                page is which of the two, and a reader comparing them should
+                not have to scroll between them. */}
+            <div className="mt-[4px] grid grid-cols-2 gap-[12px] max-[640px]:grid-cols-1">
+              <div className="rounded-[12px] border border-accent-line bg-surface px-[20px] pt-[18px] pb-[20px]">
+                <span className="mb-[10px] block text-[11px] font-semibold tracking-[0.1em] text-accent-ink uppercase">
+                  Pro
+                </span>
+                <PlanPrice />
+                <span className="mt-[10px] block text-[12.5px] leading-[1.5] text-pretty text-ink-3">
+                  One company, one domain, just you on it.
+                </span>
+              </div>
+
+              <div className="rounded-[12px] border border-line bg-surface px-[20px] pt-[18px] pb-[20px]">
+                <span className="mb-[10px] block text-[11px] font-semibold tracking-[0.1em] text-ink-3 uppercase">
+                  Business
+                </span>
+                <PlanPrice plan="business" />
+                <span className="mt-[10px] block text-[12.5px] leading-[1.5] text-pretty text-ink-3">
+                  Up to {BUSINESS_LIMITS.companies} companies, each with its own domain and branding, and up
+                  to {BUSINESS_LIMITS.membersPerCompany} people. Everyone you add keeps their own free
+                  account.
+                </span>
+              </div>
             </div>
 
             <div className="mt-[6px] flex flex-wrap gap-[10px]">
@@ -83,7 +112,7 @@ export function PricingPage() {
         <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
           <Reveal>
             <h2 className="m-0 font-serif text-[clamp(26px,3.2vw,38px)] leading-[1.06] font-normal tracking-[-0.02em] text-ink">
-              Free and Pro, side by side
+              Every plan, side by side
             </h2>
             <p className="mt-[10px] mb-[26px] max-w-[660px] text-[14px] leading-[1.6] text-ink-2">
               Free is the whole booking product, not a trial of it. Pro is for people running a business on
@@ -100,7 +129,8 @@ export function PricingPage() {
                 Start free
               </Link>
               <span className="text-[13px] text-ink-3">
-                Upgrade to Pro whenever you need it, {PRO_YEARLY}, or {PRO_MONTHLY}.
+                Upgrade whenever you need to: Pro is {PRO_YEARLY} or {PRO_MONTHLY}, Business is{" "}
+                {BUSINESS_YEARLY}.
               </span>
             </div>
           </Reveal>
