@@ -107,9 +107,13 @@ describe("the price is one number", () => {
 describe("the saving is worked out, not typed", () => {
   it("no file hard-codes the discount percentage", () => {
     /* $36 against $30 is 17% today. Write that down and it is wrong the next
-       time either number moves, which is exactly what just happened. */
+       time either number moves, which is exactly what happened once already.
+
+       `savingFor(prices)` rather than `yearlySaving()`: the component renders
+       either plan now, and computing Pro's saving on Business's card would be
+       a worse bug than a hard-coded one, because it would look right. */
     const price = readFileSync(path.join(ROOT, "src/components/marketing/plan-price.tsx"), "utf8");
-    expect(price).toContain("yearlySaving()");
+    expect(price).toContain("savingFor(prices)");
     expect(price, "the percentage is written out").not.toMatch(/save \d+%/);
   });
 });

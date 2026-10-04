@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
-import { COMPARISON, PRO_YEARLY, type PlanCell } from "@/lib/pricing";
+import { BUSINESS_YEARLY, COMPARISON, PRO_YEARLY, type PlanCell } from "@/lib/pricing";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Free and Pro, line by line.
+   Free, Pro and Business, line by line.
 
    One component, rendered on /pricing and on the landing page, because a
    comparison that exists twice is a comparison that disagrees with itself the
@@ -14,11 +14,12 @@ import { cx } from "@/lib/cx";
 export function PlanComparison({ footnote = true }: { footnote?: boolean }) {
   return (
     <>
-      {/* Three columns read across; below 720px the header hides and each
-          cell labels itself for a screen reader, because a three-column
-          table at phone width is unreadable either way. */}
+      {/* Four columns read across; below 860px the header hides and each cell
+          labels itself for a screen reader, because a four-column table at
+          phone width is unreadable either way. The breakpoint moved from 720
+          with the extra column. */}
       <div className="overflow-hidden rounded-[12px] border border-line">
-        <div className="grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] bg-fill max-[720px]:hidden">
+        <div className="grid-cols-[minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.9fr)] bg-fill max-[860px]:hidden">
           <span className="px-[16px] py-[13px] text-[12px] tracking-[0.04em] text-ink-3 uppercase">
             What you get
           </span>
@@ -28,13 +29,16 @@ export function PlanComparison({ footnote = true }: { footnote?: boolean }) {
           <span className="border-l border-accent-line bg-accent-soft px-[16px] py-[13px] text-[13px] font-semibold text-accent-ink">
             Pro · {PRO_YEARLY}
           </span>
+          <span className="border-l border-line px-[16px] py-[13px] text-[13px] font-semibold text-ink">
+            Business · {BUSINESS_YEARLY}
+          </span>
         </div>
 
         {COMPARISON.map((row, i) => (
           <div
             key={row.feature}
             className={cx(
-              "grid grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1fr)] bg-surface",
+              "grid grid-cols-[minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.9fr)] bg-surface",
               i > 0 && "border-t border-line-soft",
             )}
           >
@@ -43,6 +47,7 @@ export function PlanComparison({ footnote = true }: { footnote?: boolean }) {
             </span>
             <Cell value={row.free} label="Free" />
             <Cell value={row.pro} label="Pro" accent />
+            <Cell value={row.business} label="Business" />
           </div>
         ))}
       </div>
