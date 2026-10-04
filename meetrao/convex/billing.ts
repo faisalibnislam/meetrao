@@ -90,7 +90,7 @@ export const applyPolarSubscription = mutation({
 
     await logActivity(ctx, {
       actorId: profile.id,
-      kind: paid ? (plan === "business" ? "plan_business" : "plan_pro") : "plan_free",
+      kind: `plan_${plan}`,
       summary: `${profile.email} is now ${plan} (${a.status})`,
     });
 

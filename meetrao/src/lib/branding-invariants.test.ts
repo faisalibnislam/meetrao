@@ -67,7 +67,12 @@ describe("branding is gated on the way OUT, not only on the way in", () => {
   it("checks the plan in the projection, not just in the mutation", () => {
     const fn = projection.slice(projection.indexOf("function publicBrand"));
     const body = fn.slice(0, fn.indexOf("\n}"));
-    expect(body).toContain('planOf(p) !== "pro"');
+    /* The PREDICATE, not the spelling. This used to assert
+       `planOf(p) !== "pro"` and had to change when Business arrived, which is
+       the wrong reason for a behavioural test to fail. What matters is that
+       the projection asks whether the host pays and returns nothing when they
+       do not. */
+    expect(body).toContain("isPro(p)");
     expect(body).toContain("return null");
   });
 

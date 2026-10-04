@@ -10,7 +10,11 @@ import { Modal } from "@/components/ui/modal";
 import { SectionHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { grantProToUser, revokeProFromUser } from "@/lib/actions/admin";
-import type { Plan } from "@/convex/lib/plan";
+import { isPaid, type Plan } from "@/convex/lib/plan";
+
+/* A label per plan rather than a ternary, so a fourth tier shows its own name
+   instead of silently reading as the one in the else branch. */
+const PLAN_LABEL: Record<Plan, string> = { free: "Free", pro: "Pro", business: "Business" };
 
 /* ─────────────────────────────────────────────────────────────────────────────
    One account's plan, and giving Pro away.
@@ -60,8 +64,12 @@ export function PlanPanel({ userId, name, info }: { userId: string; name: string
       <SectionHeading
         title="Plan"
         right={
-          info.plan === "pro" ? (
-            <Badge tone="ok">{info.subscribed ? "Pro · paying" : "Pro · granted"}</Badge>
+          isPaid(info.plan) ? (
+            /* Names the tier rather than saying "Pro" for everybody who pays:
+               an operator looking at an account needs to know which one. */
+            <Badge tone="ok">
+              {PLAN_LABEL[info.plan]} {info.subscribed ? "· paying" : "· granted"}
+            </Badge>
           ) : (
             <Badge tone="off">Free</Badge>
           )

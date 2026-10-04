@@ -5,6 +5,9 @@ import { api } from "@/convex/_generated/api";
 import type { AssignableMeeting, TeamView } from "@/components/app/team-panel";
 import type { HookView, KeyView } from "@/components/app/developer-panel";
 import type { DomainView, PlanView, TimingView } from "@/components/app/billing-panel";
+import { isPaid } from "@/convex/lib/plan";
+import type { CompanyView } from "@/components/app/companies-panel";
+import type { Plan } from "@/convex/lib/plan";
 
 /* What the Team settings panel needs, in one place: the teams this host owns
    or belongs to, and their own meetings, any of which can be handed to a
@@ -13,7 +16,7 @@ import type { DomainView, PlanView, TimingView } from "@/components/app/billing-
 /** Whether the signed-in host is on Pro. For screens that only need the flag. */
 export async function isProNow(): Promise<boolean> {
   const convex = await convexServer();
-  return (await convex.query(api.billing.mine, {})).plan === "pro";
+  return isPaid((await convex.query(api.billing.mine, {})).plan);
 }
 
 export async function billingPanelData(): Promise<{
@@ -103,7 +106,7 @@ export async function developerPanelData(): Promise<{
       lastError: h.last_error,
       lastAttemptAt: h.last_attempt_at,
     })),
-    pro: plan.plan === "pro",
+    pro: isPaid(plan.plan),
   };
 }
 
@@ -136,6 +139,49 @@ export async function teamPanelData(userId: string): Promise<{
       meetings: t.meetings.map((m) => ({ id: m.id, name: m.name, slug: m.slug })),
     })),
     meetings: meetings.map((m) => ({ id: m.id, name: m.name, teamId: m.team_id ?? null })),
-    pro: plan.plan === "pro",
+    pro: isPaid(plan.plan),
+  };
+}
+
+/** Settings > Companies: what the viewer owns and what they have been added to. */
+export async function companiesPanelData(): Promise<{
+  companies: CompanyView[];
+  owned: number;
+  companyLimit: number;
+  canCreate: boolean;
+  plan: Plan;
+}> {
+  const convex = await convexServer();
+  const data = await convex.query(api.companies.mine, {});
+
+  /* The member list is fetched per company rather than returned by `mine`,
+     which keeps that query cheap for somebody in ten of them. */
+  const companies = await Promise.all(
+    data.companies.map(async (c) => ({
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      handle: c.handle,
+      isOwner: c.is_owner,
+      domain: c.domain,
+      domainVerified: c.domain_verified,
+      ownerPlan: c.owner_plan as Plan,
+      memberLimit: c.member_limit,
+      members: (await convex.query(api.companies.members, { id: c.id })).map((m) => ({
+        userId: m.user_id,
+        name: m.name,
+        email: m.email,
+        handle: m.handle,
+        role: m.role,
+      })),
+    })),
+  );
+
+  return {
+    companies,
+    owned: data.owned,
+    companyLimit: data.company_limit,
+    canCreate: data.can_create,
+    plan: data.plan as Plan,
   };
 }

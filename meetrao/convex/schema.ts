@@ -200,6 +200,62 @@ export default defineSchema({
     .index("by_owner", ["owner_id"])
     .index("by_slug_lower", ["slug_lower"]),
 
+  /* ── Companies ───────────────────────────────────────────────────────────
+     A company owns a domain, a brand and a list of people. It is NOT a team:
+     a team is a rota that answers one link, a person can be in several, and
+     its meetings belong to its owner. Overloading one table would make "which
+     team's brand is on this domain" a question with no good answer.
+
+     How many you may own, and how many people each may hold, is decided by
+     the OWNER's plan, in convex/lib/limits.ts. A member needs no plan: their
+     page is entitled by the owner's, which is why every public read resolves
+     the owner rather than the member.
+
+     unique: (slug_lower) and (custom_domain), enforced in convex/companies.ts */
+  companies: defineTable({
+    id: v.string(),
+    owner_id: v.string(),
+    name: v.string(),
+    slug: v.string(),
+    slug_lower: v.string(),
+    /** Their own domain for this company's booking pages, once DNS points here. */
+    custom_domain: v.optional(nullableString),
+    custom_domain_verified_at: v.optional(nullableNumber),
+    /** The brand every page on this company's domain wears. */
+    brand_color: v.optional(nullableString),
+    brand_background: v.optional(nullableString),
+    brand_logo_url: v.optional(nullableString),
+    brand_logo_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_owner", ["owner_id"])
+    .index("by_slug_lower", ["slug_lower"])
+    .index("by_custom_domain", ["custom_domain"]),
+
+  /* unique: (company_id, user_id) and (company_id, handle_lower), both
+     enforced in convex/companies.ts.
+
+     `handle` is the path segment on the company's domain, and is a per-company
+     name rather than the global username: usernames are first come first
+     served, so a company cannot be promised "sarah", and the same person can
+     be "sarah" at one company and "s.jones" at another. It defaults to the
+     username when a member is added. */
+  company_members: defineTable({
+    id: v.string(),
+    company_id: v.string(),
+    user_id: v.string(),
+    role: v.union(v.literal("owner"), v.literal("member")),
+    handle: v.string(),
+    handle_lower: v.string(),
+    created_at: v.number(),
+  })
+    .index("by_uuid", ["id"])
+    .index("by_company", ["company_id"])
+    .index("by_user", ["user_id"])
+    .index("by_company_handle", ["company_id", "handle_lower"]),
+
   /* unique: (team_id, user_id), enforced in convex/teams.ts */
   team_members: defineTable({
     id: v.string(),

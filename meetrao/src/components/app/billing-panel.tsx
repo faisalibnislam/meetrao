@@ -9,7 +9,7 @@ import { Callout, PanelHeading } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
 import { openPortal, startCheckout } from "@/lib/actions/billing";
 import { saveReminderTiming } from "@/lib/actions/settings";
-import type { Plan } from "@/convex/lib/plan";
+import { isPaid, type Plan } from "@/convex/lib/plan";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Plan, and the reminder timing that lives nowhere else.
@@ -65,7 +65,7 @@ export function BillingPanel({
   const [long, setLong] = useState(String(timing.long));
   const [short, setShort] = useState(String(timing.short));
 
-  const pro = plan.plan === "pro";
+  const pro = isPaid(plan.plan);
 
   function go(work: () => Promise<{ error?: string; url?: string }>) {
     startBusy(async () => {
