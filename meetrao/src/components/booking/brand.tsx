@@ -31,7 +31,13 @@ import { Logo } from "@/components/ui/logo";
    ───────────────────────────────────────────────────────────────────────────── */
 
 /** What the public queries return. Null means "use Meetrao's". */
-export type PublicBrand = { logoUrl: string | null; color: string | null; background: string | null } | null;
+export type PublicBrand = {
+  logoUrl: string | null;
+  /** True to show no mark at all, not even ours. A third state. */
+  logoHidden?: boolean;
+  color: string | null;
+  background: string | null;
+} | null;
 
 export function BrandScope({ brand, children }: { brand: PublicBrand; children: ReactNode }) {
   const tokens = brandTokens(brand?.color ?? null, brand?.background ?? null);
@@ -92,6 +98,11 @@ export function BrandMark({
   /** For the alt text. A logo IS the host's name to a guest who knows them. */
   hostName?: string;
 }) {
+  /* Three states, and the order matters. Hidden wins over having a logo,
+     because somebody who uploaded one and then turned the mark off asked for
+     a bare page, not for their logo back. */
+  if (brand?.logoHidden) return null;
+
   if (brand?.logoUrl) {
     const own = Math.round(height * 1.35);
     return (

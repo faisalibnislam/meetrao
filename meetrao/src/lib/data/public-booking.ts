@@ -54,7 +54,7 @@ type HostRow = {
   id: string;
   username: string;
   unbranded?: boolean;
-  brand?: { logo_url: string | null; color: string | null; background: string | null } | null;
+  brand?: { logo_url: string | null; logo_hidden?: boolean; color: string | null; background: string | null } | null;
   full_name: string;
   job_title: string;
   timezone: string;
@@ -71,7 +71,12 @@ function toHost(row: HostRow): PublicHost {
     avatarUrl: row.avatar_url ?? null,
     unbranded: row.unbranded ?? false,
     brand: row.brand
-      ? { logoUrl: row.brand.logo_url, color: row.brand.color, background: row.brand.background }
+      ? {
+          logoUrl: row.brand.logo_url,
+          logoHidden: row.brand.logo_hidden ?? false,
+          color: row.brand.color,
+          background: row.brand.background,
+        }
       : null,
   };
 }

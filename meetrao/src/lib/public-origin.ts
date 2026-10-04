@@ -70,7 +70,7 @@ export async function companyForRequest(): Promise<{
   /* camelCase, because this is handed straight to BrandScope. Converted here
      rather than at each call site, so a page cannot pass the raw projection
      and get a silently unbranded page from a mismatched key. */
-  brand: { logoUrl: string | null; color: string | null; background: string | null } | null;
+  brand: { logoUrl: string | null; logoHidden: boolean; color: string | null; background: string | null } | null;
 } | null> {
   const list = await headers();
   const hostname = (list.get("host") ?? "").split(":")[0]?.toLowerCase() ?? "";
@@ -84,7 +84,12 @@ export async function companyForRequest(): Promise<{
       name: row.name,
       unbranded: row.unbranded,
       brand: row.brand
-        ? { logoUrl: row.brand.logo_url, color: row.brand.color, background: row.brand.background }
+        ? {
+            logoUrl: row.brand.logo_url,
+            logoHidden: row.brand.logo_hidden,
+            color: row.brand.color,
+            background: row.brand.background,
+          }
         : null,
     };
   } catch {

@@ -84,6 +84,7 @@ export const get = query({
     return {
       logo_url: company.brand_logo_url ?? null,
       avatar_url: company.brand_avatar_url ?? null,
+      logo_hidden: company.brand_logo_hidden ?? false,
       color: company.brand_color ?? null,
       background: company.brand_background ?? null,
       /* So the panel can say "this is live" or "this is saved and will show
@@ -173,6 +174,17 @@ export const removeImage = mutation({
       updated_at: Date.now(),
     });
     if (previous) await ctx.storage.delete(previous);
+  },
+});
+
+/** As with a profile: hiding costs, showing ours again never does. */
+export const setLogoHidden = mutation({
+  args: { id: v.string(), hidden: v.boolean() },
+  handler: async (ctx, a) => {
+    const { company, owner } = await requireCompanyOwner(ctx, a.id);
+    if (a.hidden && !isPro(owner)) fail("A page with no mark on it is part of Pro.", "PRO_REQUIRED");
+    await ctx.db.patch(company._id, { brand_logo_hidden: a.hidden, updated_at: Date.now() });
+    return a.hidden;
   },
 });
 

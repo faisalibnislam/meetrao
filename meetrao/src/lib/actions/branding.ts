@@ -121,3 +121,17 @@ export async function setBrandColor(color: string): Promise<{ color?: string | n
     return { error: convexMessage(cause, "That colour could not be saved.") };
   }
 }
+
+/** Whether the booking page shows any mark at all. */
+export async function setLogoHidden(hidden: boolean): Promise<{ error?: string }> {
+  try {
+    const convex = await convexServer();
+    const { companyId } = await activeContext();
+    if (companyId) await convex.mutation(api.companyBranding.setLogoHidden, { id: companyId, hidden });
+    else await convex.mutation(api.branding.setLogoHidden, { hidden });
+  } catch (cause) {
+    return { error: convexMessage(cause, "That could not be saved.") };
+  }
+  refreshBookingPages();
+  return {};
+}

@@ -48,12 +48,18 @@ const DAY = 24 * 60 * MINUTE;
  */
 function publicBrand(
   p: Doc<"profiles">,
-): { logo_url: string | null; color: string | null; background: string | null } | null {
+): { logo_url: string | null; logo_hidden: boolean; color: string | null; background: string | null } | null {
   if (!isPro(p)) return null;
   const logo = p.brand_logo_url ?? null;
   const color = p.brand_color ?? null;
   const background = p.brand_bg ?? null;
-  return logo || color || background ? { logo_url: logo, color, background } : null;
+  /* `hidden` counts as having a brand. Without it here, somebody who only
+     turned the mark off and set no colours would get a null brand and their
+     page would quietly show ours again. */
+  const hidden = p.brand_logo_hidden ?? false;
+  return logo || color || background || hidden
+    ? { logo_url: logo, logo_hidden: hidden, color, background }
+    : null;
 }
 
 export const getHost = query({
@@ -447,12 +453,16 @@ export const companyBrandForDomain = query({
     const logo = company.brand_logo_url ?? null;
     const color = company.brand_color ?? null;
     const background = company.brand_background ?? null;
+    const hidden = company.brand_logo_hidden ?? false;
 
     return {
       slug: company.slug,
       name: company.name,
       unbranded: true,
-      brand: logo || color || background ? { logo_url: logo, color, background } : null,
+      brand:
+        logo || color || background || hidden
+          ? { logo_url: logo, logo_hidden: hidden, color, background }
+          : null,
     };
   },
 });

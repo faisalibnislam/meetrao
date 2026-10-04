@@ -159,6 +159,18 @@ export default defineSchema({
     brand_logo_url: v.optional(nullableString),
     brand_logo_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
     /**
+     * True to show NO mark on the booking page, not even ours.
+     *
+     * A third state, distinct from having no logo of your own. Absent or
+     * false means the page falls back to the Meetrao mark, which is what
+     * every page did before this existed; true means a bare page.
+     *
+     * Paid for the same reason the badge is: taking our name off is the thing
+     * being bought. Written behind a Pro gate and read behind one too, so a
+     * page does not stay unmarked after a plan lapses.
+     */
+    brand_logo_hidden: v.optional(v.boolean()),
+    /**
      * The two colours a host picks: the accent, and the page background.
      *
      * `brand_bg` absent is NOT "use Meetrao's grey", convex/lib/brand.ts
@@ -235,6 +247,8 @@ export default defineSchema({
     brand_background: v.optional(nullableString),
     /** The wordmark across the top of this company's booking pages. */
     brand_logo_url: v.optional(nullableString),
+    /** True to show no mark at all, not even ours. See profiles below. */
+    brand_logo_hidden: v.optional(v.boolean()),
     brand_logo_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
     /**
      * A SQUARE mark, for the app's own chrome.
