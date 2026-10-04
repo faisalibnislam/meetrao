@@ -7,6 +7,8 @@ import { SearchField } from "@/components/ui/controls";
 import { EmptyState } from "@/components/ui/panels";
 import { BookingDialogs, type DialogState } from "./booking-dialogs";
 import type { BookingView } from "@/lib/data/bookings";
+import type { Elsewhere } from "@/lib/elsewhere";
+import { ElsewhereEmptyState } from "./elsewhere-empty";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -41,9 +43,15 @@ type Tab = "upcoming" | "past";
 
 export function BookingsScreen({
   bookings,
+  elsewhere = [],
+  here = "Personal",
   timezoneLabel,
 }: {
   bookings: BookingView[];
+  /** Where the bookings are when this workspace has none. */
+  elsewhere?: Elsewhere[];
+  /** The workspace in force, named so the empty state is about a place. */
+  here?: string;
   /** The host's own zone, named in the move dialog's fields. */
   timezoneLabel?: string;
 }) {
@@ -110,7 +118,13 @@ export function BookingsScreen({
         />
       </div>
 
-      {rows.length === 0 ? (
+      {/* Only when the account has no bookings in this workspace at all. A
+          search that matches nothing, or an empty Past tab beside a full
+          Upcoming one, is not a workspace problem and saying so would be
+          noise. */}
+      {rows.length === 0 && bookings.length === 0 && !q && elsewhere.length ? (
+        <ElsewhereEmptyState here={here} what="booking" found={elsewhere} />
+      ) : rows.length === 0 ? (
         <EmptyState
           title={q ? "No matches" : tab === "past" ? "Nothing in the past yet" : "No upcoming bookings"}
           text={

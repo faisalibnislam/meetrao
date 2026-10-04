@@ -8,6 +8,8 @@ import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState, TableCard } from "@/components/ui/panels";
+import type { Elsewhere } from "@/lib/elsewhere";
+import { ElsewhereEmptyState } from "./elsewhere-empty";
 import { StackedCell, Table, Td, Th, Tr } from "@/components/ui/table";
 import { useToast } from "@/components/ui/toast";
 import { deleteContact, importContacts, saveContact } from "@/lib/actions/contacts";
@@ -45,7 +47,17 @@ const PAGE_SIZES = [
 
 const BLANK = { name: "", email: "", phone: "", company: "", notes: "" };
 
-export function ContactsScreen({ contacts }: { contacts: ContactView[] }) {
+export function ContactsScreen({
+  contacts,
+  elsewhere = [],
+  here = "Personal",
+}: {
+  contacts: ContactView[];
+  /** Where the contacts are when this workspace has none. */
+  elsewhere?: Elsewhere[];
+  /** The workspace in force, named so the empty state is about a place. */
+  here?: string;
+}) {
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -206,7 +218,12 @@ export function ContactsScreen({ contacts }: { contacts: ContactView[] }) {
       </div>
 
       {/* ── the list ────────────────────────────────────────────────────── */}
-      {filtered.length === 0 ? (
+      {/* Only when there are none in this workspace at all. A search that
+          matches nothing is not a workspace problem, and saying so would be
+          noise on a screen that is working. */}
+      {filtered.length === 0 && contacts.length === 0 && elsewhere.length ? (
+        <ElsewhereEmptyState here={here} what="contact" found={elsewhere} />
+      ) : filtered.length === 0 ? (
         <EmptyState
           title={contacts.length ? "Nothing matches" : "No contacts yet"}
           text={

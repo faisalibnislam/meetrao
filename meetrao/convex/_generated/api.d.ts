@@ -46,6 +46,7 @@ import type * as lib_rateLimit from "../lib/rateLimit.js";
 import type * as lib_reminderEmail from "../lib/reminderEmail.js";
 import type * as lib_reminderWindow from "../lib/reminderWindow.js";
 import type * as lib_serialize from "../lib/serialize.js";
+import type * as lib_workspaces from "../lib/workspaces.js";
 import type * as lib_zoned from "../lib/zoned.js";
 import type * as lib_zones from "../lib/zones.js";
 import type * as maintenance from "../maintenance.js";
@@ -107,6 +108,7 @@ declare const fullApi: ApiFromModules<{
   "lib/reminderEmail": typeof lib_reminderEmail;
   "lib/reminderWindow": typeof lib_reminderWindow;
   "lib/serialize": typeof lib_serialize;
+  "lib/workspaces": typeof lib_workspaces;
   "lib/zoned": typeof lib_zoned;
   "lib/zones": typeof lib_zones;
   maintenance: typeof maintenance;
