@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
 import { EmptyState, TableCard } from "@/components/ui/panels";
+import { buttonClass } from "@/components/ui/button-class";
 import type { Elsewhere } from "@/lib/elsewhere";
 import { ElsewhereEmptyState } from "./elsewhere-empty";
 import { StackedCell, Table, Td, Th, Tr } from "@/components/ui/table";
@@ -46,6 +47,11 @@ const PAGE_SIZES = [
 ];
 
 const BLANK = { name: "", email: "", phone: "", company: "", notes: "" };
+
+/* The actions column stays put while the data scrolls under it. Its own
+   background, so rows do not show through, and a soft edge on the left so it
+   reads as sitting above the scrolling columns rather than beside them. */
+const STICKY_END = "sticky right-0 z-[1] shadow-[-10px_0_10px_-10px_rgba(26,25,23,0.18)]";
 
 export function ContactsScreen({
   contacts,
@@ -171,13 +177,20 @@ export function ContactsScreen({
           <Button variant="secondary" size={32} icon="upload" busy={busy} onClick={() => fileRef.current?.click()}>
             Import CSV
           </Button>
-          <a
-            href="/api/contacts/export"
-            className="unlink box-border inline-flex h-[32px] cursor-pointer items-center gap-[7px] rounded-[6px] border border-line-strong bg-surface px-[12px] text-[12.5px] font-semibold whitespace-nowrap text-ink hover:bg-fill"
-          >
-            <Icon name="download" size={12} />
-            Export CSV
-          </a>
+          {/* Disabled with nothing to export, rather than downloading an empty
+              file. A plain <a> on purpose: this is a download from an API
+              route, and <Link> would try to route to it and prefetch it. The
+              style is the shared secondary button's, not a hand copy. */}
+          {contacts.length === 0 ? (
+            <Button variant="secondary" size={32} icon="download" disabled>
+              Export CSV
+            </Button>
+          ) : (
+            <a href="/api/contacts/export" download className={buttonClass("secondary", 32, "unlink")}>
+              <Icon name="download" size={12} />
+              Export CSV
+            </a>
+          )}
           <Button variant="accent" size={32} icon="plus" onClick={() => setEditing({ ...BLANK })}>
             Add contact
           </Button>
@@ -264,12 +277,20 @@ export function ContactsScreen({
                   <Th>Last meeting</Th>
                   <Th>Next meeting</Th>
                   <Th>Company</Th>
-                  <Th align="right">Actions</Th>
+                  {/* Pinned to the right edge, as is its cell below. The table
+                      is 860px of data and scrolls sideways in anything
+                      narrower, which is fine for the data; the actions
+                      scrolling away with it was not, because at 1024 and on
+                      a phone the only way to edit somebody was to find a
+                      sideways scroll that macOS does not draw. */}
+                  <Th align="right" className={STICKY_END}>
+                    Actions
+                  </Th>
                 </tr>
               </thead>
               <tbody>
                 {shown.map((c) => (
-                  <Tr key={c.id}>
+                  <Tr key={c.id} className="group">
                     <Td>
                       <label className="flex cursor-pointer items-center" aria-label={`Select ${c.name || c.email}`}>
                         <input
@@ -296,7 +317,9 @@ export function ContactsScreen({
                       <span className="text-[12px] text-ink-2">{c.email}</span>
                     </Td>
                     <Td>
-                      <span className="text-[13px] text-ink-2">{c.phone || "–"}</span>
+                      {/* Never broken across lines: "+44 20 7946 / 0000" is two
+                          wrong numbers to anybody reading or copying it. */}
+                      <span className="text-[13px] whitespace-nowrap text-ink-2">{c.phone || "–"}</span>
                     </Td>
                     <Td>
                       <span className="text-[13px] whitespace-nowrap text-ink-2">{c.lastMeeting ?? "–"}</span>
@@ -309,7 +332,7 @@ export function ContactsScreen({
                     <Td>
                       <span className="text-[13px] text-ink-2">{c.company || "–"}</span>
                     </Td>
-                    <Td className="text-right">
+                    <Td className={cx("text-right", STICKY_END, "bg-surface group-hover:bg-fill")}>
                       <span className="inline-flex gap-[4px]">
                         <Button
                           variant="ghost"

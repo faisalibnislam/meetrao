@@ -70,7 +70,7 @@ export default async function SettingsPage({
 
   return (
     <AppScreen title="Settings">
-      <div className="mx-auto grid w-full max-w-[780px] grid-cols-[158px_minmax(0,1fr)] items-start gap-[34px] max-[820px]:flex max-[820px]:flex-col max-[820px]:gap-[18px]">
+      <div className="grid w-full max-w-[780px] grid-cols-[158px_minmax(0,1fr)] items-start gap-[34px] max-[820px]:flex max-[820px]:flex-col max-[820px]:gap-[18px]">
         <SettingsNav current={tab} tabs={tabs} />
 
         {/* Keyed by workspace so every panel starts again when it changes.

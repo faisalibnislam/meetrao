@@ -75,7 +75,13 @@ export default async function DashboardPage({
 
   // Avg. Reply time measures link-opened → booked. With nothing recorded yet
   // the card says so rather than showing an invented figure.
-  const hours = typeof replyMinutes === "number" ? (replyMinutes / 60).toFixed(1) : null;
+  const reply = typeof replyMinutes === "number" ? replyTime(replyMinutes) : null;
+
+  const copyTargets = active.map((m) => ({
+    id: m.id,
+    name: m.name,
+    link: bookingLink(profile.username, m.slug),
+  }));
 
   return (
     <DashboardScreen
@@ -87,13 +93,7 @@ export default async function DashboardPage({
         />
       }
       actions={
-        <CopyLinkControl
-          meetings={active.map((m) => ({
-            id: m.id,
-            name: m.name,
-            link: bookingLink(profile.username, m.slug),
-          }))}
-        />
+        <CopyLinkControl meetings={copyTargets} />
       }
     >
       <div className="flex flex-col gap-[24px]">
@@ -141,10 +141,10 @@ export default async function DashboardPage({
           <MetricCard
             icon="bolt"
             tone="amber"
-            value={hours ?? "–"}
-            unit={hours ? "hrs" : undefined}
+            value={reply?.value ?? "–"}
+            unit={reply?.unit}
             label="Avg. reply time"
-            note={hours ? "From link opened to booked" : "No booking-page views recorded yet"}
+            note={reply ? "From link opened to booked" : "No booking-page views recorded yet"}
           />
         </div>
 
@@ -167,18 +167,44 @@ export default async function DashboardPage({
           {later.length ? (
             <DashboardRows rows={later} variant="later" timezoneLabel={timezoneLabel(profile.timezone)} />
           ) : upcoming.length === 0 ? (
-            <EmptyState
-              title="No upcoming meetings"
-              text="Your scheduled meetings will appear here."
-              action={
-                <ButtonLink variant="accent" size={30} href="/meetings/new" icon="plus">
-                  Create meeting
-                </ButtonLink>
-              }
-            />
+            /* What is empty is BOOKINGS, not meetings. It said "No upcoming
+               meetings" beside a Create meeting button to somebody with two
+               meetings already live, which sent them to make a third when
+               what they needed was for someone to book the first two. */
+            active.length > 0 ? (
+              <EmptyState
+                title="No upcoming bookings"
+                text="Your links are live. Share one and bookings land here."
+                action={<CopyLinkControl meetings={copyTargets} />}
+              />
+            ) : (
+              <EmptyState
+                title="No upcoming bookings"
+                text="Nothing is bookable yet. Create a meeting and its link works straight away."
+                action={
+                  <ButtonLink variant="accent" size={30} href="/meetings/new" icon="plus">
+                    Create meeting
+                  </ButtonLink>
+                }
+              />
+            )
           ) : null}
         </section>
       </div>
     </DashboardScreen>
   );
+}
+
+/**
+ * A reply time in the unit a person would say it in.
+ *
+ * It was always hours to one decimal, so a booking made within a minute of
+ * the page opening read "0.0 hrs", which looks like a broken card rather than
+ * a very fast guest.
+ */
+function replyTime(minutes: number): { value: string; unit: string } {
+  if (minutes < 1) return { value: "<1", unit: "min" };
+  if (minutes < 60) return { value: String(Math.round(minutes)), unit: "min" };
+  if (minutes < 48 * 60) return { value: (minutes / 60).toFixed(1), unit: "hrs" };
+  return { value: String(Math.round(minutes / 1440)), unit: "days" };
 }

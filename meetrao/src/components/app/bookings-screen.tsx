@@ -8,6 +8,8 @@ import { EmptyState } from "@/components/ui/panels";
 import { BookingDialogs, type DialogState } from "./booking-dialogs";
 import type { BookingView } from "@/lib/data/bookings";
 import type { Elsewhere } from "@/lib/elsewhere";
+import type { ShareableLink } from "@/lib/workspace-links";
+import { CopyLinkControl } from "./copy-link";
 import { ElsewhereEmptyState } from "./elsewhere-empty";
 import { cx } from "@/lib/cx";
 
@@ -45,6 +47,7 @@ export function BookingsScreen({
   bookings,
   elsewhere = [],
   here = "Personal",
+  links = [],
   timezoneLabel,
 }: {
   bookings: BookingView[];
@@ -52,6 +55,8 @@ export function BookingsScreen({
   elsewhere?: Elsewhere[];
   /** The workspace in force, named so the empty state is about a place. */
   here?: string;
+  /** This workspace's live links, offered when nothing is booked yet. */
+  links?: ShareableLink[];
   /** The host's own zone, named in the move dialog's fields. */
   timezoneLabel?: string;
 }) {
@@ -132,8 +137,14 @@ export function BookingsScreen({
               ? "No booking matches that guest or email."
               : tab === "past"
                 ? "Meetings move here once they have happened."
-                : "New bookings will appear here as guests book."
+                : links.length
+                  ? "Your links are live. Share one and bookings land here."
+                  : "New bookings will appear here as guests book."
           }
+          /* What to do next, not only what is missing. The same answer the
+             dashboard gives: an empty Upcoming list with live links means
+             nobody has been sent one yet. */
+          action={!q && tab !== "past" && links.length ? <CopyLinkControl meetings={links} /> : undefined}
         />
       ) : (
         <div className="flex flex-col gap-[20px]">

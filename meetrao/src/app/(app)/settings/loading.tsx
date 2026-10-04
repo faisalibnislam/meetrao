@@ -7,7 +7,7 @@ export default function Loading() {
   return (
     <AppScreen title="Settings">
       <BodySkeleton>
-        <div className="mx-auto grid w-full max-w-[780px] grid-cols-[158px_minmax(0,1fr)] items-start gap-[34px] max-[820px]:flex max-[820px]:flex-col max-[820px]:gap-[18px]">
+        <div className="grid w-full max-w-[780px] grid-cols-[158px_minmax(0,1fr)] items-start gap-[34px] max-[820px]:flex max-[820px]:flex-col max-[820px]:gap-[18px]">
           <div className="flex flex-col gap-[10px] max-[820px]:flex-row max-[820px]:flex-wrap">
             {[86, 72, 94, 64].map((w) => (
               <Bar key={w} w={w} h={13} />

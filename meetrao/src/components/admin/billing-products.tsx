@@ -127,7 +127,7 @@ function PlanProducts({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[560px] flex-col gap-[12px] pt-[26px]">
+    <div className="flex w-full max-w-[560px] flex-col gap-[12px] pt-[26px]">
       <SectionHeading
         title={title}
         meta={ready ? undefined : "Not set up"}

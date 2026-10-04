@@ -3,7 +3,8 @@ import { signOut } from "@/lib/actions/auth";
 import { unreadNotifications } from "@/lib/data/notifications";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
-import { bookingLink, companyBookingLink } from "@/lib/username";
+import { workspaceLinks } from "@/lib/workspace-links";
+import { placeOf } from "@/lib/data/links";
 import type { MeetingType, Profile } from "@/lib/types";
 import { isPaid } from "@/convex/lib/plan";
 import { activeContext, contextChoices } from "@/lib/data/context";
@@ -51,16 +52,7 @@ export async function AppShell({
      That address listed somebody's meetings and no longer exists, so the rail
      would have been handing out a link to a 404. */
   const here = contexts.find((c) => c.id === context.companyId) ?? null;
-  const links: BookingLink[] = active
-    .filter((m) => (m.company_id ?? null) === context.companyId)
-    .map((m) => ({
-      id: m.id,
-      name: m.name,
-      link:
-        here && here.slug
-          ? companyBookingLink({ slug: here.slug, domain: here.domain, domainVerified: here.domainVerified }, here.handle ?? profile.username, m.slug)
-          : bookingLink(profile.username, m.slug),
-    }));
+  const links: BookingLink[] = workspaceLinks(active, placeOf(here), profile.username);
 
   const items: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: "house" },

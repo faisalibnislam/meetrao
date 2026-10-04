@@ -9,7 +9,7 @@ import {
   getMeetingOverrides,
   getSeatMap,
   getPublicHost,
-  getPublicMeetings,
+  getPublicMeeting,
 } from "@/lib/data/public-booking";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
@@ -51,25 +51,30 @@ export async function MeetingPage({
   /** Already resolved by the route, from the path or from the hostname. */
   company: CompanyContext | null;
 }) {
-  const host = await getPublicHost(username);
+  /* TWO PHASES, NOT A CHAIN. Every read here was awaited one after the other,
+     up to nine database round trips in sequence, and the app's functions sit
+     a long way from the database, so each one was a cross-region hop that
+     everything after it waited for. This is the page every guest sees, which
+     makes it the one where the wait cost the most.
+
+     Phase one is everything that needs only the address. Phase two is
+     everything that needs the host or the meeting from phase one. Nothing in
+     either phase depends on anything else in the same phase. */
+  const [host, meeting, onCompany] = await Promise.all([
+    getPublicHost(username),
+    getPublicMeeting(username, slug),
+    /* A company's address serves only that company's meetings. Without this,
+       a guest who guessed a slug could reach a member's PERSONAL meeting
+       through somebody else's branded address, which is the whole thing
+       company scoping exists to prevent. */
+    company ? meetingIsOnCompany(username, slug, company.slug) : Promise.resolve(true),
+  ]);
   if (!host) notFound();
-
-  const meeting = (await getPublicMeetings(username)).find(
-    (m) => m.slug === slug,
-  );
   if (!meeting) notFound();
-
-  /* A company's address serves only that company's meetings. Without this, a
-     guest who guessed a slug could reach a member's PERSONAL meeting through
-     somebody else's branded address, which is the whole thing company scoping
-     exists to prevent. */
-  if (company && !(await meetingIsOnCompany(username, meeting.slug, company.slug))) notFound();
+  if (!onCompany) notFound();
 
   const brand = company ? company.brand : host.brand;
   const unbranded = company ? company.unbranded : host.unbranded;
-
-  const availability = await getMeetingAvailability(meeting.id);
-  const overrides = await getMeetingOverrides(meeting.id);
 
   // The first paint is rendered in the host's zone, because the server cannot
   // know the guest's. The client corrects it on mount.
@@ -85,23 +90,26 @@ export async function MeetingPage({
     .map(Number);
 
   const [year, month, day] = today;
+  const windowStart = new Date(Date.UTC(year, month - 1, 1) - DAY);
+  const windowEnd = new Date(Date.UTC(year, month, 1) + DAY);
 
-  const { busy } = await getBusy(
-    host.id,
-    new Date(Date.UTC(year, month - 1, 1) - DAY),
-    new Date(Date.UTC(year, month, 1) + DAY),
-    // A workshop's own seats are not conflicts with themselves.
-    meeting.capacity > 1 ? meeting.id : undefined,
-  );
-
-  const seats =
-    meeting.capacity > 1
-      ? await getSeatMap(
-          meeting.id,
-          new Date(Date.UTC(year, month - 1, 1) - DAY),
-          new Date(Date.UTC(year, month, 1) + DAY),
-        )
-      : {};
+  const [availability, overrides, { busy }, seats, pageViewId] = await Promise.all([
+    getMeetingAvailability(meeting.id),
+    getMeetingOverrides(meeting.id),
+    getBusy(
+      host.id,
+      windowStart,
+      windowEnd,
+      // A workshop's own seats are not conflicts with themselves.
+      meeting.capacity > 1 ? meeting.id : undefined,
+    ),
+    meeting.capacity > 1 ? getSeatMap(meeting.id, windowStart, windowEnd) : Promise.resolve({} as Record<string, number>),
+    // Records that the page was opened, which is what "Avg. Reply time" measures.
+    convexAnonymous().mutation(api.publicBooking.recordPageView, {
+      hostId: host.id,
+      meetingTypeId: meeting.id,
+    }),
+  ]);
 
   const shared = {
     guestTimezone: host.timezone,
@@ -125,12 +133,6 @@ export async function MeetingPage({
     .map((d) => d.toISOString())
     // A full slot is not on offer, however free the host's calendar looks.
     .filter((iso) => meeting.capacity <= 1 || (seats[iso] ?? 0) < meeting.capacity);
-
-  // Records that the page was opened, which is what "Avg. Reply time" measures.
-  const pageViewId = await convexAnonymous().mutation(api.publicBooking.recordPageView, {
-    hostId: host.id,
-    meetingTypeId: meeting.id,
-  });
 
   return (
     <BrandScope brand={brand}>

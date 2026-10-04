@@ -78,8 +78,15 @@ export function MeetingsTable({
   };
 
   return (
-    <div className="flex flex-col gap-[12px]">
-      <TableCard className="max-[640px]:hidden">
+    /* THE SPACE THIS HAS, not the size of the screen. It switched to cards
+       below a 640px VIEWPORT, but the sidebar appears at 820 and takes its
+       share, so from 820 up to about 1160 the table was wider than the room
+       left for it: at 860 the Edit button sat 182px past the card's edge,
+       behind a sideways scroll that macOS does not even draw. A container
+       query asks the question that matters, which is whether the table fits
+       where it is. */
+    <div className="@container flex flex-col gap-[12px]">
+      <TableCard className="@max-[800px]:hidden">
         <Table minWidth={640}>
           <thead>
             <tr>
@@ -156,7 +163,7 @@ export function MeetingsTable({
         </Table>
       </TableCard>
 
-      <div className="hidden flex-col gap-[10px] max-[640px]:flex">
+      <div className="hidden flex-col gap-[10px] @max-[800px]:flex">
         {meetings.map((m) => (
           <div key={m.id} className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-surface p-[14px]">
             <div className="flex items-start justify-between gap-[12px]">

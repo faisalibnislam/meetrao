@@ -28,8 +28,13 @@ const MEETINGS_ACTION = read("src/lib/actions/meetings.ts");
 const SWITCHER = read("src/components/app/workspace-menu.tsx");
 
 describe("the cookie is checked, not trusted", () => {
+  /* Still every request. Both helpers are wrapped in React's cache(), which
+     is scoped to one server request: the cookie is re-checked against real
+     memberships on each request, just not five times within one. A removed
+     member stops being able to select the company on their next request. */
   it("validates on every read", () => {
-    const fn = CONTEXT.slice(CONTEXT.indexOf("export async function activeContext"));
+    const fn = CONTEXT.slice(CONTEXT.indexOf("async function activeContext"));
+    expect(CONTEXT, "memoised per request, not across them").toContain('import { cache } from "react";');
     expect(fn).toContain("contextChoices()");
     expect(fn).toContain("choices.find((c) => c.id === wanted)");
   });
@@ -37,7 +42,7 @@ describe("the cookie is checked, not trusted", () => {
   /* A company somebody was removed from must stop being selectable the moment
      they are removed, not the next time they switch. */
   it("falls back to personal when the cookie names a company they are not in", () => {
-    const fn = CONTEXT.slice(CONTEXT.indexOf("export async function activeContext"));
+    const fn = CONTEXT.slice(CONTEXT.indexOf("async function activeContext"));
     expect(fn).toContain('{ companyId: null, name: "Personal" }');
   });
 
@@ -47,7 +52,7 @@ describe("the cookie is checked, not trusted", () => {
   });
 
   it("builds its choices from real memberships", () => {
-    const fn = CONTEXT.slice(CONTEXT.indexOf("export async function contextChoices"));
+    const fn = CONTEXT.slice(CONTEXT.indexOf("async function contextChoices"));
     expect(fn).toContain("api.companies.mine");
   });
 

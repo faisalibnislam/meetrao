@@ -111,7 +111,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
   const ok = status === "ok";
   const note = changed
     ? usernameNote(status, username, ideas.length > 0) || "Checking availability…"
-    : "This is your current link.";
+    : `Your links are meetrao.com/${profile.username}/ and the meeting's name.`;
 
   return (
     <div className="flex flex-col gap-[15px]">
@@ -148,7 +148,7 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
 
         <div className="flex flex-col gap-[6px]">
           <label htmlFor="prof-link" className="text-[12.5px] font-semibold text-ink">
-            Your booking link
+            Link name
           </label>
 
           <div

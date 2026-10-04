@@ -28,7 +28,7 @@ export function AdminSettingsForm({
   const [saved, setSaved] = useState(false);
 
   return (
-    <div className="mx-auto flex w-full max-w-[560px] flex-col gap-[20px]">
+    <div className="flex w-full max-w-[560px] flex-col gap-[20px]">
       <section className="flex flex-col gap-[14px] border-b border-line pb-[20px]">
         <PanelHeading title="Platform" subtitle="Shown to every user of this workspace." />
 

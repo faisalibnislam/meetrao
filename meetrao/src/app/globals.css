@@ -173,9 +173,27 @@
   }
 }
 
-*:focus-visible {
+/* KEYBOARD FOCUS. Was a 3px halo at 12% black, which is about 1.3:1 against
+   a white button and close to invisible around the dark accent one: every
+   button and link in the product failed WCAG's focus-appearance contrast.
+
+   A 2px ring in the accent, offset by 2px so it reads against filled buttons
+   as well as white ones. An OUTLINE rather than a box-shadow, so it neither
+   replaces a card's own shadow while focused nor ignores its corner radius.
+   --accent-ink rather than --accent: on a branded booking page it is rebound
+   to the host's colour already darkened to 4.5:1, so the ring stays visible
+   whatever colour they picked. */
+:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+/* Text fields signal focus their own way, an accent border and a soft halo
+   set in src/components/ui/controls.tsx, and they match :focus-visible on
+   every click, not only from the keyboard. A ring on top would only thicken
+   a field somebody is typing in. */
+:where(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]), textarea, select):focus-visible {
   outline: none;
-  box-shadow: var(--ring);
 }
 
 /* ── Motion ───────────────────────────────────────────────────────────────── */

@@ -3,7 +3,7 @@ import { OG_IMAGE } from "@/lib/seo";
 import { companyForRequest, publicUrl } from "@/lib/public-origin";
 import { permanentRedirect } from "next/navigation";
 import { MeetingPage } from "@/components/booking/meeting-page";
-import { companyPlaceOf, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { companyPlaceOf, getPublicHost, getPublicMeeting } from "@/lib/data/public-booking";
 
 export const dynamic = "force-dynamic";
 
@@ -13,13 +13,11 @@ export async function generateMetadata({
   params: Promise<{ username: string; slug: string }>;
 }): Promise<Metadata> {
   const { username, slug } = await params;
-  const host = await getPublicHost(username);
+  // Together, and memoised, so the page reuses both rather than asking again.
+  const [host, meeting] = await Promise.all([getPublicHost(username), getPublicMeeting(username, slug)]);
   if (!host)
     return { title: "Not found", robots: { index: false, follow: false } };
 
-  const meeting = (await getPublicMeetings(username)).find(
-    (m) => m.slug === slug,
-  );
   if (!meeting)
     return { title: "Book a time", robots: { index: false, follow: false } };
 
@@ -71,6 +69,11 @@ export default async function BookingPage({
      Not on a custom domain, where this path IS the company's address after
      the proxy has rewritten it. */
   if (!company) {
+    /* The page's first reads start NOW, while this decides whether to send
+       the guest on. They are memoised, so the page picks up the same calls
+       already in flight instead of starting them after this one returns. */
+    void getPublicHost(username);
+    void getPublicMeeting(username, slug);
     const place = await companyPlaceOf(username, slug);
     if (place) permanentRedirect(`/${place.companySlug}/${place.handle}/${slug}`);
   }

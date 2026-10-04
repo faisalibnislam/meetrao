@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { cookies } from "next/headers";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
@@ -53,7 +54,10 @@ export type ContextChoice = {
  * a company is what gives you a page on its domain, so it has to be somewhere
  * you can switch to.
  */
-export async function contextChoices(): Promise<ContextChoice[]> {
+export const contextChoices = cache(async function contextChoices(): Promise<ContextChoice[]> {
+  /* cache(), once per request. The rail, the page and every data loader ask
+     this, and without it each one re-ran companies.mine, a query that looks up
+     every member's profile, several times over and partly in sequence. */
   const convex = await convexServer();
   const data = await convex.query(api.companies.mine, {});
   return [
@@ -78,10 +82,10 @@ export async function contextChoices(): Promise<ContextChoice[]> {
       handle: c.handle,
     })),
   ];
-}
+});
 
 /** The context in force, after checking the cookie against real memberships. */
-export async function activeContext(): Promise<WorkContext> {
+export const activeContext = cache(async function activeContext(): Promise<WorkContext> {
   const jar = await cookies();
   const wanted = jar.get(CONTEXT_COOKIE)?.value ?? null;
   if (!wanted) return { companyId: null, name: "Personal" };
@@ -90,4 +94,4 @@ export async function activeContext(): Promise<WorkContext> {
   const found = choices.find((c) => c.id === wanted);
   // A cookie naming a company they are not in reads as personal, not as an error.
   return found && found.id ? { companyId: found.id, name: found.name } : { companyId: null, name: "Personal" };
-}
+});
