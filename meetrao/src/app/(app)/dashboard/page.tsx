@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DashboardScreen } from "@/components/app/app-screen";
+import { CompanyDashboard, CompanyDashboardHeader } from "@/components/app/company-dashboard";
 import { DashboardHeader } from "@/components/app/dashboard-header";
 import { DashboardRows } from "@/components/app/dashboard-rows";
 import { CopyLinkControl } from "@/components/app/copy-link";
@@ -11,6 +12,8 @@ import { GoogleG } from "@/components/ui/logo";
 import { formatTime } from "@/lib/booking/time";
 import { listBookings } from "@/lib/data/bookings";
 import { requireOnboardedSession } from "@/lib/data/session";
+import { activeContext } from "@/lib/data/context";
+import { companyAnalytics } from "@/lib/data/company-analytics";
 import { timezoneLabel } from "@/lib/timezones";
 import { connectionStatus } from "@/lib/google/connection";
 import { convexServer } from "@/lib/convex/server";
@@ -20,10 +23,33 @@ import type { MeetingType } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-export default async function DashboardPage() {
+/* Two dashboards behind one address, chosen by the workspace in force.
+
+   A company's dashboard is not this one with a filter on it: the question
+   changes from "what am I doing today" to "what is this company doing, and
+   who is doing it", and the second has no use for a copy-link control or a
+   Google connection notice. */
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ days?: string }>;
+}) {
   const { profile } = await requireOnboardedSession();
-  const convex = await convexServer();
+  const context = await activeContext();
   const zone = profile.timezone;
+
+  if (context.companyId) {
+    const asked = Number((await searchParams).days);
+    const days = asked === 7 || asked === 90 ? asked : 30;
+    const data = await companyAnalytics(context.companyId, zone, days);
+    return (
+      <DashboardScreen header={<CompanyDashboardHeader name={data.companyName} days={data.days} />}>
+        <CompanyDashboard data={data} timezone={zone} />
+      </DashboardScreen>
+    );
+  }
+
+  const convex = await convexServer();
 
   const [bookings, meetingRows, calendar, replyMinutes] = await Promise.all([
     // The dashboard shows what is next; it has never rendered a past booking.
