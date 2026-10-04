@@ -38,7 +38,7 @@ function isOwnHost(hostname: string): boolean {
  * Always https for a custom domain: a domain only resolves here once it is
  * verified, and Vercel issues a certificate as part of that.
  */
-export async function publicOrigin(): Promise<string> {
+async function publicOrigin(): Promise<string> {
   const list = await headers();
   const header = list.get("host") ?? "";
   // Strip the port, which is present in dev and on nothing else.

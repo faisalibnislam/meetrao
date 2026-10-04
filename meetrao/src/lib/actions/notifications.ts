@@ -24,7 +24,7 @@ async function attempt(work: () => Promise<unknown>): Promise<NotificationResult
 }
 
 export async function markAllRead(): Promise<NotificationResult> {
-  const session = await requireSession();
+  await requireSession();
 
   const result = await attempt(async () => (await convexServer()).mutation(api.notifications.markAllRead, {}));
 
@@ -35,7 +35,7 @@ export async function markAllRead(): Promise<NotificationResult> {
 }
 
 export async function markRead(id: string, read: boolean): Promise<NotificationResult> {
-  const session = await requireSession();
+  await requireSession();
 
   const result = await attempt(async () => (await convexServer()).mutation(api.notifications.markRead, { id, read }));
 
@@ -46,7 +46,7 @@ export async function markRead(id: string, read: boolean): Promise<NotificationR
 
 /** Clears what has been read, leaving anything unseen alone. */
 export async function clearRead(): Promise<NotificationResult> {
-  const session = await requireSession();
+  await requireSession();
 
   const result = await attempt(async () => (await convexServer()).mutation(api.notifications.clearRead, {}));
 

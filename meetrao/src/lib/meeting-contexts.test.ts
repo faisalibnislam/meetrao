@@ -32,7 +32,6 @@ const MEETING_TYPES = read("convex/meetingTypes.ts");
 /* The body moved out of the route when a company got its own address:
    three addresses now render one shared component. */
 const PAGE = read("src/components/booking/meeting-page.tsx");
-const ROUTE = read("src/app/(public)/[username]/[slug]/page.tsx");
 const BACKFILL = read("convex/companiesBackfill.ts");
 
 describe("a company domain serves only its own meetings", () => {

@@ -1,7 +1,7 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { fail } from "./lib/errors";
 import { v } from "convex/values";
-import { optionalProfile, requireProfile, AuthError } from "./lib/auth";
+import { optionalProfile, requireProfile } from "./lib/auth";
 import { profileOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
 import { requirePro } from "./lib/plan";

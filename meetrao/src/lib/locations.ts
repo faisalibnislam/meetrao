@@ -37,8 +37,3 @@ export const LOCATION_OPTIONS: { value: LocationKind; label: string; hint: strin
   { value: "custom", label: "Something else", hint: "Zoom, Teams, a note: whatever you tell guests." },
 ];
 
-/** The label on the button that opens a meeting, when there is one to open. */
-export function joinLabel(kind: string, meetUrl: string | null): string | null {
-  if (kind === "google_meet") return meetUrl ? "Join Google Meet" : null;
-  return null;
-}

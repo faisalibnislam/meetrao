@@ -7,7 +7,7 @@ import { uuid } from "./lib/ids";
 import { findOverlap, insertBooking, moveBooking } from "./bookings";
 import { overridesForMeeting, rulesForMeeting } from "./availability";
 import { membersOf } from "./teams";
-import { isPro, planOf } from "./lib/plan";
+import { isPro } from "./lib/plan";
 import type { Doc } from "./_generated/dataModel";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity } from "./lib/effects";

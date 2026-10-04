@@ -338,7 +338,7 @@ export async function savePlatformSettings(input: {
 }
 
 export async function saveAdminAccount(input: { fullName: string }): Promise<AdminResult> {
-  const admin = await requireAdmin();
+  await requireAdmin();
   try {
     await (await convexServer()).mutation(api.profiles.updateOwn, { full_name: input.fullName.trim() });
   } catch (cause) {

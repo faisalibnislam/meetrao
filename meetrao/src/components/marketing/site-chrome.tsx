@@ -14,7 +14,7 @@ import { POSTAL_ADDRESS } from "@/lib/contact";
 
 /** Where "see a booking page" points. Unset, the CTA offers the walkthrough
     instead of promising a demo that does not exist. */
-export function demoBookingPath(): string | null {
+function demoBookingPath(): string | null {
   return process.env.NEXT_PUBLIC_DEMO_BOOKING_PATH || null;
 }
 

@@ -114,7 +114,7 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
 
 /** The switch in the table. Toggling is its own action so it needs no form. */
 export async function setMeetingActive(id: string, active: boolean): Promise<MeetingResult> {
-  const session = await requireSession();
+  await requireSession();
   try {
     const convex = await convexServer();
     await convex.mutation(api.meetingTypes.update, { id, is_active: active });

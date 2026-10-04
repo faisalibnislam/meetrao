@@ -24,7 +24,7 @@ export function Help({ children, id, className }: { children: ReactNode; id?: st
 
 /* Inline validation. Red text with a solid warning glyph, shown only after a
    submit attempt (touched semantics). */
-export function FieldError({ children }: { children: ReactNode }) {
+function FieldError({ children }: { children: ReactNode }) {
   return (
     <span className="flex items-center gap-[6px] text-[12px] text-red">
       <Icon name="triangle-exclamation" weight="solid" size={10} />

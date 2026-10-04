@@ -7,6 +7,7 @@ import type { Booking } from "@/lib/types";
 import { activeContext } from "@/lib/data/context";
 import { namedElsewhere } from "@/lib/data/elsewhere";
 import type { Elsewhere } from "@/lib/elsewhere";
+import { dateFormat } from "@/lib/intl";
 
 /* Bookings, shaped for the screens. Labels are formatted here, in the host's
    own timezone, so the client components stay presentational and no screen has
@@ -58,13 +59,13 @@ export function toView(row: Booking, timeZone: string, now: Date): BookingView {
     duration: row.duration_minutes,
     startsAt: row.starts_at,
     dayLabel: formatDayLabel(start, timeZone, now),
-    dateKey: new Intl.DateTimeFormat("en-CA", {
+    dateKey: dateFormat("en-CA", {
       timeZone,
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     }).format(start),
-    dayHeading: new Intl.DateTimeFormat("en-GB", {
+    dayHeading: dateFormat("en-GB", {
       timeZone,
       weekday: "short",
       day: "numeric",
@@ -157,9 +158,3 @@ export async function listBookingsForScreen(
   return { bookings: views, elsewhere: await namedElsewhere(elsewhere, context) };
 }
 
-export async function getBooking(hostId: string, bookingId: string, timeZone: string) {
-  void hostId; // the query is scoped by the caller's own identity
-  const convex = await convexServer();
-  const row = await convex.query(api.bookings.getForHost, { id: bookingId });
-  return row ? toView(row as unknown as Booking, timeZone, new Date()) : null;
-}

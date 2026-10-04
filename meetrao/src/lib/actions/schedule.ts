@@ -80,7 +80,7 @@ function normalise(invitees: { name: string; email: string }[]) {
 }
 
 export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleResult> {
-  const { userId, profile } = await requireOnboardedSession();
+  const { profile } = await requireOnboardedSession();
 
   const cleaned = normalise(input.invitees);
   if (cleaned.error) return { error: cleaned.error };
@@ -110,7 +110,6 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
   if (!Number.isInteger(input.time) || input.time < 0 || input.time > 1439) return { error: "Pick a time." };
 
   const start = zonedInstant({ year, month, day }, input.time, profile.timezone);
-  const end = new Date(start.getTime() + duration * 60_000);
   if (start.getTime() < Date.now()) return { error: "That time has already passed." };
 
   const guest = invitees[0];

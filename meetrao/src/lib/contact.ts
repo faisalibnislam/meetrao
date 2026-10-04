@@ -35,12 +35,3 @@ export const POSTAL_ADDRESS = "44/A Judge Court Road, Cumilla 3500, Bangladesh";
  */
 export const SUPPORT_EMAIL = "hello@meetrao.com";
 
-/**
- * How Meetrao describes its operator in legal text.
- *
- * A sole proprietorship, deliberately not a person's name: the service is
- * identified by its name, its address and its support address. If Meetrao ever
- * incorporates, this is the one line to change. The Terms and the Privacy
- * Policy both read from it.
- */
-export const OPERATOR = "Meetrao, an independently operated service";

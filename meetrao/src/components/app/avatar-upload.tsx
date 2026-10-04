@@ -19,11 +19,9 @@ const MAX_BYTES = 2 * 1024 * 1024;
 const ACCEPT = "image/png,image/jpeg,image/webp,image/gif";
 
 export function AvatarUpload({
-  userId,
   name,
   initialUrl,
 }: {
-  userId: string;
   name: string;
   initialUrl: string | null;
 }) {
