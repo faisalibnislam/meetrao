@@ -22,9 +22,29 @@ describe("every guest-facing page", () => {
     expect(pages.length).toBeGreaterThanOrEqual(6);
   });
 
+  /* The two booking routes render one shared component: three addresses lead
+     to the same page. Following the delegation keeps this as strict, because
+     the component is checked on its own below. */
+  const DELEGATES_TO = "<MeetingPage";
+
   it.each(pages)("%s renders the public footer", (file) => {
     const text = readFileSync(path.join(APP, file), "utf8");
+    if (text.includes(DELEGATES_TO)) return;
     expect(text, `${file} has no footer, so no Terms or Privacy link`).toContain("<PublicFooter");
+  });
+
+  it("the shared booking page carries it for the routes that delegate", () => {
+    const shared = readFileSync(
+      path.join(process.cwd(), "src/components/booking/meeting-page.tsx"),
+      "utf8",
+    );
+    expect(shared).toContain("<PublicFooter");
+    expect(shared).toMatch(/(<>\s|<BrandScope)/);
+
+    const delegating = pages.filter((f) =>
+      readFileSync(path.join(APP, f), "utf8").includes(DELEGATES_TO),
+    );
+    expect(delegating.length, "both booking routes render it").toBe(2);
   });
 });
 
@@ -61,6 +81,8 @@ describe("the layout stacks what the pages return", () => {
 
   it.each(pages)("%s returns its content and the footer as siblings", (file) => {
     const text = readFileSync(path.join(APP, file), "utf8");
+    // Checked on the shared component instead, in the block above.
+    if (text.includes("<MeetingPage")) return;
     /* A fragment, or <BrandScope>, which is a fragment with CSS variables on
        it. BrandScope renders `display: contents`, so it introduces no box and
        the card and footer are still the layout column's own children, exactly
@@ -98,14 +120,17 @@ describe("the badge", () => {
        page wears the COMPANY's brand, so the badge follows the company's
        entitlement and not the member's. A free member of a Business company
        must not get a "Powered by Meetrao" badge on their owner's domain. */
-    const byUsername = ["(public)/[username]/[slug]/page.tsx"];
-    for (const file of byUsername) {
-      const text = readFileSync(path.join(APP, file), "utf8");
-      expect(text).toContain("badge={!unbranded}");
-      expect(text, "the badge must follow the brand actually shown").toContain(
-        "const unbranded = company ? company.unbranded : host.unbranded;",
-      );
-    }
+    /* Moved with the page body: every booking address now renders one shared
+       component, so this is asserted where it lives rather than on each of
+       the routes that delegate to it. */
+    const text = readFileSync(
+      path.join(process.cwd(), "src/components/booking/meeting-page.tsx"),
+      "utf8",
+    );
+    expect(text).toContain("badge={!unbranded}");
+    expect(text, "the badge must follow the brand actually shown").toContain(
+      "const unbranded = company ? company.unbranded : host.unbranded;",
+    );
 
     const byReference = globSync("(public)/booking/**/page.tsx", { cwd: APP });
     expect(byReference.length).toBeGreaterThanOrEqual(4);

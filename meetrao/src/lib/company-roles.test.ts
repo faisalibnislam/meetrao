@@ -207,12 +207,17 @@ describe("the links on the screen", () => {
     expect(body, "a personal meeting is not published on this domain").toContain("company.id");
   });
 
-  /* An unverified domain does not resolve yet, so showing it would be showing
-     an address that 404s. */
-  it("fall back to meetrao.com until the domain is verified", () => {
-    const body = PANEL.slice(PANEL.indexOf("function linkFor"));
-    expect(body).toContain("company.domain && company.domainVerified");
-    expect(body).toContain("${siteHost}/${member.username}/${meetingSlug}");
+  /* THE COMPANY'S ADDRESS, never the member's personal one. This used to fall
+     back to meetrao.com/<username>/<meeting> when there was no verified
+     domain, which showed somebody their own link and called it the company's.
+     A company and the people in it are different things with different
+     links. */
+  it("are the company's, not the host's", () => {
+    const body = PANEL.slice(PANEL.indexOf("function linkFor"), PANEL.indexOf("export function CompaniesPanel"));
+    expect(body).toContain("companyBookingLink(company, member.handle, meetingSlug)");
+    expect(body, "a username here is the personal link wearing a company's name").not.toContain(
+      "member.username",
+    );
   });
 });
 

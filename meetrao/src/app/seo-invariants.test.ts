@@ -243,7 +243,10 @@ describe("page titles", () => {
          authored. There is no fixed path to render and no fixed title to
          assert, so they carry their canonical in generateMetadata and are
          checked by the noindex block above instead. */
-      .filter((p) => !p.file.includes("[username]") && !p.file.includes("/team/"))
+      .filter(
+        (p) =>
+          !p.file.includes("[username]") && !p.file.includes("/team/"),
+      )
       .map((p) => p.file)
       .sort();
 

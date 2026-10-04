@@ -6,7 +6,6 @@ import type { AssignableMeeting, TeamView } from "@/components/app/team-panel";
 import type { HookView, KeyView } from "@/components/app/developer-panel";
 import type { DomainView, PlanView, TimingView } from "@/components/app/billing-panel";
 import { isPaid } from "@/convex/lib/plan";
-import { siteUrl } from "@/lib/env";
 import type { CompanyRole, CompanyView } from "@/components/app/companies-panel";
 import type { Plan } from "@/convex/lib/plan";
 import { activeContext } from "@/lib/data/context";
@@ -179,7 +178,6 @@ export async function companiesPanelData(): Promise<{
   companyLimit: number;
   canCreate: boolean;
   plan: Plan;
-  siteHost: string;
 }> {
   const convex = await convexServer();
   const data = await convex.query(api.companies.mine, {});
@@ -226,7 +224,6 @@ export async function companiesPanelData(): Promise<{
     companyLimit: data.company_limit,
     canCreate: data.can_create,
     plan: data.plan as Plan,
-    siteHost: new URL(siteUrl()).host,
   };
 }
 

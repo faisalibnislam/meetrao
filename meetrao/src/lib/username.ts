@@ -105,6 +105,28 @@ export function bookingLink(username: string, slug?: string): string {
   return slug ? `meetrao.com/${username}/${slug}` : `meetrao.com/${username}`;
 }
 
+/**
+ * Where a COMPANY's meeting lives, which is not where its host's own does.
+ *
+ * A personal meeting is at meetrao.com/<username>/<meeting>. A company's is
+ * at meetrao.com/<company>/<handle>/<meeting>, or on the company's own domain
+ * once that is verified, and the two must never be shown in place of each
+ * other: a company and the people in it are different things with different
+ * links, which is the whole point of a company having a domain at all.
+ *
+ * An UNVERIFIED domain does not resolve yet, so it is not offered. Showing it
+ * would be handing somebody an address that 404s.
+ */
+export function companyBookingLink(
+  company: { slug: string; domain: string | null; domainVerified: boolean },
+  handle: string,
+  slug: string,
+): string {
+  return company.domain && company.domainVerified
+    ? `${company.domain}/${handle}/${slug}`
+    : `meetrao.com/${company.slug}/${handle}/${slug}`;
+}
+
 export function slugify(name: string): string {
   return name
     .toLowerCase()

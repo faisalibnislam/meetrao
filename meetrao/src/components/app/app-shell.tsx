@@ -3,7 +3,7 @@ import { signOut } from "@/lib/actions/auth";
 import { unreadNotifications } from "@/lib/data/notifications";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
-import { bookingLink } from "@/lib/username";
+import { bookingLink, companyBookingLink } from "@/lib/username";
 import type { MeetingType, Profile } from "@/lib/types";
 import { isPaid } from "@/convex/lib/plan";
 import { activeContext, contextChoices } from "@/lib/data/context";
@@ -37,18 +37,30 @@ export async function AppShell({
     activeContext(),
   ]);
 
-  const active = meetingRows as Pick<MeetingType, "id" | "name" | "slug">[];
+  const active = meetingRows as Pick<MeetingType, "id" | "name" | "slug" | "company_id">[];
 
-  /* Mirrors CopyLinkControl: one row per active meeting, and nothing else.
+  /* THE WORKSPACE IN FORCE, and only it. The rail used to list every active
+     meeting whatever workspace you were standing in, so somebody in Personal
+     was handed their company's links and somebody in a company was handed
+     their own. A company and the people in it are different things with
+     different links; mixing them here made the rail disagree with the
+     Meetings screen, which has always been scoped.
 
+     Mirrors CopyLinkControl: one row per active meeting, and nothing else.
      There used to be an "All meetings" row pointing at meetrao.com/<username>.
      That address listed somebody's meetings and no longer exists, so the rail
      would have been handing out a link to a 404. */
-  const links: BookingLink[] = active.map((m) => ({
-    id: m.id,
-    name: m.name,
-    link: bookingLink(profile.username, m.slug),
-  }));
+  const here = contexts.find((c) => c.id === context.companyId) ?? null;
+  const links: BookingLink[] = active
+    .filter((m) => (m.company_id ?? null) === context.companyId)
+    .map((m) => ({
+      id: m.id,
+      name: m.name,
+      link:
+        here && here.slug
+          ? companyBookingLink({ slug: here.slug, domain: here.domain, domainVerified: here.domainVerified }, here.handle ?? profile.username, m.slug)
+          : bookingLink(profile.username, m.slug),
+    }));
 
   const items: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: "house" },

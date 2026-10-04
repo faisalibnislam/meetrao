@@ -8,9 +8,9 @@ import { requireOnboardedSession } from "@/lib/data/session";
 import { convexServer } from "@/lib/convex/server";
 import { siteUrl } from "@/lib/env";
 import { api } from "@/convex/_generated/api";
-import { bookingLink } from "@/lib/username";
+import { bookingLink, companyBookingLink } from "@/lib/username";
 import type { MeetingType } from "@/lib/types";
-import { activeContext } from "@/lib/data/context";
+import { activeContext, contextChoices } from "@/lib/data/context";
 import { heldElsewhere } from "@/lib/data/elsewhere";
 import { ElsewhereEmptyState } from "@/components/app/elsewhere-empty";
 
@@ -35,6 +35,19 @@ export default async function MeetingsPage() {
      only on the screen that would otherwise mislead. */
   const elsewhere = meetings.length === 0 ? await heldElsewhere(all, context) : [];
 
+  /* The address of the workspace in force. A company's meeting lives at the
+     company's address, not at its host's personal one: the list was already
+     scoped, but every row still showed meetrao.com/<username>/<meeting>. */
+  const here = (await contextChoices()).find((c) => c.id === context.companyId) ?? null;
+  const addressOf = (slug: string) =>
+    here && here.slug
+      ? companyBookingLink(
+          { slug: here.slug, domain: here.domain, domainVerified: here.domainVerified },
+          here.handle ?? profile.username,
+          slug,
+        )
+      : bookingLink(profile.username, slug);
+
   const rows: MeetingRow[] = meetings.map((m) => ({
     id: m.id,
     name: m.name,
@@ -42,8 +55,10 @@ export default async function MeetingsPage() {
     duration: m.duration_minutes,
     slug: m.slug,
     active: m.is_active,
-    link: bookingLink(profile.username, m.slug),
-    previewHref: `/${profile.username}/${m.slug}`,
+    link: addressOf(m.slug),
+    /* Preview opens the real page, which for a company is the company's. */
+    previewHref:
+      here && here.slug ? `/${here.slug}/${here.handle}/${m.slug}` : `/${profile.username}/${m.slug}`,
   }));
 
   return (

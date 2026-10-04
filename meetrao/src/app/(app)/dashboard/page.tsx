@@ -59,7 +59,10 @@ export default async function DashboardPage({
     convex.query(api.admin.avgReplyMinutes, { days: 30 }),
   ]);
 
-  const meetings = meetingRows as unknown as MeetingType[];
+  /* Personal only: the company dashboard returned above, so anything filed
+     under a company is somebody else's screen. Without this the Copy link
+     control handed out a company's links from the personal dashboard. */
+  const meetings = (meetingRows as unknown as MeetingType[]).filter((m) => !m.company_id);
   const active = meetings.filter((m) => m.is_active);
 
   const upcoming = bookings.filter((b) => !b.past && !b.cancelled);

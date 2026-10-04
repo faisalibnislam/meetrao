@@ -21,6 +21,7 @@ import { cx } from "@/lib/cx";
 import { BUSINESS_PITCH, UpgradeCallout } from "./upgrade";
 import { BUSINESS_LIMITS } from "@/lib/pricing";
 import { isPaid, type Plan } from "@/convex/lib/plan";
+import { companyBookingLink } from "@/lib/username";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Companies: a domain, a brand, and the people whose links live on it.
@@ -92,10 +93,12 @@ const canManage = (role: CompanyRole) => role === "owner" || role === "admin";
  * domain does not resolve yet and showing it would be showing an address
  * that 404s.
  */
-function linkFor(company: CompanyView, member: CompanyMemberView, meetingSlug: string, siteHost: string): string {
-  return company.domain && company.domainVerified
-    ? `${company.domain}/${member.handle}/${meetingSlug}`
-    : `${siteHost}/${member.username}/${meetingSlug}`;
+function linkFor(company: CompanyView, member: CompanyMemberView, meetingSlug: string): string {
+  /* The COMPANY's address, never the member's personal one. It used to fall
+     back to meetrao.com/<username>/<meeting> when there was no verified
+     domain, which showed somebody their own link and called it the
+     company's. */
+  return companyBookingLink(company, member.handle, meetingSlug);
 }
 
 export function CompaniesPanel({
@@ -104,15 +107,12 @@ export function CompaniesPanel({
   companyLimit,
   canCreate,
   plan,
-  siteHost,
   only = null,
 }: {
   companies: CompanyView[];
   owned: number;
   companyLimit: number;
   canCreate: boolean;
-  /** Where a link answers when the company has no verified domain. */
-  siteHost: string;
   /** The VIEWER's plan, which decides only whether they may create one. */
   plan: Plan;
   /**
@@ -232,7 +232,6 @@ export function CompaniesPanel({
           ) : current ? (
             <CompanyCard
               company={current}
-              siteHost={siteHost}
               /* Deleting a company belongs to the owner's personal space,
                  beside the list of every company they have. Offering it from
                  inside the company is offering to delete the room you are
@@ -374,7 +373,6 @@ export function CompaniesPanel({
 
 function CompanyCard({
   company,
-  siteHost,
   canDelete,
   busy,
   onInvite,
@@ -385,7 +383,6 @@ function CompanyCard({
   onRemoveMember,
 }: {
   company: CompanyView;
-  siteHost: string;
   /** False inside a company's own settings: deleting lives in Personal. */
   canDelete: boolean;
   busy: boolean;
@@ -459,7 +456,6 @@ function CompanyCard({
             key={m.userId}
             company={company}
             member={m}
-            siteHost={siteHost}
             viewerRole={mine}
             busy={busy}
             editing={editing === m.userId}
@@ -518,7 +514,6 @@ function CompanyCard({
 function MemberRow({
   company,
   member,
-  siteHost,
   viewerRole,
   busy,
   editing,
@@ -532,7 +527,6 @@ function MemberRow({
 }: {
   company: CompanyView;
   member: CompanyMemberView;
-  siteHost: string;
   viewerRole: CompanyRole;
   busy: boolean;
   editing: boolean;
@@ -640,7 +634,7 @@ function MemberRow({
       {active.length > 0 ? (
         <ul className="m-0 flex list-none flex-col gap-[4px] p-0 pl-[1px]">
           {active.map((t) => {
-            const link = linkFor(company, member, t.slug, siteHost);
+            const link = linkFor(company, member, t.slug);
             return (
               <li key={t.id} className="flex flex-wrap items-center gap-[8px] text-[12px]">
                 <span className="text-ink-2">{t.name}</span>

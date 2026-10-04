@@ -467,6 +467,139 @@ export const companyBrandForDomain = query({
   },
 });
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   A company's own address on meetrao.com.
+
+   meetrao.com/<company>/<handle>/<meeting>, which exists whether or not the
+   company has bought a domain. A custom domain is then a prettier alias for
+   the same page rather than the only way to have one.
+
+   HANDLES, NOT USERNAMES, for the same reason as on a custom domain: a handle
+   is who somebody is INSIDE THIS COMPANY, and usernames are global and first
+   come first served, so a company cannot be promised one.
+
+   THE COMPANY SLUG IS ALREADY RESERVED product-wide. convex/companies.ts
+   refuses a name held by a host or a team, so meetrao.com/<company> cannot
+   collide with meetrao.com/<username>, and the two routes differ by segment
+   count anyway.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/** Who `handle` is on this company, or null. The gate for the public route. */
+export const hostOnCompany = query({
+  args: { companySlug: v.string(), handle: v.string() },
+  handler: async (ctx, a) => {
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_slug_lower", (q) => q.eq("slug_lower", a.companySlug.trim().toLowerCase()))
+      .unique();
+    if (!company) return null;
+
+    /* The OWNER's plan serves every page on this company, including a free
+       member's, exactly as on a custom domain. Nobody's page resolves when
+       the owner stops paying. */
+    const owner = await ctx.db
+      .query("profiles")
+      .withIndex("by_uuid", (q) => q.eq("id", company.owner_id))
+      .unique();
+    if (!owner || owner.is_suspended || !isPro(owner)) return null;
+
+    const row = await ctx.db
+      .query("company_members")
+      .withIndex("by_company_handle", (q) =>
+        q.eq("company_id", company.id).eq("handle_lower", a.handle.trim().toLowerCase()),
+      )
+      .unique();
+    if (!row) return null;
+
+    const member = await ctx.db
+      .query("profiles")
+      .withIndex("by_uuid", (q) => q.eq("id", row.user_id))
+      .unique();
+    // A suspended host has no public page, on a company's address or their own.
+    if (!member || member.is_suspended) return null;
+
+    return { username: member.username };
+  },
+});
+
+/**
+ * Where a meeting's own address is, when it belongs to a company.
+ *
+ * Null for a personal meeting, which keeps meetrao.com/<username>/<meeting>.
+ * The two-segment page uses this to send a company's meeting on to the
+ * company's address rather than serving it at a personal one: every link
+ * already in somebody's email signature keeps working, and there is one
+ * canonical address for each page.
+ */
+export const companyPlaceOf = query({
+  args: { username: v.string(), slug: v.string() },
+  handler: async (ctx, a) => {
+    const host = await ctx.db
+      .query("profiles")
+      .withIndex("by_username_lower", (q) => q.eq("username_lower", a.username.trim().toLowerCase()))
+      .unique();
+    if (!host) return null;
+
+    const meeting = await ctx.db
+      .query("meeting_types")
+      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
+      .unique();
+    if (!meeting || !meeting.company_id) return null;
+
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_uuid", (q) => q.eq("id", meeting.company_id as string))
+      .unique();
+    if (!company) return null;
+
+    const row = await ctx.db
+      .query("company_members")
+      .withIndex("by_company", (q) => q.eq("company_id", company.id))
+      .collect();
+    const mine = row.find((m) => m.user_id === host.id);
+    /* No membership means no address on this company, which happens when
+       somebody is removed while their meeting still points at it. Sending
+       them nowhere is better than sending them to a handle that 404s. */
+    if (!mine) return null;
+
+    return { companySlug: company.slug, handle: mine.handle };
+  },
+});
+
+/** A company's brand by its slug, the same projection the domain lookup returns. */
+export const companyBrandBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, a) => {
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_slug_lower", (q) => q.eq("slug_lower", a.slug.trim().toLowerCase()))
+      .unique();
+    if (!company) return null;
+
+    const owner = await ctx.db
+      .query("profiles")
+      .withIndex("by_uuid", (q) => q.eq("id", company.owner_id))
+      .unique();
+    // Gated on the way out, exactly as a profile's branding is.
+    if (!owner || owner.is_suspended || !isPro(owner)) return null;
+
+    const logo = company.brand_logo_url ?? null;
+    const color = company.brand_color ?? null;
+    const background = company.brand_background ?? null;
+    const hidden = company.brand_logo_hidden ?? false;
+
+    return {
+      slug: company.slug,
+      name: company.name,
+      unbranded: true,
+      brand:
+        logo || color || background || hidden
+          ? { logo_url: logo, logo_hidden: hidden, color, background }
+          : null,
+    };
+  },
+});
+
 /** One member's hours for a team meeting, their own schedule, their own zone. */
 export const teamMemberAvailability = query({
   args: { teamSlug: v.string(), meetingId: v.string() },
