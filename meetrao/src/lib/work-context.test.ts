@@ -79,43 +79,65 @@ describe("switching changes what you are working on", () => {
   });
 });
 
-describe("the workspace menu", () => {
-  /* One control, not two. It used to be a "Working in" switcher at the top of
-     the rail and an account button at the bottom, which answered the same
-     question in two places and would have answered it differently once
-     settings belonged to a workspace. */
-  it("is the only account control in the rail", () => {
-    const rail = read("src/components/app/sidebar.tsx");
-    expect(rail).toContain("<WorkspaceMenu");
-    expect(rail, "the old account footer must be gone").not.toContain("aria-expanded={menuOpen}");
+describe("the workspace switcher", () => {
+  /* TWO CONTROLS, and the split is the point. One answers "which company am
+     I working in", which changes what every screen shows and is something
+     somebody does several times an hour. The other answers "where do I go to
+     change my own things", which changes nothing until you arrive and is
+     something they do once a month. Logging out does not belong beside
+     switching. */
+  it("is a switcher, and nothing else", () => {
+    expect(SWITCHER).toContain('role="menuitemradio"');
+    expect(SWITCHER).toContain("aria-checked={w.id === activeId}");
+    for (const gone of ["Log out", "Help centre", "Support", "onSignOut"]) {
+      expect(SWITCHER, `${gone} moved to the settings menu`).not.toContain(gone);
+    }
   });
 
-  /* Most accounts have no companies. A list offering one choice teaches
+  /* Most accounts have no companies. A menu offering a single choice teaches
      people the product has a concept they do not have, every time they open
-     it, so the menu is an account menu until there is a second workspace. */
-  it("shows no workspace list when there is only one", () => {
-    expect(SWITCHER).toContain("workspaces.length > 1 ?");
-  });
-
-  /* Settings belong to the workspace in force, which is the reason these two
-     controls had to become one. The label says WHICH KIND of workspace rather
-     than pasting its name: "<company> settings" reads as a thing belonging to
-     that company, and the row changes width on every switch. */
-  it("labels the settings link by workspace kind, not by name", () => {
-    /* Qualified in a company, bare in personal: the word only earns its place
-       where there is something to tell it apart from, and most accounts have
-       no company at all. */
-    expect(SWITCHER).toContain('active.id ? "Company settings" : "Settings"');
-    expect(SWITCHER, "the company's name must not be pasted into the label").not.toContain(
-      "`${active.name} settings`",
-    );
+     it, so with one workspace this stops being a control at all. */
+  it("is a plain label when there is only one workspace", () => {
+    expect(SWITCHER).toContain("const only = workspaces.length <= 1;");
+    expect(SWITCHER).toContain("if (only) {");
   });
 
   it("says where you are and whose account it is", () => {
     expect(SWITCHER).toContain(
-      "aria-label={`${active.name}, signed in as ${email}. Open account and workspace menu.`}",
+      "aria-label={`${active.name}, signed in as ${email}. Switch workspace.`}",
     );
-    expect(SWITCHER).toContain('role="menuitemradio"');
-    expect(SWITCHER).toContain("aria-checked={w.id === activeId}");
+  });
+});
+
+describe("the settings menu", () => {
+  const RAIL = read("src/components/app/sidebar.tsx");
+  const MENU = read("src/components/app/settings-menu.tsx");
+
+  it("sits at the foot of the rail, not on the switcher", () => {
+    expect(RAIL).toContain("<SettingsMenu");
+    const at = RAIL.indexOf("<SettingsMenu");
+    const switcher = RAIL.indexOf("<WorkspaceMenu");
+    expect(at, "below everything a host uses daily").toBeGreaterThan(switcher);
+  });
+
+  it("carries the four things that left the switcher", () => {
+    for (const label of ["Help centre", "Support", "Log out"]) {
+      expect(MENU).toContain(label);
+    }
+    expect(MENU).toContain('href="/settings"');
+  });
+
+  /* Settings belong to the workspace in force, which is why the label still
+     names its KIND. Pasting the company's name in reads as a thing belonging
+     to that company, and the row changes width on every switch. */
+  it("labels settings by workspace kind, not by name", () => {
+    expect(RAIL).toContain('settingsLabel={activeContextId ? "Company settings" : "Settings"}');
+    expect(RAIL).not.toContain("`${active.name} settings`");
+  });
+
+  /* It is pinned to the bottom of the rail, so a menu opening downward would
+     run off the screen. */
+  it("opens upward", () => {
+    expect(MENU).toContain("bottom-[calc(100%+6px)]");
   });
 });

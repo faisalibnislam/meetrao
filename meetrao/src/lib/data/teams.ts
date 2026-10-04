@@ -229,3 +229,18 @@ export async function companiesPanelData(): Promise<{
     siteHost: new URL(siteUrl()).host,
   };
 }
+
+/**
+ * Whether the company in force can only ever hold one person.
+ *
+ * The owner's cap, not the viewer's plan: a member of a Business company
+ * must not have a screen collapse because their own account is on Free.
+ * False for Personal, which is not a company and has its own team feature.
+ */
+export async function soloCompany(companyId: string | null): Promise<boolean> {
+  if (!companyId) return false;
+  const convex = await convexServer();
+  const data = await convex.query(api.companies.mine, {});
+  const found = data.companies.find((c) => c.id === companyId);
+  return Boolean(found && found.member_limit <= 1);
+}

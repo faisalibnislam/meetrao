@@ -185,7 +185,7 @@ describe("the People screen draws what the mutations allow", () => {
   });
 
   it("shows Delete company to the owner alone", () => {
-    expect(PANEL).toContain('{mine === "owner" ? (');
+    expect(PANEL).toContain('{mine === "owner" && canDelete ? (');
     expect(PANEL).toContain("Delete company");
   });
 
@@ -213,5 +213,99 @@ describe("the links on the screen", () => {
     const body = PANEL.slice(PANEL.indexOf("function linkFor"));
     expect(body).toContain("company.domain && company.domainVerified");
     expect(body).toContain("${siteHost}/${member.username}/${meetingSlug}");
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Where each control belongs.
+
+   The same panel renders in two places: Personal → Companies, which is the
+   list of every company somebody has, and a company's own People tab, which
+   is the one they are standing in. The second is not the first with a filter
+   on it, and two controls had to move because of that.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+describe("the company's own People tab", () => {
+  /* A Pro owner's company can only ever hold them, so the list is a heading,
+     a count of one, and themselves. What is useful on that screen is the
+     reason it is empty. Everything else stays reachable from Personal →
+     Companies, which is the same card without the `only` filter. */
+  it("is only the pitch when the company can hold one person", () => {
+    expect(PANEL).toContain("const soloCompany = Boolean(only && current && current.memberLimit <= 1);");
+    expect(PANEL).toContain("{current && soloCompany ? (");
+  });
+
+  /* Offering it from inside the company is offering to delete the room you
+     are standing in, and leaves the workspace switcher pointing at something
+     that no longer exists. */
+  it("never offers to delete the company you are standing in", () => {
+    expect(PANEL).toContain("canDelete={!only}");
+    expect(PANEL).toContain('{mine === "owner" && canDelete ? (');
+  });
+
+  /* The gate is the OWNER's cap, not the viewer's plan: a member of a
+     Business company must not have the screen collapse because their own
+     account is on Free. */
+  it("decides from the company's cap, not the viewer's plan", () => {
+    expect(PANEL).toContain("current.memberLimit <= 1");
+    expect(PANEL, "the viewer's plan decides only whether they may create one").not.toContain(
+      "only && isPaid(plan)",
+    );
+  });
+});
+
+describe("the company's own Team tab", () => {
+  const SETTINGS = read("src/app/(app)/settings/[[...tab]]/page.tsx");
+  const LOADER = read("src/lib/data/teams.ts");
+  const PITCH = read("src/components/app/team-pitch.tsx");
+
+  /* A team link is answered by whoever of you is free, so it needs a second
+     person to be anything at all. Offering "Create a team" to somebody who
+     can never add anyone is the worst version of a locked feature: it works
+     right up until it cannot. */
+  it("is the pitch when the company can hold one person", () => {
+    expect(SETTINGS).toContain("(await soloCompany(context.companyId)) ? (");
+    expect(SETTINGS).toContain("<TeamPitch />");
+    expect(PITCH).toContain('to="business"');
+    expect(PITCH, "a create button is the thing being removed").not.toContain("Create a team");
+  });
+
+  /* Personal is not a company and keeps its own team feature. */
+  it("leaves Personal alone", () => {
+    const fn = LOADER.slice(LOADER.indexOf("export async function soloCompany"));
+    expect(fn).toContain("if (!companyId) return false;");
+  });
+
+  /* The OWNER's cap, as everywhere else: a member of a Business company must
+     not have the screen collapse because their own account is on Free. */
+  it("reads the company's cap, not the viewer's plan", () => {
+    const fn = LOADER.slice(LOADER.indexOf("export async function soloCompany"));
+    expect(fn).toContain("found.member_limit <= 1");
+    expect(fn).not.toMatch(/isPaid\(|planOf\(me/);
+  });
+});
+
+describe("two brandings, not one", () => {
+  const TABS = read("src/lib/settings-tabs.ts");
+  const LOADER = read("src/lib/data/teams.ts");
+
+  /* A Pro account has its own branding and its own domain on its own links,
+     AND a company with its own branding and its own domain. They are
+     different things that happen to share a screen, and removing Branding
+     from Personal once took the first one away. */
+  it("is in both workspaces' tabs", () => {
+    const personal = TABS.slice(TABS.indexOf("PERSONAL_TABS"), TABS.indexOf("COMPANY_TABS"));
+    const company = TABS.slice(TABS.indexOf("COMPANY_TABS"), TABS.indexOf("export const SETTINGS_TABS"));
+    expect(personal, "Personal keeps its own branding").toContain('key: "branding"');
+    expect(company, "a company has its own").toContain('key: "branding"');
+  });
+
+  /* One loader, two sources. Reading the profile's branding while standing in
+     a company would show the wrong brand and save over the wrong one. */
+  it("reads whichever workspace is in force", () => {
+    const fn = LOADER.slice(LOADER.indexOf("export async function brandingPanelData"));
+    expect(fn).toContain("const { companyId } = await activeContext();");
+    expect(fn).toContain("if (companyId) {");
+    expect(fn).toContain("api.companyBranding.get");
   });
 });

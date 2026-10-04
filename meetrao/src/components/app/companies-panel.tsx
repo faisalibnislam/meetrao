@@ -153,6 +153,15 @@ export function CompaniesPanel({
      panel-level one steps aside when it is showing. */
   const cardAsksForBusiness = Boolean(current?.isOwner && current.memberLimit <= 1);
 
+  /* A Pro owner opening their company's own People tab has nothing to manage:
+     the company can only ever hold them, so the list is a heading, a count of
+     one, and themselves. What is useful here is the reason it is empty, so
+     this screen becomes the pitch and nothing else.
+
+     Everything the card carries stays reachable from Personal → Companies,
+     which is the same card without this `only` filter. */
+  const soloCompany = Boolean(only && current && current.memberLimit <= 1);
+
   function run(work: () => Promise<{ error?: string }>, ok: { title: string; text?: string }) {
     startBusy(async () => {
       const result = await work();
@@ -216,10 +225,19 @@ export function CompaniesPanel({
             </div>
           ) : null}
 
-          {current ? (
+          {current && soloCompany ? (
+            <UpgradeCallout to="business" feature="Adding people to a company">
+              {BUSINESS_PITCH}
+            </UpgradeCallout>
+          ) : current ? (
             <CompanyCard
               company={current}
               siteHost={siteHost}
+              /* Deleting a company belongs to the owner's personal space,
+                 beside the list of every company they have. Offering it from
+                 inside the company is offering to delete the room you are
+                 standing in. */
+              canDelete={!only}
               busy={busy}
               onInvite={() => setDialog("invite")}
               onDelete={() => setDialog("delete")}
@@ -357,6 +375,7 @@ export function CompaniesPanel({
 function CompanyCard({
   company,
   siteHost,
+  canDelete,
   busy,
   onInvite,
   onDelete,
@@ -367,6 +386,8 @@ function CompanyCard({
 }: {
   company: CompanyView;
   siteHost: string;
+  /** False inside a company's own settings: deleting lives in Personal. */
+  canDelete: boolean;
   busy: boolean;
   onInvite: () => void;
   onDelete: () => void;
@@ -461,8 +482,13 @@ function CompanyCard({
 
       {/* Deleting is the owner's alone. An admin looking after the company's
           face and its people must not be able to take the company away from
-          the person who pays for it. */}
-      {mine === "owner" ? (
+          the person who pays for it.
+
+          And only from Personal, where it sits beside the list of every
+          company they have. From inside the company it is an offer to delete
+          the room you are standing in, with the workspace switcher left
+          pointing at something that no longer exists. */}
+      {mine === "owner" && canDelete ? (
         <div className="flex flex-wrap items-center gap-[8px]">
           <Button variant="ghost" size={32} disabled={busy} onClick={onDelete}>
             Delete company
