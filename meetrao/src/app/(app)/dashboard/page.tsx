@@ -59,7 +59,6 @@ export default async function DashboardPage() {
       }
       actions={
         <CopyLinkControl
-          accountLink={bookingLink(profile.username)}
           meetings={active.map((m) => ({
             id: m.id,
             name: m.name,

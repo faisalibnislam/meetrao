@@ -139,7 +139,7 @@ export function BillingPanel({
           <ul className="m-0 flex list-none flex-col gap-[6px] p-0">
             {[
               "Your own logo and colour on your booking page",
-              "Your own domain, at meeting.yourcompany.com",
+              "Your own domain, at meeting.yourcompany.com/you/intro",
               "No Meetrao badge on your pages or embed",
               "Team links that rotate between people",
               "Sessions several guests share",

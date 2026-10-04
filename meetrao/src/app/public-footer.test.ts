@@ -16,8 +16,10 @@ const pages = globSync("(public)/**/page.tsx", { cwd: APP }).filter((f) => !f.in
 
 describe("every guest-facing page", () => {
   it("finds them at all", () => {
-    // Guards the guard: a renamed folder passes everything below vacuously.
-    expect(pages.length).toBeGreaterThanOrEqual(7);
+    /* Guards the guard: a renamed folder passes everything below vacuously.
+       Was 7 until (public)/[username]/page.tsx was removed: that page listed
+       somebody's meetings and the product no longer has such a page. */
+    expect(pages.length).toBeGreaterThanOrEqual(6);
   });
 
   it.each(pages)("%s renders the public footer", (file) => {
@@ -92,9 +94,17 @@ describe("the badge", () => {
      and then lands on our green confirmation has been handed to a stranger
      halfway through, and the email link is the MOST likely way they get there. */
   it("is hidden wherever a host is known, which is everywhere", () => {
-    const byUsername = ["(public)/[username]/page.tsx", "(public)/[username]/[slug]/page.tsx"];
+    /* `unbranded` rather than `host.unbranded`: on a company's domain the
+       page wears the COMPANY's brand, so the badge follows the company's
+       entitlement and not the member's. A free member of a Business company
+       must not get a "Powered by Meetrao" badge on their owner's domain. */
+    const byUsername = ["(public)/[username]/[slug]/page.tsx"];
     for (const file of byUsername) {
-      expect(readFileSync(path.join(APP, file), "utf8")).toContain("badge={!host.unbranded}");
+      const text = readFileSync(path.join(APP, file), "utf8");
+      expect(text).toContain("badge={!unbranded}");
+      expect(text, "the badge must follow the brand actually shown").toContain(
+        "const unbranded = company ? company.unbranded : host.unbranded;",
+      );
     }
 
     const byReference = globSync("(public)/booking/**/page.tsx", { cwd: APP });

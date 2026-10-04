@@ -734,7 +734,7 @@ export default async function HelpPage() {
             <h2 id="domain">Your own domain</h2>
             <p>
               On Pro you can serve your booking page from a name you own, so the link you hand out is{" "}
-              <strong>meeting.yourcompany.com/your-name</strong> rather than ours. Set it up under{" "}
+              <strong>meeting.yourcompany.com/your-name/intro</strong> rather than ours. Set it up under{" "}
               <strong>Settings → Branding</strong>.
             </p>
 
@@ -761,21 +761,21 @@ export default async function HelpPage() {
             </p>
             <ul>
               <li>
-                <code>meeting.yourcompany.com/your-name</code>. your booking page. This is the one to put in
-                a signature.
+                <code>meeting.yourcompany.com/your-name/intro</code>, one of your meetings on your own
+                domain. This is the one to put in a signature.
               </li>
               <li>
-                <code>meeting.yourcompany.com</code>, the same page. Someone who half-remembers the link
-                still arrives.
+                Each person in the company gets their own name in the path, so{" "}
+                <code>meeting.yourcompany.com/sarah/review</code> is Sarah&rsquo;s.
               </li>
               <li>
-                <code>meeting.yourcompany.com/intro</code>, straight to one meeting, using its own short
-                name.
+                The domain on its own is not a page. Every link names a specific meeting, so there is nothing
+                at <code>meeting.yourcompany.com</code> to show.
               </li>
             </ul>
             <p>
-              Your meetrao.com link keeps working the whole time, so anything already shared or printed is
-              safe. Search engines are told your domain is the real address, which is the point of having
+              Your meetrao.com meeting links keep working the whole time, so anything already shared or
+              printed is safe. Search engines are told your domain is the real address, which is the point of having
               one. Confirmation links in emails to guests, and the legal pages, are served unchanged on your
               domain.
             </p>

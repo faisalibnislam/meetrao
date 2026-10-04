@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest, type NextFetchEvent } from "next/server";
-import { rewriteForDomain } from "@/lib/custom-domain";
+import { routeForDomain, type DomainHandle } from "@/lib/custom-domain";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Proxy (Middleware, renamed in Next.js 16).
@@ -149,10 +149,11 @@ async function convexProxyOnce() {
    path means is decided by rewriteForDomain in src/lib/custom-domain.ts,
    which is pure and tested, and which this file only has to call.
 
-   The short of it: `meeting.acme.com/alex` and the bare domain both serve
-   Alex's page, `/intro` is read as one of Alex's meeting slugs, and the shared
-   paths, a guest's /booking/<ref> link, the legal pages, the plumbing,
-   are served unchanged.
+   The short of it: `meeting.acme.com/sarah/intro` serves Sarah's intro call,
+   where `sarah` is who she is inside THAT company; the bare domain and a bare
+   handle are both 404, because this product has no page that lists somebody's
+   meetings; and the shared paths, a guest's /booking/<ref> link, the legal
+   pages, the plumbing, are served unchanged.
 
    REWRITE, NEVER REDIRECT. A redirect would bounce the guest to
    meetrao.com/<username>, which is the opposite of what the host paid for.
@@ -166,8 +167,9 @@ async function convexProxyOnce() {
 
 const KNOWN_HOSTS = new Set(["localhost", "127.0.0.1"]);
 
-/** Hostname → username, or null for "not one of ours". Bounded, and short-lived. */
-const domainCache = new Map<string, { username: string | null; at: number }>();
+/** Hostname → who answers it, or null for "not one of ours". Short-lived. */
+type DomainOwner = { company: string | null; handles: DomainHandle[] };
+const domainCache = new Map<string, { owner: DomainOwner | null; at: number }>();
 const DOMAIN_TTL = 60_000;
 
 function isOwnHost(hostname: string): boolean {
@@ -182,9 +184,9 @@ function isOwnHost(hostname: string): boolean {
   }
 }
 
-async function usernameForDomain(hostname: string): Promise<string | null> {
+async function ownerForDomain(hostname: string): Promise<DomainOwner | null> {
   const cached = domainCache.get(hostname);
-  if (cached && Date.now() - cached.at < DOMAIN_TTL) return cached.username;
+  if (cached && Date.now() - cached.at < DOMAIN_TTL) return cached.owner;
 
   const base = process.env.NEXT_PUBLIC_CONVEX_URL;
   if (!base) return null;
@@ -196,10 +198,16 @@ async function usernameForDomain(hostname: string): Promise<string | null> {
       body: JSON.stringify({ path: "publicBooking:hostForDomain", args: { domain: hostname }, format: "json" }),
     });
     if (!response.ok) return null;
-    const json = (await response.json()) as { status?: string; value?: { username?: string } | null };
-    const username = json.status === "success" ? (json.value?.username ?? null) : null;
-    domainCache.set(hostname, { username, at: Date.now() });
-    return username;
+    const json = (await response.json()) as {
+      status?: string;
+      value?: { company?: string | null; handles?: DomainHandle[] } | null;
+    };
+    const value = json.status === "success" ? (json.value ?? null) : null;
+    const owner: DomainOwner | null = value?.handles
+      ? { company: value.company ?? null, handles: value.handles }
+      : null;
+    domainCache.set(hostname, { owner, at: Date.now() });
+    return owner;
   } catch {
     // A lookup that fails must not take the site down for everyone else.
     return null;
@@ -214,17 +222,28 @@ export async function proxy(request: NextRequest, event?: NextFetchEvent): Promi
 
   const hostname = request.nextUrl.hostname;
   if (!isOwnHost(hostname)) {
-    const username = await usernameForDomain(hostname);
-    if (username) {
-      const to = rewriteForDomain(request.nextUrl.pathname, username);
-      if (to) {
+    const owner = await ownerForDomain(hostname);
+    if (owner) {
+      const route = routeForDomain(request.nextUrl.pathname, owner.handles);
+
+      if (route.kind === "rewrite") {
         const url = request.nextUrl.clone();
-        url.pathname = to;
+        url.pathname = route.path;
         return NextResponse.rewrite(url);
       }
-      /* null means the path already says what it means on this domain, the
-         advertised /<username> shape, a guest's booking link, a legal page.
-         It falls through to the session refresh like any other request. */
+
+      /* A 404 rendered rather than a redirect home. Somebody holding an old
+         link should be told there is nothing here, on the domain they typed,
+         not bounced to a page that says nothing about why. */
+      if (route.kind === "notFound") {
+        const url = request.nextUrl.clone();
+        url.pathname = "/_not-found";
+        return NextResponse.rewrite(url, { status: 404 });
+      }
+
+      /* "pass" means the path already says what it means on this domain: a
+         guest's booking link, a legal page, the plumbing. It falls through to
+         the session refresh like any other request. */
     }
   }
 

@@ -38,9 +38,8 @@ export const metadata: Metadata = {
 };
 
 const ADDRESSES: [string, string][] = [
-  ["meet.yourcompany.com/alex", "Your booking page. This is the one for a signature."],
-  ["meet.yourcompany.com", "The same page. Somebody who half-remembers the link still arrives."],
-  ["meet.yourcompany.com/intro", "Straight to one meeting, by its own short name."],
+  ["meet.yourcompany.com/alex/intro", "A meeting on your domain. This is the one for a signature."],
+  ["meet.yourcompany.com/sarah/review", "Somebody else in the company, with their own handle."],
 ];
 
 const STEPS: [string, string][] = [
@@ -59,10 +58,10 @@ const STEPS: [string, string][] = [
 ];
 
 const KEEPS: string[] = [
-  "Your meetrao.com link keeps working, so anything already printed or shared is safe.",
+  "Your meetrao.com meeting links keep working, so anything already shared is safe.",
   "Search engines are told your domain is the real address, which is the point of having one.",
   "Confirmation links in guest emails are served on your domain too, not just the booking page.",
-  "Remove releases the domain at once, and your meetrao.com link carries on.",
+  "Remove releases the domain at once, and your meetrao.com links carry on.",
 ];
 
 const FAQ: [string, string][] = [
@@ -75,8 +74,12 @@ const FAQ: [string, string][] = [
     "No. The record has to be a CNAME, and a CNAME cannot sit on an apex domain. Use a subdomain: meet., book., calendar., whatever suits.",
   ],
   [
-    "What happens to my meetrao.com link?",
-    "It keeps working, permanently. The custom domain is an additional address, not a replacement, so nothing you have already shared breaks.",
+    "What is at meet.yourcompany.com on its own?",
+    "Nothing. Every link names a specific meeting, so the root of the domain is not a page. If you want it to go somewhere, point it at your own site.",
+  ],
+  [
+    "What happens to my meetrao.com links?",
+    "They keep working, permanently. The custom domain is an additional address, not a replacement, so nothing you have already shared breaks.",
   ],
   [
     "Does the domain cover my whole team?",

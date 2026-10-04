@@ -318,11 +318,62 @@ export const getTeam = query({
  * claim, and serving somebody's booking page on an unproven name is how a
  * domain gets pointed somewhere it should not be.
  */
+/**
+ * Who answers a hostname, for the proxy.
+ *
+ * Two kinds of answer, because a hostname may be held by a company or, until
+ * the profile columns are dropped, by a profile. A company answers with its
+ * people, so the proxy can turn `meet.acme.com/sarah/intro` into the path for
+ * whoever `sarah` is INSIDE THAT COMPANY, and refuse anything that is not one
+ * of its handles.
+ *
+ * That refusal is the whole security property. Without it,
+ * `meet.acme.com/<any-meetrao-username>` would serve a stranger's booking page
+ * under somebody else's logo, and the domain would be a way to enumerate the
+ * product.
+ *
+ * A company is preferred over a profile for the same hostname. After the
+ * backfill the company is the live holder, and preferring the older row would
+ * serve the brand the migration replaced.
+ */
 export const hostForDomain = query({
   args: { domain: v.string() },
   handler: async (ctx, a) => {
     const domain = a.domain.trim().toLowerCase();
     if (!domain) return null;
+
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_custom_domain", (q) => q.eq("custom_domain", domain))
+      .unique();
+
+    if (company && company.custom_domain_verified_at) {
+      const owner = await ctx.db
+        .query("profiles")
+        .withIndex("by_uuid", (q) => q.eq("id", company.owner_id))
+        .unique();
+      /* The OWNER's plan serves every page on this domain, including a free
+         member's. Nobody's page resolves when the owner stops paying. */
+      if (!owner || owner.is_suspended || !isPro(owner)) return null;
+
+      const rows = await ctx.db
+        .query("company_members")
+        .withIndex("by_company", (q) => q.eq("company_id", company.id))
+        .collect();
+
+      const handles: { handle: string; username: string }[] = [];
+      for (const row of rows) {
+        const member = await ctx.db
+          .query("profiles")
+          .withIndex("by_uuid", (q) => q.eq("id", row.user_id))
+          .unique();
+        // A suspended host is not offered on a company domain either.
+        if (!member || member.is_suspended) continue;
+        handles.push({ handle: row.handle_lower, username: member.username });
+      }
+
+      return { company: company.slug, handles, username: null };
+    }
 
     const p = await ctx.db
       .query("profiles")
@@ -331,7 +382,46 @@ export const hostForDomain = query({
 
     if (!p || !p.custom_domain_verified_at || p.is_suspended) return null;
     if (!isPro(p)) return null;
-    return { username: p.username };
+    return { company: null, handles: [{ handle: p.username.toLowerCase(), username: p.username }], username: p.username };
+  },
+});
+
+/**
+ * A company's brand, for a page being served on its domain.
+ *
+ * Resolved from the HOSTNAME rather than from anything in the path or the
+ * query string, which is what makes it unspoofable: meetrao.com/alex cannot
+ * be made to wear somebody else's logo by adding a parameter.
+ */
+export const companyBrandForDomain = query({
+  args: { domain: v.string() },
+  handler: async (ctx, a) => {
+    const domain = a.domain.trim().toLowerCase();
+    if (!domain) return null;
+
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_custom_domain", (q) => q.eq("custom_domain", domain))
+      .unique();
+    if (!company || !company.custom_domain_verified_at) return null;
+
+    const owner = await ctx.db
+      .query("profiles")
+      .withIndex("by_uuid", (q) => q.eq("id", company.owner_id))
+      .unique();
+    // Gated on the way out, exactly as a profile's branding is.
+    if (!owner || owner.is_suspended || !isPro(owner)) return null;
+
+    const logo = company.brand_logo_url ?? null;
+    const color = company.brand_color ?? null;
+    const background = company.brand_background ?? null;
+
+    return {
+      slug: company.slug,
+      name: company.name,
+      unbranded: true,
+      brand: logo || color || background ? { logo_url: logo, color, background } : null,
+    };
   },
 });
 
