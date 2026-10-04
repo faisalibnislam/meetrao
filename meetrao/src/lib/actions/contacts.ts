@@ -6,6 +6,7 @@ import { requireOnboardedSession } from "@/lib/data/session";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { convexMessage } from "@/lib/convex/error";
+import { activeContext } from "@/lib/data/context";
 
 /* Contacts a host maintains by hand, alongside the ones the database fills in
    from bookings. Email is the identity, so saving an address that already
@@ -45,7 +46,15 @@ export async function saveContact(input: ContactInput): Promise<ContactResult> {
 
   try {
     const convex = await convexServer();
-    const id = await convex.mutation(api.contacts.save, { id: input.id, ...row });
+    /* A new contact lands in the list the person is looking at. An EDIT does
+       not move: convex/contacts.ts keeps an existing row in its own company,
+       so switching context and fixing a typo cannot relocate somebody. */
+    const context = await activeContext();
+    const id = await convex.mutation(api.contacts.save, {
+      id: input.id,
+      companyId: context.companyId,
+      ...row,
+    });
     revalidatePath("/contacts");
     return { id };
   } catch (e) {
@@ -120,13 +129,15 @@ export async function importContacts(csv: string): Promise<ImportResult> {
      which rows already existed at the moment each chunk ran. */
   try {
     const convex = await convexServer();
+    // Imported into the list the person is looking at, like a manual add.
+    const context = await activeContext();
     let added = 0;
     let updated = 0;
     for (let i = 0; i < rows.length; i += IMPORT_CHUNK) {
       const chunk = rows.slice(i, i + IMPORT_CHUNK).map(({ name, email, phone, company, notes }) => ({
         name, email, phone, company, notes,
       }));
-      const r = await convex.mutation(api.contacts.importChunk, { rows: chunk });
+      const r = await convex.mutation(api.contacts.importChunk, { rows: chunk, companyId: context.companyId });
       added += r.added;
       updated += r.updated;
     }

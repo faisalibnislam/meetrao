@@ -144,12 +144,21 @@ export async function insertBooking(
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guestEmail)) fail("Guest email is not valid.");
   if (endsAt <= args.startsAt) fail("A booking must end after it starts.");
 
+  /* The company this booking belongs to, read from the meeting type once and
+     stored on the row. Looked up here rather than joined on every read: the
+     bookings screens read a range by host and would otherwise do one extra
+     read per result. */
+  const meetingType = args.meetingTypeId
+    ? await ctx.db.query("meeting_types").withIndex("by_uuid", (q) => q.eq("id", args.meetingTypeId as string)).unique()
+    : null;
+
   const now = Date.now();
   const row = {
     id: uuid(),
     reference: newReference(),
     host_id: args.hostId,
     meeting_type_id: args.meetingTypeId,
+    company_id: meetingType?.company_id ?? null,
     meeting_name: args.meetingName,
     duration_minutes: args.durationMinutes,
     guest_name: args.guestName.trim(),
@@ -179,7 +188,12 @@ export async function insertBooking(
 
   // The four triggers that used to fire on insert.
   await notifyBookingCreated(ctx, booking);
-  await upsertContact(ctx, { userId: booking.host_id, name: booking.guest_name, email: booking.guest_email });
+  await upsertContact(ctx, {
+    userId: booking.host_id,
+    name: booking.guest_name,
+    email: booking.guest_email,
+    companyId: booking.company_id ?? null,
+  });
   await logActivity(ctx, {
     actorId: booking.host_id,
     kind: "booking_created",
@@ -291,15 +305,27 @@ export const rescheduleAsHost = mutation({
  * than as a second round trip.
  */
 export const listForScreen = query({
-  args: { history: v.optional(v.boolean()), pastLimit: v.optional(v.number()) },
+  args: {
+    history: v.optional(v.boolean()),
+    pastLimit: v.optional(v.number()),
+    /* Null and absent both mean personal. Optional so every existing caller
+       stays correct while the screens are updated. */
+    companyId: v.optional(v.union(v.string(), v.null())),
+  },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
     const now = Date.now();
+    const companyId = a.companyId ?? null;
 
-    const all = await ctx.db
-      .query("bookings")
-      .withIndex("by_host_starts", (q) => q.eq("host_id", me.id))
-      .collect();
+    /* Read by host, then filter by company in memory. by_host_starts is what
+       orders this screen, and a composite index that also ordered by date
+       would be a third index on the busiest table for one screen's filter. */
+    const all = (
+      await ctx.db
+        .query("bookings")
+        .withIndex("by_host_starts", (q) => q.eq("host_id", me.id))
+        .collect()
+    ).filter((b) => (b.company_id ?? null) === companyId);
 
     // "Past" means ENDED, so the boundary is ends_at, not starts_at.
     const upcoming = all.filter((b) => b.ends_at >= now).sort((x, y) => x.starts_at - y.starts_at);
@@ -412,7 +438,9 @@ export const createAsHost = mutation({
         created_at: Date.now(),
       });
       // booking_invitees_make_contact
-      await upsertContact(ctx, { userId: me.id, name: invitee.name, email });
+      /* The same list as the booking they were invited to, not whatever the
+         host happens to be looking at. */
+      await upsertContact(ctx, { userId: me.id, name: invitee.name, email, companyId: booking.company_id ?? null });
     }
 
     return bookingOut(booking);

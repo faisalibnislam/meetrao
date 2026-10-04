@@ -3,6 +3,7 @@ import "server-only";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Contact } from "@/lib/types";
+import { activeContext } from "@/lib/data/context";
 
 export type ContactView = {
   id: string;
@@ -37,7 +38,11 @@ async function sources(
 ): Promise<{ contactRows: Contact[]; bookingRows: BookingRow[]; inviteeRows: InviteeRow[] }> {
   void userId; // every read below is scoped by the caller's own identity
   const convex = await convexServer();
-  const r = await convex.query(api.contacts.listForScreen, {});
+  /* The company in force, for the same reason the bookings screen takes
+     one: an agency's point in scoping contacts is that one client's people
+     stay out of another's list. */
+  const context = await activeContext();
+  const r = await convex.query(api.contacts.listForScreen, { companyId: context.companyId });
   return {
     contactRows: r.contacts as Contact[],
     bookingRows: r.bookings as BookingRow[],

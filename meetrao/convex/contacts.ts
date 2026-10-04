@@ -4,6 +4,8 @@ import { v } from "convex/values";
 import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
 import { contactOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
+import type { MutationCtx } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -19,6 +21,27 @@ const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
  */
 function byNewestThenId(x: { created_at: number; id: string }, y: { created_at: number; id: string }) {
   return y.created_at - x.created_at || x.id.localeCompare(y.id);
+}
+
+/**
+ * The company a contact write belongs to, refusing one the caller is not in.
+ *
+ * Every write path takes it, because a contact landing in the wrong list is
+ * the whole failure mode: an agency's point in scoping contacts is that one
+ * client's people stay out of another's.
+ */
+async function companyForContact(
+  ctx: MutationCtx,
+  me: Doc<"profiles">,
+  companyId: string | null | undefined,
+): Promise<string | null> {
+  if (!companyId) return null;
+  const rows = await ctx.db
+    .query("company_members")
+    .withIndex("by_user", (q) => q.eq("user_id", me.id))
+    .collect();
+  if (!rows.some((r) => r.company_id === companyId)) fail("That is not one of your companies.");
+  return companyId;
 }
 
 export const listOwn = query({
@@ -42,14 +65,28 @@ export const listOwn = query({
  * invitee in the database.
  */
 export const listForScreen = query({
-  args: {},
-  handler: async (ctx) => {
+  /* Null and absent both mean personal. An optional argument rather than a
+     required one keeps every existing caller correct while the screens are
+     updated. */
+  args: { companyId: v.optional(v.union(v.string(), v.null())) },
+  handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
+    const companyId = a.companyId ?? null;
 
-    const contacts = await ctx.db.query("contacts").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
+    const contacts = (
+      await ctx.db
+        .query("contacts")
+        .withIndex("by_user_company", (q) => q.eq("user_id", me.id).eq("company_id", companyId))
+        .collect()
+    ).slice();
     contacts.sort(byNewestThenId);
 
-    const bookings = await ctx.db.query("bookings").withIndex("by_host_starts", (q) => q.eq("host_id", me.id)).collect();
+    /* The bookings behind the "last seen" column, in the same list. Filtered
+       in memory: by_host_starts is the index that exists and the alternative
+       is a second index for a column this screen reads once. */
+    const bookings = (
+      await ctx.db.query("bookings").withIndex("by_host_starts", (q) => q.eq("host_id", me.id)).collect()
+    ).filter((b) => (b.company_id ?? null) === companyId);
 
     const invitees: Array<{ email: string; booking_id: string }> = [];
     for (const b of bookings) {
@@ -75,23 +112,27 @@ export const create = mutation({
   args: {
     name: v.optional(v.string()), email: v.string(), phone: v.optional(v.string()),
     company: v.optional(v.string()), notes: v.optional(v.string()),
+    companyId: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
     const email = a.email.trim().toLowerCase();
     if (!EMAIL.test(email)) fail("Enter a valid email.");
+    const companyId = await companyForContact(ctx, me, a.companyId);
 
-    // unique (user_id, email)
+    // unique (user_id, company_id, email)
     const existing = await ctx.db
       .query("contacts")
-      .withIndex("by_user_email", (q) => q.eq("user_id", me.id).eq("email", email))
+      .withIndex("by_user_company_email", (q) =>
+        q.eq("user_id", me.id).eq("company_id", companyId).eq("email", email),
+      )
       .unique();
     if (existing) fail("You already have a contact with that email.");
 
     const now = Date.now();
     const id = uuid();
     await ctx.db.insert("contacts", {
-      id, user_id: me.id, name: (a.name ?? "").trim(), email,
+      id, user_id: me.id, company_id: companyId, name: (a.name ?? "").trim(), email,
       phone: a.phone ?? "", company: a.company ?? "", notes: a.notes ?? "",
       source: "manual", created_at: now, updated_at: now,
     });
@@ -130,11 +171,13 @@ export const save = mutation({
   args: {
     id: v.optional(v.string()),
     name: v.string(), email: v.string(), phone: v.string(), company: v.string(), notes: v.string(),
+    companyId: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
     const email = a.email.trim().toLowerCase();
     if (!EMAIL.test(email)) fail("That is not an email address.");
+    const companyId = await companyForContact(ctx, me, a.companyId);
 
     const fields = {
       name: a.name.trim(), email, phone: a.phone.trim(),
@@ -146,9 +189,15 @@ export const save = mutation({
       const c = await ctx.db.query("contacts").withIndex("by_uuid", (q) => q.eq("id", a.id!)).unique();
       if (!c) AuthError("No such contact.", "NOT_FOUND");
       assertOwnerOrAdmin(me, c.user_id);
+      /* Against the list this contact is ALREADY in, not the caller's current
+         one. Editing a contact does not move it between companies, and
+         checking the wrong list would refuse an edit because an unrelated
+         client has the same address. */
       const clash = await ctx.db
         .query("contacts")
-        .withIndex("by_user_email", (q) => q.eq("user_id", c.user_id).eq("email", email))
+        .withIndex("by_user_company_email", (q) =>
+          q.eq("user_id", c.user_id).eq("company_id", c.company_id ?? null).eq("email", email),
+        )
         .unique();
       if (clash && clash.id !== c.id) fail("You already have a contact with that email.");
       await ctx.db.patch(c._id, { ...fields, updated_at: now });
@@ -157,7 +206,9 @@ export const save = mutation({
 
     const existing = await ctx.db
       .query("contacts")
-      .withIndex("by_user_email", (q) => q.eq("user_id", me.id).eq("email", email))
+      .withIndex("by_user_company_email", (q) =>
+        q.eq("user_id", me.id).eq("company_id", companyId).eq("email", email),
+      )
       .unique();
     if (existing) {
       await ctx.db.patch(existing._id, { ...fields, source: "manual", updated_at: now });
@@ -165,7 +216,7 @@ export const save = mutation({
     }
 
     const id = uuid();
-    await ctx.db.insert("contacts", { id, user_id: me.id, ...fields, source: "manual", created_at: now, updated_at: now });
+    await ctx.db.insert("contacts", { id, user_id: me.id, company_id: companyId, ...fields, source: "manual", created_at: now, updated_at: now });
     return id;
   },
 });
@@ -184,9 +235,14 @@ export const importChunk = mutation({
     rows: v.array(v.object({
       name: v.string(), email: v.string(), phone: v.string(), company: v.string(), notes: v.string(),
     })),
+    companyId: v.optional(v.union(v.string(), v.null())),
   },
   handler: async (ctx, a) => {
     const me = await requireProfile(ctx);
+    /* Checked once for the chunk rather than per row: the membership cannot
+       change inside one transaction, and a read per row is the thing chunking
+       exists to avoid. */
+    const companyId = await companyForContact(ctx, me, a.companyId);
     const now = Date.now();
     let added = 0;
     let updated = 0;
@@ -198,14 +254,16 @@ export const importChunk = mutation({
 
       const existing = await ctx.db
         .query("contacts")
-        .withIndex("by_user_email", (q) => q.eq("user_id", me.id).eq("email", email))
+        .withIndex("by_user_company_email", (q) =>
+          q.eq("user_id", me.id).eq("company_id", companyId).eq("email", email),
+        )
         .unique();
 
       if (existing) {
         await ctx.db.patch(existing._id, { ...fields, source: "import", updated_at: now });
         updated++;
       } else {
-        await ctx.db.insert("contacts", { id: uuid(), user_id: me.id, ...fields, source: "import", created_at: now, updated_at: now });
+        await ctx.db.insert("contacts", { id: uuid(), user_id: me.id, company_id: companyId, ...fields, source: "import", created_at: now, updated_at: now });
         added++;
       }
     }

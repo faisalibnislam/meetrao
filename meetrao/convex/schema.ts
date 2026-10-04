@@ -420,6 +420,20 @@ export default defineSchema({
      * is a small thing, one that arrives twice is why people turn them off.
      * Optional because every row written before reminders existed has neither.
      */
+    /**
+     * Which company this booking belongs to, copied from the meeting type
+     * when it is made. Null is personal.
+     *
+     * Denormalised rather than joined. Every bookings screen reads a range by
+     * host and then needs the context of each row, and a join per booking
+     * turns one indexed read into one per result.
+     *
+     * A booking keeps the company it was made under even if the meeting is
+     * later moved or deleted, which is right: it records what happened, and
+     * moving a meeting type cannot retroactively move money or a calendar
+     * entry between two client workspaces.
+     */
+    company_id: v.optional(nullableString),
     reminded_24h_at: v.optional(v.number()),
     reminded_1h_at: v.optional(v.number()),
     created_at: v.number(),
@@ -428,6 +442,7 @@ export default defineSchema({
     .index("by_uuid", ["id"])
     .index("by_reference", ["reference"])
     .index("by_host_starts", ["host_id", "starts_at"])
+    .index("by_host_company", ["host_id", "company_id"])
     /* The reminder sweep asks "what starts soon" across every host, which
        by_host_starts cannot answer without a scan per host. Kept separate
        rather than widened: by_host_starts is the double-booking guard's read
@@ -475,6 +490,19 @@ export default defineSchema({
   contacts: defineTable({
     id: v.string(),
     user_id: v.string(),
+    /**
+     * Which company's contact list this row is in. Null is personal.
+     *
+     * NOT the same thing as `company` below, which is free text naming the
+     * guest's own employer and predates companies entirely. One is who they
+     * work for; this is whose list they are on. The names are close enough to
+     * be worth saying out loud.
+     *
+     * The same address can appear in two of these lists, deliberately: an
+     * agency keeping one client's contacts out of another's is the reason
+     * contacts are scoped at all, so uniqueness is per (user, company, email).
+     */
+    company_id: v.optional(nullableString),
     name: v.string(),
     email: v.string(),
     phone: v.string(),
@@ -486,7 +514,9 @@ export default defineSchema({
   })
     .index("by_uuid", ["id"])
     .index("by_user", ["user_id"])
-    .index("by_user_email", ["user_id", "email"]),
+    .index("by_user_email", ["user_id", "email"])
+    .index("by_user_company", ["user_id", "company_id"])
+    .index("by_user_company_email", ["user_id", "company_id", "email"]),
 
   notifications: defineTable({
     id: v.string(),
