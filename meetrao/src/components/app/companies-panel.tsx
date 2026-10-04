@@ -17,6 +17,8 @@ import {
   setCompanyHandle,
 } from "@/lib/actions/companies";
 import { cx } from "@/lib/cx";
+import { BUSINESS_PITCH, UpgradeCallout } from "./upgrade";
+import { BUSINESS_LIMITS } from "@/lib/pricing";
 import { isPaid, type Plan } from "@/convex/lib/plan";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -111,10 +113,10 @@ export function CompaniesPanel({
       />
 
       {!isPaid(plan) ? (
-        <Callout tone="amber" title="Companies are part of Pro">
-          Pro covers one company, Business covers ten and lets you add people to them. You can still be added
-          to somebody else&rsquo;s company without paying anything.
-        </Callout>
+        <UpgradeCallout to="pro" feature="A company of your own">
+          Your booking links on your own domain, with your logo and colours. You can still be added to
+          somebody else&rsquo;s company for nothing.
+        </UpgradeCallout>
       ) : null}
 
       {companies.length === 0 ? (
@@ -177,9 +179,19 @@ export function CompaniesPanel({
           </span>
         </div>
       ) : owned > 0 ? (
-        <span className="text-[12px] text-ink-3">
-          {owned} of {companyLimit} used. {companyLimit === 1 ? "Business covers ten." : null}
-        </span>
+        /* At the cap, which is the one moment a Pro customer has a reason to
+           read about Business: they have just been told they cannot make
+           another. One prompt, here, rather than a banner on the panel. */
+        <div className="flex flex-col gap-[9px]">
+          <span className="text-[12px] text-ink-3">
+            {owned} of {companyLimit} used.
+          </span>
+          {companyLimit < BUSINESS_LIMITS.companies ? (
+            <UpgradeCallout to="business" feature="More than one company">
+              {BUSINESS_PITCH}
+            </UpgradeCallout>
+          ) : null}
+        </div>
       ) : null}
 
       <Modal
@@ -398,11 +410,17 @@ function CompanyCard({
             Delete company
           </Button>
           <span className="text-[12px] text-ink-3">
-            {canAddPeople
-              ? `${company.members.length} of ${company.memberLimit}.`
-              : "Pro covers one person. Business adds the rest of your team."}
+            {canAddPeople ? `${company.members.length} of ${company.memberLimit}.` : null}
           </span>
         </div>
+      ) : null}
+
+      {/* Beside the button that is not there, rather than at the top of the
+          panel: this is the moment somebody wanted to add a colleague. */}
+      {company.isOwner && !canAddPeople ? (
+        <UpgradeCallout to="business" feature="Adding people to a company">
+          {BUSINESS_PITCH}
+        </UpgradeCallout>
       ) : null}
     </div>
   );

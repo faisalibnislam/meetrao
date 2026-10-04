@@ -8,6 +8,7 @@ import { Field, Input } from "@/components/ui/controls";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
 import { Callout, PanelHeading } from "@/components/ui/panels";
+import { UpgradeCallout } from "./upgrade";
 import { useToast } from "@/components/ui/toast";
 import { CopyLinkChip } from "./copy-link";
 import {
@@ -18,7 +19,6 @@ import {
   setMeetingTeam,
 } from "@/lib/actions/teams";
 import { cx } from "@/lib/cx";
-import Link from "next/link";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    One link several people answer.
@@ -103,13 +103,9 @@ export function TeamPanel({
           ) : (
             /* Locked, and it says what it costs. A disabled button with no
                explanation is how a paywall reads as a bug. */
-            <Callout tone="accent" title="Team links are part of Pro">
-              One link the whole team answers, rotating to whoever is free.{" "}
-              <Link href="/settings/billing" className="font-semibold">
-                See Pro, $30 a year
-              </Link>
-              .
-            </Callout>
+            <UpgradeCallout to="pro" feature="Team links">
+              One link the whole team answers, rotating to whoever is free.
+            </UpgradeCallout>
           )}
         </>
       ) : null}

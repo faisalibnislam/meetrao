@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, Help, Input, Label } from "@/components/ui/controls";
-import { Callout, PanelHeading } from "@/components/ui/panels";
+import { PanelHeading } from "@/components/ui/panels";
+import { UpgradeCallout } from "./upgrade";
 import { useToast } from "@/components/ui/toast";
 import { logoUploadUrl, removeLogo, saveLogo, setBrandBackground, setBrandColor } from "@/lib/actions/branding";
 import { claimDomain, removeDomain, verifyDomain } from "@/lib/actions/billing";
@@ -238,10 +238,9 @@ export function BrandingPanel({
       />
 
       {!pro ? (
-        <Callout tone="amber" title="Branding is part of Pro">
-          Everything on this screen is set up and ready. It shows on your pages once you are on Pro.{" "}
-          <Link href="/settings/billing">See the plans</Link>.
-        </Callout>
+        <UpgradeCallout to="pro" feature="Your own branding">
+          Everything on this screen is set up and ready. It shows on your pages once you are on Pro.
+        </UpgradeCallout>
       ) : null}
 
       {/* ── logo ──────────────────────────────────────────────────────── */}

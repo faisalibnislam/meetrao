@@ -8,6 +8,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
+import { SidebarUpgrade } from "./upgrade";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Sidebar, 218px, #EFEDE7, one border to the right.
@@ -54,11 +55,14 @@ export function Sidebar({
   avatarUrl,
   links = [],
   onSignOut,
+  showUpgrade = false,
 }: {
   items: NavItem[];
   name: string;
   email: string;
   isAdmin: boolean;
+  /** Free accounts only. The single standing upsell in the whole app. */
+  showUpgrade?: boolean;
   avatarUrl?: string | null;
   /** Account link first, then one row per active meeting type. */
   links?: BookingLink[];
@@ -310,6 +314,8 @@ export function Sidebar({
           </div>
         </div>
       ) : null}
+
+      {showUpgrade ? <SidebarUpgrade /> : null}
 
       <div className="relative mt-auto flex flex-none items-center gap-[9px] border-t border-line px-[4px] pt-[12px] pb-[2px] max-[820px]:hidden">
         <div className="relative w-full">

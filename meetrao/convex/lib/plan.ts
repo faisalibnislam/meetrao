@@ -77,6 +77,11 @@ export function isPaid(plan: Plan): boolean {
   return plan !== "free";
 }
 
+/** isBusiness, asked of a plan that has already been resolved. */
+export function isBusinessPlan(plan: Plan): boolean {
+  return plan === "business";
+}
+
 /** True only for Business. For the handful of things Pro genuinely lacks. */
 export function isBusiness(profile: PlanFields): boolean {
   return planOf(profile) === "business";

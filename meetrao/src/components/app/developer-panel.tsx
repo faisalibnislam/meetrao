@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Field, Input } from "@/components/ui/controls";
 import { Modal } from "@/components/ui/modal";
 import { Callout, PanelHeading } from "@/components/ui/panels";
+import { UpgradeCallout } from "./upgrade";
 import { useToast } from "@/components/ui/toast";
 import { addWebhook, createApiKey, removeWebhook, revokeApiKey, testWebhook } from "@/lib/actions/developer";
 import { cx } from "@/lib/cx";
-import Link from "next/link";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Keys and endpoints.
@@ -77,13 +77,9 @@ export function DeveloperPanel({
       />
 
       {pro ? null : (
-        <Callout tone="accent" title="The API is part of Pro">
-          A read-only key for your bookings and meetings, and a signed webhook when one changes.{" "}
-          <Link href="/settings/billing" className="font-semibold">
-            See Pro, $30 a year
-          </Link>
-          .
-        </Callout>
+        <UpgradeCallout to="pro" feature="The API">
+          A read-only key for your bookings and meetings, and a signed webhook when one changes.
+        </UpgradeCallout>
       )}
 
       <div className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
