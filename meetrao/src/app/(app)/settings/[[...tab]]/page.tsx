@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { AppScreen } from "@/components/app/app-screen";
 import { SettingsNav } from "@/components/app/settings-nav";
-import { SETTINGS_TABS, type SettingsTab } from "@/lib/settings-tabs";
+import { SETTINGS_TABS, defaultTab, tabsFor, type SettingsTab } from "@/lib/settings-tabs";
+import { activeContext } from "@/lib/data/context";
 import {
   AccountPanel,
   BookingPanel,
@@ -47,16 +48,28 @@ export default async function SettingsPage({
   const { tab: segments } = await params;
   const { calendar, welcome } = await searchParams;
 
-  const tab = (segments?.[0] ?? "profile") as SettingsTab;
+  const session = await requireOnboardedSession();
+
+  /* Which panels exist depends on the workspace. In a company you are editing
+     that company's brand, domain and people; in Personal you are editing your
+     own profile, calendar and account. */
+  const context = await activeContext();
+  const tabs = tabsFor(context.companyId);
+
+  const tab = (segments?.[0] ?? defaultTab(context.companyId)) as SettingsTab;
   if (segments && segments.length > 1) notFound();
   if (!SETTINGS_TABS.some((t) => t.key === tab)) notFound();
 
-  const session = await requireOnboardedSession();
+  /* A tab that exists but belongs to the other workspace sends you to that
+     workspace's first panel rather than 404ing. Somebody following a bookmark
+     to /settings/branding while in Personal has asked a reasonable question;
+     the answer is just that branding lives in a company now. */
+  if (!tabs.some((t) => t.key === tab)) redirect(`/settings/${defaultTab(context.companyId)}`);
 
   return (
     <AppScreen title="Settings">
       <div className="mx-auto grid w-full max-w-[780px] grid-cols-[158px_minmax(0,1fr)] items-start gap-[34px] max-[820px]:flex max-[820px]:flex-col max-[820px]:gap-[18px]">
-        <SettingsNav current={tab} />
+        <SettingsNav current={tab} tabs={tabs} />
 
         <div className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
           {tab === "billing" ? (
@@ -70,6 +83,7 @@ export default async function SettingsPage({
           />
         ) : null}
         {tab === "companies" ? <CompaniesPanel {...(await companiesPanelData())} /> : null}
+        {tab === "people" ? <CompaniesPanel {...(await companiesPanelData())} only={context.companyId} /> : null}
         {tab === "developer" ? <DeveloperPanel {...(await developerPanelData())} siteUrl={siteUrl()} /> : null}
         {tab === "team" ? (
           <TeamPanel {...(await teamPanelData(session.profile.id))} siteUrl={siteUrl()} />

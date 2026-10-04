@@ -8,6 +8,7 @@ import { createCheckout, customerPortalUrl, type Cadence, type Tier } from "@/li
 import { attachDomain, checkDomain, detachDomain, type DomainState } from "@/lib/vercel-domains";
 import { api } from "@/convex/_generated/api";
 import { env, siteUrl } from "@/lib/env";
+import { activeContext } from "@/lib/data/context";
 
 /* Billing and custom domains. The plan itself is never written here, only
    Polar's webhook does that. These actions start a checkout, open the portal,
@@ -58,45 +59,65 @@ export async function openPortal(): Promise<BillingResult> {
 
 export type DomainResult = { error?: string; state?: DomainState };
 
+/* A domain belongs to the workspace in force: a company's own, or the
+   profile's in Personal. The company id is read from the cookie on the server
+   rather than taken from the caller, and Convex re-checks the membership. */
+
 export async function claimDomain(domain: string): Promise<DomainResult> {
   await requireSession();
   const convex = await convexServer();
+  const { companyId } = await activeContext();
 
   let claimed: string;
   try {
-    claimed = await convex.mutation(api.domains.claim, { domain });
+    claimed = companyId
+      ? await convex.mutation(api.companyDomains.claim, { id: companyId, domain })
+      : await convex.mutation(api.domains.claim, { domain });
   } catch (cause) {
     return { error: convexMessage(cause, "That domain could not be claimed.") };
   }
 
   const state = await attachDomain(claimed);
   if (state.status === "verified") {
-    await convex.mutation(api.domains.markVerified, { domain: claimed, verified: true });
+    if (companyId) await convex.mutation(api.companyDomains.markVerified, { id: companyId, domain: claimed, verified: true });
+    else await convex.mutation(api.domains.markVerified, { domain: claimed, verified: true });
   }
 
-  revalidatePath("/settings/billing");
+  revalidatePath("/settings", "layout");
   return { state };
 }
 
-/** Asks Vercel again. The host presses this after adding the DNS record. */
+/** Asks Vercel again. Pressed after adding the DNS record. */
 export async function verifyDomain(domain: string): Promise<DomainResult> {
   await requireSession();
   const convex = await convexServer();
+  const { companyId } = await activeContext();
 
   const state = await checkDomain(domain);
-  await convex.mutation(api.domains.markVerified, { domain, verified: state.status === "verified" });
+  const verified = state.status === "verified";
+  if (companyId) await convex.mutation(api.companyDomains.markVerified, { id: companyId, domain, verified });
+  else await convex.mutation(api.domains.markVerified, { domain, verified });
 
-  revalidatePath("/settings/billing");
+  revalidatePath("/settings", "layout");
   return { state };
 }
 
 export async function removeDomain(): Promise<DomainResult> {
   await requireSession();
   const convex = await convexServer();
+  const { companyId } = await activeContext();
 
-  const had = await convex.mutation(api.domains.release, {});
-  if (had) await detachDomain(had);
+  if (companyId) {
+    /* The company query is the only thing that knows which hostname this was,
+       and Vercel has to be told to let it go or the certificate stays. */
+    const current = await convex.query(api.companyDomains.get, { id: companyId });
+    await convex.mutation(api.companyDomains.release, { id: companyId });
+    if (current?.domain) await detachDomain(current.domain);
+  } else {
+    const had = await convex.mutation(api.domains.release, {});
+    if (had) await detachDomain(had);
+  }
 
-  revalidatePath("/settings/billing");
+  revalidatePath("/settings", "layout");
   return {};
 }

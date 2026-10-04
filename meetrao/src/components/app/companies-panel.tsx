@@ -57,11 +57,12 @@ export type CompanyView = {
 };
 
 export function CompaniesPanel({
-  companies,
+  companies: all,
   owned,
   companyLimit,
   canCreate,
   plan,
+  only = null,
 }: {
   companies: CompanyView[];
   owned: number;
@@ -69,12 +70,22 @@ export function CompaniesPanel({
   canCreate: boolean;
   /** The VIEWER's plan, which decides only whether they may create one. */
   plan: Plan;
+  /**
+   * One company, for the People tab inside a company's own settings.
+   *
+   * The same panel, because the card is the same thing in both places: who is
+   * in this company and what they are called on its domain. The difference is
+   * the question being asked, which is "which companies do I have" in
+   * Personal and "who is in this one" inside a company, so the list of others
+   * and the create button are both absent here.
+   */
+  only?: string | null;
 }) {
   const router = useRouter();
   const toast = useToast();
   const [busy, startBusy] = useTransition();
   const [dialog, setDialog] = useState<"new" | "invite" | "delete" | null>(null);
-  const [active, setActive] = useState<string | null>(companies[0]?.id ?? null);
+  const [active, setActive] = useState<string | null>(all[0]?.id ?? null);
 
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
@@ -86,6 +97,7 @@ export function CompaniesPanel({
      company re-renders with new props while the state stays null, so the card
      for the company somebody just made would not appear at all. Deriving it
      here means the selection is a preference, not the only way to have one. */
+  const companies = only ? all.filter((c) => c.id === only) : all;
   const current = companies.find((c) => c.id === active) ?? companies[0] ?? null;
 
   /* ONE Business prompt per screen, and the card's wins.
@@ -116,11 +128,15 @@ export function CompaniesPanel({
   return (
     <section className="flex flex-col gap-[11px]">
       <PanelHeading
-        title="Companies"
-        subtitle="A company owns a domain and a brand. The people in it get their own links on it."
+        title={only ? "People" : "Companies"}
+        subtitle={
+          only
+            ? "Everyone here gets their own link on this company's domain, under the handle you give them."
+            : "A company owns a domain and a brand. The people in it get their own links on it."
+        }
       />
 
-      {!isPaid(plan) ? (
+      {!only && !isPaid(plan) ? (
         <UpgradeCallout to="pro" feature="A company of your own">
           Your booking links on your own domain, with your logo and colours. You can still be added to
           somebody else&rsquo;s company for nothing.
@@ -135,7 +151,7 @@ export function CompaniesPanel({
         </Callout>
       ) : (
         <div className="flex flex-col gap-[10px]">
-          {companies.length > 1 ? (
+          {!only && companies.length > 1 ? (
             <div className="flex flex-wrap gap-[7px]">
               {companies.map((c) => (
                 <button
@@ -177,7 +193,7 @@ export function CompaniesPanel({
         </div>
       )}
 
-      {canCreate ? (
+      {!only && canCreate ? (
         <div>
           <Button variant="secondary" size={34} icon="plus" disabled={busy} onClick={() => setDialog("new")}>
             New company

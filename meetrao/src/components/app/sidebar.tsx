@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
 import { SidebarUpgrade } from "./upgrade";
-import { ContextSwitcher, type ContextOption } from "./context-switcher";
+import { WorkspaceMenu, type WorkspaceOption } from "./workspace-menu";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Sidebar, 218px, #EFEDE7, one border to the right.
@@ -67,7 +67,7 @@ export function Sidebar({
   /** Free accounts only. The single standing upsell in the whole app. */
   showUpgrade?: boolean;
   /** Personal plus every company. Renders nothing when there is only one. */
-  contexts?: ContextOption[];
+  contexts?: WorkspaceOption[];
   activeContextId?: string | null;
   avatarUrl?: string | null;
   /** Account link first, then one row per active meeting type. */
@@ -165,7 +165,15 @@ export function Sidebar({
           Meetings screen, its empty state and the dashboard's. A second copy
           here would crowd out the thing a host does most days.
           Hidden on the mobile bar; the drawer below carries its own row. */}
-      <ContextSwitcher options={contexts} activeId={activeContextId} />
+      <WorkspaceMenu
+        name={name}
+        email={email}
+        avatarUrl={avatarUrl}
+        isAdmin={isAdmin}
+        workspaces={contexts}
+        activeId={activeContextId}
+        onSignOut={onSignOut}
+      />
 
       <Link
         href="/bookings/new"
@@ -325,59 +333,6 @@ export function Sidebar({
 
       {showUpgrade ? <SidebarUpgrade /> : null}
 
-      <div className="relative mt-auto flex flex-none items-center gap-[9px] border-t border-line px-[4px] pt-[12px] pb-[2px] max-[820px]:hidden">
-        <div className="relative w-full">
-          <button
-            type="button"
-            aria-expanded={menuOpen}
-            aria-haspopup="menu"
-            onClick={() => setMenuOpen((v) => !v)}
-            className={cx(
-              "box-border flex w-full cursor-pointer items-center gap-[9px] rounded-[7px] border p-[6px]",
-              "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
-              menuOpen ? "border-line bg-surface" : "border-transparent bg-transparent hover:bg-white/55",
-            )}
-          >
-            {avatarUrl ? (
-              <Avatar name={name} size={26} src={avatarUrl} />
-            ) : (
-              <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[11px] font-bold text-accent-ink">
-                {initials}
-              </span>
-            )}
-            <span className="flex min-w-0 flex-1 flex-col">
-              <span className="overflow-hidden text-left text-[12.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
-                {name}
-              </span>
-              <span className="overflow-hidden text-left text-[11.5px] text-ellipsis whitespace-nowrap text-ink-3">
-                {email}
-              </span>
-            </span>
-            <Icon
-              name="chevron-down"
-              size={9}
-              className="flex-none text-ink-3 transition-transform duration-[140ms]"
-              style={{ transform: menuOpen ? "rotate(180deg)" : "rotate(0deg)" }}
-            />
-          </button>
-
-          {menuOpen ? (
-            <div
-              role="menu"
-              className="animate-in absolute bottom-[calc(100%+6px)] left-0 z-95 w-full min-w-[190px] rounded-[8px] border border-line bg-surface p-[6px] shadow-[var(--pop)]"
-            >
-              {!isAdmin ? <MenuLink href="/settings" icon="gear" label="Settings" /> : null}
-              <MenuLink href="/help" icon="circle-question" label="Help centre" newTab />
-              <MenuLink href="/support" icon="envelope" label="Support" />
-              <span aria-hidden="true" className="mx-[2px] my-[5px] block h-[1px] bg-line-soft" />
-              <button type="button" role="menuitem" onClick={onSignOut} className={menuItem}>
-                <Icon name="sign-out" size={12} className="w-[15px] flex-none text-ink-3" />
-                <span>Log out</span>
-              </button>
-            </div>
-          ) : null}
-        </div>
-      </div>
     </nav>
   );
 }
@@ -409,40 +364,10 @@ function NavIcon({ name, active }: { name: IconName; active: boolean }) {
   );
 }
 
-const menuItem =
-  "unlink box-border flex h-[32px] w-full cursor-pointer items-center gap-[10px] rounded-[6px] border-0 " +
-  "bg-transparent px-[8px] text-left font-sans text-[13px] font-medium text-ink hover:bg-fill";
-
 const drawerItem =
   "unlink box-border flex min-h-[44px] w-full cursor-pointer items-center gap-[11px] rounded-[8px] border-0 " +
   "bg-transparent px-[12px] text-left font-sans text-[13.5px] font-medium text-ink hover:bg-fill";
 
-/* `newTab` is for the Help centre. Reading an answer should not close the
-   screen the question is about, and coming back should not mean losing it. */
-function MenuLink({
-  href,
-  icon,
-  label,
-  newTab,
-}: {
-  href: string;
-  icon: IconName;
-  label: string;
-  newTab?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      role="menuitem"
-      className={menuItem}
-      {...(newTab ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-    >
-      <Icon name={icon} size={12} className="w-[15px] flex-none text-ink-3" />
-      <span className="flex-1">{label}</span>
-      {newTab ? <Icon name="external-link" size={10} className="flex-none text-ink-3" /> : null}
-    </Link>
-  );
-}
 
 function DrawerLink({
   href,

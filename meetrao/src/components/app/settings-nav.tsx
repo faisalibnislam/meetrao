@@ -2,12 +2,22 @@
 
 import Link from "next/link";
 import { cx } from "@/lib/cx";
-import { SETTINGS_TABS, type SettingsTab } from "@/lib/settings-tabs";
+import { type SettingsTab } from "@/lib/settings-tabs";
 
 
 /* A sticky sub-nav on desktop, a horizontal chip row on mobile. Real links, so
-   each panel has its own URL and the browser's back button behaves. */
-export function SettingsNav({ current }: { current: SettingsTab }) {
+   each panel has its own URL and the browser's back button behaves.
+
+   The tabs are passed in rather than imported: which ones exist depends on the
+   workspace in force, and that is decided on the server where the cookie is
+   read. */
+export function SettingsNav({
+  current,
+  tabs,
+}: {
+  current: SettingsTab;
+  tabs: readonly { key: string; label: string }[];
+}) {
   return (
     <nav
       aria-label="Settings"
@@ -16,7 +26,7 @@ export function SettingsNav({ current }: { current: SettingsTab }) {
         "max-[820px]:flex-row max-[820px]:gap-[4px] max-[820px]:overflow-x-auto max-[820px]:pb-[2px]",
       )}
     >
-      {SETTINGS_TABS.map((tab) => {
+      {tabs.map((tab) => {
         const on = tab.key === current;
         return (
           <Link
