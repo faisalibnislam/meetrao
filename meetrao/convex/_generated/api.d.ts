@@ -22,6 +22,8 @@ import type * as bookings from "../bookings.js";
 import type * as branding from "../branding.js";
 import type * as calendarConnections from "../calendarConnections.js";
 import type * as companies from "../companies.js";
+import type * as companyBranding from "../companyBranding.js";
+import type * as companyDomains from "../companyDomains.js";
 import type * as contacts from "../contacts.js";
 import type * as crons from "../crons.js";
 import type * as domains from "../domains.js";
@@ -79,6 +81,8 @@ declare const fullApi: ApiFromModules<{
   branding: typeof branding;
   calendarConnections: typeof calendarConnections;
   companies: typeof companies;
+  companyBranding: typeof companyBranding;
+  companyDomains: typeof companyDomains;
   contacts: typeof contacts;
   crons: typeof crons;
   domains: typeof domains;
