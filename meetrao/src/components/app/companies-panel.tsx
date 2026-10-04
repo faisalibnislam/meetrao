@@ -88,6 +88,14 @@ export function CompaniesPanel({
      here means the selection is a preference, not the only way to have one. */
   const current = companies.find((c) => c.id === active) ?? companies[0] ?? null;
 
+  /* ONE Business prompt per screen, and the card's wins.
+
+     A Pro owner at the cap triggered both: "adding people" inside the card and
+     "more than one company" under it, with the same pitch and the same button
+     twice. The card's is the one beside what somebody just tried to do, so the
+     panel-level one steps aside when it is showing. */
+  const cardAsksForBusiness = Boolean(current?.isOwner && current.memberLimit <= 1);
+
   function run(work: () => Promise<{ error?: string }>, ok: { title: string; text?: string }) {
     startBusy(async () => {
       const result = await work();
@@ -186,7 +194,7 @@ export function CompaniesPanel({
           <span className="text-[12px] text-ink-3">
             {owned} of {companyLimit} used.
           </span>
-          {companyLimit < BUSINESS_LIMITS.companies ? (
+          {companyLimit < BUSINESS_LIMITS.companies && !cardAsksForBusiness ? (
             <UpgradeCallout to="business" feature="More than one company">
               {BUSINESS_PITCH}
             </UpgradeCallout>
