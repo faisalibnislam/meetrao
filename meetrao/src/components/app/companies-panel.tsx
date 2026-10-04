@@ -220,6 +220,10 @@ export function CompaniesPanel({
                   )}
                 >
                   {c.name}
+                  {/* The link name, which is unique where the display name
+                      is not: two companies called the same thing were two
+                      identical chips. */}
+                  <span className="ml-[6px] font-normal opacity-70">/{c.slug}</span>
                 </button>
               ))}
             </div>
@@ -231,6 +235,12 @@ export function CompaniesPanel({
             </UpgradeCallout>
           ) : current ? (
             <CompanyCard
+              /* One card per company, not one card shown for each in turn.
+                 Without a key React reuses the instance, and the name and
+                 link fields keep whichever company the card first showed:
+                 switching showed the other company's values, and Save wrote
+                 them onto the company now selected. */
+              key={current.id}
               company={current}
               /* Deleting a company belongs to the owner's personal space,
                  beside the list of every company they have. Offering it from

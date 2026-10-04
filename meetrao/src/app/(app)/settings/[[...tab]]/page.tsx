@@ -73,7 +73,12 @@ export default async function SettingsPage({
       <div className="mx-auto grid w-full max-w-[780px] grid-cols-[158px_minmax(0,1fr)] items-start gap-[34px] max-[820px]:flex max-[820px]:flex-col max-[820px]:gap-[18px]">
         <SettingsNav current={tab} tabs={tabs} />
 
-        <div className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
+        {/* Keyed by workspace so every panel starts again when it changes.
+            The panels seed their fields from props once, and switching
+            workspace keeps you on the same page, so without this the
+            Branding screen showed Personal's colours inside a company and
+            Save colour would have written them onto the company. */}
+        <div key={context.companyId ?? "personal"} className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
           {tab === "billing" ? (
           <BillingPanel {...(await billingPanelData())} welcome={welcome === "1"} />
         ) : null}

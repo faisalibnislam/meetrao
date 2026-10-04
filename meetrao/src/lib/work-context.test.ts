@@ -141,3 +141,31 @@ describe("the settings menu", () => {
     expect(MENU).toContain("bottom-[calc(100%+6px)]");
   });
 });
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   State that belongs to one workspace must not survive into another.
+
+   Both screens below seed their fields from props ONCE. Switching company,
+   or switching workspace while staying on the same page, re-renders with new
+   props and keeps the old fields, so the screen showed one company's values
+   under another's name and Save wrote them onto the wrong one. Found with two
+   companies both called "Airly Studio": editing either changed both.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+describe("one workspace's fields never carry into another", () => {
+  const PANEL = read("src/components/app/companies-panel.tsx");
+  const SETTINGS = read("src/app/(app)/settings/[[...tab]]/page.tsx");
+
+  it("gives each company its own card", () => {
+    expect(PANEL).toContain("key={current.id}");
+  });
+
+  it("starts every settings panel again when the workspace changes", () => {
+    expect(SETTINGS).toContain('key={context.companyId ?? "personal"}');
+  });
+
+  /* Two companies can share a display name; only the link name is unique. */
+  it("tells two same-named companies apart", () => {
+    expect(PANEL).toContain("/{c.slug}");
+  });
+});
