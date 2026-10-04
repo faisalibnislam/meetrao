@@ -281,7 +281,17 @@ export default defineSchema({
     id: v.string(),
     company_id: v.string(),
     user_id: v.string(),
-    role: v.union(v.literal("owner"), v.literal("member")),
+    /**
+     * "owner", "admin" or "member". The line between them is the size of the
+     * mistake each can make: a member has their own link, an admin has the
+     * company's face and its people, and the owner has the two things nobody
+     * should be able to do to somebody else's company, which are deleting it
+     * and taking an admin's powers away.
+     *
+     * Every row written before "admin" existed holds one of the other two, so
+     * widening the union needs no migration.
+     */
+    role: v.union(v.literal("owner"), v.literal("admin"), v.literal("member")),
     handle: v.string(),
     handle_lower: v.string(),
     created_at: v.number(),

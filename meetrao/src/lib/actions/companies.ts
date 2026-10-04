@@ -27,7 +27,11 @@ async function viaConvex<T>(
 }
 
 function done() {
+  /* Both paths to the same list: Personal → Companies, and a company's own
+     People tab. Revalidating one would leave the other showing what was true
+     before the change. */
   revalidatePath("/settings/companies");
+  revalidatePath("/settings/people");
 }
 
 export async function createCompany(input: { name: string; slug: string }): Promise<CompanyResult> {
@@ -69,6 +73,26 @@ export async function setCompanyHandle(input: {
 }): Promise<CompanyResult> {
   await requireSession();
   const { error } = await viaConvex((c) => c.mutation(api.companies.setHandle, input));
+  if (error) return { error };
+  done();
+  return {};
+}
+
+/**
+ * Promote a member to admin, or take it back.
+ *
+ * Which of those is allowed depends on the caller's role AND on what the
+ * person already is, and both are decided in convex/companies.ts. Nothing is
+ * pre-checked here: a form that guesses at a rule it does not own ends up
+ * disagreeing with it.
+ */
+export async function setCompanyRole(input: {
+  id: string;
+  userId: string;
+  role: "admin" | "member";
+}): Promise<CompanyResult> {
+  await requireSession();
+  const { error } = await viaConvex((c) => c.mutation(api.companies.setRole, input));
   if (error) return { error };
   done();
   return {};

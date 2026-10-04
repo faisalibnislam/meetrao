@@ -6,7 +6,8 @@ import type { AssignableMeeting, TeamView } from "@/components/app/team-panel";
 import type { HookView, KeyView } from "@/components/app/developer-panel";
 import type { DomainView, PlanView, TimingView } from "@/components/app/billing-panel";
 import { isPaid } from "@/convex/lib/plan";
-import type { CompanyView } from "@/components/app/companies-panel";
+import { siteUrl } from "@/lib/env";
+import type { CompanyRole, CompanyView } from "@/components/app/companies-panel";
 import type { Plan } from "@/convex/lib/plan";
 import { activeContext } from "@/lib/data/context";
 
@@ -178,6 +179,7 @@ export async function companiesPanelData(): Promise<{
   companyLimit: number;
   canCreate: boolean;
   plan: Plan;
+  siteHost: string;
 }> {
   const convex = await convexServer();
   const data = await convex.query(api.companies.mine, {});
@@ -191,6 +193,9 @@ export async function companiesPanelData(): Promise<{
       slug: c.slug,
       handle: c.handle,
       isOwner: c.is_owner,
+      /* The viewer's own role here, which is what decides every control on
+         the panel. `isOwner` answered one third of that question. */
+      myRole: c.role as CompanyRole,
       domain: c.domain,
       domainVerified: c.domain_verified,
       ownerPlan: c.owner_plan as Plan,
@@ -199,8 +204,18 @@ export async function companiesPanelData(): Promise<{
         userId: m.user_id,
         name: m.name,
         email: m.email,
+        avatarUrl: m.avatar_url,
+        username: m.username,
         handle: m.handle,
-        role: m.role,
+        role: m.role as CompanyRole,
+        joinedAt: m.joined_at,
+        meetings: m.meetings.map((t) => ({
+          id: t.id,
+          name: t.name,
+          slug: t.slug,
+          durationMinutes: t.duration_minutes,
+          isActive: t.is_active,
+        })),
       })),
     })),
   );
@@ -211,5 +226,6 @@ export async function companiesPanelData(): Promise<{
     companyLimit: data.company_limit,
     canCreate: data.can_create,
     plan: data.plan as Plan,
+    siteHost: new URL(siteUrl()).host,
   };
 }

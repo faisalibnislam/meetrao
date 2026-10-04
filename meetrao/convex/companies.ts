@@ -1,7 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { fail } from "./lib/errors";
-import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
+import { requireProfile, AuthError } from "./lib/auth";
 import { uuid } from "./lib/ids";
 import { planOf } from "./lib/plan";
 import { limitsFor } from "./lib/limits";
@@ -76,15 +76,90 @@ export async function ownerOf(ctx: QueryCtx | MutationCtx, company: Doc<"compani
     .unique();
 }
 
-async function requireOwner(ctx: MutationCtx, companyId: string) {
+/* ── who may do what ──────────────────────────────────────────────────────────
+   Three roles, and the line between them is the size of the mistake each one
+   can make.
+
+   MEMBER  their own link on the domain, and the list of who else is here.
+   ADMIN   the company's face and its people: branding, the domain, adding
+           somebody, giving a member the same powers they have.
+   OWNER   the two things nobody should be able to do to somebody else's
+           company, which are deleting it and taking an admin's powers away.
+
+   WHY AN ADMIN CANNOT DEMOTE AN ADMIN. Two admins who can each strip the
+   other is a race, and whoever clicks first ends up holding a company that is
+   not theirs. Promotion is additive and safe to share; demotion is not, so it
+   stays with the one person whose company it is. Removing an admin is the
+   same act under another name, so it sits in the same place.
+
+   A PLATFORM ADMIN reads as the owner, as everywhere else, because support
+   has to be able to act on an account it does not own. That is the only way
+   somebody outside the company gets past this.
+   ───────────────────────────────────────────────────────────────────────── */
+
+export type CompanyRole = "owner" | "admin" | "member";
+
+const RANK: Record<CompanyRole, number> = { member: 0, admin: 1, owner: 2 };
+
+/** One person's membership row, or null. */
+async function memberRow(ctx: QueryCtx | MutationCtx, companyId: string, userId: string) {
+  const rows = await ctx.db
+    .query("company_members")
+    .withIndex("by_company", (q) => q.eq("company_id", companyId))
+    .collect();
+  return rows.find((m) => m.user_id === userId) ?? null;
+}
+
+/**
+ * The caller's role in this company, or null when they are not in it.
+ *
+ * Reads `owner_id` first rather than trusting the membership row: the row
+ * says "owner" too, but the company is the record of who owns it and a row
+ * that disagreed would be the more dangerous of the two to believe.
+ */
+export async function roleIn(
+  ctx: QueryCtx | MutationCtx,
+  company: Doc<"companies">,
+  me: Doc<"profiles">,
+): Promise<CompanyRole | null> {
+  if (company.owner_id === me.id) return "owner";
+  const row = await memberRow(ctx, company.id, me.id);
+  if (row) return row.role === "owner" ? "owner" : row.role === "admin" ? "admin" : "member";
+  return me.is_admin ? "owner" : null;
+}
+
+/** The company, the caller, and their role, refused below `least`. */
+async function requireRole(ctx: MutationCtx, companyId: string, least: CompanyRole) {
   const me = await requireProfile(ctx);
   const company = await ctx.db
     .query("companies")
     .withIndex("by_uuid", (q) => q.eq("id", companyId))
     .unique();
   if (!company) AuthError("No such company.", "NOT_FOUND");
-  assertOwnerOrAdmin(me, company.owner_id);
-  return { me, company };
+
+  const role = await roleIn(ctx, company, me);
+  /* NOT_FOUND rather than a refusal: somebody who is not in this company
+     should not learn from the error that it exists. */
+  if (!role) AuthError("No such company.", "NOT_FOUND");
+  if (RANK[role] < RANK[least]) {
+    fail(
+      least === "owner"
+        ? "Only the owner of this company can do that."
+        : "Only an owner or admin of this company can do that.",
+      "FORBIDDEN",
+    );
+  }
+  return { me, company, role };
+}
+
+/** Owner or admin: everything about the company's face and its people. */
+async function requireManager(ctx: MutationCtx, companyId: string) {
+  return await requireRole(ctx, companyId, "admin");
+}
+
+/** The owner alone: deleting the company, and unmaking an admin. */
+async function requireOwner(ctx: MutationCtx, companyId: string) {
+  return await requireRole(ctx, companyId, "owner");
 }
 
 /** A name nobody else holds: not a host, not a team, not another company. */
@@ -138,7 +213,10 @@ export const mine = query({
         name: company.name,
         slug: company.slug,
         handle: m.handle,
-        role: m.role,
+        /* The row's role, corrected by the company: `owner_id` is the record
+           of who owns this and a row that disagreed would be the wrong one of
+           the two to believe. */
+        role: company.owner_id === me.id ? ("owner" as const) : m.role,
         is_owner: company.owner_id === me.id,
         domain: company.custom_domain ?? null,
         domain_verified: Boolean(company.custom_domain_verified_at),
@@ -195,13 +273,43 @@ export const members = query({
       AuthError("That company is not yours.", "NOT_FOUND");
     }
 
-    return rows.map(({ member, profile }) => ({
-      user_id: profile.id,
-      name: profile.full_name || profile.username,
-      email: profile.email,
-      handle: member.handle,
-      role: member.role,
-    }));
+    /* Their links, which is the question the People screen was not able to
+       answer. A handle alone tells somebody what the first segment of a URL
+       will be; it does not tell them whether there is anything at the end of
+       it, and a company whose people have no meetings set up has a domain
+       serving nothing but 404s without anybody being able to see that here.
+
+       Scoped to THIS company: a member's personal meetings are not published
+       on this domain and listing them here would say they were. */
+    const out = [];
+    for (const { member, profile } of rows) {
+      const meetings = await ctx.db
+        .query("meeting_types")
+        .withIndex("by_user", (q) => q.eq("user_id", profile.id))
+        .collect();
+
+      out.push({
+        user_id: profile.id,
+        name: profile.full_name || profile.username,
+        email: profile.email,
+        avatar_url: profile.avatar_url ?? null,
+        handle: member.handle,
+        role: member.role,
+        username: profile.username,
+        joined_at: member.created_at,
+        meetings: meetings
+          .filter((m) => (m.company_id ?? null) === company.id)
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((m) => ({
+            id: m.id,
+            name: m.name,
+            slug: m.slug,
+            duration_minutes: m.duration_minutes,
+            is_active: m.is_active,
+          })),
+      });
+    }
+    return out;
   },
 });
 
@@ -277,7 +385,7 @@ export const create = mutation({
 export const rename = mutation({
   args: { id: v.string(), name: v.string(), slug: v.string() },
   handler: async (ctx, a) => {
-    const { company } = await requireOwner(ctx, a.id);
+    const { company } = await requireManager(ctx, a.id);
 
     const name = a.name.trim();
     if (!name) fail("Give the company a name.");
@@ -295,7 +403,7 @@ export const rename = mutation({
 export const addMember = mutation({
   args: { id: v.string(), email: v.string(), handle: v.optional(v.string()) },
   handler: async (ctx, a) => {
-    const { me, company } = await requireOwner(ctx, a.id);
+    const { me, company } = await requireManager(ctx, a.id);
 
     /* The OWNER's plan decides, not the caller's. An admin acting on somebody
        else's company must not be able to exceed what that owner pays for. */
@@ -339,10 +447,18 @@ export const addMember = mutation({
   },
 });
 
+/**
+ * The name somebody goes by on this company's domain.
+ *
+ * A manager may set anybody's, and ANYBODY MAY SET THEIR OWN. The handle is
+ * the person's own link and nobody else's, so needing an admin to fix a typo
+ * in it was a rule with nothing behind it.
+ */
 export const setHandle = mutation({
   args: { id: v.string(), userId: v.string(), handle: v.string() },
   handler: async (ctx, a) => {
-    const { company } = await requireOwner(ctx, a.id);
+    const me = await requireProfile(ctx);
+    const { company } = await requireRole(ctx, a.id, a.userId === me.id ? "member" : "admin");
 
     const rows = await ctx.db
       .query("company_members")
@@ -363,10 +479,39 @@ export const setHandle = mutation({
   },
 });
 
+/**
+ * Promote a member to admin, or take it back.
+ *
+ * Promotion is a manager's to make and demotion is the owner's alone. Two
+ * admins who could each strip the other is a race whoever clicks first wins.
+ * Ownership is not in this union: it moves by transfer, not by assignment.
+ */
+export const setRole = mutation({
+  args: { id: v.string(), userId: v.string(), role: v.union(v.literal("admin"), v.literal("member")) },
+  handler: async (ctx, a) => {
+    /* Reading the row before choosing the gate, because what this costs
+       depends on what the person already is, not on what they are becoming:
+       making an admin into a member is the owner's call even though "member"
+       is the lesser of the two words. */
+    const probe = await requireRole(ctx, a.id, "admin");
+    const row = await memberRow(ctx, probe.company.id, a.userId);
+    if (!row) fail("They are not in this company.");
+    if (row.role === "owner") fail("The owner's role cannot be changed.");
+    if (row.role === a.role) return a.role;
+
+    if (row.role === "admin" && probe.role !== "owner") {
+      fail("Only the owner of this company can take an admin's powers away.", "FORBIDDEN");
+    }
+
+    await ctx.db.patch(row._id, { role: a.role });
+    return a.role;
+  },
+});
+
 export const removeMember = mutation({
   args: { id: v.string(), userId: v.string() },
   handler: async (ctx, a) => {
-    const { company } = await requireOwner(ctx, a.id);
+    const { company, role: mine } = await requireManager(ctx, a.id);
 
     const rows = await ctx.db
       .query("company_members")
@@ -378,6 +523,13 @@ export const removeMember = mutation({
     /* The owner is the one member who cannot leave. A company with a domain
        and nobody on it would keep answering and show no one. */
     if (row.role === "owner") fail("The owner cannot be removed. Delete the company instead.");
+
+    /* Removing an admin is demoting one under another name, so it lives
+       behind the same gate. Without this an admin could remove the other
+       admins and then be alone with the company. */
+    if (row.role === "admin" && mine !== "owner") {
+      fail("Only the owner of this company can remove an admin.", "FORBIDDEN");
+    }
 
     await ctx.db.delete(row._id);
     return true;
