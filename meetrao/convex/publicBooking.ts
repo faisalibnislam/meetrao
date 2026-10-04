@@ -100,6 +100,38 @@ export const getMeetingTypes = query({
   },
 });
 
+/**
+ * Whether a meeting may be served on a given company's domain.
+ *
+ * A meeting is always reachable at meetrao.com/<username>/<slug>, whichever
+ * company it belongs to. A COMPANY's domain serves only its own, so being
+ * added to somebody's company never puts your personal meetings on their
+ * branded pages, and a guest who guesses a slug gets nothing.
+ */
+export const meetingIsOnCompany = query({
+  args: { username: v.string(), slug: v.string(), companySlug: v.string() },
+  handler: async (ctx, a) => {
+    const host = await ctx.db
+      .query("profiles")
+      .withIndex("by_username_lower", (q) => q.eq("username_lower", a.username.trim().toLowerCase()))
+      .unique();
+    if (!host || host.is_suspended) return false;
+
+    const meeting = await ctx.db
+      .query("meeting_types")
+      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
+      .unique();
+    if (!meeting || !meeting.is_active) return false;
+    if (!meeting.company_id) return false;
+
+    const company = await ctx.db
+      .query("companies")
+      .withIndex("by_uuid", (q) => q.eq("id", meeting.company_id as string))
+      .unique();
+    return Boolean(company && company.slug === a.companySlug);
+  },
+});
+
 /** public.get_meeting_availability, the rules a booking page renders from. */
 export const getMeetingAvailability = query({
   args: { username: v.string(), slug: v.string() },

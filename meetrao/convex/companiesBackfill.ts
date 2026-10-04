@@ -203,3 +203,57 @@ export const backfill = internalMutation({
     return report;
   },
 });
+
+/**
+ * Files every existing meeting under its owner's company.
+ *
+ * Without this, a company's domain would serve nothing: a meeting with no
+ * company_id is personal, and every meeting written before companies existed
+ * has none. The owner's own meetings are the ones that were already on their
+ * domain under the old model, so putting them on the company preserves what
+ * was there rather than changing it.
+
+ * A MEMBER'S meetings are deliberately NOT touched. Somebody added to a
+ * company publishes nothing there until they choose to, which is what stops a
+ * personal meeting appearing on a client's branded page.
+ *
+ * Same three properties as the branding backfill: dry run by default,
+ * idempotent, and it only ever fills a field that is empty.
+ */
+export const backfillMeetings = internalMutation({
+  args: { dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, a): Promise<Report> => {
+    const dryRun = a.dryRun !== false;
+    const report: Report = { dryRun, scanned: 0, actions: [], created: 0, updated: 0, skipped: [] };
+
+    const companies = await ctx.db.query("companies").collect();
+
+    for (const company of companies) {
+      const owner = await ctx.db
+        .query("profiles")
+        .withIndex("by_uuid", (q) => q.eq("id", company.owner_id))
+        .unique();
+      if (!owner) {
+        report.skipped.push(`${company.slug}: no owner`);
+        continue;
+      }
+
+      const meetings = await ctx.db
+        .query("meeting_types")
+        .withIndex("by_user", (q) => q.eq("user_id", owner.id))
+        .collect();
+
+      for (const m of meetings) {
+        report.scanned++;
+        // Already filed somewhere, including under this company. Leave it.
+        if (m.company_id) continue;
+
+        report.actions.push(`${owner.username}: file "${m.name}" under ${company.slug}`);
+        report.updated++;
+        if (!dryRun) await ctx.db.patch(m._id, { company_id: company.id, updated_at: Date.now() });
+      }
+    }
+
+    return report;
+  },
+});

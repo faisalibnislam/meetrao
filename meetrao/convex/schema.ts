@@ -308,6 +308,19 @@ export default defineSchema({
      */
     team_id: v.optional(nullableString),
     /**
+     * Which COMPANY this meeting belongs to, or null for a personal one.
+     *
+     * The dimension that decides what appears on a company's domain. A
+     * meeting is always reachable at meetrao.com/<username>/<slug>, whichever
+     * company it belongs to; a company's domain serves ONLY its own, so being
+     * added to somebody's company never puts your personal meetings on their
+     * branded pages.
+     *
+     * Absent and null both mean personal, because every row written before
+     * companies existed has neither.
+     */
+    company_id: v.optional(nullableString),
+    /**
      * What the guest is asked besides name, email and the free-text note.
      * Optional because every meeting written before questions existed has
      * none, and none is the same as an empty list.
@@ -331,6 +344,7 @@ export default defineSchema({
   })
     .index("by_uuid", ["id"])
     .index("by_user", ["user_id"])
+    .index("by_company", ["company_id"])
     .index("by_user_slug", ["user_id", "slug"]),
 
   /* unique: (user_id, name) and one is_default per user, convex/availability.ts */
