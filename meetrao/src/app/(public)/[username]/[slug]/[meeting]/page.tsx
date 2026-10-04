@@ -62,7 +62,7 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
     getPublicHost(found.username),
     getPublicMeeting(found.username, found.slug),
   ]);
-  if (!host || !meeting) return { title: "Book a time", robots: { index: false, follow: false } };
+  if (!host || !meeting) return { title: "Not found", robots: { index: false, follow: false } };
 
   const name = host.fullName || host.username;
   const title = `${meeting.name} with ${name}`;

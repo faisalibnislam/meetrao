@@ -19,7 +19,7 @@ export async function generateMetadata({
     return { title: "Not found", robots: { index: false, follow: false } };
 
   if (!meeting)
-    return { title: "Book a time", robots: { index: false, follow: false } };
+    return { title: "Not found", robots: { index: false, follow: false } };
 
   const name = host.fullName || host.username;
   const title = `${meeting.name} with ${name}`;
