@@ -8,6 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { slugify } from "@/lib/username";
 import type { BookingQuestion } from "@/lib/types";
 import { isLocationKind } from "@/lib/locations";
+import { activeContext } from "@/lib/data/context";
 
 export type MeetingResult = { error?: string; id?: string };
 
@@ -93,8 +94,14 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
       revalidatePath("/meetings");
       return { id: input.id };
     }
+    /* Filed under whatever company the switcher is on, so a meeting made
+       while working in Acme appears on Acme's domain and not on anybody's
+       personal page. Convex re-checks the membership; this only decides which
+       of the caller's own contexts was meant. */
+    const context = await activeContext();
     const created = await convex.mutation(api.meetingTypes.create, {
       ...payload,
+      company_id: context.companyId,
       slug: await uniqueSlug(session.userId, payload.name),
     });
     revalidatePath("/meetings");
