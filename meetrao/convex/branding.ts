@@ -35,6 +35,7 @@ export const mine = query({
     const me = await requireProfile(ctx);
     return {
       logo_url: me.brand_logo_url ?? null,
+      logo_hidden: me.brand_logo_hidden ?? false,
       color: me.brand_color ?? null,
       background: me.brand_bg ?? null,
       /* So the panel can say "this is live" or "this is saved and will show
@@ -117,6 +118,23 @@ export const removeLogo = mutation({
  * half applies here, and the rest of the safety comes from deriving the text
  * drawn on it rather than from restricting the choice.
  */
+/**
+ * Whether to show any mark at all.
+ *
+ * Turning it ON is never gated: a host whose plan lapsed must be able to put
+ * our mark back, and leaving them unable to would trap a paid-for state. It
+ * is only turning it OFF that costs anything.
+ */
+export const setLogoHidden = mutation({
+  args: { hidden: v.boolean() },
+  handler: async (ctx, a) => {
+    const me = await requireProfile(ctx);
+    if (a.hidden) requirePro(me, "A page with no mark on it");
+    await ctx.db.patch(me._id, { brand_logo_hidden: a.hidden, updated_at: Date.now() });
+    return a.hidden;
+  },
+});
+
 export const setBackground = mutation({
   args: { color: v.string() },
   handler: async (ctx, a) => {

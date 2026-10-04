@@ -4,11 +4,19 @@ import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, Help, Input, Label } from "@/components/ui/controls";
+import { Field, Help, Input, Label, Switch } from "@/components/ui/controls";
+import { Modal } from "@/components/ui/modal";
 import { PanelHeading } from "@/components/ui/panels";
 import { UpgradeCallout } from "./upgrade";
 import { useToast } from "@/components/ui/toast";
-import { logoUploadUrl, removeLogo, saveLogo, setBrandBackground, setBrandColor } from "@/lib/actions/branding";
+import {
+  logoUploadUrl,
+  removeLogo,
+  saveLogo,
+  setBrandBackground,
+  setBrandColor,
+  setLogoHidden,
+} from "@/lib/actions/branding";
 import { claimDomain, removeDomain, verifyDomain } from "@/lib/actions/billing";
 import type { DomainState } from "@/lib/vercel-domains";
 import { brandTokens, normaliseHex, validateBrandColor } from "@/convex/lib/brand";
@@ -112,6 +120,7 @@ function readDomainState(state: DomainState | undefined, error: string | undefin
 export function BrandingPanel({
   pro,
   logoUrl,
+  logoHidden,
   color,
   background,
   domain,
@@ -122,6 +131,8 @@ export function BrandingPanel({
 }: {
   pro: boolean;
   logoUrl: string | null;
+  /** True to show no mark at all. A third state, not "no logo uploaded". */
+  logoHidden: boolean;
   /** A company's square mark. Personal has no second picture here: an
       account's photograph is set on the Profile tab. */
   avatarUrl?: string | null;
@@ -139,6 +150,10 @@ export function BrandingPanel({
   const [busy, startBusy] = useTransition();
 
   const [logo, setLogo] = useState(logoUrl);
+  const [hidden, setHidden] = useState(logoHidden);
+  /* Shown when a free account tries to turn the mark OFF, which is the one
+     direction that costs anything. */
+  const [askUpgrade, setAskUpgrade] = useState(false);
   const [avatar, setAvatar] = useState(avatarUrl);
   /* Which picture the one hidden file input is currently collecting. A second
      input would be a second place to keep the accept list and size cap. */
@@ -262,16 +277,58 @@ export function BrandingPanel({
       {/* ── logo ──────────────────────────────────────────────────────── */}
       <section className="flex flex-col gap-[11px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
         <div className="flex flex-wrap items-center justify-between gap-[10px]">
-          <span className="text-[13px] font-semibold text-ink">Your logo</span>
-          {!pro ? <Badge tone="off" dot={false}>Pro</Badge> : null}
+          <span className="flex items-center gap-[8px]">
+            <span className="text-[13px] font-semibold text-ink">Your logo</span>
+            {!pro ? (
+              <Badge tone="off" dot={false}>
+                Pro
+              </Badge>
+            ) : null}
+          </span>
+          <span className="flex items-center gap-[9px]">
+            <span className="text-[12.5px] text-ink-2">{hidden ? "Hidden" : "Shown"}</span>
+            {/* Not disabled for a free account. A disabled switch says the
+                feature is not for you; a switch that answers tells you what
+                it would cost, which is the only version that can sell it. */}
+            <Switch
+              label="Show a logo on the booking page"
+              checked={!hidden}
+              disabled={busy}
+              onChange={(next) => {
+                const wantHidden = !next;
+                if (wantHidden && !pro) {
+                  setAskUpgrade(true);
+                  return;
+                }
+                const was = hidden;
+                setHidden(wantHidden);
+                startBusy(async () => {
+                  const result = await setLogoHidden(wantHidden);
+                  if (result.error) {
+                    setHidden(was);
+                    toast({ tone: "bad", title: "Could not save", text: result.error });
+                    return;
+                  }
+                  router.refresh();
+                });
+              }}
+            />
+          </span>
         </div>
         <Help>
-          Shown at the top of your booking page in place of the Meetrao mark. PNG, JPG or WEBP, under 1 MB. A wide logo reads better than a tall one.
+          {hidden
+            ? "Nothing is shown at the top of your booking page. Turn this back on for the Meetrao mark, or your own logo if you have uploaded one."
+            : "Shown at the top of your booking page in place of the Meetrao mark. PNG, JPG or WEBP, under 1 MB. A wide logo reads better than a tall one."}
         </Help>
 
         <div className="flex flex-wrap items-center gap-[14px]">
+          {/* Three states, and the tile has to show all three. A tile that
+              showed the Meetrao mark while the page showed nothing would make
+              the toggle look broken. */}
           <div className="flex h-[52px] min-w-[120px] items-center justify-center rounded-[6px] border border-line bg-fill px-[14px]">
-            {logo ? (
+            {hidden ? (
+              <span className="text-[11.5px] text-ink-3">No mark</span>
+            ) : logo ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={logo} alt="Your logo" className="block max-h-[28px] w-auto max-w-[150px] object-contain" />
             ) : (
@@ -537,7 +594,7 @@ export function BrandingPanel({
           ))}
         </div>
 
-        <BrandPreview tokens={tokens} logo={logo} />
+        <BrandPreview tokens={tokens} logo={logo} logoHidden={hidden} />
       </section>
 
       {/* ── their own domain ──────────────────────────────────────────── */}
@@ -685,6 +742,19 @@ export function BrandingPanel({
           </div>
         ) : null}
       </section>
+
+      {/* The one thing on this screen a free host can reach for and be
+          stopped. The upload button is already disabled and badged; turning
+          the mark off is a click that looks like it will work, so the answer
+          has to be an answer and not a dead control. */}
+      <Modal
+        open={askUpgrade}
+        onClose={() => setAskUpgrade(false)}
+        title="A page with no mark is part of Pro"
+        subtitle="Free booking pages carry the Meetrao mark. Pro puts your own logo there instead, or takes it off entirely."
+        primary={{ label: "See Pro", onClick: () => router.push("/settings/billing") }}
+        secondary={{ label: "Not now", onClick: () => setAskUpgrade(false) }}
+      />
     </div>
   );
 }
@@ -705,9 +775,11 @@ export function BrandingPanel({
 function BrandPreview({
   tokens,
   logo,
+  logoHidden,
 }: {
   tokens: ReturnType<typeof brandTokens>;
   logo: string | null;
+  logoHidden: boolean;
 }) {
   const style = tokens
     ? ({
@@ -738,7 +810,9 @@ function BrandPreview({
         className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-ground px-[14px] py-[13px]"
       >
         <div className="flex items-center justify-between gap-[10px]">
-          {logo ? (
+          {logoHidden ? (
+            <span aria-hidden="true" />
+          ) : logo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={logo} alt="" className="block max-h-[22px] w-auto max-w-[110px] object-contain" />
           ) : (

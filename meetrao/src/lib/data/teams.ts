@@ -62,6 +62,7 @@ export async function brandingPanelData(): Promise<{
   isCompany?: boolean;
   avatarUrl?: string | null;
   logoUrl: string | null;
+  logoHidden: boolean;
   color: string | null;
   background: string | null;
   domain: DomainView;
@@ -82,6 +83,7 @@ export async function brandingPanelData(): Promise<{
       isCompany: true,
       avatarUrl: brand?.avatar_url ?? null,
       logoUrl: brand?.logo_url ?? null,
+      logoHidden: brand?.logo_hidden ?? false,
       color: brand?.color ?? null,
       background: brand?.background ?? null,
       domain: { domain: domain?.domain ?? null, verifiedAt: domain?.verified_at ?? null },
@@ -96,6 +98,7 @@ export async function brandingPanelData(): Promise<{
   return {
     pro: brand.live,
     logoUrl: brand.logo_url,
+    logoHidden: brand.logo_hidden,
     color: brand.color,
     background: brand.background,
     domain: { domain: domain.domain, verifiedAt: domain.verified_at },
