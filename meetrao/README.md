@@ -393,22 +393,13 @@ workspace the first resolves. `src/lib/round-trips.test.ts` pins all of it,
 because one `await` in the wrong place restores a whole hop and no type check
 or behaviour test notices.
 
-**`regions: ["hnd1"]` in `vercel.json` — AND IT IS NOW WRONG.** This was set when
-the database was Supabase in `ap-northeast-1` (Tokyo): Vercel functions default
-to `iad1` (Washington), which put a Pacific crossing — roughly 150–180 ms — on
-every database hop, and pinning the functions next to the data was the largest
-single win available.
-
-The database is now **Convex, in US East (N. Virginia)**. So the pin does the
-opposite of its purpose: functions in Tokyo now cross the Pacific to reach it,
-on every one of those hops. The same reasoning says `iad1`. Not changed yet,
-because it is a production behaviour change — but the rationale below describes
-the old arrangement. A *single* region is allowed on Hobby; only multi-region is
-a paid feature.
-Confirmed: every deploy since the key was added reports success. Check which
-region actually served a request with
-`curl -sI https://www.meetrao.com/login | grep x-vercel-id` — the region is the
-prefix. To undo it, delete the `regions` key.
+**`regions: ["iad1"]` in `vercel.json`.** Functions run next to the database.
+It was `hnd1` (Tokyo) while the database was Supabase in `ap-northeast-1`.
+The database is now Convex in US East (N. Virginia), so the Tokyo pin put a
+Pacific crossing, roughly 150–180 ms, on every query a page made. A single
+region is allowed on Hobby; only multi-region is a paid feature. Check which
+region served a request with `curl -sI https://www.meetrao.com/login | grep
+x-vercel-id`: the region is the prefix.
 
 ## Mobile
 
