@@ -11,6 +11,8 @@ import { api } from "@/convex/_generated/api";
 import { bookingLink } from "@/lib/username";
 import type { MeetingType } from "@/lib/types";
 import { activeContext } from "@/lib/data/context";
+import { heldElsewhere } from "@/lib/data/elsewhere";
+import { ElsewhereEmptyState } from "@/components/app/elsewhere-empty";
 
 export const metadata: Metadata = { title: "Meetings" };
 
@@ -25,6 +27,13 @@ export default async function MeetingsPage() {
      scoping exists to make false. */
   const context = await activeContext();
   const meetings = all.filter((m) => (m.company_id ?? null) === context.companyId);
+
+  /* Only when there is nothing to show. "No meetings yet" is a confident
+     claim that somebody has none, and for a host whose meetings all belong to
+     their company it is false in the most alarming way available: it looks
+     exactly like the meetings have been deleted. Costs one extra query, paid
+     only on the screen that would otherwise mislead. */
+  const elsewhere = meetings.length === 0 ? await heldElsewhere(all, context) : [];
 
   const rows: MeetingRow[] = meetings.map((m) => ({
     id: m.id,
@@ -56,6 +65,17 @@ export default async function MeetingsPage() {
     >
       {rows.length ? (
         <MeetingsTable meetings={rows} siteUrl={siteUrl()} username={profile.username} />
+      ) : elsewhere.length ? (
+        <ElsewhereEmptyState
+          here={context.name}
+          what="meeting"
+          found={elsewhere}
+          action={
+            <ButtonLink variant="secondary" size={30} href="/meetings/new" icon="plus">
+              Create one here
+            </ButtonLink>
+          }
+        />
       ) : (
         <EmptyState
           title="No meetings yet"
