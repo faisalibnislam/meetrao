@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
+import { activeContext } from "@/lib/data/context";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Branding and the custom domain, from the host's settings screen.
@@ -17,6 +18,12 @@ import { api } from "@/convex/_generated/api";
    feature, but its actions already live in src/lib/actions/billing.ts beside
    the checkout. A second set of claim/verify/release actions would be two
    code paths writing one row.
+
+   EVERY ONE OF THESE WRITES TO THE WORKSPACE IN FORCE. In a company that is
+   the company's brand, which is what its domain serves; in Personal it is the
+   profile's. The company id comes from the cookie on the server rather than
+   from the caller, so a panel cannot be made to write somebody else's brand,
+   and Convex re-checks the membership regardless.
    ───────────────────────────────────────────────────────────────────────────── */
 
 function refreshBookingPages() {
@@ -29,7 +36,12 @@ function refreshBookingPages() {
 export async function logoUploadUrl(): Promise<{ url?: string; error?: string }> {
   try {
     const convex = await convexServer();
-    return { url: await convex.mutation(api.branding.generateUploadUrl, {}) };
+    const { companyId } = await activeContext();
+    return {
+      url: companyId
+        ? await convex.mutation(api.companyBranding.generateUploadUrl, { id: companyId })
+        : await convex.mutation(api.branding.generateUploadUrl, {}),
+    };
   } catch (cause) {
     return { error: convexMessage(cause, "Could not start the upload.") };
   }
@@ -46,7 +58,10 @@ export async function logoUploadUrl(): Promise<{ url?: string; error?: string }>
 export async function saveLogo(storageId: string): Promise<{ url?: string | null; error?: string }> {
   try {
     const convex = await convexServer();
-    const url = await convex.mutation(api.branding.saveLogo, { storageId: storageId as never });
+    const { companyId } = await activeContext();
+    const url = companyId
+      ? await convex.mutation(api.companyBranding.saveLogo, { id: companyId, storageId: storageId as never })
+      : await convex.mutation(api.branding.saveLogo, { storageId: storageId as never });
     refreshBookingPages();
     return { url };
   } catch (cause) {
@@ -56,7 +71,10 @@ export async function saveLogo(storageId: string): Promise<{ url?: string | null
 
 export async function removeLogo(): Promise<{ error?: string }> {
   try {
-    await (await convexServer()).mutation(api.branding.removeLogo, {});
+    const { companyId } = await activeContext();
+    const convex = await convexServer();
+    if (companyId) await convex.mutation(api.companyBranding.removeLogo, { id: companyId });
+    else await convex.mutation(api.branding.removeLogo, {});
   } catch (cause) {
     return { error: convexMessage(cause, "That logo could not be removed.") };
   }
@@ -69,7 +87,10 @@ export async function removeLogo(): Promise<{ error?: string }> {
 export async function setBrandBackground(color: string): Promise<{ color?: string | null; error?: string }> {
   try {
     const convex = await convexServer();
-    const saved = await convex.mutation(api.branding.setBackground, { color });
+    const { companyId } = await activeContext();
+    const saved = companyId
+      ? await convex.mutation(api.companyBranding.setBackground, { id: companyId, color })
+      : await convex.mutation(api.branding.setBackground, { color });
     refreshBookingPages();
     return { color: saved };
   } catch (cause) {
@@ -80,7 +101,10 @@ export async function setBrandBackground(color: string): Promise<{ color?: strin
 export async function setBrandColor(color: string): Promise<{ color?: string | null; error?: string }> {
   try {
     const convex = await convexServer();
-    const saved = await convex.mutation(api.branding.setColor, { color });
+    const { companyId } = await activeContext();
+    const saved = companyId
+      ? await convex.mutation(api.companyBranding.setColor, { id: companyId, color })
+      : await convex.mutation(api.branding.setColor, { color });
     refreshBookingPages();
     return { color: saved };
   } catch (cause) {

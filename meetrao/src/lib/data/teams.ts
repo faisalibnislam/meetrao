@@ -8,6 +8,7 @@ import type { DomainView, PlanView, TimingView } from "@/components/app/billing-
 import { isPaid } from "@/convex/lib/plan";
 import type { CompanyView } from "@/components/app/companies-panel";
 import type { Plan } from "@/convex/lib/plan";
+import { activeContext } from "@/lib/data/context";
 
 /* What the Team settings panel needs, in one place: the teams this host owns
    or belongs to, and their own meetings, any of which can be handed to a
@@ -64,6 +65,25 @@ export async function brandingPanelData(): Promise<{
   domain: DomainView;
 }> {
   const convex = await convexServer();
+  const { companyId } = await activeContext();
+
+  /* The workspace's own brand. A company's is entitled by its OWNER's plan,
+     which is why `live` comes from the query rather than from the caller's:
+     a free member of a Business company is looking at branding that is live. */
+  if (companyId) {
+    const [brand, domain] = await Promise.all([
+      convex.query(api.companyBranding.get, { id: companyId }),
+      convex.query(api.companyDomains.get, { id: companyId }),
+    ]);
+    return {
+      pro: brand?.live ?? false,
+      logoUrl: brand?.logo_url ?? null,
+      color: brand?.color ?? null,
+      background: brand?.background ?? null,
+      domain: { domain: domain?.domain ?? null, verifiedAt: domain?.verified_at ?? null },
+    };
+  }
+
   const [brand, domain] = await Promise.all([
     convex.query(api.branding.mine, {}),
     convex.query(api.domains.mine, {}),

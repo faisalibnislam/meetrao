@@ -25,7 +25,7 @@ const CONTEXT = read("src/lib/data/context.ts");
 const ACTION = read("src/lib/actions/context.ts");
 const MEETINGS_PAGE = read("src/app/(app)/meetings/page.tsx");
 const MEETINGS_ACTION = read("src/lib/actions/meetings.ts");
-const SWITCHER = read("src/components/app/context-switcher.tsx");
+const SWITCHER = read("src/components/app/workspace-menu.tsx");
 
 describe("the cookie is checked, not trusted", () => {
   it("validates on every read", () => {
@@ -79,17 +79,35 @@ describe("switching changes what you are working on", () => {
   });
 });
 
-describe("the switcher itself", () => {
-  /* Most accounts have no companies. A control offering one choice teaches
-     people the product has a concept they do not have, every time they open
-     it. */
-  it("renders nothing when there is only one context", () => {
-    expect(SWITCHER).toContain("if (options.length < 2) return null;");
+describe("the workspace menu", () => {
+  /* One control, not two. It used to be a "Working in" switcher at the top of
+     the rail and an account button at the bottom, which answered the same
+     question in two places and would have answered it differently once
+     settings belonged to a workspace. */
+  it("is the only account control in the rail", () => {
+    const rail = read("src/components/app/sidebar.tsx");
+    expect(rail).toContain("<WorkspaceMenu");
+    expect(rail, "the old account footer must be gone").not.toContain("aria-expanded={menuOpen}");
   });
 
-  it("says where you are, for a screen reader as well", () => {
-    expect(SWITCHER).toContain("aria-label={`Working in ${active.name}. Switch company.`}");
+  /* Most accounts have no companies. A list offering one choice teaches
+     people the product has a concept they do not have, every time they open
+     it, so the menu is an account menu until there is a second workspace. */
+  it("shows no workspace list when there is only one", () => {
+    expect(SWITCHER).toContain("workspaces.length > 1 ?");
+  });
+
+  /* Settings belong to the workspace in force, which is the reason these two
+     controls had to become one. */
+  it("names the workspace on the settings link", () => {
+    expect(SWITCHER).toContain("label={`${active.name} settings`}");
+  });
+
+  it("says where you are and whose account it is", () => {
+    expect(SWITCHER).toContain(
+      "aria-label={`${active.name}, signed in as ${email}. Open account and workspace menu.`}",
+    );
     expect(SWITCHER).toContain('role="menuitemradio"');
-    expect(SWITCHER).toContain("aria-checked={o.id === activeId}");
+    expect(SWITCHER).toContain("aria-checked={w.id === activeId}");
   });
 });
