@@ -194,16 +194,22 @@ export async function notifyBookingDeclined(ctx: MutationCtx, booking: Doc<"book
  */
 export async function upsertContact(
   ctx: MutationCtx,
-  args: { userId: string; name: string; email: string },
+  args: { userId: string; name: string; email: string; companyId?: string | null },
 ): Promise<void> {
   const email = args.email.trim().toLowerCase();
   if (!email) return;
+  const companyId = args.companyId ?? null;
   const name = (args.name ?? "").trim();
   const now = Date.now();
 
+  /* Per (user, company, email), not per (user, email). The same address can
+     be a contact of two companies, which is the reason contacts are scoped at
+     all: an agency keeping one client's people out of another's list. */
   const existing = await ctx.db
     .query("contacts")
-    .withIndex("by_user_email", (q) => q.eq("user_id", args.userId).eq("email", email))
+    .withIndex("by_user_company_email", (q) =>
+      q.eq("user_id", args.userId).eq("company_id", companyId).eq("email", email),
+    )
     .unique();
 
   if (existing) {
@@ -217,6 +223,7 @@ export async function upsertContact(
   await ctx.db.insert("contacts", {
     id: uuid(),
     user_id: args.userId,
+    company_id: companyId,
     name,
     email,
     phone: "",

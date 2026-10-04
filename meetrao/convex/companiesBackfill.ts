@@ -257,3 +257,81 @@ export const backfillMeetings = internalMutation({
     return report;
   },
 });
+
+/**
+ * Files existing bookings and contacts under the company their work belongs to.
+ *
+ * Without this both screens go empty the moment somebody switches to their
+ * company: every row written before companies existed has no company, which
+ * reads as personal, while their meetings are now filed under the company.
+ *
+ * A BOOKING TAKES ITS MEETING'S COMPANY, because that is what it would have
+ * been given had it been made today. One whose meeting has since been deleted
+ * stays personal rather than being guessed at.
+ *
+ * A CONTACT TAKES THE COMPANY OF THE BOOKINGS IT CAME FROM, and only when
+ * they agree. Somebody who has booked both a personal meeting and a company
+ * one is left where they are: moving them would take them out of one list to
+ * put them in another, and a contact quietly leaving a list is worse than one
+ * that needs filing by hand.
+ *
+ * Same three properties as the others: dry run by default, idempotent, and it
+ * only ever fills a field that is empty.
+ */
+export const backfillWork = internalMutation({
+  args: { dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, a): Promise<Report> => {
+    const dryRun = a.dryRun !== false;
+    const report: Report = { dryRun, scanned: 0, actions: [], created: 0, updated: 0, skipped: [] };
+
+    const bookings = await ctx.db.query("bookings").collect();
+    const companyOfBooking = new Map<string, string | null>();
+
+    for (const b of bookings) {
+      report.scanned++;
+      if (b.company_id) {
+        companyOfBooking.set(b.id, b.company_id);
+        continue;
+      }
+
+      const meeting = b.meeting_type_id
+        ? await ctx.db.query("meeting_types").withIndex("by_uuid", (q) => q.eq("id", b.meeting_type_id as string)).unique()
+        : null;
+      const companyId = meeting?.company_id ?? null;
+      companyOfBooking.set(b.id, companyId);
+      if (!companyId) continue;
+
+      report.updated++;
+      if (!dryRun) await ctx.db.patch(b._id, { company_id: companyId, updated_at: Date.now() });
+    }
+    report.actions.push(`${report.updated} bookings filed from their meeting`);
+
+    const contacts = await ctx.db.query("contacts").collect();
+    let movedContacts = 0;
+
+    for (const c of contacts) {
+      report.scanned++;
+      if (c.company_id) continue;
+
+      /* Every company this address has booked with, for this host. One
+         answer means the contact belongs there; several means leave them. */
+      const seen = new Set<string | null>();
+      for (const b of bookings) {
+        if (b.host_id !== c.user_id) continue;
+        if (b.guest_email.trim().toLowerCase() !== c.email.trim().toLowerCase()) continue;
+        seen.add(companyOfBooking.get(b.id) ?? null);
+      }
+
+      if (seen.size !== 1) continue;
+      const only = [...seen][0];
+      if (!only) continue;
+
+      movedContacts++;
+      if (!dryRun) await ctx.db.patch(c._id, { company_id: only, updated_at: Date.now() });
+    }
+    report.updated += movedContacts;
+    report.actions.push(`${movedContacts} contacts filed from their bookings`);
+
+    return report;
+  },
+});

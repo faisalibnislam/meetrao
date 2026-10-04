@@ -4,6 +4,7 @@ import { formatDayLabel, formatTimeRange, isSameDay } from "@/lib/booking/time";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Booking } from "@/lib/types";
+import { activeContext } from "@/lib/data/context";
 
 /* Bookings, shaped for the screens. Labels are formatted here, in the host's
    own timezone, so the client components stay presentational and no screen has
@@ -112,7 +113,14 @@ export async function listBookings(
   const now = new Date();
 
   const convex = await convexServer();
-  const { rows, invitees } = await convex.query(api.bookings.listForScreen, { history, pastLimit: PAST_LIMIT });
+  /* The company in force. A screen that showed every booking regardless
+     would put a client's bookings under another client's heading. */
+  const context = await activeContext();
+  const { rows, invitees } = await convex.query(api.bookings.listForScreen, {
+    history,
+    pastLimit: PAST_LIMIT,
+    companyId: context.companyId,
+  });
   const views = (rows as unknown as Booking[]).map((row) => toView(row, timeZone, now));
   for (const view of views) {
     for (const i of invitees[view.id] ?? []) view.invitees.push({ name: i.name, email: i.email });
