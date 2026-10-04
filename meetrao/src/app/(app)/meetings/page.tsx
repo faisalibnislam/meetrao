@@ -36,7 +36,6 @@ export default async function MeetingsPage() {
       actions={
         <>
           <CopyLinkControl
-            accountLink={bookingLink(profile.username)}
             meetings={rows
               .filter((r) => r.active)
               .map((r) => ({ id: r.id, name: r.name, link: r.link }))}

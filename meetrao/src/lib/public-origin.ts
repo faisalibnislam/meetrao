@@ -1,6 +1,8 @@
 import "server-only";
 import { headers } from "next/headers";
 import { siteUrl } from "@/lib/env";
+import { convexAnonymous } from "@/lib/convex/server";
+import { api } from "@/convex/_generated/api";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Which origin a guest-facing page should call itself.
@@ -49,4 +51,44 @@ export async function publicOrigin(): Promise<string> {
 /** An absolute URL for `alternates.canonical`, on whichever domain this is. */
 export async function publicUrl(path: string): Promise<string> {
   return new URL(path, await publicOrigin()).toString();
+}
+
+/**
+ * The company whose domain this request arrived on, if any.
+ *
+ * Resolved from the HOSTNAME, never from the path or a query parameter, which
+ * is what makes it unspoofable: meetrao.com/alex cannot be made to wear
+ * somebody else's logo by adding `?c=acme`.
+ *
+ * Returns null on our own hostnames and on anything that is not a verified
+ * company domain, so every caller falls back to the host's own branding.
+ */
+export async function companyForRequest(): Promise<{
+  slug: string;
+  name: string;
+  unbranded: boolean;
+  /* camelCase, because this is handed straight to BrandScope. Converted here
+     rather than at each call site, so a page cannot pass the raw projection
+     and get a silently unbranded page from a mismatched key. */
+  brand: { logoUrl: string | null; color: string | null; background: string | null } | null;
+} | null> {
+  const list = await headers();
+  const hostname = (list.get("host") ?? "").split(":")[0]?.toLowerCase() ?? "";
+  if (!hostname || isOwnHost(hostname)) return null;
+
+  try {
+    const row = await convexAnonymous().query(api.publicBooking.companyBrandForDomain, { domain: hostname });
+    if (!row) return null;
+    return {
+      slug: row.slug,
+      name: row.name,
+      unbranded: row.unbranded,
+      brand: row.brand
+        ? { logoUrl: row.brand.logo_url, color: row.brand.color, background: row.brand.background }
+        : null,
+    };
+  } catch {
+    // A lookup that fails falls back to the host's own brand, never to an error.
+    return null;
+  }
 }

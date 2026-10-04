@@ -75,9 +75,15 @@ describe("plan comparisons", () => {
     expect(text).toContain("if (!isPro(p)) return null;");
   });
 
+  /* hostForDomain answers for a company as well as a profile, and the company
+     branch gates on its OWNER: a free member's page on a Business domain is
+     paid for by whoever owns it. Both branches have to ask isPro, and neither
+     may ask it of a plan name. */
   it("resolves a custom domain for every paid plan", () => {
     const text = readFileSync(path.join(ROOT, "convex/publicBooking.ts"), "utf8");
     const fn = text.slice(text.indexOf("export const hostForDomain"));
-    expect(fn.slice(0, fn.indexOf("});"))).toContain("isPro(p)");
+    const body = fn.slice(0, fn.indexOf("\nexport const"));
+    expect(body, "the company branch must gate on the owner").toContain("isPro(owner)");
+    expect(body, "the profile branch must still gate").toContain("isPro(p)");
   });
 });

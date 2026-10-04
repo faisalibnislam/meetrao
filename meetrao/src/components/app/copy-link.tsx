@@ -9,16 +9,20 @@ import { cx } from "@/lib/cx";
 /* ─────────────────────────────────────────────────────────────────────────────
    The "Copy link" control.
 
-   A single button when 0–1 meetings are active. With more than one it becomes
-   a dropdown listing the account link plus one row per active meeting, because
-   "copy link" is ambiguous the moment there is more than one link to copy.
+   A single button when exactly one meeting is active. With more than one it
+   becomes a dropdown with a row per meeting, because "copy link" is ambiguous
+   the moment there is more than one link to copy.
+
+   THERE IS NO ACCOUNT LINK. meetrao.com/<username> used to list somebody's
+   meetings and offering it here was the main way people found it. It 404s
+   now: every link names a specific meeting.
    ───────────────────────────────────────────────────────────────────────────── */
 
 export type CopyTarget = { id: string; name: string; link: string };
 
 const FLASH_MS = 1800;
 
-export function CopyLinkControl({ accountLink, meetings }: { accountLink: string; meetings: CopyTarget[] }) {
+export function CopyLinkControl({ meetings }: { meetings: CopyTarget[] }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
@@ -26,7 +30,10 @@ export function CopyLinkControl({ accountLink, meetings }: { accountLink: string
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const isMenu = meetings.length > 1;
-  const rows: CopyTarget[] = [{ id: "all", name: "All meetings", link: accountLink }, ...meetings];
+  const rows: CopyTarget[] = meetings;
+  /* With nothing active there is no link to copy at all, and a button that
+     copies an address which 404s is worse than no button. */
+  const only = meetings.length === 1 ? meetings[0] : null;
 
   useEffect(() => () => clearTimeout(timer.current), []);
 
@@ -47,7 +54,9 @@ export function CopyLinkControl({ accountLink, meetings }: { accountLink: string
     timer.current = setTimeout(() => setCopied(null), FLASH_MS);
   }
 
-  const flashed = copied === "all";
+  const flashed = Boolean(only && copied === only.id);
+
+  if (!isMenu && !only) return null;
 
   return (
     <div ref={box} className="relative">
@@ -55,7 +64,7 @@ export function CopyLinkControl({ accountLink, meetings }: { accountLink: string
         type="button"
         aria-expanded={isMenu ? open : undefined}
         aria-haspopup={isMenu ? "menu" : undefined}
-        onClick={() => (isMenu ? setOpen((v) => !v) : copy("all", accountLink))}
+        onClick={() => (isMenu ? setOpen((v) => !v) : only ? copy(only.id, only.link) : undefined)}
         className="inline-flex h-[32px] cursor-pointer items-center gap-[7px] rounded-[6px] border border-line-strong bg-surface px-[11px] font-sans text-[12.5px] font-semibold whitespace-nowrap text-ink hover:bg-fill"
       >
         <Icon name={flashed ? "check" : "copy"} weight={flashed ? "solid" : "light"} size={11} />

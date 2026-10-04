@@ -31,8 +31,9 @@ const guestPages = globSync("(public)/**/page.tsx", { cwd: APP }).filter(
 
 describe("the mark on a guest-facing page", () => {
   it("finds the pages at all", () => {
-    // Guards the guard: a renamed folder passes everything below vacuously.
-    expect(guestPages.length).toBeGreaterThanOrEqual(6);
+    /* Guards the guard: a renamed folder passes everything below vacuously.
+       Was 6 until the index page was removed. */
+    expect(guestPages.length).toBeGreaterThanOrEqual(5);
   });
 
   it.each(guestPages)("%s renders BrandMark, not the Meetrao logo directly", (file) => {
@@ -227,12 +228,12 @@ describe("a host's own logo is larger than ours", () => {
 });
 
 describe("the booking page shows a host's photograph", () => {
+  /* This used to assert the index page, which hand-rolled initials from the
+     host's name and never read host.avatarUrl. That page is gone, and the
+     meeting page is now the front door, so the assertion follows it rather
+     than being deleted with the file it happened to be about. */
   it("uses <Avatar> rather than drawing initials itself", () => {
-    /* This page hand-rolled initials from the host's name and never read
-       host.avatarUrl, so a host with a photograph showed up as two letters,
-       on the one page that is their front door. */
-    const page = read("src/app/(public)/[username]/page.tsx");
-    expect(page).toContain("<Avatar");
-    expect(page).toContain("src={host.avatarUrl}");
+    const page = read("src/app/(public)/[username]/[slug]/page.tsx");
+    expect(page).toContain("hostAvatarUrl={host.avatarUrl}");
   });
 });

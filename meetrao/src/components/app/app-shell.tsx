@@ -36,13 +36,16 @@ export async function AppShell({
 
   const active = meetingRows as Pick<MeetingType, "id" | "name" | "slug">[];
 
-  // Mirrors CopyLinkControl: the account link that offers every type, then one
-  // row per meeting. With nothing active the rail shows the account link alone,
-  // the same way the header control collapses to a single button.
-  const links: BookingLink[] = [
-    { id: "all", name: active.length > 1 ? "All meetings" : "Your booking page", link: bookingLink(profile.username) },
-    ...active.map((m) => ({ id: m.id, name: m.name, link: bookingLink(profile.username, m.slug) })),
-  ];
+  /* Mirrors CopyLinkControl: one row per active meeting, and nothing else.
+
+     There used to be an "All meetings" row pointing at meetrao.com/<username>.
+     That address listed somebody's meetings and no longer exists, so the rail
+     would have been handing out a link to a 404. */
+  const links: BookingLink[] = active.map((m) => ({
+    id: m.id,
+    name: m.name,
+    link: bookingLink(profile.username, m.slug),
+  }));
 
   const items: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: "house" },

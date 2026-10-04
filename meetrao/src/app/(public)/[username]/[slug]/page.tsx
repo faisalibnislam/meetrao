@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { OG_IMAGE } from "@/lib/seo";
-import { publicUrl } from "@/lib/public-origin";
+import { companyForRequest, publicUrl } from "@/lib/public-origin";
 import { notFound } from "next/navigation";
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { Eyebrow } from "@/components/ui/badge";
@@ -82,6 +82,16 @@ export default async function BookingPage({
   );
   if (!meeting) notFound();
 
+  /* On a company's domain the page wears the COMPANY's brand, not the host's.
+     Resolved from the hostname rather than from anything in the path, so
+     meetrao.com/alex cannot be made to wear somebody else's logo.
+
+     The company wins outright rather than merging: a page that took the logo
+     from one brand and the colour from another would be neither. */
+  const company = await companyForRequest();
+  const brand = company ? company.brand : host.brand;
+  const unbranded = company ? company.unbranded : host.unbranded;
+
   const availability = await getMeetingAvailability(meeting.id);
   const overrides = await getMeetingOverrides(meeting.id);
 
@@ -147,10 +157,10 @@ export default async function BookingPage({
   });
 
   return (
-    <BrandScope brand={host.brand}>
+    <BrandScope brand={brand}>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
       <div className="flex items-center justify-between gap-[12px] px-[2px]">
-        <BrandMark brand={host.brand} hostName={host.fullName || host.username} height={20} />
+        <BrandMark brand={brand} hostName={company?.name || host.fullName || host.username} height={20} />
         <Eyebrow size={10.5} className="text-on-ground">Booking page</Eyebrow>
       </div>
 
@@ -181,7 +191,7 @@ export default async function BookingPage({
         pageViewId={typeof pageViewId === "string" ? pageViewId : null}
       />
     </div>
-      <PublicFooter badge={!host.unbranded} />
+      <PublicFooter badge={!unbranded} />
     </BrandScope>
   );
 }
