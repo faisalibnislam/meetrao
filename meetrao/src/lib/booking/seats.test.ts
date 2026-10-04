@@ -71,7 +71,8 @@ describe("a full slot is not offered", () => {
      them offers a seat that the mutation will then refuse, which reads to a
      guest as the product losing their booking. */
   const sites = [
-    ["the hosted page", read("src/app/(public)/[username]/[slug]/page.tsx")],
+    /* The body moved: every booking address renders one shared component. */
+    ["the hosted page", read("src/components/booking/meeting-page.tsx")],
     ["the embed", read("src/app/embed/[username]/[slug]/page.tsx")],
     ["the slots API", read("src/app/api/slots/route.ts")],
   ] as const;

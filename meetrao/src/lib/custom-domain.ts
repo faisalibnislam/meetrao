@@ -73,7 +73,18 @@ export type DomainRoute =
  * Takes the handles rather than looking them up: the lookup is a network call
  * and belongs to the caller, so everything here can be decided in a test.
  */
-export function routeForDomain(pathname: string, handles: readonly DomainHandle[]): DomainRoute {
+export function routeForDomain(
+  pathname: string,
+  handles: readonly DomainHandle[],
+  /**
+   * The company this domain belongs to, so the rewrite can point at the
+   * company's own address rather than at the host's personal one.
+   *
+   * Null for a profile's custom domain, which is one person and has no
+   * company address to point at.
+   */
+  companySlug: string | null = null,
+): DomainRoute {
   if (isShared(pathname)) return { kind: "pass" };
 
   const segments = pathname.split("/").filter(Boolean);
@@ -97,5 +108,17 @@ export function routeForDomain(pathname: string, handles: readonly DomainHandle[
   // Anything deeper than /<handle>/<meeting> is not a shape this product has.
   if (segments.length > 2) return { kind: "notFound" };
 
-  return { kind: "rewrite", path: `/${who.username}/${segments[1]}` };
+  /* Rewritten to the COMPANY's address, which is the same page this domain
+     is an alias for. Pointing at the host's personal address instead would
+     serve the page, then have that route decide it belongs to a company and
+     send the guest on, bouncing them through a redirect on every visit.
+
+     A profile's own custom domain has no company address, so it still rewrites
+     to the one person it belongs to. */
+  return {
+    kind: "rewrite",
+    path: companySlug
+      ? `/${companySlug}/${who.handle}/${segments[1]}`
+      : `/${who.username}/${segments[1]}`,
+  };
 }

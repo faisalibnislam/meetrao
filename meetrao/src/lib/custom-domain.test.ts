@@ -118,3 +118,43 @@ describe("paths that mean the same thing everywhere", () => {
     });
   });
 });
+
+describe("a company's domain is an alias for its address", () => {
+  /* The page a custom domain serves is the same page meetrao.com serves at
+     the company's own address. Rewriting to the HOST's personal address
+     instead would serve it, then have that route notice the meeting belongs
+     to a company and send the guest on: a redirect on every single visit to a
+     domain somebody paid for. */
+  it("rewrites to the company's address, not the host's", () => {
+    expect(routeForDomain("/sarah/intro", ACME, "acme")).toEqual({
+      kind: "rewrite",
+      path: "/acme/sarah/intro",
+    });
+  });
+
+  /* The handle, not the username. They are different on purpose: a handle is
+     who somebody is inside this company, and usernames are global. */
+  it("keeps the handle in the path", () => {
+    const route = routeForDomain("/sarah/intro", ACME, "acme");
+    expect(route).toHaveProperty("path");
+    if (route.kind === "rewrite") expect(route.path).toContain("/sarah/");
+  });
+
+  /* A profile's own custom domain is one person and has no company address,
+     so it still points at the only thing it can. */
+  it("still rewrites a profile's domain to that person", () => {
+    expect(routeForDomain("/sarah/intro", ACME, null)).toEqual({
+      kind: "rewrite",
+      path: "/sarah-jones-1988/intro",
+    });
+  });
+
+  /* The refusals are unchanged by any of this: a name that is not one of this
+     company's handles is still a 404 rather than a door to another account. */
+  it("refuses a stranger's name whichever address it would rewrite to", () => {
+    expect(routeForDomain("/nobody/intro", ACME, "acme")).toEqual({ kind: "notFound" });
+    expect(routeForDomain("/acme", ACME, "acme")).toEqual({ kind: "notFound" });
+    expect(routeForDomain("/sarah", ACME, "acme")).toEqual({ kind: "notFound" });
+    expect(routeForDomain("/sarah/intro/extra", ACME, "acme")).toEqual({ kind: "notFound" });
+  });
+});

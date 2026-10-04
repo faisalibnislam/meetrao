@@ -16,6 +16,7 @@ import { requireOnboardedSession } from "@/lib/data/session";
 import { connectionStatus } from "@/lib/google/connection";
 import { timezoneOptions } from "@/lib/timezones";
 import { TeamPanel } from "@/components/app/team-panel";
+import { TeamPitch } from "@/components/app/team-pitch";
 import { DeveloperPanel } from "@/components/app/developer-panel";
 import { BillingPanel } from "@/components/app/billing-panel";
 import { BrandingPanel } from "@/components/app/branding-panel";
@@ -25,6 +26,7 @@ import {
   brandingPanelData,
   companiesPanelData,
   developerPanelData,
+  soloCompany,
   teamPanelData,
 } from "@/lib/data/teams";
 import { siteUrl } from "@/lib/env";
@@ -71,22 +73,33 @@ export default async function SettingsPage({
       <div className="mx-auto grid w-full max-w-[780px] grid-cols-[158px_minmax(0,1fr)] items-start gap-[34px] max-[820px]:flex max-[820px]:flex-col max-[820px]:gap-[18px]">
         <SettingsNav current={tab} tabs={tabs} />
 
-        <div className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
+        {/* Keyed by workspace so every panel starts again when it changes.
+            The panels seed their fields from props once, and switching
+            workspace keeps you on the same page, so without this the
+            Branding screen showed Personal's colours inside a company and
+            Save colour would have written them onto the company. */}
+        <div key={context.companyId ?? "personal"} className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
           {tab === "billing" ? (
           <BillingPanel {...(await billingPanelData())} welcome={welcome === "1"} />
         ) : null}
         {tab === "branding" ? (
           <BrandingPanel
             {...(await brandingPanelData())}
-            username={session.profile.username}
             siteHost={new URL(siteUrl()).host}
           />
         ) : null}
         {tab === "companies" ? <CompaniesPanel {...(await companiesPanelData())} /> : null}
         {tab === "people" ? <CompaniesPanel {...(await companiesPanelData())} only={context.companyId} /> : null}
         {tab === "developer" ? <DeveloperPanel {...(await developerPanelData())} siteUrl={siteUrl()} /> : null}
+        {/* A team link is answered by whoever of you is free, so it needs a
+            second person to be anything at all. A company that can hold one
+            cannot have one, and the useful thing to show is the reason. */}
         {tab === "team" ? (
-          <TeamPanel {...(await teamPanelData(session.profile.id))} siteUrl={siteUrl()} />
+          (await soloCompany(context.companyId)) ? (
+            <TeamPitch />
+          ) : (
+            <TeamPanel {...(await teamPanelData(session.profile.id))} siteUrl={siteUrl()} />
+          )
         ) : null}
         {tab === "profile" ? <ProfilePanel profile={session.profile} /> : null}
 

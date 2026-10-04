@@ -124,7 +124,7 @@ export function BrandingPanel({
   color,
   background,
   domain,
-  username,
+  address,
   siteHost,
   avatarUrl = null,
   isCompany = false,
@@ -140,7 +140,8 @@ export function BrandingPanel({
   color: string | null;
   background: string | null;
   domain: DomainView;
-  username: string;
+  /** What a link in the workspace in force looks like, company or personal. */
+  address: { today: string; handle: string };
   /** "meetrao.com", for showing what the link looks like either way. */
   siteHost: string;
 }) {
@@ -617,16 +618,22 @@ export function BrandingPanel({
             because "a custom domain" does not tell a host what they will be
             able to put in their email signature. */}
         <div className="flex flex-col gap-[4px] rounded-[6px] border border-line bg-fill px-[12px] py-[10px]">
+          {/* THIS WORKSPACE's address, not the viewer's own. A company's
+              links are meetrao.com/<company>/<handle>; printing the account's
+              meetrao.com/<username> here showed somebody their personal link
+              on their company's branding screen. */}
           <span className="text-[11.5px] text-ink-3">Today</span>
           <span className="text-[12.5px] break-all text-ink-2">
-            {siteHost}/{username}
+            {address.today}/<span className="text-ink-3">meeting</span>
           </span>
           <span className="mt-[4px] text-[11.5px] text-ink-3">With your domain</span>
           <span className="text-[12.5px] break-all font-semibold text-ink">
-            {(domain.domain || "meeting.yourcompany.com")}/{username}
+            {domain.domain || "meeting.yourcompany.com"}/{address.handle}/
+            <span className="font-normal text-ink-3">meeting</span>
           </span>
           <span className="text-[11.5px] leading-[1.5] text-ink-3">
-            The bare domain works too, and so does a link straight to one meeting.
+            Every link names one meeting: there is no page that lists them, here or on a domain of your
+            own, so the name on its own is not an address.
           </span>
         </div>
 

@@ -9,6 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
 import { SidebarUpgrade } from "./upgrade";
+import { SettingsMenu } from "./settings-menu";
 import { WorkspaceMenu, type WorkspaceOption } from "./workspace-menu";
 import { copyText } from "@/lib/clipboard";
 
@@ -174,10 +175,8 @@ export function Sidebar({
         name={name}
         email={email}
         avatarUrl={avatarUrl}
-        isAdmin={isAdmin}
         workspaces={contexts}
         activeId={activeContextId}
-        onSignOut={onSignOut}
       />
 
       <Link
@@ -337,6 +336,17 @@ export function Sidebar({
       ) : null}
 
       {showUpgrade ? <SidebarUpgrade /> : null}
+
+      {/* The foot of the rail, under everything a host uses daily. Settings,
+          help and the way out are all things somebody does rarely, and they
+          used to sit on the workspace switcher, which is something they do
+          several times an hour. */}
+      {!isAdmin ? (
+        <SettingsMenu
+          settingsLabel={activeContextId ? "Company settings" : "Settings"}
+          onSignOut={onSignOut}
+        />
+      ) : null}
 
     </nav>
   );

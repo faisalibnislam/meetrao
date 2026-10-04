@@ -36,6 +36,14 @@ export type ContextChoice = {
   avatarUrl: string | null;
   /** Its accent, used to tint the fallback initial when there is no logo. */
   color: string | null;
+  /* Everything a LINK in this workspace is built from. Null for Personal,
+     whose links are built from the account's own username. A company's links
+     are not its members' links, so the two cannot share a builder. */
+  slug: string | null;
+  domain: string | null;
+  domainVerified: boolean;
+  /** The caller's own handle on this company. */
+  handle: string | null;
 };
 
 /**
@@ -49,12 +57,25 @@ export async function contextChoices(): Promise<ContextChoice[]> {
   const convex = await convexServer();
   const data = await convex.query(api.companies.mine, {});
   return [
-    { id: null, name: "Personal", avatarUrl: null, color: null },
+    {
+      id: null,
+      name: "Personal",
+      avatarUrl: null,
+      color: null,
+      slug: null,
+      domain: null,
+      domainVerified: false,
+      handle: null,
+    },
     ...data.companies.map((c) => ({
       id: c.id,
       name: c.name,
       avatarUrl: c.avatar_url,
       color: c.brand_color,
+      slug: c.slug,
+      domain: c.domain,
+      domainVerified: c.domain_verified,
+      handle: c.handle,
     })),
   ];
 }

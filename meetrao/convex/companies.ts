@@ -482,8 +482,14 @@ export const setHandle = mutation({
 /**
  * Promote a member to admin, or take it back.
  *
- * Promotion is a manager's to make and demotion is the owner's alone. Two
- * admins who could each strip the other is a race whoever clicks first wins.
+ * BOTH DIRECTIONS ARE AN ADMIN'S TO MAKE. An admin does everything an owner
+ * does except delete the company, and that includes unmaking another admin.
+ *
+ * It means two admins can each strip the other, and whoever clicks first
+ * wins. That is a real race and it is the owner's to accept: an admin is
+ * somebody the owner chose and can unmake, and a company where admins cannot
+ * tidy up after each other needs the owner present for every change.
+ *
  * Ownership is not in this union: it moves by transfer, not by assignment.
  */
 export const setRole = mutation({
@@ -493,15 +499,13 @@ export const setRole = mutation({
        depends on what the person already is, not on what they are becoming:
        making an admin into a member is the owner's call even though "member"
        is the lesser of the two words. */
-    const probe = await requireRole(ctx, a.id, "admin");
-    const row = await memberRow(ctx, probe.company.id, a.userId);
+    const { company } = await requireManager(ctx, a.id);
+    const row = await memberRow(ctx, company.id, a.userId);
     if (!row) fail("They are not in this company.");
+    /* The one person whose role is not anybody's to change, including their
+       own: the company is theirs and ownership moves by transfer. */
     if (row.role === "owner") fail("The owner's role cannot be changed.");
     if (row.role === a.role) return a.role;
-
-    if (row.role === "admin" && probe.role !== "owner") {
-      fail("Only the owner of this company can take an admin's powers away.", "FORBIDDEN");
-    }
 
     await ctx.db.patch(row._id, { role: a.role });
     return a.role;
@@ -511,7 +515,7 @@ export const setRole = mutation({
 export const removeMember = mutation({
   args: { id: v.string(), userId: v.string() },
   handler: async (ctx, a) => {
-    const { company, role: mine } = await requireManager(ctx, a.id);
+    const { company } = await requireManager(ctx, a.id);
 
     const rows = await ctx.db
       .query("company_members")
@@ -524,12 +528,10 @@ export const removeMember = mutation({
        and nobody on it would keep answering and show no one. */
     if (row.role === "owner") fail("The owner cannot be removed. Delete the company instead.");
 
-    /* Removing an admin is demoting one under another name, so it lives
-       behind the same gate. Without this an admin could remove the other
-       admins and then be alone with the company. */
-    if (row.role === "admin" && mine !== "owner") {
-      fail("Only the owner of this company can remove an admin.", "FORBIDDEN");
-    }
+    /* An admin may remove another admin, for the same reason they may demote
+       one: an admin does everything except delete the company. The owner is
+       the exception above, and the owner always remains, so a company can
+       never be left with nobody in it. */
 
     await ctx.db.delete(row._id);
     return true;

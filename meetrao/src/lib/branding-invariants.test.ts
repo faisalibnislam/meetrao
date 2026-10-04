@@ -36,6 +36,13 @@ describe("the mark on a guest-facing page", () => {
     expect(guestPages.length).toBeGreaterThanOrEqual(5);
   });
 
+  /* The two booking routes render one shared component rather than a page
+     each: three addresses lead to the same page and the only difference
+     between them is who worked out the company. Following the delegation
+     keeps the rule exactly as strict, because the component it delegates to
+     is checked in the same breath below. */
+  const DELEGATES_TO = "<MeetingPage";
+
   it.each(guestPages)("%s renders BrandMark, not the Meetrao logo directly", (file) => {
     const text = readFileSync(path.join(APP, file), "utf8");
     /* <Logo> and <LogoLink> hard-code our mark. BrandMark falls back to the
@@ -45,12 +52,31 @@ describe("the mark on a guest-facing page", () => {
     expect(text, `${file} shows the Meetrao mark to a Pro host's guests`).not.toMatch(
       /<Logo(Link)?\s/,
     );
+    if (text.includes(DELEGATES_TO)) return;
     expect(text).toContain("<BrandMark");
   });
 
   it.each(guestPages)("%s is wrapped in BrandScope", (file) => {
     const text = readFileSync(path.join(APP, file), "utf8");
+    if (text.includes(DELEGATES_TO)) return;
     expect(text, `${file} ignores a host's colour`).toContain("<BrandScope");
+  });
+
+  /* Where the delegation ends. Every booking address on the product renders
+     through this one component, so if it stopped branding, every host's page
+     would show our mark at once. */
+  it("brands the shared booking page the pages delegate to", () => {
+    const shared = read("src/components/booking/meeting-page.tsx");
+    expect(shared).toContain("<BrandMark");
+    expect(shared).toContain("<BrandScope");
+    expect(shared).not.toMatch(/<Logo(Link)?\s/);
+  });
+
+  it("is actually reached by delegation, not passing vacuously", () => {
+    const delegating = guestPages.filter((f) =>
+      readFileSync(path.join(APP, f), "utf8").includes(DELEGATES_TO),
+    );
+    expect(delegating.length, "both booking routes render the shared page").toBe(2);
   });
 
   it("brands the embed too, which sits on the host's own site", () => {
@@ -233,7 +259,8 @@ describe("the booking page shows a host's photograph", () => {
      meeting page is now the front door, so the assertion follows it rather
      than being deleted with the file it happened to be about. */
   it("uses <Avatar> rather than drawing initials itself", () => {
-    const page = read("src/app/(public)/[username]/[slug]/page.tsx");
+    // Moved with the page body, which every booking address now renders.
+    const page = read("src/components/booking/meeting-page.tsx");
     expect(page).toContain("hostAvatarUrl={host.avatarUrl}");
   });
 });

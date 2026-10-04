@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { setContext } from "@/lib/actions/context";
 import { cx } from "@/lib/cx";
@@ -141,19 +140,15 @@ export function WorkspaceMenu({
   name,
   email,
   avatarUrl,
-  isAdmin,
   workspaces,
   activeId,
-  onSignOut,
 }: {
   name: string;
   email: string;
   avatarUrl?: string | null;
-  isAdmin: boolean;
   /** Personal first, then every company. One entry means no list is shown. */
   workspaces: WorkspaceOption[];
   activeId: string | null;
-  onSignOut: () => void | Promise<void>;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -193,13 +188,35 @@ export function WorkspaceMenu({
     });
   }
 
+  /* With one workspace there is nothing to switch to, so this stops being a
+     control and becomes what it looks like: a label saying whose account this
+     is. A menu offering a single choice teaches people a concept they do not
+     have, every time they open it. */
+  const only = workspaces.length <= 1;
+
+  if (only) {
+    return (
+      <div className="mb-[12px] box-border flex w-full items-center gap-[9px] rounded-[7px] border border-line bg-surface p-[6px] max-[820px]:hidden">
+        <WorkspaceMark option={active} avatarUrl={avatarUrl} name={name} size={26} />
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="overflow-hidden text-left text-[12.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
+            {name}
+          </span>
+          <span className="overflow-hidden text-left text-[11.5px] text-ellipsis whitespace-nowrap text-ink-3">
+            {email}
+          </span>
+        </span>
+      </div>
+    );
+  }
+
   return (
     <div ref={box} className="relative mb-[12px] max-[820px]:hidden">
       <button
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`${active.name}, signed in as ${email}. Open account and workspace menu.`}
+        aria-label={`${active.name}, signed in as ${email}. Switch workspace.`}
         disabled={busy}
         onClick={() => setOpen((v) => !v)}
         className={cx(
@@ -232,83 +249,27 @@ export function WorkspaceMenu({
           role="menu"
           className="animate-in absolute top-[calc(100%+6px)] right-0 left-0 z-95 min-w-[200px] rounded-[8px] border border-line bg-surface p-[6px] shadow-[var(--pop)]"
         >
-          {/* No list for an account with one workspace. A switcher offering a
-              single choice teaches people a concept they do not have. */}
-          {workspaces.length > 1 ? (
-            <>
-              <span className="block px-[9px] pt-[5px] pb-[6px] text-[10px] tracking-[0.1em] text-ink-3 uppercase">
-                Workspace
-              </span>
-              {workspaces.map((w) => (
-                <button
-                  key={w.id ?? "personal"}
-                  type="button"
-                  role="menuitemradio"
-                  aria-checked={w.id === activeId}
-                  onClick={() => choose(w.id)}
-                  className={cx(item, w.id === activeId && "bg-accent-soft font-semibold text-accent-ink")}
-                >
-                  <WorkspaceMark option={w} avatarUrl={avatarUrl} name={name} size={20} />
-                  <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                    {w.name}
-                  </span>
-                  {w.id === activeId ? (
-                    <Icon name="check" weight="solid" size={10} className="flex-none" aria-hidden="true" />
-                  ) : null}
-                </button>
-              ))}
-              <span aria-hidden="true" className="mx-[2px] my-[5px] block h-[1px] bg-line-soft" />
-            </>
-          ) : null}
-
-          {/* Settings belongs to the workspace in force, which is why this
-              control and the switcher had to become one thing. */}
-          {/* A fixed label, not the company's name. Pasting the name in reads
-              as a thing belonging to that company rather than as the settings
-              of whatever you are in, and the row changes width every time you
-              switch.
-
-              Personal says just "Settings". The qualifier earns its place
-              only where there is something to tell apart, and in a personal
-              workspace there is nothing else these could be: "Personal
-              settings" invites the question of which other kind exists for
-              the many accounts that have no company at all. */}
-          {!isAdmin ? (
-            <MenuLink href="/settings" icon="gear" label={active.id ? "Company settings" : "Settings"} />
-          ) : null}
-          <MenuLink href="/help" icon="circle-question" label="Help centre" newTab />
-          <MenuLink href="/support" icon="envelope" label="Support" />
-          <span aria-hidden="true" className="mx-[2px] my-[5px] block h-[1px] bg-line-soft" />
-          <button type="button" role="menuitem" onClick={onSignOut} className={item}>
-            <Icon name="sign-out" size={12} className="w-[15px] flex-none text-ink-3" />
-            <span>Log out</span>
-          </button>
+          <span className="block px-[9px] pt-[5px] pb-[6px] text-[10px] tracking-[0.1em] text-ink-3 uppercase">
+            Workspace
+          </span>
+          {workspaces.map((w) => (
+            <button
+              key={w.id ?? "personal"}
+              type="button"
+              role="menuitemradio"
+              aria-checked={w.id === activeId}
+              onClick={() => choose(w.id)}
+              className={cx(item, w.id === activeId && "bg-accent-soft font-semibold text-accent-ink")}
+            >
+              <WorkspaceMark option={w} avatarUrl={avatarUrl} name={name} size={20} />
+              <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{w.name}</span>
+              {w.id === activeId ? (
+                <Icon name="check" weight="solid" size={10} className="flex-none" aria-hidden="true" />
+              ) : null}
+            </button>
+          ))}
         </div>
       ) : null}
     </div>
-  );
-}
-
-function MenuLink({
-  href,
-  icon,
-  label,
-  newTab = false,
-}: {
-  href: string;
-  icon: IconName;
-  label: string;
-  newTab?: boolean;
-}) {
-  return (
-    <Link
-      href={href}
-      role="menuitem"
-      className={cx(item, "unlink")}
-      {...(newTab ? { target: "_blank", rel: "noreferrer" } : {})}
-    >
-      <Icon name={icon} size={12} className="w-[15px] flex-none text-ink-3" />
-      <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{label}</span>
-    </Link>
   );
 }

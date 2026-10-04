@@ -21,6 +21,7 @@ import { cx } from "@/lib/cx";
 import { BUSINESS_PITCH, UpgradeCallout } from "./upgrade";
 import { BUSINESS_LIMITS } from "@/lib/pricing";
 import { isPaid, type Plan } from "@/convex/lib/plan";
+import { companyBookingLink } from "@/lib/username";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Companies: a domain, a brand, and the people whose links live on it.
@@ -92,10 +93,12 @@ const canManage = (role: CompanyRole) => role === "owner" || role === "admin";
  * domain does not resolve yet and showing it would be showing an address
  * that 404s.
  */
-function linkFor(company: CompanyView, member: CompanyMemberView, meetingSlug: string, siteHost: string): string {
-  return company.domain && company.domainVerified
-    ? `${company.domain}/${member.handle}/${meetingSlug}`
-    : `${siteHost}/${member.username}/${meetingSlug}`;
+function linkFor(company: CompanyView, member: CompanyMemberView, meetingSlug: string): string {
+  /* The COMPANY's address, never the member's personal one. It used to fall
+     back to meetrao.com/<username>/<meeting> when there was no verified
+     domain, which showed somebody their own link and called it the
+     company's. */
+  return companyBookingLink(company, member.handle, meetingSlug);
 }
 
 export function CompaniesPanel({
@@ -104,15 +107,12 @@ export function CompaniesPanel({
   companyLimit,
   canCreate,
   plan,
-  siteHost,
   only = null,
 }: {
   companies: CompanyView[];
   owned: number;
   companyLimit: number;
   canCreate: boolean;
-  /** Where a link answers when the company has no verified domain. */
-  siteHost: string;
   /** The VIEWER's plan, which decides only whether they may create one. */
   plan: Plan;
   /**
@@ -152,6 +152,15 @@ export function CompaniesPanel({
      twice. The card's is the one beside what somebody just tried to do, so the
      panel-level one steps aside when it is showing. */
   const cardAsksForBusiness = Boolean(current?.isOwner && current.memberLimit <= 1);
+
+  /* A Pro owner opening their company's own People tab has nothing to manage:
+     the company can only ever hold them, so the list is a heading, a count of
+     one, and themselves. What is useful here is the reason it is empty, so
+     this screen becomes the pitch and nothing else.
+
+     Everything the card carries stays reachable from Personal → Companies,
+     which is the same card without this `only` filter. */
+  const soloCompany = Boolean(only && current && current.memberLimit <= 1);
 
   function run(work: () => Promise<{ error?: string }>, ok: { title: string; text?: string }) {
     startBusy(async () => {
@@ -211,15 +220,33 @@ export function CompaniesPanel({
                   )}
                 >
                   {c.name}
+                  {/* The link name, which is unique where the display name
+                      is not: two companies called the same thing were two
+                      identical chips. */}
+                  <span className="ml-[6px] font-normal opacity-70">/{c.slug}</span>
                 </button>
               ))}
             </div>
           ) : null}
 
-          {current ? (
+          {current && soloCompany ? (
+            <UpgradeCallout to="business" feature="Adding people to a company">
+              {BUSINESS_PITCH}
+            </UpgradeCallout>
+          ) : current ? (
             <CompanyCard
+              /* One card per company, not one card shown for each in turn.
+                 Without a key React reuses the instance, and the name and
+                 link fields keep whichever company the card first showed:
+                 switching showed the other company's values, and Save wrote
+                 them onto the company now selected. */
+              key={current.id}
               company={current}
-              siteHost={siteHost}
+              /* Deleting a company belongs to the owner's personal space,
+                 beside the list of every company they have. Offering it from
+                 inside the company is offering to delete the room you are
+                 standing in. */
+              canDelete={!only}
               busy={busy}
               onInvite={() => setDialog("invite")}
               onDelete={() => setDialog("delete")}
@@ -356,7 +383,7 @@ export function CompaniesPanel({
 
 function CompanyCard({
   company,
-  siteHost,
+  canDelete,
   busy,
   onInvite,
   onDelete,
@@ -366,7 +393,8 @@ function CompanyCard({
   onRemoveMember,
 }: {
   company: CompanyView;
-  siteHost: string;
+  /** False inside a company's own settings: deleting lives in Personal. */
+  canDelete: boolean;
   busy: boolean;
   onInvite: () => void;
   onDelete: () => void;
@@ -438,7 +466,6 @@ function CompanyCard({
             key={m.userId}
             company={company}
             member={m}
-            siteHost={siteHost}
             viewerRole={mine}
             busy={busy}
             editing={editing === m.userId}
@@ -461,8 +488,13 @@ function CompanyCard({
 
       {/* Deleting is the owner's alone. An admin looking after the company's
           face and its people must not be able to take the company away from
-          the person who pays for it. */}
-      {mine === "owner" ? (
+          the person who pays for it.
+
+          And only from Personal, where it sits beside the list of every
+          company they have. From inside the company it is an offer to delete
+          the room you are standing in, with the workspace switcher left
+          pointing at something that no longer exists. */}
+      {mine === "owner" && canDelete ? (
         <div className="flex flex-wrap items-center gap-[8px]">
           <Button variant="ghost" size={32} disabled={busy} onClick={onDelete}>
             Delete company
@@ -492,7 +524,6 @@ function CompanyCard({
 function MemberRow({
   company,
   member,
-  siteHost,
   viewerRole,
   busy,
   editing,
@@ -506,7 +537,6 @@ function MemberRow({
 }: {
   company: CompanyView;
   member: CompanyMemberView;
-  siteHost: string;
   viewerRole: CompanyRole;
   busy: boolean;
   editing: boolean;
@@ -521,13 +551,16 @@ function MemberRow({
   const isOwner = member.role === "owner";
   const manage = canManage(viewerRole);
 
-  /* Promotion is a manager's to make; demotion and removing an admin are the
-     owner's alone, because two admins who can each strip the other is a race
-     whoever clicks first wins. The same rule is enforced in
-     convex/companies.ts, which is the boundary; this only decides what to
-     draw. */
-  const mayChangeRole = !isOwner && (viewerRole === "owner" || (manage && member.role === "member"));
-  const mayRemove = !isOwner && (viewerRole === "owner" || (manage && member.role === "member"));
+  /* An admin does everything an owner does except delete the company, so
+     both of these are theirs to make, on anybody but the owner. The owner is
+     the one person nobody can remove or re-role, because the company is
+     theirs and ownership moves by transfer.
+
+     The same rules are enforced in convex/companies.ts, which is the
+     boundary; this only decides what to draw. A control drawn where the
+     mutation would refuse is a worse lie than a control that is missing. */
+  const mayChangeRole = !isOwner && manage;
+  const mayRemove = !isOwner && manage;
   /* Anybody may fix their own link. Needing an admin for a typo in the one
      part of this that is nobody else's business was a rule with nothing
      behind it. */
@@ -614,7 +647,7 @@ function MemberRow({
       {active.length > 0 ? (
         <ul className="m-0 flex list-none flex-col gap-[4px] p-0 pl-[1px]">
           {active.map((t) => {
-            const link = linkFor(company, member, t.slug, siteHost);
+            const link = linkFor(company, member, t.slug);
             return (
               <li key={t.id} className="flex flex-wrap items-center gap-[8px] text-[12px]">
                 <span className="text-ink-2">{t.name}</span>

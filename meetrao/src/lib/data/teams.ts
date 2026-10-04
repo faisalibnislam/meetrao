@@ -6,10 +6,10 @@ import type { AssignableMeeting, TeamView } from "@/components/app/team-panel";
 import type { HookView, KeyView } from "@/components/app/developer-panel";
 import type { DomainView, PlanView, TimingView } from "@/components/app/billing-panel";
 import { isPaid } from "@/convex/lib/plan";
-import { siteUrl } from "@/lib/env";
 import type { CompanyRole, CompanyView } from "@/components/app/companies-panel";
 import type { Plan } from "@/convex/lib/plan";
-import { activeContext } from "@/lib/data/context";
+import { activeContext, contextChoices } from "@/lib/data/context";
+import { siteUrl } from "@/lib/env";
 
 /* What the Team settings panel needs, in one place: the teams this host owns
    or belongs to, and their own meetings, any of which can be handed to a
@@ -67,6 +67,14 @@ export async function brandingPanelData(): Promise<{
   color: string | null;
   background: string | null;
   domain: DomainView;
+  /**
+   * What a link in THIS workspace looks like, for the domain explainer.
+   *
+   * A company's links are not its members' links: inside a company this is
+   * meetrao.com/<company>/<handle>, and the panel used to print the viewer's
+   * own meetrao.com/<username> there whichever workspace they were in.
+   */
+  address: { today: string; handle: string };
 }> {
   const convex = await convexServer();
   const { companyId } = await activeContext();
@@ -88,6 +96,7 @@ export async function brandingPanelData(): Promise<{
       color: brand?.color ?? null,
       background: brand?.background ?? null,
       domain: { domain: domain?.domain ?? null, verifiedAt: domain?.verified_at ?? null },
+      address: await companyAddress(companyId),
     };
   }
 
@@ -96,6 +105,8 @@ export async function brandingPanelData(): Promise<{
     convex.query(api.domains.mine, {}),
   ]);
 
+  const me = await convex.query(api.profiles.current, {});
+  const username = (me?.username as string | undefined) ?? "";
   return {
     pro: brand.live,
     logoUrl: brand.logo_url,
@@ -103,7 +114,21 @@ export async function brandingPanelData(): Promise<{
     color: brand.color,
     background: brand.background,
     domain: { domain: domain.domain, verifiedAt: domain.verified_at },
+    address: { today: `${host()}/${username}`, handle: username },
   };
+}
+
+/** The site's own hostname, without the scheme. */
+function host(): string {
+  return new URL(siteUrl()).host;
+}
+
+/** meetrao.com/<company>/<handle>, which is this company's own shape. */
+async function companyAddress(companyId: string): Promise<{ today: string; handle: string }> {
+  const here = (await contextChoices()).find((c) => c.id === companyId);
+  const handle = here?.handle ?? "";
+  const slug = here?.slug ?? "";
+  return { today: `${host()}/${slug}/${handle}`, handle };
 }
 
 export async function developerPanelData(): Promise<{
@@ -179,7 +204,6 @@ export async function companiesPanelData(): Promise<{
   companyLimit: number;
   canCreate: boolean;
   plan: Plan;
-  siteHost: string;
 }> {
   const convex = await convexServer();
   const data = await convex.query(api.companies.mine, {});
@@ -226,6 +250,20 @@ export async function companiesPanelData(): Promise<{
     companyLimit: data.company_limit,
     canCreate: data.can_create,
     plan: data.plan as Plan,
-    siteHost: new URL(siteUrl()).host,
   };
+}
+
+/**
+ * Whether the company in force can only ever hold one person.
+ *
+ * The owner's cap, not the viewer's plan: a member of a Business company
+ * must not have a screen collapse because their own account is on Free.
+ * False for Personal, which is not a company and has its own team feature.
+ */
+export async function soloCompany(companyId: string | null): Promise<boolean> {
+  if (!companyId) return false;
+  const convex = await convexServer();
+  const data = await convex.query(api.companies.mine, {});
+  const found = data.companies.find((c) => c.id === companyId);
+  return Boolean(found && found.member_limit <= 1);
 }

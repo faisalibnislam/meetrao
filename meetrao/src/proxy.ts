@@ -224,7 +224,7 @@ export async function proxy(request: NextRequest, event?: NextFetchEvent): Promi
   if (!isOwnHost(hostname)) {
     const owner = await ownerForDomain(hostname);
     if (owner) {
-      const route = routeForDomain(request.nextUrl.pathname, owner.handles);
+      const route = routeForDomain(request.nextUrl.pathname, owner.handles, owner.company);
 
       if (route.kind === "rewrite") {
         const url = request.nextUrl.clone();

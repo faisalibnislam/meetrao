@@ -234,3 +234,49 @@ export async function meetingIsOnCompany(
     companySlug,
   });
 }
+
+/* ── a company's own address on meetrao.com ──────────────────────────────── */
+
+/** Who `handle` is on this company, or null when the path names nobody. */
+export async function hostOnCompany(companySlug: string, handle: string): Promise<string | null> {
+  const row = await convexAnonymous().query(api.publicBooking.hostOnCompany, { companySlug, handle });
+  return row?.username ?? null;
+}
+
+/**
+ * Where this meeting's own address is, when it belongs to a company.
+ *
+ * Null for a personal meeting. The two-segment page uses this to send a
+ * company's meeting on to the company's address, so every link already in
+ * somebody's signature keeps working and each page has one canonical home.
+ */
+export async function companyPlaceOf(
+  username: string,
+  slug: string,
+): Promise<{ companySlug: string; handle: string } | null> {
+  return await convexAnonymous().query(api.publicBooking.companyPlaceOf, { username, slug });
+}
+
+/** A company's brand by slug, in the shape BrandScope wants. */
+export async function companyBySlug(slug: string): Promise<{
+  slug: string;
+  name: string;
+  unbranded: boolean;
+  brand: { logoUrl: string | null; logoHidden: boolean; color: string | null; background: string | null } | null;
+} | null> {
+  const row = await convexAnonymous().query(api.publicBooking.companyBrandBySlug, { slug });
+  if (!row) return null;
+  return {
+    slug: row.slug,
+    name: row.name,
+    unbranded: row.unbranded,
+    brand: row.brand
+      ? {
+          logoUrl: row.brand.logo_url,
+          logoHidden: row.brand.logo_hidden,
+          color: row.brand.color,
+          background: row.brand.background,
+        }
+      : null,
+  };
+}

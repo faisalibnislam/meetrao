@@ -124,20 +124,33 @@ describe("what only the owner may do", () => {
     expect(fn(COMPANIES, "remove")).toContain("requireOwner(ctx, a.id)");
   });
 
-  /* The race this prevents: two admins who can each strip the other, where
-     whoever clicks first is alone with a company that is not theirs. */
-  it("taking an admin's powers away", () => {
+});
+
+describe("what an admin may do, which is everything else", () => {
+  /* The rule, stated plainly: an admin does everything an owner does except
+     delete the company. That includes unmaking another admin, which means two
+     admins can each strip the other and whoever clicks first wins.
+
+     That race is real and it is accepted on purpose: an admin is somebody the
+     owner chose and can unmake, and a company whose admins cannot tidy up
+     after each other needs the owner present for every change. An earlier
+     version kept both of these owner-only; this is the deliberate opposite,
+     so a future reader does not "fix" it back. */
+  it("unmakes another admin", () => {
     const body = fn(COMPANIES, "setRole");
-    expect(body).toContain('if (row.role === "admin" && probe.role !== "owner")');
-    expect(body).toContain("FORBIDDEN");
+    expect(body).toContain("requireManager(ctx, a.id)");
+    expect(body, "demotion is not owner-only").not.toContain('probe.role !== "owner"');
   });
 
-  /* Removing an admin IS demoting one, under another name. A gate on the
-     first without the second is no gate at all. */
-  it("removing an admin, which is the same act under another name", () => {
+  it("removes another admin", () => {
     const body = fn(COMPANIES, "removeMember");
-    expect(body).toContain('if (row.role === "admin" && mine !== "owner")');
-    expect(body).toContain("FORBIDDEN");
+    expect(body).toContain("requireManager(ctx, a.id)");
+    expect(body, "removing an admin is not owner-only").not.toContain('mine !== "owner"');
+  });
+
+  it("is drawn that way on the screen too", () => {
+    expect(PANEL).toContain("const mayChangeRole = !isOwner && manage;");
+    expect(PANEL).toContain("const mayRemove = !isOwner && manage;");
   });
 });
 
@@ -172,20 +185,8 @@ describe("the People screen draws what the mutations allow", () => {
   /* A control that is drawn when the mutation would refuse is a worse lie
      than a control that is missing, so these two predicates have to match the
      rules above exactly. */
-  it("offers a role change under the same rule the mutation enforces", () => {
-    expect(PANEL).toContain(
-      'const mayChangeRole = !isOwner && (viewerRole === "owner" || (manage && member.role === "member"));',
-    );
-  });
-
-  it("offers removal under the same rule", () => {
-    expect(PANEL).toContain(
-      'const mayRemove = !isOwner && (viewerRole === "owner" || (manage && member.role === "member"));',
-    );
-  });
-
   it("shows Delete company to the owner alone", () => {
-    expect(PANEL).toContain('{mine === "owner" ? (');
+    expect(PANEL).toContain('{mine === "owner" && canDelete ? (');
     expect(PANEL).toContain("Delete company");
   });
 
@@ -207,11 +208,169 @@ describe("the links on the screen", () => {
     expect(body, "a personal meeting is not published on this domain").toContain("company.id");
   });
 
-  /* An unverified domain does not resolve yet, so showing it would be showing
-     an address that 404s. */
-  it("fall back to meetrao.com until the domain is verified", () => {
-    const body = PANEL.slice(PANEL.indexOf("function linkFor"));
-    expect(body).toContain("company.domain && company.domainVerified");
-    expect(body).toContain("${siteHost}/${member.username}/${meetingSlug}");
+  /* THE COMPANY'S ADDRESS, never the member's personal one. This used to fall
+     back to meetrao.com/<username>/<meeting> when there was no verified
+     domain, which showed somebody their own link and called it the company's.
+     A company and the people in it are different things with different
+     links. */
+  it("are the company's, not the host's", () => {
+    const body = PANEL.slice(PANEL.indexOf("function linkFor"), PANEL.indexOf("export function CompaniesPanel"));
+    expect(body).toContain("companyBookingLink(company, member.handle, meetingSlug)");
+    expect(body, "a username here is the personal link wearing a company's name").not.toContain(
+      "member.username",
+    );
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Where each control belongs.
+
+   The same panel renders in two places: Personal → Companies, which is the
+   list of every company somebody has, and a company's own People tab, which
+   is the one they are standing in. The second is not the first with a filter
+   on it, and two controls had to move because of that.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+describe("the company's own People tab", () => {
+  /* A Pro owner's company can only ever hold them, so the list is a heading,
+     a count of one, and themselves. What is useful on that screen is the
+     reason it is empty. Everything else stays reachable from Personal →
+     Companies, which is the same card without the `only` filter. */
+  it("is only the pitch when the company can hold one person", () => {
+    expect(PANEL).toContain("const soloCompany = Boolean(only && current && current.memberLimit <= 1);");
+    expect(PANEL).toContain("{current && soloCompany ? (");
+  });
+
+  /* Offering it from inside the company is offering to delete the room you
+     are standing in, and leaves the workspace switcher pointing at something
+     that no longer exists. */
+  it("never offers to delete the company you are standing in", () => {
+    expect(PANEL).toContain("canDelete={!only}");
+    expect(PANEL).toContain('{mine === "owner" && canDelete ? (');
+  });
+
+  /* The gate is the OWNER's cap, not the viewer's plan: a member of a
+     Business company must not have the screen collapse because their own
+     account is on Free. */
+  it("decides from the company's cap, not the viewer's plan", () => {
+    expect(PANEL).toContain("current.memberLimit <= 1");
+    expect(PANEL, "the viewer's plan decides only whether they may create one").not.toContain(
+      "only && isPaid(plan)",
+    );
+  });
+});
+
+describe("the company's own Team tab", () => {
+  const SETTINGS = read("src/app/(app)/settings/[[...tab]]/page.tsx");
+  const LOADER = read("src/lib/data/teams.ts");
+  const PITCH = read("src/components/app/team-pitch.tsx");
+
+  /* A team link is answered by whoever of you is free, so it needs a second
+     person to be anything at all. Offering "Create a team" to somebody who
+     can never add anyone is the worst version of a locked feature: it works
+     right up until it cannot. */
+  it("is the pitch when the company can hold one person", () => {
+    expect(SETTINGS).toContain("(await soloCompany(context.companyId)) ? (");
+    expect(SETTINGS).toContain("<TeamPitch />");
+    expect(PITCH).toContain('to="business"');
+    expect(PITCH, "a create button is the thing being removed").not.toContain("Create a team");
+  });
+
+  /* Personal is not a company and keeps its own team feature. */
+  it("leaves Personal alone", () => {
+    const fn = LOADER.slice(LOADER.indexOf("export async function soloCompany"));
+    expect(fn).toContain("if (!companyId) return false;");
+  });
+
+  /* The OWNER's cap, as everywhere else: a member of a Business company must
+     not have the screen collapse because their own account is on Free. */
+  it("reads the company's cap, not the viewer's plan", () => {
+    const fn = LOADER.slice(LOADER.indexOf("export async function soloCompany"));
+    expect(fn).toContain("found.member_limit <= 1");
+    expect(fn).not.toMatch(/isPaid\(|planOf\(me/);
+  });
+});
+
+describe("two brandings, not one", () => {
+  const TABS = read("src/lib/settings-tabs.ts");
+  const LOADER = read("src/lib/data/teams.ts");
+
+  /* A Pro account has its own branding and its own domain on its own links,
+     AND a company with its own branding and its own domain. They are
+     different things that happen to share a screen, and removing Branding
+     from Personal once took the first one away. */
+  it("is in both workspaces' tabs", () => {
+    const personal = TABS.slice(TABS.indexOf("PERSONAL_TABS"), TABS.indexOf("COMPANY_TABS"));
+    const company = TABS.slice(TABS.indexOf("COMPANY_TABS"), TABS.indexOf("export const SETTINGS_TABS"));
+    expect(personal, "Personal keeps its own branding").toContain('key: "branding"');
+    expect(company, "a company has its own").toContain('key: "branding"');
+  });
+
+  /* One loader, two sources. Reading the profile's branding while standing in
+     a company would show the wrong brand and save over the wrong one. */
+  it("reads whichever workspace is in force", () => {
+    const fn = LOADER.slice(LOADER.indexOf("export async function brandingPanelData"));
+    expect(fn).toContain("const { companyId } = await activeContext();");
+    expect(fn).toContain("if (companyId) {");
+    expect(fn).toContain("api.companyBranding.get");
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The whole matrix, in one place.
+
+   OWNER   everything, including deleting the company.
+   ADMIN   everything except deleting the company.
+   MEMBER  nothing except their own link on this company.
+
+   Written as a table because that is how it was specified, and because three
+   rules spread across eight mutations is how one of them quietly drifts.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+describe("the matrix", () => {
+  /** The least role each mutation accepts, read off the gate it calls. */
+  const GATE: Record<string, "owner" | "admin" | "member"> = {
+    rename: "admin",
+    addMember: "admin",
+    setRole: "admin",
+    removeMember: "admin",
+    remove: "owner",
+  };
+
+  it.each(Object.entries(GATE))("%s is gated at %s", (name, least) => {
+    const body = fn(COMPANIES, name);
+    const call = least === "owner" ? "requireOwner(ctx, a.id)" : "requireManager(ctx, a.id)";
+    expect(body, `${name} should take the ${least} gate`).toContain(call);
+  });
+
+  /* Deleting the company is the ONE thing on this list an admin cannot do,
+     which is the whole difference between the two roles. */
+  it("leaves exactly one thing to the owner alone", () => {
+    const ownerOnly = Object.entries(GATE)
+      .filter(([, least]) => least === "owner")
+      .map(([name]) => name);
+    expect(ownerOnly).toEqual(["remove"]);
+  });
+
+  /* A member changes their own link and nothing else. `setHandle` is the only
+     mutation in the file that accepts one, and only for themselves. */
+  it("lets a member change their own link and nothing else", () => {
+    expect(fn(COMPANIES, "setHandle")).toContain(
+      'requireRole(ctx, a.id, a.userId === me.id ? "member" : "admin")',
+    );
+    for (const name of Object.keys(GATE)) {
+      expect(fn(COMPANIES, name), `${name} must not admit a member`).not.toContain(
+        'requireRole(ctx, a.id, "member")',
+      );
+    }
+  });
+
+  /* The company's face is an admin's to set, and is gated on the OWNER's
+     plan rather than the caller's wherever it is. */
+  it("gives an admin the company's branding and domain", () => {
+    for (const source of [BRANDING, DOMAINS]) {
+      expect(source).toContain("requireCompanyManager");
+      expect(source).toContain('role === "member"');
+    }
   });
 });
