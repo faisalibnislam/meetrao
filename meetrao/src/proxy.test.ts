@@ -18,13 +18,18 @@ let options: MiddlewareOptions = {};
 
 type Handler = (
   request: NextRequest,
-  ctx: { convexAuth: { isAuthenticated: () => Promise<boolean> } },
+  ctx: {
+    convexAuth: { getToken: () => Promise<string | undefined>; isAuthenticated: () => Promise<boolean> };
+  },
 ) => Promise<unknown>;
 
 let handler: Handler = async () => undefined;
 
-/** What Convex answers when the middleware asks. Reassigned per test. */
+/** Whether the request carries a session token. Reassigned per test. */
 let convexSaysAuthenticated = false;
+
+/** Paths on which the proxy asked Convex over the network. Should stay empty. */
+const askedConvex: string[] = [];
 
 vi.mock("@convex-dev/auth/nextjs/server", () => ({
   convexAuthNextjsMiddleware: (h: Handler, opts: MiddlewareOptions) => {
@@ -33,7 +38,13 @@ vi.mock("@convex-dev/auth/nextjs/server", () => ({
     return async (request: NextRequest) => {
       delegated.push(request.nextUrl.pathname);
       return await handler(request, {
-        convexAuth: { isAuthenticated: async () => convexSaysAuthenticated },
+        convexAuth: {
+          getToken: async () => (convexSaysAuthenticated ? "token" : undefined),
+          isAuthenticated: async () => {
+            askedConvex.push(request.nextUrl.pathname);
+            return convexSaysAuthenticated;
+          },
+        },
       });
     };
   },
@@ -47,6 +58,7 @@ function get(url: string) {
 
 beforeEach(() => {
   delegated.length = 0;
+  askedConvex.length = 0;
 });
 
 describe("proxy · an OAuth code stranded on the site root", () => {
@@ -186,4 +198,18 @@ describe("proxy · a signed-in visitor is never bounced off an auth page", () =>
     convexSaysAuthenticated = true;
     expect((await get("https://meetrao.com/dashboard")).headers.get("location")).toBeNull();
   });
+});
+
+/* isAuthenticated() is a network query. It used to run on every request with
+   a session, public pages and API routes included, which put a cross-region
+   hop in front of every signed-in navigation. */
+describe("proxy · no database round trip", () => {
+  it.each(["/", "/pricing", "/sarah/intro", "/api/slots", "/booking/MR-1", "/dashboard", "/settings/profile"])(
+    "%s is decided without asking Convex",
+    async (path) => {
+      convexSaysAuthenticated = true;
+      await get(`https://meetrao.com${path}`);
+      expect(askedConvex).toEqual([]);
+    },
+  );
 });

@@ -100,9 +100,22 @@ async function convexProxyOnce() {
     async (request, { convexAuth }) => {
       const path = request.nextUrl.pathname;
       const isPrivate = PRIVATE_PREFIXES.some((p) => path === p || path.startsWith(`${p}/`));
-      const authed = await convexAuth.isAuthenticated();
+      if (!isPrivate) return undefined;
 
-      if (!authed && isPrivate) {
+      /* THE COOKIE, NOT A QUERY. `isAuthenticated()` is a round trip to
+         Convex, and it ran on every request carrying a session, public pages
+         and API routes included, before anything else could start: a whole
+         cross-region hop added to every signed-in navigation, to answer a
+         question only private paths ask.
+
+         By this point the middleware has already refreshed a token near
+         expiry and cleared the cookies when that failed, so a token here is
+         one Convex issued and has not expired. The only case the query would
+         add is a session revoked elsewhere, and requireSession catches that
+         on the page, which was always the boundary. */
+      const signedIn = Boolean(await convexAuth.getToken());
+
+      if (!signedIn) {
         const to = request.nextUrl.clone();
         to.pathname = "/login";
         to.searchParams.set("next", path);

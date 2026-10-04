@@ -367,12 +367,26 @@ its own, rendering the **real** header (every title and subtitle is a static
 string) over a shimmering body, so the header never moves when content arrives.
 `src/app/app-loading-boundaries.test.ts` fails if a new route ships without one.
 
-**One fewer round trip in the session.** `current_profile()` (migration 0015)
-filters by `auth.uid()` inside Postgres, so the profile read no longer waits on
-`getUser()` for an id — the two run together. `requireSession` is wrapped in React
-`cache()`, and that is load-bearing rather than tidy: the layout and the page both
-call it, Next dedupes identical GET fetches but an RPC is a POST and is not
-deduped, so without it the profile would be fetched twice per navigation.
+**The session is one round trip.** `whoami.session` returns the identity and
+the profile together; it used to be two queries in sequence, the second
+re-reading a row the first had already read. `requireSession`,
+`contextChoices` and `activeContext` are wrapped in React `cache()`, which is
+load-bearing rather than tidy: the layout, the page and every loader call
+them, and a Convex query is a POST that Next does not dedupe.
+
+**The proxy asks Convex nothing.** It used to call `isAuthenticated()`, a
+network query, on every request that carried a session, public pages and API
+routes included. It now acts on private paths only, and only reads the cookie:
+Convex Auth's middleware has already refreshed a token near expiry, or cleared
+the cookies if that failed, before the handler runs. A session revoked
+elsewhere is caught by `requireSession`, which was always the boundary.
+`src/proxy.test.ts` fails if a network check comes back.
+
+**Reads run in phases, not chains.** The guest booking page, `/api/slots` and
+booking creation each make two rounds of parallel reads where they used to
+make six to nine in sequence. `src/lib/round-trips.test.ts` pins the
+structure, because one `await` in the wrong place restores a whole hop and no
+type check or behaviour test notices.
 
 **`regions: ["hnd1"]` in `vercel.json` — AND IT IS NOW WRONG.** This was set when
 the database was Supabase in `ap-northeast-1` (Tokyo): Vercel functions default
@@ -390,14 +404,6 @@ Confirmed: every deploy since the key was added reports success. Check which
 region actually served a request with
 `curl -sI https://www.meetrao.com/login | grep x-vercel-id` — the region is the
 prefix. To undo it, delete the `regions` key.
-
-**Still open, deliberately.** The proxy calls `auth.getUser()` on every request,
-and that is the remaining fourth hop. `getClaims()` would verify the token
-in-process instead — but only when the project signs with *asymmetric* JWT keys;
-with a symmetric key `auth-js` falls back to a network `getUser()` and nothing is
-saved. Deriving the verified flag from claims is also not free: it lives in
-`user_metadata`, which the user can write. Confirm the signing key type under
-Settings → JWT Keys before touching this.
 
 ## Mobile
 
