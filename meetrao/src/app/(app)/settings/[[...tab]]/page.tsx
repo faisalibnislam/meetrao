@@ -18,7 +18,14 @@ import { TeamPanel } from "@/components/app/team-panel";
 import { DeveloperPanel } from "@/components/app/developer-panel";
 import { BillingPanel } from "@/components/app/billing-panel";
 import { BrandingPanel } from "@/components/app/branding-panel";
-import { billingPanelData, brandingPanelData, developerPanelData, teamPanelData } from "@/lib/data/teams";
+import { CompaniesPanel } from "@/components/app/companies-panel";
+import {
+  billingPanelData,
+  brandingPanelData,
+  companiesPanelData,
+  developerPanelData,
+  teamPanelData,
+} from "@/lib/data/teams";
 import { siteUrl } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -62,6 +69,7 @@ export default async function SettingsPage({
             siteHost={new URL(siteUrl()).host}
           />
         ) : null}
+        {tab === "companies" ? <CompaniesPanel {...(await companiesPanelData())} /> : null}
         {tab === "developer" ? <DeveloperPanel {...(await developerPanelData())} siteUrl={siteUrl()} /> : null}
         {tab === "team" ? (
           <TeamPanel {...(await teamPanelData(session.profile.id))} siteUrl={siteUrl()} />

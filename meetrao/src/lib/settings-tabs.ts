@@ -11,6 +11,7 @@ export const SETTINGS_TABS = [
   { key: "booking", label: "Booking" },
   { key: "billing", label: "Plan" },
   { key: "branding", label: "Branding" },
+  { key: "companies", label: "Companies" },
   { key: "team", label: "Team" },
   { key: "developer", label: "Developer" },
   { key: "notifications", label: "Notifications" },

@@ -60,7 +60,21 @@ export function planOf(profile: PlanFields): Plan {
 
 /** True for Pro AND Business. The question almost every gate is asking. */
 export function isPro(profile: PlanFields): boolean {
-  return planOf(profile) !== "free";
+  return isPaid(planOf(profile));
+}
+
+/**
+ * The same question, asked of a plan that has already been resolved.
+ *
+ * Screens and loaders receive a Plan string from `billing.mine` rather than a
+ * profile, and before this existed each of them wrote `plan === "pro"`. Every
+ * one of those turned into a bug the moment a third tier existed: a Business
+ * customer read as not-paid, which hid their own branding and stopped their
+ * domain resolving. `no-plan-equality.test.ts` is what keeps them from coming
+ * back.
+ */
+export function isPaid(plan: Plan): boolean {
+  return plan !== "free";
 }
 
 /** True only for Business. For the handful of things Pro genuinely lacks. */

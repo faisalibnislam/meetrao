@@ -1,3 +1,4 @@
+import { LIMITS as PLAN_LIMITS } from "@/convex/lib/limits";
 /* ─────────────────────────────────────────────────────────────────────────────
    The pricing page's content.
 
@@ -62,8 +63,14 @@ export const BUSINESS_PRICES = {
   yearly: { amount: 99, unit: "a year", suffix: "/yr" },
 } as const;
 
-/** The caps Business buys. Printed on the pricing page and enforced in Convex. */
-export const BUSINESS_LIMITS = { companies: 10, membersPerCompany: 100 } as const;
+/**
+ * The caps Business buys, re-exported from where they are ENFORCED.
+ *
+ * Not typed again here. A number on a pricing card and a number in a Convex
+ * mutation are two things that disagree the first time either moves, and the
+ * one customers read is the one nobody remembers to update.
+ */
+export const BUSINESS_LIMITS = PLAN_LIMITS.business;
 
 /**
  * What a year saves against twelve monthly payments, for either plan.

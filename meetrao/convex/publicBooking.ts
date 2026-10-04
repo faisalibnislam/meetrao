@@ -7,7 +7,7 @@ import { uuid } from "./lib/ids";
 import { findOverlap, insertBooking, moveBooking } from "./bookings";
 import { overridesForMeeting, rulesForMeeting } from "./availability";
 import { membersOf } from "./teams";
-import { planOf } from "./lib/plan";
+import { isPro, planOf } from "./lib/plan";
 import type { Doc } from "./_generated/dataModel";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity } from "./lib/effects";
@@ -49,7 +49,7 @@ const DAY = 24 * 60 * MINUTE;
 function publicBrand(
   p: Doc<"profiles">,
 ): { logo_url: string | null; color: string | null; background: string | null } | null {
-  if (planOf(p) !== "pro") return null;
+  if (!isPro(p)) return null;
   const logo = p.brand_logo_url ?? null;
   const color = p.brand_color ?? null;
   const background = p.brand_bg ?? null;
@@ -75,7 +75,7 @@ export const getHost = query({
       is_suspended: p.is_suspended,
       /* Whether the "Powered by Meetrao" badge is shown. A boolean, not the
          plan: a guest has no use for knowing which tier somebody is on. */
-      unbranded: planOf(p) === "pro",
+      unbranded: isPro(p),
       brand: publicBrand(p),
     };
   },
@@ -123,7 +123,7 @@ export const getMeetingAvailability = query({
         avatar_url: host.avatar_url, timezone: host.timezone,
         /* Whether the badge is shown. A boolean, not the plan: a guest has no
            use for knowing which tier somebody is on. */
-        unbranded: planOf(host) === "pro",
+        unbranded: isPro(host),
         brand: publicBrand(host),
       },
       meeting: {
@@ -330,7 +330,7 @@ export const hostForDomain = query({
       .unique();
 
     if (!p || !p.custom_domain_verified_at || p.is_suspended) return null;
-    if (planOf(p) !== "pro") return null;
+    if (!isPro(p)) return null;
     return { username: p.username };
   },
 });
@@ -694,7 +694,7 @@ export const getByReference = query({
             full_name: host.full_name,
             timezone: host.timezone,
             avatar_url: host.avatar_url,
-            unbranded: planOf(host) === "pro",
+            unbranded: isPro(host),
             brand: publicBrand(host),
           }
         : null,
