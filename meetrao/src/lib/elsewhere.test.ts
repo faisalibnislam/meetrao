@@ -231,3 +231,20 @@ describe("the other two screens", () => {
     expect(CONVEX_CONTACTS).toContain("contacts.length === 0");
   });
 });
+
+describe("the window where the two deploys disagree", () => {
+  const SERVER = read("src/lib/data/elsewhere.ts");
+
+  /* Convex and Vercel deploy separately and can never be atomic, so there is
+     always a window where this app is newer than the backend answering it and
+     a field added to a query is simply absent. Reading `.length` off that
+     took the bookings screen down in production until the Convex side caught
+     up. An empty state is not worth a blank page. */
+  it("treats a missing count as nothing elsewhere", () => {
+    expect(SERVER).toContain("if (!counts || counts.length === 0) return [];");
+  });
+
+  it("accepts undefined in the signature, so a caller cannot forget", () => {
+    expect(SERVER).toContain("count: number }[] | undefined,");
+  });
+});
