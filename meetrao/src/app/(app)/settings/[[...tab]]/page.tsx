@@ -80,7 +80,6 @@ export default async function SettingsPage({
         {tab === "branding" ? (
           <BrandingPanel
             {...(await brandingPanelData())}
-            username={session.profile.username}
             siteHost={new URL(siteUrl()).host}
           />
         ) : null}
