@@ -541,13 +541,16 @@ function MemberRow({
   const isOwner = member.role === "owner";
   const manage = canManage(viewerRole);
 
-  /* Promotion is a manager's to make; demotion and removing an admin are the
-     owner's alone, because two admins who can each strip the other is a race
-     whoever clicks first wins. The same rule is enforced in
-     convex/companies.ts, which is the boundary; this only decides what to
-     draw. */
-  const mayChangeRole = !isOwner && (viewerRole === "owner" || (manage && member.role === "member"));
-  const mayRemove = !isOwner && (viewerRole === "owner" || (manage && member.role === "member"));
+  /* An admin does everything an owner does except delete the company, so
+     both of these are theirs to make, on anybody but the owner. The owner is
+     the one person nobody can remove or re-role, because the company is
+     theirs and ownership moves by transfer.
+
+     The same rules are enforced in convex/companies.ts, which is the
+     boundary; this only decides what to draw. A control drawn where the
+     mutation would refuse is a worse lie than a control that is missing. */
+  const mayChangeRole = !isOwner && manage;
+  const mayRemove = !isOwner && manage;
   /* Anybody may fix their own link. Needing an admin for a typo in the one
      part of this that is nobody else's business was a rule with nothing
      behind it. */

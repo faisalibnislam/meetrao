@@ -124,20 +124,33 @@ describe("what only the owner may do", () => {
     expect(fn(COMPANIES, "remove")).toContain("requireOwner(ctx, a.id)");
   });
 
-  /* The race this prevents: two admins who can each strip the other, where
-     whoever clicks first is alone with a company that is not theirs. */
-  it("taking an admin's powers away", () => {
+});
+
+describe("what an admin may do, which is everything else", () => {
+  /* The rule, stated plainly: an admin does everything an owner does except
+     delete the company. That includes unmaking another admin, which means two
+     admins can each strip the other and whoever clicks first wins.
+
+     That race is real and it is accepted on purpose: an admin is somebody the
+     owner chose and can unmake, and a company whose admins cannot tidy up
+     after each other needs the owner present for every change. An earlier
+     version kept both of these owner-only; this is the deliberate opposite,
+     so a future reader does not "fix" it back. */
+  it("unmakes another admin", () => {
     const body = fn(COMPANIES, "setRole");
-    expect(body).toContain('if (row.role === "admin" && probe.role !== "owner")');
-    expect(body).toContain("FORBIDDEN");
+    expect(body).toContain("requireManager(ctx, a.id)");
+    expect(body, "demotion is not owner-only").not.toContain('probe.role !== "owner"');
   });
 
-  /* Removing an admin IS demoting one, under another name. A gate on the
-     first without the second is no gate at all. */
-  it("removing an admin, which is the same act under another name", () => {
+  it("removes another admin", () => {
     const body = fn(COMPANIES, "removeMember");
-    expect(body).toContain('if (row.role === "admin" && mine !== "owner")');
-    expect(body).toContain("FORBIDDEN");
+    expect(body).toContain("requireManager(ctx, a.id)");
+    expect(body, "removing an admin is not owner-only").not.toContain('mine !== "owner"');
+  });
+
+  it("is drawn that way on the screen too", () => {
+    expect(PANEL).toContain("const mayChangeRole = !isOwner && manage;");
+    expect(PANEL).toContain("const mayRemove = !isOwner && manage;");
   });
 });
 
@@ -172,18 +185,6 @@ describe("the People screen draws what the mutations allow", () => {
   /* A control that is drawn when the mutation would refuse is a worse lie
      than a control that is missing, so these two predicates have to match the
      rules above exactly. */
-  it("offers a role change under the same rule the mutation enforces", () => {
-    expect(PANEL).toContain(
-      'const mayChangeRole = !isOwner && (viewerRole === "owner" || (manage && member.role === "member"));',
-    );
-  });
-
-  it("offers removal under the same rule", () => {
-    expect(PANEL).toContain(
-      'const mayRemove = !isOwner && (viewerRole === "owner" || (manage && member.role === "member"));',
-    );
-  });
-
   it("shows Delete company to the owner alone", () => {
     expect(PANEL).toContain('{mine === "owner" && canDelete ? (');
     expect(PANEL).toContain("Delete company");
@@ -312,5 +313,64 @@ describe("two brandings, not one", () => {
     expect(fn).toContain("const { companyId } = await activeContext();");
     expect(fn).toContain("if (companyId) {");
     expect(fn).toContain("api.companyBranding.get");
+  });
+});
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   The whole matrix, in one place.
+
+   OWNER   everything, including deleting the company.
+   ADMIN   everything except deleting the company.
+   MEMBER  nothing except their own link on this company.
+
+   Written as a table because that is how it was specified, and because three
+   rules spread across eight mutations is how one of them quietly drifts.
+   ───────────────────────────────────────────────────────────────────────────── */
+
+describe("the matrix", () => {
+  /** The least role each mutation accepts, read off the gate it calls. */
+  const GATE: Record<string, "owner" | "admin" | "member"> = {
+    rename: "admin",
+    addMember: "admin",
+    setRole: "admin",
+    removeMember: "admin",
+    remove: "owner",
+  };
+
+  it.each(Object.entries(GATE))("%s is gated at %s", (name, least) => {
+    const body = fn(COMPANIES, name);
+    const call = least === "owner" ? "requireOwner(ctx, a.id)" : "requireManager(ctx, a.id)";
+    expect(body, `${name} should take the ${least} gate`).toContain(call);
+  });
+
+  /* Deleting the company is the ONE thing on this list an admin cannot do,
+     which is the whole difference between the two roles. */
+  it("leaves exactly one thing to the owner alone", () => {
+    const ownerOnly = Object.entries(GATE)
+      .filter(([, least]) => least === "owner")
+      .map(([name]) => name);
+    expect(ownerOnly).toEqual(["remove"]);
+  });
+
+  /* A member changes their own link and nothing else. `setHandle` is the only
+     mutation in the file that accepts one, and only for themselves. */
+  it("lets a member change their own link and nothing else", () => {
+    expect(fn(COMPANIES, "setHandle")).toContain(
+      'requireRole(ctx, a.id, a.userId === me.id ? "member" : "admin")',
+    );
+    for (const name of Object.keys(GATE)) {
+      expect(fn(COMPANIES, name), `${name} must not admit a member`).not.toContain(
+        'requireRole(ctx, a.id, "member")',
+      );
+    }
+  });
+
+  /* The company's face is an admin's to set, and is gated on the OWNER's
+     plan rather than the caller's wherever it is. */
+  it("gives an admin the company's branding and domain", () => {
+    for (const source of [BRANDING, DOMAINS]) {
+      expect(source).toContain("requireCompanyManager");
+      expect(source).toContain('role === "member"');
+    }
   });
 });
