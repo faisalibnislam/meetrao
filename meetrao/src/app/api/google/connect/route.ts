@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
 import { consentUrl } from "@/lib/google/oauth";
+import { safePath } from "@/lib/safe-path";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
@@ -17,9 +18,9 @@ export async function GET(request: NextRequest) {
 
   if (!user) return NextResponse.redirect(new URL("/login", request.nextUrl.origin));
 
-  const returnTo = request.nextUrl.searchParams.get("next") ?? "/settings/calendar";
+  const returnTo = safePath(request.nextUrl.searchParams.get("next"), "/settings/calendar");
   const nonce = randomBytes(16).toString("hex");
-  const state = `${nonce}:${returnTo.startsWith("/") ? returnTo : "/settings/calendar"}`;
+  const state = `${nonce}:${returnTo}`;
 
   const store = await cookies();
   store.set("google_oauth_state", state, {

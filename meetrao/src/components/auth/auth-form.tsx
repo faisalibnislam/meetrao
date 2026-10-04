@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { safePath } from "@/lib/safe-path";
 import { useState, useTransition } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
@@ -73,7 +74,7 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
         }
 
         await signIn("password", { email, password, flow: "signIn" });
-        router.push(next && next.startsWith("/") ? next : "/dashboard");
+        router.push(safePath(next, "/dashboard"));
         router.refresh();
       } catch {
         setConvexError(mode === "signup" ? "That email could not be registered." : GENERIC);

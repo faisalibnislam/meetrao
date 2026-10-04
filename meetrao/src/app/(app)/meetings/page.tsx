@@ -5,12 +5,10 @@ import { MeetingsTable, type MeetingRow } from "@/components/app/meetings-table"
 import { ButtonLink } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/panels";
 import { requireOnboardedSession } from "@/lib/data/session";
-import { convexServer } from "@/lib/convex/server";
+import { ownMeetings } from "@/lib/data/own";
 import { siteUrl } from "@/lib/env";
-import { api } from "@/convex/_generated/api";
 import { addressFor } from "@/lib/workspace-links";
 import { placeOf } from "@/lib/data/links";
-import type { MeetingType } from "@/lib/types";
 import { activeContext, contextChoices } from "@/lib/data/context";
 import { heldElsewhere } from "@/lib/data/elsewhere";
 import { ElsewhereEmptyState } from "@/components/app/elsewhere-empty";
@@ -19,14 +17,12 @@ export const metadata: Metadata = { title: "Meetings" };
 
 export default async function MeetingsPage() {
   const { profile } = await requireOnboardedSession();
-  const convex = await convexServer();
-  const all = (await convex.query(api.meetingTypes.listOwn, {})) as unknown as MeetingType[];
+  const [all, context, choices] = await Promise.all([ownMeetings(), activeContext(), contextChoices()]);
 
   /* Only the meetings belonging to the context in force. Showing all of them
      under a company heading would make it look as though a personal meeting
      is published on that company's domain, which is the one thing company
      scoping exists to make false. */
-  const context = await activeContext();
   const meetings = all.filter((m) => (m.company_id ?? null) === context.companyId);
 
   /* Only when there is nothing to show. "No meetings yet" is a confident
@@ -39,7 +35,7 @@ export default async function MeetingsPage() {
   /* The address of the workspace in force. A company's meeting lives at the
      company's address, not at its host's personal one: the list was already
      scoped, but every row still showed meetrao.com/<username>/<meeting>. */
-  const here = (await contextChoices()).find((c) => c.id === context.companyId) ?? null;
+  const here = choices.find((c) => c.id === context.companyId) ?? null;
   const place = placeOf(here);
   const addressOf = (slug: string) => addressFor(place, profile.username, slug);
 

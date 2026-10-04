@@ -30,22 +30,26 @@ const read = (rel: string) => readFileSync(path.join(ROOT, rel), "utf8");
 const PUBLIC_BOOKING = read("convex/publicBooking.ts");
 const MEETING_TYPES = read("convex/meetingTypes.ts");
 /* The body moved out of the route when a company got its own address:
-   three addresses now render one shared component. */
+   three addresses now render one shared component, whose reads are one
+   shared loader's. */
 const PAGE = read("src/components/booking/meeting-page.tsx");
+const LOADER = read("src/lib/data/booking-start.ts");
 const BACKFILL = read("convex/companiesBackfill.ts");
 
 describe("a company domain serves only its own meetings", () => {
   /* Now part of the page's first parallel phase rather than a step of its
      own, but still decided before anything is rendered or branded. */
   it("checks before rendering anything", () => {
-    expect(PAGE).toContain("meetingIsOnCompany(username, slug, company.slug)");
-    expect(PAGE).toContain("if (!onCompany) notFound();");
+    expect(LOADER).toContain("meetingIsOnCompany(username, slug, companySlug)");
+    expect(LOADER).toContain("if (!host || !meeting || !onCompany) return null;");
+    expect(PAGE).toContain("const start = await bookingStart(username, slug, company?.slug ?? null);");
+    expect(PAGE).toContain("if (!start) notFound();");
   });
 
   /* Ordering matters: a check that runs after the brand is resolved is still
      a check, but one that runs after the page is built is not. */
   it("checks before the brand is chosen", () => {
-    const check = PAGE.indexOf("meetingIsOnCompany(username");
+    const check = PAGE.indexOf("if (!start) notFound();");
     const brand = PAGE.indexOf("const brand = company ?");
     expect(check).toBeGreaterThan(-1);
     expect(brand).toBeGreaterThan(-1);
@@ -55,7 +59,8 @@ describe("a company domain serves only its own meetings", () => {
   /* The gate only applies on a company's domain. On meetrao.com `company` is
      null and every meeting resolves, which is what keeps existing links alive. */
   it("applies only when the request arrived on a company domain", () => {
-    expect(PAGE).toContain("company ? meetingIsOnCompany(username, slug, company.slug) : Promise.resolve(true)");
+    expect(LOADER).toContain("companySlug ? meetingIsOnCompany(username, slug, companySlug) : Promise.resolve(true)");
+    expect(read("src/app/embed/[username]/[slug]/page.tsx")).toContain("bookingStart(username, slug, null)");
   });
 
   it("treats a personal meeting as belonging to no company", () => {

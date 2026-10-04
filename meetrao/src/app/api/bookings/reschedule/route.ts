@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { isSlotBookable } from "@/lib/booking/slots";
-import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeeting } from "@/lib/data/public-booking";
 import { getBookingByReference } from "@/lib/data/guest-booking";
 import { rescheduleMail, type MailableBooking } from "@/lib/email/booking-mail";
 import { sendRescheduled } from "@/lib/email/send";
@@ -53,15 +53,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "This meeting can no longer be moved online." }, { status: 409 });
   }
 
-  const host = await getPublicHost(booking.hostUsername);
+  // Two phases after the booking, as on the page: host and meeting, then
+  // everything that needs either.
+  const [host, meeting] = await Promise.all([
+    getPublicHost(booking.hostUsername),
+    getPublicMeeting(booking.hostUsername, booking.meetingSlug),
+  ]);
   if (!host) return NextResponse.json({ error: "Unknown host." }, { status: 404 });
-
-  const meeting = (await getPublicMeetings(booking.hostUsername)).find((m) => m.slug === booking.meetingSlug);
   if (!meeting) return NextResponse.json({ error: "This meeting can no longer be moved online." }, { status: 409 });
 
-  const availability = await getMeetingAvailability(meeting.id);
-  const overrides = await getMeetingOverrides(meeting.id);
-  const { busy } = await getBusy(host.id, new Date(start.getTime() - DAY), new Date(start.getTime() + DAY));
+  const [availability, overrides, { busy }] = await Promise.all([
+    getMeetingAvailability(meeting.id),
+    getMeetingOverrides(meeting.id),
+    getBusy(host.id, new Date(start.getTime() - DAY), new Date(start.getTime() + DAY)),
+  ]);
 
   const guestTimezone = input.guestTimezone || booking.guestTimezone || host.timezone;
 
@@ -119,13 +124,14 @@ export async function POST(request: NextRequest) {
   /* The calendar write comes after the move, exactly as creation's comes after
      the insert: if Google refuses, the meeting has still moved and the guest
      is not sent back to a time nobody holds any more. */
+  // The mail details do not depend on the calendar write, so they are read
+  // while it runs rather than after it, as creation does.
   let calendarWarning: string | null = null;
-  const event = await updateEventForBooking(row.reference);
+  const [event, hostProfile] = await Promise.all([
+    updateEventForBooking(row.reference),
+    convexAnonymous().query(api.publicBooking.hostForRescheduleMail, { reference: row.reference }),
+  ]);
   if ("failure" in event) calendarWarning = event.failure;
-
-  const hostProfile = await convexAnonymous().query(api.publicBooking.hostForRescheduleMail, {
-    reference: row.reference,
-  });
 
   if (hostProfile) {
     const moved: MailableBooking = {

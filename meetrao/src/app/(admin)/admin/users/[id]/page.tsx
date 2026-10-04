@@ -13,9 +13,8 @@ export const metadata: Metadata = { title: "User" };
 
 export default async function AdminUserPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const detail = await getUserDetail(id);
+  const [detail, plan] = await Promise.all([getUserDetail(id), getUserPlan(id)]);
   if (!detail) notFound();
-  const plan = await getUserPlan(id);
 
   const { user, meetings, bookings } = detail;
   const first = user.name.split(" ")[0] || user.name;

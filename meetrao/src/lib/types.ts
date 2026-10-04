@@ -16,6 +16,10 @@ export type Profile = {
   /** Absent on every profile written before reminders existed, and absent
       reads as on, the server applies the same rule. */
   notify_reminders?: boolean;
+  /** When the two reminders go out, in minutes before the start. Absent is
+      the free schedule: a day and an hour. */
+  reminder_long_minutes?: number;
+  reminder_short_minutes?: number;
   notify_daily_agenda: boolean;
   notify_product_news: boolean;
   onboarding_completed_at: string | null;
@@ -52,6 +56,8 @@ export type MeetingType = {
   schedule_id: string | null;
   /** Which company this meeting belongs to; null or absent is personal. */
   company_id?: string | null;
+  /** The team link this meeting is handed to, if any. */
+  team_id?: string | null;
   questions?: BookingQuestion[];
   created_at: string;
 };

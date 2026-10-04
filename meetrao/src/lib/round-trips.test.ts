@@ -47,6 +47,43 @@ describe("the session is one round trip", () => {
   });
 });
 
+describe("an app screen reads in one round after the session", () => {
+  /* Seeding a default schedule is a write. It ran before the read on every
+     visit to Availability; now only a host with no schedule pays for it. */
+  it("Availability reads before it seeds", () => {
+    const page = read("src/app/(app)/availability/page.tsx");
+    const readAt = page.indexOf("let screen = await convex.query(api.availability.screen, {});");
+    const seedAt = page.indexOf("screen.schedules.length === 0 && (await ensureDefaultAvailability(profile.id))");
+    expect(readAt).toBeGreaterThan(-1);
+    expect(seedAt).toBeGreaterThan(readAt);
+  });
+
+  it("the meeting form reads its plan and schedules beside the meeting", () => {
+    expect(read("src/app/(app)/meetings/[id]/edit/page.tsx")).toContain("const [data, pro, schedules] = await Promise.all([");
+    expect(read("src/app/(app)/meetings/new/page.tsx")).toContain("const [pro, schedules] = await Promise.all([");
+  });
+
+  /* The rail and the page used to ask for the same rows separately. */
+  it("the shell and the pages share one read of meetings and plan", () => {
+    const own = read("src/lib/data/own.ts");
+    expect(own).toContain("export const ownMeetings = cache(async function ownMeetings()");
+    expect(own).toContain("export const ownPlan = cache(async function ownPlan()");
+    for (const file of [
+      "src/components/app/app-shell.tsx",
+      "src/app/(app)/dashboard/page.tsx",
+      "src/app/(app)/meetings/page.tsx",
+      "src/lib/data/links.ts",
+    ]) {
+      expect(read(file), file).not.toContain("api.meetingTypes.listOwn");
+    }
+  });
+
+  /* Settings already has the profile from the session. */
+  it("settings loaders take the profile from the session", () => {
+    expect(read("src/lib/data/teams.ts")).not.toContain("api.profiles.current");
+  });
+});
+
 describe("the workspace is asked once, and early", () => {
   const CONTEXT = read("src/lib/data/context.ts");
 
@@ -67,7 +104,7 @@ describe("the workspace is asked once, and early", () => {
 });
 
 describe("the guest booking path runs in phases, not chains", () => {
-  const PAGE = read("src/components/booking/meeting-page.tsx");
+  const LOADER = read("src/lib/data/booking-start.ts");
   const SLOTS = read("src/app/api/slots/route.ts");
   const BOOKINGS = read("src/app/api/bookings/route.ts");
   const PUBLIC = read("src/lib/data/public-booking.ts");
@@ -75,18 +112,35 @@ describe("the guest booking path runs in phases, not chains", () => {
   /** How many `await`s a function body contains: a rough count of hops. */
   const awaits = (body: string) => (body.match(/\bawait\b/g) ?? []).length;
 
-  it("the booking page makes two phases of reads", () => {
-    const body = PAGE.slice(PAGE.indexOf("export async function MeetingPage"));
+  /* The hosted page and the embed widget both start here. The widget used
+     to chain seven reads of its own. */
+  it("the booking page and the widget make two phases of reads", () => {
+    const body = LOADER.slice(LOADER.indexOf("export async function bookingStart"));
     expect(body).toContain("const [host, meeting, onCompany] = await Promise.all([");
     expect(body).toContain("const [availability, overrides, { busy }, seats, pageViewId] = await Promise.all([");
     expect(awaits(body), "every await on this page is a cross-region hop").toBeLessThanOrEqual(2);
   });
 
-  /* The page needs one meeting; it used to list them all and fetch the rules
-     for each, two trips in sequence. */
+  /* A page needs one meeting; each used to list them all and fetch the rules
+     for each, two trips in sequence. The list loader no longer exists. */
   it("reads one meeting, not the whole list", () => {
-    expect(PAGE).toContain("getPublicMeeting(username, slug)");
-    expect(PAGE).not.toContain("getPublicMeetings(");
+    expect(LOADER).toContain("getPublicMeeting(username, slug)");
+    expect(PUBLIC).not.toContain("export async function getPublicMeetings");
+  });
+
+  it("rescheduling reads in phases after the booking, on the page and in the API", () => {
+    for (const file of ["src/app/(public)/booking/[reference]/reschedule/page.tsx", "src/app/api/bookings/reschedule/route.ts"]) {
+      const text = read(file);
+      expect(text, file).toContain("const [host, meeting] = await Promise.all([");
+      expect(text, file).toContain("const [availability, overrides, { busy }] = await Promise.all([");
+    }
+  });
+
+  /* A team of five used to wait through ten round trips in a row. */
+  it("a team's calendars are read all at once", () => {
+    const team = read("src/lib/data/team-booking.ts");
+    expect(team).toContain("await Promise.all(hours.map((member) => busyFor(member.userId, from, to)))");
+    expect(team).not.toMatch(/for \(const member of hours\)[^\n]*await/);
   });
 
   it("slots, which run on every date clicked, make two phases", () => {

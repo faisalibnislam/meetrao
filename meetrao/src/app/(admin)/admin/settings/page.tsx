@@ -17,9 +17,12 @@ export const metadata: Metadata = { title: "Admin settings" };
 export default async function AdminSettingsPage() {
   const { profile } = await requireAdmin();
   const convex = await convexServer();
-  const settings = (await convex.query(api.platformSettings.getForApp, {})) as PlatformSettings | null;
-  const held = await listHeldBookingLinks();
-  const products = await convex.query(api.platformSettings.products, {});
+  const [settingsRow, held, products] = await Promise.all([
+    convex.query(api.platformSettings.getForApp, {}),
+    listHeldBookingLinks(),
+    convex.query(api.platformSettings.products, {}),
+  ]);
+  const settings = settingsRow as PlatformSettings | null;
   // Shown as the host alone. An admin scanning a list wants to recognise the
   // link, not read https:// twelve times.
   const siteHost = siteUrl().replace(/^https?:\/\//, "").replace(/\/$/, "");

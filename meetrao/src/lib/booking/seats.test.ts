@@ -71,11 +71,17 @@ describe("a full slot is not offered", () => {
      them offers a seat that the mutation will then refuse, which reads to a
      guest as the product losing their booking. */
   const sites = [
-    /* The body moved: every booking address renders one shared component. */
-    ["the hosted page", read("src/components/booking/meeting-page.tsx")],
-    ["the embed", read("src/app/embed/[username]/[slug]/page.tsx")],
+    /* The hosted page and the embed both start from one loader. */
+    ["the first paint, hosted and embedded", read("src/lib/data/booking-start.ts")],
     ["the slots API", read("src/app/api/slots/route.ts")],
   ] as const;
+
+  it.each([
+    ["the hosted page", "src/components/booking/meeting-page.tsx"],
+    ["the embed", "src/app/embed/[username]/[slug]/page.tsx"],
+  ])("%s takes its first times from that loader", (_name, file) => {
+    expect(read(file)).toContain("await bookingStart(username, slug,");
+  });
 
   it.each(sites)("%s filters on seats taken", (_name, text) => {
     expect(text).toMatch(/seats\[iso\] \?\? 0\) < meeting\.capacity/);

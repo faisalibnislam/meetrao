@@ -1,7 +1,6 @@
 import "server-only";
 
-import { convexServer } from "@/lib/convex/server";
-import { api } from "@/convex/_generated/api";
+import { ownMeetings } from "./own";
 import { activeContext, contextChoices, type ContextChoice } from "./context";
 import { workspaceLinks, type ShareableLink, type WorkspaceLinkPlace } from "@/lib/workspace-links";
 
@@ -18,15 +17,10 @@ export function placeOf(choice: ContextChoice | null | undefined): WorkspaceLink
 
 /** The active links of the workspace in force, ready to copy or share. */
 export async function shareableLinks(username: string): Promise<ShareableLink[]> {
-  const convex = await convexServer();
-  const [rows, choices, context] = await Promise.all([
-    convex.query(api.meetingTypes.listOwn, { activeOnly: true }),
-    contextChoices(),
-    activeContext(),
-  ]);
+  const [rows, choices, context] = await Promise.all([ownMeetings(), contextChoices(), activeContext()]);
   const here = choices.find((c) => c.id === context.companyId) ?? null;
   return workspaceLinks(
-    rows as unknown as { id: string; name: string; slug: string; company_id?: string | null }[],
+    rows.filter((m) => m.is_active),
     placeOf(here),
     username,
   );

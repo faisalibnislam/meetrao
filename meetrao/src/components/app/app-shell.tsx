@@ -5,9 +5,10 @@ import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { workspaceLinks } from "@/lib/workspace-links";
 import { placeOf } from "@/lib/data/links";
-import type { MeetingType, Profile } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 import { isPaid } from "@/convex/lib/plan";
 import { activeContext, contextChoices } from "@/lib/data/context";
+import { ownMeetings, ownPlan } from "@/lib/data/own";
 
 /* The app shell: 218px sidebar beside a column that owns its own header and
    scroll area. Built once, the prototypes duplicate their chrome because the
@@ -31,14 +32,14 @@ export async function AppShell({
   // plan, which decides only whether the rail carries an upgrade button.
   const [count, meetingRows, unread, plan, contexts, context] = await Promise.all([
     convex.query(api.bookings.upcomingCount, {}),
-    convex.query(api.meetingTypes.listOwn, { activeOnly: true }),
+    ownMeetings(),
     unreadNotifications(profile.id),
-    convex.query(api.billing.mine, {}),
+    ownPlan(),
     contextChoices(),
     activeContext(),
   ]);
 
-  const active = meetingRows as Pick<MeetingType, "id" | "name" | "slug" | "company_id">[];
+  const active = meetingRows.filter((m) => m.is_active);
 
   /* THE WORKSPACE IN FORCE, and only it. The rail used to list every active
      meeting whatever workspace you were standing in, so somebody in Personal

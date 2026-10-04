@@ -6,7 +6,8 @@ import { Eyebrow } from "@/components/ui/badge";
 import { Callout } from "@/components/ui/panels";
 import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import { getBookingByReference } from "@/lib/data/guest-booking";
-import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeeting } from "@/lib/data/public-booking";
+import { dateFormat } from "@/lib/intl";
 import { PublicFooter } from "@/components/booking/public-footer";
 import { BrandMark, BrandScope } from "@/components/booking/brand";
 
@@ -34,10 +35,14 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
   if (!booking) notFound();
   if (booking.status === "cancelled") redirect(`/booking/${reference}/cancelled`);
 
-  const host = await getPublicHost(booking.hostUsername);
-  const meeting = booking.meetingSlug
-    ? (await getPublicMeetings(booking.hostUsername)).find((m) => m.slug === booking.meetingSlug)
-    : undefined;
+  /* Three phases rather than six reads in a row: the booking, then its host
+     and meeting together, then everything that needs either. The meeting is
+     read by slug, where it used to list every meeting the host has and fetch
+     the rules for each in order to pick one. */
+  const [host, meeting] = await Promise.all([
+    getPublicHost(booking.hostUsername),
+    booking.meetingSlug ? getPublicMeeting(booking.hostUsername, booking.meetingSlug) : Promise.resolve(null),
+  ]);
 
   /* A meeting the host has deleted or switched off has no rules left to book
      against. Cancelling still works, and the host can offer another time
@@ -68,13 +73,10 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
     );
   }
 
-  const availability = await getMeetingAvailability(meeting.id);
-  const overrides = await getMeetingOverrides(meeting.id);
-
   // First paint in the host's zone, as the booking page does; the client
   // corrects to the guest's own zone on mount.
   const now = new Date();
-  const [year, month, day] = new Intl.DateTimeFormat("en-CA", {
+  const [year, month, day] = dateFormat("en-CA", {
     timeZone: host.timezone,
     year: "numeric",
     month: "2-digit",
@@ -84,11 +86,11 @@ export default async function ReschedulePage({ params }: { params: Promise<{ ref
     .split("-")
     .map(Number);
 
-  const { busy } = await getBusy(
-    host.id,
-    new Date(Date.UTC(year, month - 1, 1) - DAY),
-    new Date(Date.UTC(year, month, 1) + DAY),
-  );
+  const [availability, overrides, { busy }] = await Promise.all([
+    getMeetingAvailability(meeting.id),
+    getMeetingOverrides(meeting.id),
+    getBusy(host.id, new Date(Date.UTC(year, month - 1, 1) - DAY), new Date(Date.UTC(year, month, 1) + DAY)),
+  ]);
 
   /* The booking's own slot would otherwise read as busy and hide the times
      either side of it, including, at a shorter duration, the time it already

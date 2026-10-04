@@ -12,6 +12,7 @@ import { GoogleG } from "@/components/ui/logo";
 import { formatTime } from "@/lib/booking/time";
 import { listBookings } from "@/lib/data/bookings";
 import { requireOnboardedSession } from "@/lib/data/session";
+import { ownMeetings } from "@/lib/data/own";
 import { activeContext } from "@/lib/data/context";
 import { companyAnalytics } from "@/lib/data/company-analytics";
 import { timezoneLabel } from "@/lib/timezones";
@@ -19,7 +20,6 @@ import { connectionStatus } from "@/lib/google/connection";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { bookingLink } from "@/lib/username";
-import type { MeetingType } from "@/lib/types";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -54,7 +54,7 @@ export default async function DashboardPage({
   const [bookings, meetingRows, calendar, replyMinutes] = await Promise.all([
     // The dashboard shows what is next; it has never rendered a past booking.
     listBookings(profile.id, zone, { history: false }),
-    convex.query(api.meetingTypes.listOwn, {}),
+    ownMeetings(),
     connectionStatus(profile.id),
     convex.query(api.admin.avgReplyMinutes, { days: 30 }),
   ]);
@@ -62,7 +62,7 @@ export default async function DashboardPage({
   /* Personal only: the company dashboard returned above, so anything filed
      under a company is somebody else's screen. Without this the Copy link
      control handed out a company's links from the personal dashboard. */
-  const meetings = (meetingRows as unknown as MeetingType[]).filter((m) => !m.company_id);
+  const meetings = meetingRows.filter((m) => !m.company_id);
   const active = meetings.filter((m) => m.is_active);
 
   const upcoming = bookings.filter((b) => !b.past && !b.cancelled);

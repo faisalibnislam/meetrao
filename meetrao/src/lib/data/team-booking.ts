@@ -1,5 +1,6 @@
 import "server-only";
 
+import { cache } from "react";
 import { bookableDatesInMonth, computeSlots, type AvailabilityRule, type DateOverride, type Interval, type PlainDate, type SlotRules } from "@/lib/booking/slots";
 import { busyPeriods } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
@@ -35,7 +36,8 @@ export type TeamMeeting = {
 
 export type PublicTeam = { id: string; name: string; slug: string; members: TeamMember[]; meetings: TeamMeeting[] };
 
-export async function getPublicTeam(slug: string): Promise<PublicTeam | null> {
+/* Cached per request: the page's metadata and the page both ask. */
+export const getPublicTeam = cache(async function getPublicTeam(slug: string): Promise<PublicTeam | null> {
   const team = await convexAnonymous().query(api.publicBooking.getTeam, { slug });
   if (!team) return null;
 
@@ -61,7 +63,7 @@ export async function getPublicTeam(slug: string): Promise<PublicTeam | null> {
       },
     })),
   };
-}
+});
 
 type MemberHours = {
   userId: string;
@@ -84,19 +86,14 @@ export async function getTeamHours(teamSlug: string, meetingId: string): Promise
 }
 
 async function busyFor(userId: string, from: Date, to: Date): Promise<Interval[]> {
-  const rows = await convexAnonymous().query(api.publicBooking.busyForHost, {
-    hostId: userId,
-    from: from.getTime(),
-    to: to.getTime(),
-  });
+  // Our bookings and Google's free/busy at the same time: neither needs the
+  // other. Google unreachable for one member is not a reason to hide the team.
+  const [rows, google] = await Promise.all([
+    convexAnonymous().query(api.publicBooking.busyForHost, { hostId: userId, from: from.getTime(), to: to.getTime() }),
+    busyPeriods(userId, from, to).catch(() => [] as Interval[]),
+  ]);
   const own: Interval[] = rows.map((r) => ({ start: new Date(r.starts_at), end: new Date(r.ends_at) }));
-
-  try {
-    return [...own, ...(await busyPeriods(userId, from, to))];
-  } catch {
-    // Google unreachable for one member is not a reason to hide the team.
-    return own;
-  }
+  return [...own, ...google];
 }
 
 /**
@@ -105,11 +102,13 @@ async function busyFor(userId: string, from: Date, to: Date): Promise<Interval[]
  * The month grid and the day's times are two questions about the same data,
  * and asking Google twice per member to answer them would double the cost of
  * every page load for nothing.
+ *
+ * Every member at once. This awaited each member in turn, two round trips
+ * apiece, so a team of five waited through ten before a guest saw a time.
  */
 export async function getTeamBusy(hours: MemberHours[], from: Date, to: Date): Promise<Map<string, Interval[]>> {
-  const out = new Map<string, Interval[]>();
-  for (const member of hours) out.set(member.userId, await busyFor(member.userId, from, to));
-  return out;
+  const busy = await Promise.all(hours.map((member) => busyFor(member.userId, from, to)));
+  return new Map(hours.map((member, i) => [member.userId, busy[i]]));
 }
 
 /**
