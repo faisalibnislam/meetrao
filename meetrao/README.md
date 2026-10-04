@@ -382,11 +382,16 @@ the cookies if that failed, before the handler runs. A session revoked
 elsewhere is caught by `requireSession`, which was always the boundary.
 `src/proxy.test.ts` fails if a network check comes back.
 
-**Reads run in phases, not chains.** The guest booking page, `/api/slots` and
-booking creation each make two rounds of parallel reads where they used to
-make six to nine in sequence. `src/lib/round-trips.test.ts` pins the
-structure, because one `await` in the wrong place restores a whole hop and no
-type check or behaviour test notices.
+**Every page reads in two rounds.** The session and the workspace together,
+then one parallel burst for everything that needs either. The guest booking
+page and the embed widget share one loader (`src/lib/data/booking-start.ts`)
+that does exactly that; `/api/slots`, booking creation and rescheduling run
+in phases too; a team page reads every member's calendars at once. The
+sidebar and the page share one read of the meetings and the plan per request
+(`src/lib/data/own.ts`). Two rounds is the floor while the second needs the
+workspace the first resolves. `src/lib/round-trips.test.ts` pins all of it,
+because one `await` in the wrong place restores a whole hop and no type check
+or behaviour test notices.
 
 **`regions: ["hnd1"]` in `vercel.json` — AND IT IS NOW WRONG.** This was set when
 the database was Supabase in `ap-northeast-1` (Tokyo): Vercel functions default
