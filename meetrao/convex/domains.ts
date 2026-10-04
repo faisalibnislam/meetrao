@@ -59,6 +59,16 @@ export const claim = mutation({
       .unique();
     if (taken && taken.id !== me.id) fail("Another account has claimed that domain.");
 
+    /* And companies, which now hold domains too. Until the migration has run
+       a hostname may live in either table, and checking only this one would
+       let a claim here shadow a company's live domain, which takes somebody's
+       booking page down rather than merely refusing them. */
+    const byCompany = await ctx.db
+      .query("companies")
+      .withIndex("by_custom_domain", (q) => q.eq("custom_domain", domain))
+      .unique();
+    if (byCompany) fail("Another account has claimed that domain.");
+
     await ctx.db.patch(me._id, {
       custom_domain: domain,
       // Claiming is not proving. The flag is set by `markVerified`, after
