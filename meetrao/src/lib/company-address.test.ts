@@ -171,3 +171,41 @@ describe("the screens that hand links out", () => {
     expect(MEETINGS).toContain("`/${here.slug}/${here.handle}/${m.slug}`");
   });
 });
+
+describe("the branding screen's own example link", () => {
+  const PANEL = read("src/components/app/branding-panel.tsx");
+  const LOADER = read("src/lib/data/teams.ts");
+
+  /* It printed the VIEWER's meetrao.com/<username> whichever workspace they
+     were standing in, so a company's branding screen showed somebody their
+     personal link as the thing a domain would replace. */
+  it("shows the workspace's address, not the account's", () => {
+    expect(PANEL).toContain("{address.today}");
+    expect(PANEL, "the account's username is not this workspace's address").not.toContain(
+      "{siteHost}/{username}",
+    );
+  });
+
+  it("builds a company's from the company and the handle", () => {
+    const fn = LOADER.slice(LOADER.indexOf("async function companyAddress"));
+    expect(fn).toContain("`${host()}/${slug}/${handle}`");
+  });
+
+  it("leaves Personal as the account's own", () => {
+    expect(LOADER).toContain("address: { today: `${host()}/${username}`, handle: username }");
+  });
+
+  /* The domain line has to use the same name as the path on that domain,
+     which is the handle inside a company and the username outside one. */
+  it("uses the same name in the with-a-domain line", () => {
+    expect(PANEL).toContain('{domain.domain || "meeting.yourcompany.com"}/{address.handle}/');
+  });
+
+  /* It used to say "The bare domain works too", which is false: there is no
+     index page on any address, so the bare domain and the bare name both
+     404. Telling a host otherwise sends them to advertise one. */
+  it("does not promise a bare domain that 404s", () => {
+    expect(PANEL).not.toContain("The bare domain works too");
+    expect(PANEL).toContain("Every link names one meeting");
+  });
+});

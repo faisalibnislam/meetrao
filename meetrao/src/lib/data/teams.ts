@@ -8,7 +8,8 @@ import type { DomainView, PlanView, TimingView } from "@/components/app/billing-
 import { isPaid } from "@/convex/lib/plan";
 import type { CompanyRole, CompanyView } from "@/components/app/companies-panel";
 import type { Plan } from "@/convex/lib/plan";
-import { activeContext } from "@/lib/data/context";
+import { activeContext, contextChoices } from "@/lib/data/context";
+import { siteUrl } from "@/lib/env";
 
 /* What the Team settings panel needs, in one place: the teams this host owns
    or belongs to, and their own meetings, any of which can be handed to a
@@ -66,6 +67,14 @@ export async function brandingPanelData(): Promise<{
   color: string | null;
   background: string | null;
   domain: DomainView;
+  /**
+   * What a link in THIS workspace looks like, for the domain explainer.
+   *
+   * A company's links are not its members' links: inside a company this is
+   * meetrao.com/<company>/<handle>, and the panel used to print the viewer's
+   * own meetrao.com/<username> there whichever workspace they were in.
+   */
+  address: { today: string; handle: string };
 }> {
   const convex = await convexServer();
   const { companyId } = await activeContext();
@@ -87,6 +96,7 @@ export async function brandingPanelData(): Promise<{
       color: brand?.color ?? null,
       background: brand?.background ?? null,
       domain: { domain: domain?.domain ?? null, verifiedAt: domain?.verified_at ?? null },
+      address: await companyAddress(companyId),
     };
   }
 
@@ -95,6 +105,8 @@ export async function brandingPanelData(): Promise<{
     convex.query(api.domains.mine, {}),
   ]);
 
+  const me = await convex.query(api.profiles.current, {});
+  const username = (me?.username as string | undefined) ?? "";
   return {
     pro: brand.live,
     logoUrl: brand.logo_url,
@@ -102,7 +114,21 @@ export async function brandingPanelData(): Promise<{
     color: brand.color,
     background: brand.background,
     domain: { domain: domain.domain, verifiedAt: domain.verified_at },
+    address: { today: `${host()}/${username}`, handle: username },
   };
+}
+
+/** The site's own hostname, without the scheme. */
+function host(): string {
+  return new URL(siteUrl()).host;
+}
+
+/** meetrao.com/<company>/<handle>, which is this company's own shape. */
+async function companyAddress(companyId: string): Promise<{ today: string; handle: string }> {
+  const here = (await contextChoices()).find((c) => c.id === companyId);
+  const handle = here?.handle ?? "";
+  const slug = here?.slug ?? "";
+  return { today: `${host()}/${slug}/${handle}`, handle };
 }
 
 export async function developerPanelData(): Promise<{
