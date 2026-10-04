@@ -83,6 +83,7 @@ export const get = query({
     const owner = await ownerOf(ctx, company);
     return {
       logo_url: company.brand_logo_url ?? null,
+      avatar_url: company.brand_avatar_url ?? null,
       color: company.brand_color ?? null,
       background: company.brand_background ?? null,
       /* So the panel can say "this is live" or "this is saved and will show
@@ -102,11 +103,28 @@ export const generateUploadUrl = mutation({
   },
 });
 
-export const saveLogo = mutation({
-  args: { id: v.string(), storageId: v.id("_storage") },
+/**
+ * Two pictures, one code path.
+ *
+ * `logo` is the wordmark across a booking page; `avatar` is the square mark in
+ * the app's own chrome. They are different pictures doing different jobs, and
+ * every rule around storing them (the size cap, the refused formats, deleting
+ * what is replaced) is identical, so a second copy of this would be a second
+ * place for those rules to drift.
+ */
+const FIELDS = {
+  logo: { url: "brand_logo_url", storage: "brand_logo_storage_id", what: "A company logo" },
+  avatar: { url: "brand_avatar_url", storage: "brand_avatar_storage_id", what: "A company picture" },
+} as const;
+
+const kindArg = v.union(v.literal("logo"), v.literal("avatar"));
+
+export const saveImage = mutation({
+  args: { id: v.string(), storageId: v.id("_storage"), kind: kindArg },
   handler: async (ctx, a) => {
     const { company, owner } = await requireCompanyOwner(ctx, a.id);
-    if (!isPro(owner)) fail("A company logo is part of Pro.", "PRO_REQUIRED");
+    const field = FIELDS[a.kind];
+    if (!isPro(owner)) fail(`${field.what} is part of Pro.`, "PRO_REQUIRED");
 
     /* Checked HERE rather than in the browser, because the upload URL goes to
        the browser and anything can post to it. The file is already stored by
@@ -127,10 +145,10 @@ export const saveLogo = mutation({
     const url = await ctx.storage.getUrl(a.storageId);
     if (!url) fail("That upload could not be found.", "NOT_FOUND");
 
-    const previous = company.brand_logo_storage_id ?? null;
+    const previous = (company[field.storage] as typeof company.brand_logo_storage_id) ?? null;
     await ctx.db.patch(company._id, {
-      brand_logo_url: url,
-      brand_logo_storage_id: a.storageId,
+      [field.url]: url,
+      [field.storage]: a.storageId,
       updated_at: Date.now(),
     });
     // After the patch: a delete that runs first and a patch that then fails
@@ -141,16 +159,17 @@ export const saveLogo = mutation({
   },
 });
 
-export const removeLogo = mutation({
-  args: { id: v.string() },
+export const removeImage = mutation({
+  args: { id: v.string(), kind: kindArg },
   handler: async (ctx, a) => {
     const { company } = await requireCompanyOwner(ctx, a.id);
-    /* No plan check. Taking a logo down is not a paid feature, and an owner
+    const field = FIELDS[a.kind];
+    /* No plan check. Taking a picture down is not a paid feature, and an owner
        whose plan has lapsed must still be able to clear what they set. */
-    const previous = company.brand_logo_storage_id ?? null;
+    const previous = (company[field.storage] as typeof company.brand_logo_storage_id) ?? null;
     await ctx.db.patch(company._id, {
-      brand_logo_url: null,
-      brand_logo_storage_id: null,
+      [field.url]: null,
+      [field.storage]: null,
       updated_at: Date.now(),
     });
     if (previous) await ctx.storage.delete(previous);

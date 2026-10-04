@@ -190,6 +190,14 @@ export default defineSchema({
   teams: defineTable({
     id: v.string(),
     owner_id: v.string(),
+    /**
+     * Which company this rota belongs to, or null for a personal one.
+     *
+     * A team link is a company's: an agency running two clients wants one
+     * client's rota out of the other's settings. Null is personal, which is
+     * where every team written before companies existed starts.
+     */
+    company_id: v.optional(nullableString),
     name: v.string(),
     slug: v.string(),
     slug_lower: v.string(),
@@ -198,6 +206,7 @@ export default defineSchema({
   })
     .index("by_uuid", ["id"])
     .index("by_owner", ["owner_id"])
+    .index("by_owner_company", ["owner_id", "company_id"])
     .index("by_slug_lower", ["slug_lower"]),
 
   /* ── Companies ───────────────────────────────────────────────────────────
@@ -224,8 +233,20 @@ export default defineSchema({
     /** The brand every page on this company's domain wears. */
     brand_color: v.optional(nullableString),
     brand_background: v.optional(nullableString),
+    /** The wordmark across the top of this company's booking pages. */
     brand_logo_url: v.optional(nullableString),
     brand_logo_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
+    /**
+     * A SQUARE mark, for the app's own chrome.
+     *
+     * Separate from the logo because they are different pictures doing
+     * different jobs: a wordmark is unreadable at 20px, and a square icon
+     * looks lost across the top of a booking page. Most companies have both
+     * already, and asking for one picture to do both means one of the two
+     * places is always wrong.
+     */
+    brand_avatar_url: v.optional(nullableString),
+    brand_avatar_storage_id: v.optional(v.union(v.id("_storage"), v.null())),
     created_at: v.number(),
     updated_at: v.number(),
   })

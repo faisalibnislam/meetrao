@@ -132,6 +132,12 @@ export const create = mutation({
     minimum_notice_minutes: v.optional(v.number()), booking_window_days: v.optional(v.number()),
     location: v.optional(v.string()), location_detail: v.optional(v.string()),
     capacity: v.optional(v.number()),
+    /* The form has an "active" switch and has always sent this; the validator
+       never accepted it, so every create from the Meetings screen failed with
+       "Object contains extra field `is_active`". Onboarding creates meetings
+       with its own payload, which is why the ones made there worked and this
+       went unnoticed. Absent means active, which is what a new meeting is. */
+    is_active: v.optional(v.boolean()),
     schedule_id: v.optional(v.union(v.string(), v.null())),
     company_id: v.optional(v.union(v.string(), v.null())),
     questions: v.optional(
@@ -167,7 +173,7 @@ export const create = mutation({
       id, user_id: me.id, description: a.description ?? "",
       ...validLocation(a.location ?? "google_meet", a.location_detail ?? ""),
       capacity: validCapacity(a.capacity ?? 1, me),
-      is_active: true,
+      is_active: a.is_active ?? true,
       questions: validQuestions(a.questions ?? []),
       schedule_id: a.schedule_id ?? null,
       company_id: await companyForMeeting(ctx, me, a.company_id),
@@ -186,6 +192,13 @@ export const update = mutation({
     slug: v.optional(v.string()), duration_minutes: v.optional(v.number()),
     buffer_minutes: v.optional(v.number()), minimum_notice_minutes: v.optional(v.number()),
     booking_window_days: v.optional(v.number()), location: v.optional(v.string()),
+    /* The handler reads both of these and the form sends both, and neither was
+       ever listed, so editing a meeting's seats or its location detail failed
+       the same way creating one did. Same family of defect as is_active on
+       `create`: a validator and a payload that nothing compares until a
+       request is in flight. meeting-args.test.ts compares them now. */
+    location_detail: v.optional(v.string()),
+    capacity: v.optional(v.number()),
     is_active: v.optional(v.boolean()), schedule_id: v.optional(v.union(v.string(), v.null())),
     team_id: v.optional(v.union(v.string(), v.null())),
     company_id: v.optional(v.union(v.string(), v.null())),

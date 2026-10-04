@@ -117,9 +117,15 @@ export function BrandingPanel({
   domain,
   username,
   siteHost,
+  avatarUrl = null,
+  isCompany = false,
 }: {
   pro: boolean;
   logoUrl: string | null;
+  /** A company's square mark. Personal has no second picture here: an
+      account's photograph is set on the Profile tab. */
+  avatarUrl?: string | null;
+  isCompany?: boolean;
   color: string | null;
   background: string | null;
   domain: DomainView;
@@ -133,6 +139,10 @@ export function BrandingPanel({
   const [busy, startBusy] = useTransition();
 
   const [logo, setLogo] = useState(logoUrl);
+  const [avatar, setAvatar] = useState(avatarUrl);
+  /* Which picture the one hidden file input is currently collecting. A second
+     input would be a second place to keep the accept list and size cap. */
+  const [picking, setPicking] = useState<"logo" | "avatar">("logo");
   const [draftColor, setDraftColor] = useState(color ?? "");
   const [savedColor, setSavedColor] = useState(color);
   const [draftBg, setDraftBg] = useState(background ?? "");
@@ -183,13 +193,19 @@ export function BrandingPanel({
         return;
       }
       const { storageId } = (await posted.json()) as { storageId: string };
-      const saved = await saveLogo(storageId);
+      const kind = picking;
+      const saved = await saveLogo(storageId, kind);
       if (saved.error) {
         toast({ tone: "bad", title: "Could not save", text: saved.error });
         return;
       }
-      setLogo(saved.url ?? null);
-      toast({ tone: "ok", title: "Logo saved", text: "It is on your booking page now." });
+      if (kind === "avatar") {
+        setAvatar(saved.url ?? null);
+        toast({ tone: "ok", title: "Picture saved", text: "It is beside the company's name now." });
+      } else {
+        setLogo(saved.url ?? null);
+        toast({ tone: "ok", title: "Logo saved", text: "It is on your booking page now." });
+      }
       router.refresh();
     });
   }
@@ -280,7 +296,10 @@ export function BrandingPanel({
             size={32}
             icon="upload"
             disabled={!pro || busy}
-            onClick={() => input.current?.click()}
+            onClick={() => {
+              setPicking("logo");
+              input.current?.click();
+            }}
           >
             {logo ? "Change logo" : "Upload logo"}
           </Button>
@@ -293,7 +312,7 @@ export function BrandingPanel({
               aria-label="Remove your logo"
               onClick={() =>
                 startBusy(async () => {
-                  const result = await removeLogo();
+                  const result = await removeLogo("logo");
                   if (result.error) {
                     toast({ tone: "bad", title: "Could not remove", text: result.error });
                     return;
@@ -309,6 +328,67 @@ export function BrandingPanel({
           ) : null}
         </div>
       </section>
+
+      {/* ── the square mark, companies only ───────────────────────────── */}
+      {isCompany ? (
+        <section className="flex flex-col gap-[11px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
+          <div className="flex flex-wrap items-center justify-between gap-[10px]">
+            <span className="text-[13px] font-semibold text-ink">Company picture</span>
+          </div>
+          <Help>
+            A square mark, shown beside this company&rsquo;s name inside Meetrao. Separate from the logo
+            because a wide wordmark is unreadable at this size. Without one, the company&rsquo;s initials on
+            its colour are used.
+          </Help>
+
+          <div className="flex flex-wrap items-center gap-[14px]">
+            <span className="inline-flex h-[44px] w-[44px] flex-none items-center justify-center overflow-hidden rounded-[9px] border border-line bg-white">
+              {avatar ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatar} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <span className="text-[13px] font-bold text-ink-3">?</span>
+              )}
+            </span>
+
+            <Button
+              variant="secondary"
+              size={32}
+              icon="upload"
+              disabled={!pro || busy}
+              onClick={() => {
+                setPicking("avatar");
+                input.current?.click();
+              }}
+            >
+              {avatar ? "Change picture" : "Upload picture"}
+            </Button>
+
+            {avatar ? (
+              <Button
+                variant="ghost"
+                size={32}
+                disabled={busy}
+                aria-label="Remove the company picture"
+                onClick={() =>
+                  startBusy(async () => {
+                    const result = await removeLogo("avatar");
+                    if (result.error) {
+                      toast({ tone: "bad", title: "Could not remove", text: result.error });
+                      return;
+                    }
+                    setAvatar(null);
+                    toast({ tone: "neutral", title: "Picture removed", text: "Initials are shown instead." });
+                    router.refresh();
+                  })
+                }
+              >
+                Remove
+              </Button>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
 
       {/* ── colour ────────────────────────────────────────────────────── */}
       <section className="flex flex-col gap-[11px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">

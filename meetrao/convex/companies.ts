@@ -142,6 +142,13 @@ export const mine = query({
         is_owner: company.owner_id === me.id,
         domain: company.custom_domain ?? null,
         domain_verified: Boolean(company.custom_domain_verified_at),
+        /* The square mark the workspace menu draws, not the wordmark its
+           booking pages wear. Ungated on purpose: this is the company shown
+           back to its own people inside the app, not a public page, so the
+           plan gate that decides what GUESTS see does not apply. A company
+           whose plan lapsed still looks like itself to the people in it. */
+        avatar_url: company.brand_avatar_url ?? null,
+        brand_color: company.brand_color ?? null,
         member_count: members.length,
         /* The owner's plan, because that is what entitles every page on this
            company's domain. A member looking at this sees what the company

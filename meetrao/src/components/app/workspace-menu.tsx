@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { Avatar } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { useToast } from "@/components/ui/toast";
 import { setContext } from "@/lib/actions/context";
@@ -27,10 +26,119 @@ import { cx } from "@/lib/cx";
    menu, which is what every account that has never made a company sees.
    ───────────────────────────────────────────────────────────────────────────── */
 
-export type WorkspaceOption = { id: string | null; name: string };
+export type WorkspaceOption = {
+  id: string | null;
+  name: string;
+  /** A square mark the company uploaded, for this menu. */
+  avatarUrl: string | null;
+  /** Its accent, which tints the initials when there is no mark. */
+  color: string | null;
+};
 
 const item =
   "box-border flex w-full cursor-pointer items-center gap-[9px] rounded-[6px] border-0 bg-transparent px-[9px] py-[7px] text-left text-[12.5px] text-ink no-underline hover:bg-fill";
+
+/** The first letters of a name, for when there is no picture of anything. */
+function initialsOf(name: string): string {
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((p) => p[0]?.toUpperCase() ?? "")
+      .join("") || "?"
+  );
+}
+
+/**
+ * What a workspace looks like, at a size where a wordmark is unreadable.
+ *
+ * Personal wears the person's avatar, a company wears its own logo. A company
+ * logo is usually a WIDE wordmark, so it is contained in the square on a plain
+ * tile rather than cropped: a cropped wordmark is three letters of a word,
+ * which is worse than the initial it would have fallen back to.
+ *
+ * With no logo the fallback is the company's initials on its accent, which is
+ * the one thing every branded company has and is legible at 20px in a way a
+ * wordmark is not.
+ */
+function WorkspaceMark({
+  option,
+  avatarUrl,
+  name,
+  size,
+}: {
+  option: WorkspaceOption;
+  /** The signed-in person's photograph, which is what Personal wears. */
+  avatarUrl?: string | null;
+  name: string;
+  size: number;
+}) {
+  const radius = Math.max(4, Math.round(size / 5));
+
+  if (!option.id) {
+    return avatarUrl ? (
+      /* A plain <img> rather than <Avatar>, which only takes a fixed set of
+         sizes and this is drawn at two that are not among them. */
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={avatarUrl}
+        alt=""
+        aria-hidden="true"
+        className="flex-none object-cover"
+        style={{ width: size, height: size, borderRadius: radius }}
+      />
+    ) : (
+      <span
+        aria-hidden="true"
+        className="inline-flex flex-none items-center justify-center bg-accent-soft font-bold text-accent-ink"
+        style={{ width: size, height: size, borderRadius: radius, fontSize: Math.round(size * 0.42) }}
+      >
+        {initialsOf(name)}
+      </span>
+    );
+  }
+
+  /* The square mark if the company set one. The WORDMARK is deliberately not
+     a fallback: contained in 20px it is three unreadable letters, which is
+     worse than the initials below. */
+  if (option.avatarUrl) {
+    return (
+      <span
+        aria-hidden="true"
+        className="inline-flex flex-none items-center justify-center overflow-hidden border border-line bg-white"
+        style={{ width: size, height: size, borderRadius: radius }}
+      >
+        {/* A plain <img>: this is somebody's uploaded file at a fixed tiny
+            size, so there is nothing for the optimiser to decide. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={option.avatarUrl}
+          alt=""
+          className="h-full w-full object-contain"
+          style={{ padding: Math.max(1, Math.round(size / 10)) }}
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex flex-none items-center justify-center font-bold"
+      style={{
+        width: size,
+        height: size,
+        borderRadius: radius,
+        fontSize: Math.round(size * 0.42),
+        background: option.color ?? "var(--accent-soft)",
+        color: option.color ? "#ffffff" : "var(--accent-ink)",
+      }}
+    >
+      {initialsOf(option.name)}
+    </span>
+  );
+}
 
 export function WorkspaceMenu({
   name,
@@ -72,14 +180,8 @@ export function WorkspaceMenu({
     };
   }, [open]);
 
-  const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0] ?? { id: null, name: "Personal" };
-  const initials =
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((p) => p[0]?.toUpperCase() ?? "")
-      .join("") || "?";
+  const active: WorkspaceOption = workspaces.find((w) => w.id === activeId) ??
+    workspaces[0] ?? { id: null, name: "Personal", logoUrl: null, color: null };
 
   function choose(id: string | null) {
     setOpen(false);
@@ -109,15 +211,9 @@ export function WorkspaceMenu({
           open ? "border-line bg-surface" : "border-line bg-surface hover:bg-fill",
         )}
       >
-        {/* The person, not the company: a company has a logo on its booking
-            pages and nothing small enough for a 26px square here. */}
-        {avatarUrl ? (
-          <Avatar name={name} size={26} src={avatarUrl} />
-        ) : (
-          <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-[5px] bg-accent-soft text-[11px] font-bold text-accent-ink">
-            {initials}
-          </span>
-        )}
+        {/* The workspace, not the person. The label underneath already says
+            whose account this is; the mark should match the name beside it. */}
+        <WorkspaceMark option={active} avatarUrl={avatarUrl} name={name} size={26} />
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="overflow-hidden text-left text-[12.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
             {active.name}
@@ -155,6 +251,7 @@ export function WorkspaceMenu({
                   onClick={() => choose(w.id)}
                   className={cx(item, w.id === activeId && "bg-accent-soft font-semibold text-accent-ink")}
                 >
+                  <WorkspaceMark option={w} avatarUrl={avatarUrl} name={name} size={20} />
                   <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {w.name}
                   </span>

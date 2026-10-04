@@ -5,6 +5,7 @@ import { requireSession } from "@/lib/data/session";
 import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
+import { activeContext } from "@/lib/data/context";
 
 /* Teams: a booking link several hosts answer in turn. The invariants (one
    owner, members must already have accounts, a product-wide unique link) are
@@ -27,7 +28,12 @@ export async function createTeam(input: { name: string; slug: string }): Promise
   await requireSession();
   if (!input.name.trim()) return { error: "Give the team a name." };
 
-  const { value, error } = await viaConvex((c) => c.mutation(api.teams.create, input));
+  /* Made in the workspace the person is looking at, so an agency's client
+     rota stays in that client's settings. */
+  const { companyId } = await activeContext();
+  const { value, error } = await viaConvex((c) =>
+    c.mutation(api.teams.create, { ...input, company_id: companyId }),
+  );
   if (error) return { error };
   revalidatePath("/settings/team");
   return { id: value?.id, slug: value?.slug };
