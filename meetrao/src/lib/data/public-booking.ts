@@ -216,3 +216,16 @@ export async function getBusy(
     return { busy: own, calendarChecked: false };
   }
 }
+
+/** Whether this meeting is one the given company's domain may serve. */
+export async function meetingIsOnCompany(
+  username: string,
+  slug: string,
+  companySlug: string,
+): Promise<boolean> {
+  return await convexAnonymous().query(api.publicBooking.meetingIsOnCompany, {
+    username,
+    slug,
+    companySlug,
+  });
+}

@@ -6,6 +6,7 @@ import { meetingTypeOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
 import { isLocationKind } from "./lib/locations";
 import { requirePro } from "./lib/plan";
+import type { MutationCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { logActivity } from "./lib/effects";
 
@@ -19,6 +20,29 @@ function validate(a: { name: string; slug: string; duration_minutes: number; buf
   if (a.buffer_minutes < 0 || a.buffer_minutes > 120) fail("Buffer must be 0–120 minutes.");
   if (a.minimum_notice_minutes < 0) fail("Notice cannot be negative.");
   if (a.booking_window_days < 1 || a.booking_window_days > 365) fail("Window must be 1–365 days.");
+}
+
+/**
+ * The company a meeting may be filed under, or null for a personal one.
+ *
+ * Refuses a company the caller is not in. Without this, anybody could file a
+ * meeting under somebody else's company id and have it served from that
+ * company's branded domain, which is the whole thing company scoping exists
+ * to prevent.
+ */
+async function companyForMeeting(
+  ctx: MutationCtx,
+  me: Doc<"profiles">,
+  companyId: string | null | undefined,
+): Promise<string | null> {
+  if (!companyId) return null;
+
+  const rows = await ctx.db
+    .query("company_members")
+    .withIndex("by_user", (q) => q.eq("user_id", me.id))
+    .collect();
+  if (!rows.some((r) => r.company_id === companyId)) fail("That is not one of your companies.");
+  return companyId;
 }
 
 export const listOwn = query({
@@ -109,6 +133,7 @@ export const create = mutation({
     location: v.optional(v.string()), location_detail: v.optional(v.string()),
     capacity: v.optional(v.number()),
     schedule_id: v.optional(v.union(v.string(), v.null())),
+    company_id: v.optional(v.union(v.string(), v.null())),
     questions: v.optional(
       v.array(
         v.object({
@@ -144,7 +169,9 @@ export const create = mutation({
       capacity: validCapacity(a.capacity ?? 1, me),
       is_active: true,
       questions: validQuestions(a.questions ?? []),
-      schedule_id: a.schedule_id ?? null, created_at: now, updated_at: now, ...row,
+      schedule_id: a.schedule_id ?? null,
+      company_id: await companyForMeeting(ctx, me, a.company_id),
+      created_at: now, updated_at: now, ...row,
     });
     // meeting_types_log_created
     await logActivity(ctx, { actorId: me.id, kind: "meeting_type_created", summary: `${me.full_name || me.email} created ${row.name}` });
@@ -161,6 +188,7 @@ export const update = mutation({
     booking_window_days: v.optional(v.number()), location: v.optional(v.string()),
     is_active: v.optional(v.boolean()), schedule_id: v.optional(v.union(v.string(), v.null())),
     team_id: v.optional(v.union(v.string(), v.null())),
+    company_id: v.optional(v.union(v.string(), v.null())),
     questions: v.optional(
       v.array(
         v.object({
@@ -201,6 +229,12 @@ export const update = mutation({
     if (patch.team_id) {
       const team = await ctx.db.query("teams").withIndex("by_uuid", (q) => q.eq("id", patch.team_id as string)).unique();
       if (!team || team.owner_id !== m.user_id) fail("That is not your team.");
+    }
+
+    /* Only a company you are in. Moving a meeting under somebody else's
+       company id would have it served from their branded domain. */
+    if (patch.company_id !== undefined) {
+      patch.company_id = await companyForMeeting(ctx, me, patch.company_id as string | null);
     }
 
     if (patch.questions !== undefined) {

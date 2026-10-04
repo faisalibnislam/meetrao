@@ -7,6 +7,7 @@ import { Eyebrow } from "@/components/ui/badge";
 import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import {
   getBusy,
+  meetingIsOnCompany,
   getMeetingAvailability,
   getMeetingOverrides,
   getSeatMap,
@@ -89,6 +90,14 @@ export default async function BookingPage({
      The company wins outright rather than merging: a page that took the logo
      from one brand and the colour from another would be neither. */
   const company = await companyForRequest();
+
+  /* A company's domain serves only that company's meetings. Without this, a
+     guest who guessed a slug could reach a member's PERSONAL meeting through
+     somebody else's branded domain, which is the whole thing company scoping
+     exists to prevent. meetrao.com is unaffected: every meeting is reachable
+     at its own address there. */
+  if (company && !(await meetingIsOnCompany(username, meeting.slug, company.slug))) notFound();
+
   const brand = company ? company.brand : host.brand;
   const unbranded = company ? company.unbranded : host.unbranded;
 
