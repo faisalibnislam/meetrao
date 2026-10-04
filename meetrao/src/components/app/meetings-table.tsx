@@ -137,6 +137,10 @@ export function MeetingsTable({
                   >
                     Preview
                   </Button>
+                  {/* Deleting lives on the edit screen, not here. A fourth
+                      text button pushed this column past the viewport at
+                      1161px and put a horizontal scrollbar on the page, and
+                      there is no trash glyph in the set to shrink it to. */}
                   <Button
                     variant="secondary"
                     size={26}

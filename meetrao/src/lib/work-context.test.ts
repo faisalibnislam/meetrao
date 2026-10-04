@@ -102,7 +102,10 @@ describe("the workspace menu", () => {
      than pasting its name: "<company> settings" reads as a thing belonging to
      that company, and the row changes width on every switch. */
   it("labels the settings link by workspace kind, not by name", () => {
-    expect(SWITCHER).toContain('active.id ? "Company settings" : "Personal settings"');
+    /* Qualified in a company, bare in personal: the word only earns its place
+       where there is something to tell it apart from, and most accounts have
+       no company at all. */
+    expect(SWITCHER).toContain('active.id ? "Company settings" : "Settings"');
     expect(SWITCHER, "the company's name must not be pasted into the label").not.toContain(
       "`${active.name} settings`",
     );

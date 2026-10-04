@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button";
 import { ChoiceChip, Field, Input, Switch, Textarea } from "@/components/ui/controls";
 import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
+import { Modal } from "@/components/ui/modal";
 import { Callout, PanelHeading } from "@/components/ui/panels";
 import Link from "next/link";
 import { useToast } from "@/components/ui/toast";
-import { saveMeeting, type MeetingInput } from "@/lib/actions/meetings";
+import { deleteMeeting, saveMeeting, type MeetingInput } from "@/lib/actions/meetings";
 import type { BookingQuestion } from "@/lib/types";
 import { LOCATION_OPTIONS } from "@/lib/locations";
 import { cx } from "@/lib/cx";
@@ -93,6 +94,11 @@ export function MeetingForm({
 
   const nameInvalid = touched && !form.name.trim();
   const editing = Boolean(initial.id);
+  /* Deleting lives here rather than on the list. Four text actions in a row
+     pushed that column past the viewport, and this is where the rest of the
+     destructive-ish settings for one meeting already are. */
+  const [confirming, setConfirming] = useState(false);
+  const [removing, startRemove] = useTransition();
 
   return (
     <div className="mx-auto flex w-full max-w-[600px] flex-col">
@@ -415,7 +421,49 @@ export function MeetingForm({
         <Button variant="ghost" size={36} onClick={() => router.push("/meetings")}>
           Cancel
         </Button>
+
+        {/* Pushed to the far end, away from Save. Ghost rather than red: the
+            weight belongs in the dialog, not in a button somebody passes on
+            the way to saving. */}
+        {editing ? (
+          <Button
+            variant="ghost"
+            size={36}
+            className="ml-auto hover:bg-red-soft hover:text-red"
+            disabled={removing}
+            onClick={() => setConfirming(true)}
+          >
+            Delete meeting
+          </Button>
+        ) : null}
       </div>
+
+      {/* Names the meeting, because "Delete this meeting?" is a dialog people
+          confirm without reading. */}
+      <Modal
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        title={`Delete ${initial.name || "this meeting"}?`}
+        subtitle="The link stops working and the meeting goes from your list. Bookings already made stay where they are and keep their times: nobody is cancelled and no guest is told."
+        primary={{
+          label: "Delete",
+          variant: "danger",
+          busy: removing,
+          onClick: () =>
+            startRemove(async () => {
+              const result = await deleteMeeting(initial.id as string);
+              if (result.error) {
+                toast({ tone: "bad", title: "Could not delete", text: result.error });
+                return;
+              }
+              setConfirming(false);
+              toast({ tone: "neutral", title: "Meeting deleted", text: initial.name });
+              router.push("/meetings");
+              router.refresh();
+            }),
+        }}
+        secondary={{ label: "Keep it", onClick: () => setConfirming(false) }}
+      />
     </div>
   );
 }

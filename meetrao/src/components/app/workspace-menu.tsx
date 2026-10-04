@@ -266,13 +266,15 @@ export function WorkspaceMenu({
           {/* A fixed label, not the company's name. Pasting the name in reads
               as a thing belonging to that company rather than as the settings
               of whatever you are in, and the row changes width every time you
-              switch. */}
+              switch.
+
+              Personal says just "Settings". The qualifier earns its place
+              only where there is something to tell apart, and in a personal
+              workspace there is nothing else these could be: "Personal
+              settings" invites the question of which other kind exists for
+              the many accounts that have no company at all. */}
           {!isAdmin ? (
-            <MenuLink
-              href="/settings"
-              icon="gear"
-              label={active.id ? "Company settings" : "Personal settings"}
-            />
+            <MenuLink href="/settings" icon="gear" label={active.id ? "Company settings" : "Settings"} />
           ) : null}
           <MenuLink href="/help" icon="circle-question" label="Help centre" newTab />
           <MenuLink href="/support" icon="envelope" label="Support" />
