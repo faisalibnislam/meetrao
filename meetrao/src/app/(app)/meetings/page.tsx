@@ -8,7 +8,8 @@ import { requireOnboardedSession } from "@/lib/data/session";
 import { convexServer } from "@/lib/convex/server";
 import { siteUrl } from "@/lib/env";
 import { api } from "@/convex/_generated/api";
-import { bookingLink, companyBookingLink } from "@/lib/username";
+import { addressFor } from "@/lib/workspace-links";
+import { placeOf } from "@/lib/data/links";
 import type { MeetingType } from "@/lib/types";
 import { activeContext, contextChoices } from "@/lib/data/context";
 import { heldElsewhere } from "@/lib/data/elsewhere";
@@ -39,14 +40,8 @@ export default async function MeetingsPage() {
      company's address, not at its host's personal one: the list was already
      scoped, but every row still showed meetrao.com/<username>/<meeting>. */
   const here = (await contextChoices()).find((c) => c.id === context.companyId) ?? null;
-  const addressOf = (slug: string) =>
-    here && here.slug
-      ? companyBookingLink(
-          { slug: here.slug, domain: here.domain, domainVerified: here.domainVerified },
-          here.handle ?? profile.username,
-          slug,
-        )
-      : bookingLink(profile.username, slug);
+  const place = placeOf(here);
+  const addressOf = (slug: string) => addressFor(place, profile.username, slug);
 
   const rows: MeetingRow[] = meetings.map((m) => ({
     id: m.id,

@@ -176,3 +176,82 @@ describe("what the screens say", () => {
     expect(panels).not.toContain("Your booking link");
   });
 });
+
+/* ── Round two ──────────────────────────────────────────────────────────── */
+
+import { addressFor, workspaceLinks } from "./workspace-links";
+
+describe("one place decides what a link is", () => {
+  const personal = { companyId: null, slug: null, domain: null, domainVerified: false, handle: null };
+  const acme = { companyId: "c1", slug: "acme", domain: null, domainVerified: false, handle: "sam" };
+  const meetings = [
+    { id: "1", name: "Intro", slug: "intro", company_id: null },
+    { id: "2", name: "Review", slug: "review", company_id: "c1" },
+  ];
+
+  /* The rail, Meetings and the branding screen each built links their own
+     way and each mixed the two workspaces differently. */
+  it("hands Personal only its own, at the personal address", () => {
+    expect(workspaceLinks(meetings, personal, "sam-jones")).toEqual([
+      { id: "1", name: "Intro", link: "meetrao.com/sam-jones/intro" },
+    ]);
+  });
+
+  it("hands a company only its own, at the company address", () => {
+    expect(workspaceLinks(meetings, acme, "sam-jones")).toEqual([
+      { id: "2", name: "Review", link: "meetrao.com/acme/sam/review" },
+    ]);
+  });
+
+  it("treats an absent company as Personal", () => {
+    expect(workspaceLinks([{ id: "3", name: "Old", slug: "old" }], personal, "sam")).toHaveLength(1);
+  });
+
+  it("is the builder the rail, Meetings and Bookings all use", () => {
+    expect(read("src/components/app/app-shell.tsx")).toContain("workspaceLinks(active, placeOf(here), profile.username)");
+    expect(read("src/app/(app)/meetings/page.tsx")).toContain("addressFor(place, profile.username, slug)");
+    expect(read("src/app/(app)/bookings/page.tsx")).toContain("shareableLinks(profile.username)");
+    expect(addressFor(acme, "sam-jones", "x")).toBe("meetrao.com/acme/sam/x");
+  });
+});
+
+describe("tables keep their actions reachable", () => {
+  /* Between 820 and ~1160px the Meetings table was wider than its space and
+     Edit sat 182px past the card's edge, behind an undrawn scrollbar. The
+     switch to cards is on the space available, not the viewport. */
+  it("Meetings switches layout on container width", () => {
+    const t = read("src/components/app/meetings-table.tsx");
+    expect(t).toContain('<div className="@container flex flex-col gap-[12px]">');
+    expect(t).toContain('<TableCard className="@max-[800px]:hidden">');
+    expect(t).toContain("hidden flex-col gap-[10px] @max-[800px]:flex");
+    expect(t, "a viewport breakpoint cannot see the sidebar").not.toContain("max-[640px]");
+  });
+
+  /* Contacts is a data table and may scroll; its actions may not. */
+  it("Contacts pins its actions to the right edge", () => {
+    const c = read("src/components/app/contacts-screen.tsx");
+    expect(c).toContain('const STICKY_END = "sticky right-0');
+    expect(c).toContain('<Th align="right" className={STICKY_END}>');
+    expect(c).toContain('cx("text-right", STICKY_END, "bg-surface group-hover:bg-fill")');
+  });
+
+  it("never breaks a phone number across lines", () => {
+    expect(read("src/components/app/contacts-screen.tsx")).toContain(
+      'text-[13px] whitespace-nowrap text-ink-2">{c.phone',
+    );
+  });
+
+  it("does not offer to export nothing", () => {
+    const c = read("src/components/app/contacts-screen.tsx");
+    expect(c).toContain("contacts.length === 0 ? (");
+    expect(c).toContain('buttonClass("secondary", 32, "unlink")');
+  });
+});
+
+describe("empty Bookings says what to do", () => {
+  it("offers the workspace's links when nothing is booked", () => {
+    const b = read("src/components/app/bookings-screen.tsx");
+    expect(b).toContain("<CopyLinkControl meetings={links} />");
+    expect(b).toContain("Your links are live. Share one and bookings land here.");
+  });
+});
