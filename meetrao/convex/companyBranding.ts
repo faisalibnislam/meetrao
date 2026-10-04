@@ -196,7 +196,7 @@ export const removeImage = mutation({
 export const setLogoHidden = mutation({
   args: { id: v.string(), hidden: v.boolean() },
   handler: async (ctx, a) => {
-    const { company, owner } = await requireCompanyOwner(ctx, a.id);
+    const { company, owner } = await requireCompanyManager(ctx, a.id);
     if (a.hidden && !isPro(owner)) fail("A page with no mark on it is part of Pro.", "PRO_REQUIRED");
     await ctx.db.patch(company._id, { brand_logo_hidden: a.hidden, updated_at: Date.now() });
     return a.hidden;

@@ -83,6 +83,21 @@ describe("what an admin may do", () => {
 
   /* Branding and the domain are the company's face, which is the thing an
      admin was given to look after. */
+  /* Named one by one rather than checked in bulk. `setLogoHidden` arrived on
+     another branch while this one renamed the guard, rebased cleanly, and
+     kept calling a function that no longer existed. A test that only asked
+     whether the file mentions the manager gate would have been happy. */
+  it.each(["generateUploadUrl", "saveImage", "setColor", "setBackground", "setLogoHidden"])(
+    "companyBranding.%s takes the manager gate",
+    (name) => {
+      const at = BRANDING.indexOf(`export const ${name} =`);
+      expect(at, `no such export: ${name}`).toBeGreaterThan(-1);
+      const next = BRANDING.indexOf("export const ", at + 10);
+      const body = BRANDING.slice(at, next === -1 ? BRANDING.length : next);
+      expect(body).toContain("requireCompanyManager(ctx,");
+    },
+  );
+
   it("branding and the domain admit an admin", () => {
     for (const [what, source] of [
       ["branding", BRANDING],
