@@ -46,9 +46,16 @@ export async function heldElsewhere(
  * rows out, so they return counts and this puts names on them.
  */
 export async function namedElsewhere(
-  counts: readonly { company_id: string | null; count: number }[],
+  counts: readonly { company_id: string | null; count: number }[] | undefined,
   context: WorkContext,
 ): Promise<Elsewhere[]> {
-  if (counts.length === 0) return [];
+  /* `undefined`, not just empty. Convex and Vercel deploy separately and can
+     never be atomic, so there is always a window where this app is newer than
+     the backend answering it and a field added to a query is simply absent.
+     Reading `.length` off that took the bookings screen down in production
+     until the Convex side caught up: the empty state this feature exists to
+     improve is not worth a blank page while two deploys agree with each
+     other. Anything missing reads as "nothing elsewhere". */
+  if (!counts || counts.length === 0) return [];
   return nameWorkspaces(counts, await contextChoices(), context.companyId);
 }
