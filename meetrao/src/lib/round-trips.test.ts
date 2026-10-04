@@ -175,3 +175,15 @@ describe("the guest booking path runs in phases, not chains", () => {
     }
   });
 });
+
+/* "Connect Google Calendar" is a link to /api/google/connect, which starts
+   the OAuth flow. As a <Link> it was prefetched whenever it scrolled into
+   view, which ran a Convex query and overwrote the OAuth state cookie on
+   every visit to the calendar settings, before anybody clicked. */
+describe("a link to a route handler is never prefetched", () => {
+  it("ButtonLink renders a plain anchor for /api/", () => {
+    const button = read("src/components/ui/button.tsx");
+    expect(button).toContain('if (typeof rest.href === "string" && rest.href.startsWith("/api/")) {');
+    expect(button).toContain("<a href={rest.href} className={classes}");
+  });
+});
