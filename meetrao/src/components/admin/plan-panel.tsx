@@ -16,6 +16,12 @@ import { isPaid, type Plan } from "@/convex/lib/plan";
    instead of silently reading as the one in the else branch. */
 const PLAN_LABEL: Record<Plan, string> = { free: "Free", pro: "Pro", business: "Business" };
 
+/* Free is absent: a grant OF free is just not granting. */
+const GRANT_PLANS = [
+  { value: "pro", label: "Pro" },
+  { value: "business", label: "Business" },
+];
+
 /* ─────────────────────────────────────────────────────────────────────────────
    One account's plan, and giving Pro away.
 
@@ -32,6 +38,8 @@ export type PlanInfo = {
   compUntil: string | null;
   compReason: string;
   compGrantedBy: string | null;
+  /** Which plan the grant gives. Absent reads as Pro. */
+  compPlan?: string | null;
   planUntil: string | null;
 };
 
@@ -57,6 +65,7 @@ export function PlanPanel({ userId, name, info }: { userId: string; name: string
   const [busy, startBusy] = useTransition();
   const [dialog, setDialog] = useState<"grant" | "revoke" | null>(null);
   const [length, setLength] = useState("year");
+  const [grantPlan, setGrantPlan] = useState<"pro" | "business">("pro");
   const [reason, setReason] = useState("");
 
   return (
@@ -85,7 +94,9 @@ export function PlanPanel({ userId, name, info }: { userId: string; name: string
         </div>
 
         <div className="flex flex-wrap items-center gap-[10px] border-t border-line-soft pt-[9px]">
-          <span className="min-w-[110px] text-[12.5px] text-ink-3">Granted Pro</span>
+          <span className="min-w-[110px] text-[12.5px] text-ink-3">
+            Granted {PLAN_LABEL[(info.compPlan ?? "pro") as Plan]}
+          </span>
           <span className="min-w-0 flex-1 text-[13px] text-ink">
             {info.comp ? `Until ${when(info.compUntil)}` : "None"}
           </span>
@@ -138,26 +149,39 @@ export function PlanPanel({ userId, name, info }: { userId: string; name: string
       <Modal
         open={dialog === "grant"}
         onClose={() => setDialog(null)}
-        title={`Give ${name} Pro`}
-        subtitle="They get everything Pro does, at no charge. No card, no invoice, no subscription."
+        title={`Give ${name} a plan`}
+        subtitle="They get everything that plan does, at no charge. No card, no invoice, no subscription."
         primary={{
-          label: busy ? "Saving…" : "Give Pro",
+          label: busy ? "Saving…" : `Give ${PLAN_LABEL[grantPlan]}`,
           busy,
           onClick: () =>
             startBusy(async () => {
-              const result = await grantProToUser({ userId, length, reason });
+              const result = await grantProToUser({ userId, length, reason, plan: grantPlan });
               if (result.error) {
                 toast({ tone: "bad", title: "Could not grant", text: result.error });
                 return;
               }
               setDialog(null);
-              toast({ tone: "ok", title: "Pro granted", text: `${name} has Pro.` });
+              toast({
+                tone: "ok",
+                title: `${PLAN_LABEL[grantPlan]} granted`,
+                text: `${name} has ${PLAN_LABEL[grantPlan]}.`,
+              });
               router.refresh();
             }),
         }}
         secondary={{ label: "Cancel", onClick: () => setDialog(null) }}
       >
         <div className="flex flex-col gap-[12px]">
+          <div className="flex flex-col gap-[6px]">
+            <span className="text-[12.5px] font-semibold text-ink">Which plan</span>
+            <MenuSelect
+              aria-label="Which plan"
+              options={GRANT_PLANS}
+              value={grantPlan}
+              onChange={(v) => setGrantPlan(v as "pro" | "business")}
+            />
+          </div>
           <div className="flex flex-col gap-[6px]">
             <span className="text-[12.5px] font-semibold text-ink">For how long</span>
             <MenuSelect aria-label="How long" options={LENGTHS} value={length} onChange={setLength} />

@@ -137,6 +137,16 @@ export default defineSchema({
      * and expires by itself. Far-future means indefinite.
      */
     comp_until: v.optional(nullableNumber),
+    /**
+     * Which plan a complimentary grant gives.
+     *
+     * Added when Business arrived. Before it, a grant was one date with no
+     * tier beside it and could only mean Pro, and reading a tier out of a
+     * field that did not carry one was how a free grant would have quietly
+     * become the most expensive plan. Now it carries one, and absent still
+     * means Pro so every grant written before today keeps its meaning.
+     */
+    comp_plan: v.optional(nullableString),
     /** Why, in the operator's words. Shown on the admin screen, never to the host. */
     comp_reason: v.optional(v.string()),
     comp_granted_by: v.optional(nullableString),

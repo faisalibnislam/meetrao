@@ -11,6 +11,7 @@ import { UpgradeCallout } from "./upgrade";
 import { useToast } from "@/components/ui/toast";
 import { addWebhook, createApiKey, removeWebhook, revokeApiKey, testWebhook } from "@/lib/actions/developer";
 import { cx } from "@/lib/cx";
+import { copyText } from "@/lib/clipboard";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Keys and endpoints.
@@ -239,7 +240,7 @@ export function DeveloperPanel({
         primary={{
           label: "Copy",
           onClick: () => {
-            if (minted) void navigator.clipboard.writeText(minted).catch(() => {});
+            if (minted) void copyText(minted);
             toast({ tone: "ok", title: "Copied", text: "Store it somewhere safe." });
           },
         }}

@@ -502,9 +502,11 @@ export async function grantProToUser(input: {
   userId: string;
   length: string;
   reason: string;
+  /** Absent is Pro, which is what every grant meant before Business existed. */
+  plan?: "pro" | "business";
 }): Promise<GrantResult> {
   await requireAdmin();
-  if (!input.reason.trim()) return { error: "Say why this account is getting Pro." };
+  if (!input.reason.trim()) return { error: "Say why this account is getting a plan." };
 
   const convex = await convexServer();
   try {
@@ -512,6 +514,7 @@ export async function grantProToUser(input: {
       userId: input.userId,
       length: input.length,
       reason: input.reason.trim(),
+      plan: input.plan ?? "pro",
     });
   } catch (cause) {
     return { error: convexMessage(cause, "That grant could not be saved.") };

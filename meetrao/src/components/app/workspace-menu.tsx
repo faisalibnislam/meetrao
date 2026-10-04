@@ -103,22 +103,19 @@ function WorkspaceMark({
      a fallback: contained in 20px it is three unreadable letters, which is
      worse than the initials below. */
   if (option.avatarUrl) {
+    /* Filled, exactly like the person's photograph beside it in the same
+       list. This was contained on a white tile when the field held a logo;
+       a square avatar letterboxed inside a square is a smaller picture with
+       a white ring around it and nothing gained. */
     return (
-      <span
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={option.avatarUrl}
+        alt=""
         aria-hidden="true"
-        className="inline-flex flex-none items-center justify-center overflow-hidden border border-line bg-white"
+        className="flex-none object-cover"
         style={{ width: size, height: size, borderRadius: radius }}
-      >
-        {/* A plain <img>: this is somebody's uploaded file at a fixed tiny
-            size, so there is nothing for the optimiser to decide. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={option.avatarUrl}
-          alt=""
-          className="h-full w-full object-contain"
-          style={{ padding: Math.max(1, Math.round(size / 10)) }}
-        />
-      </span>
+      />
     );
   }
 
@@ -266,7 +263,17 @@ export function WorkspaceMenu({
 
           {/* Settings belongs to the workspace in force, which is why this
               control and the switcher had to become one thing. */}
-          {!isAdmin ? <MenuLink href="/settings" icon="gear" label={`${active.name} settings`} /> : null}
+          {/* A fixed label, not the company's name. Pasting the name in reads
+              as a thing belonging to that company rather than as the settings
+              of whatever you are in, and the row changes width every time you
+              switch. */}
+          {!isAdmin ? (
+            <MenuLink
+              href="/settings"
+              icon="gear"
+              label={active.id ? "Company settings" : "Personal settings"}
+            />
+          ) : null}
           <MenuLink href="/help" icon="circle-question" label="Help centre" newTab />
           <MenuLink href="/support" icon="envelope" label="Support" />
           <span aria-hidden="true" className="mx-[2px] my-[5px] block h-[1px] bg-line-soft" />

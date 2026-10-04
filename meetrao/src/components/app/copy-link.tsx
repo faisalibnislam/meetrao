@@ -5,6 +5,7 @@ import { Icon } from "@/components/ui/icon";
 import { Eyebrow } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import { cx } from "@/lib/cx";
+import { copyText } from "@/lib/clipboard";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The "Copy link" control.
@@ -47,7 +48,10 @@ export function CopyLinkControl({ meetings }: { meetings: CopyTarget[] }) {
   }, [open]);
 
   async function copy(id: string, link: string) {
-    await navigator.clipboard?.writeText(`https://${link}`).catch(() => {});
+    if (!(await copyText(`https://${link}`))) {
+      toast({ tone: "warn", title: "Copy it by hand", text: `https://${link}` });
+      return;
+    }
     clearTimeout(timer.current);
     setCopied(id);
     toast({ tone: "ok", title: "Copied", text: link });
@@ -131,7 +135,10 @@ export function CopyLinkChip({ link }: { link: string }) {
       type="button"
       title="Copy link"
       onClick={async () => {
-        await navigator.clipboard?.writeText(`https://${link}`).catch(() => {});
+        if (!(await copyText(`https://${link}`))) {
+          toast({ tone: "warn", title: "Copy it by hand", text: `https://${link}` });
+          return;
+        }
         clearTimeout(timer.current);
         setCopied(true);
         toast({ tone: "ok", title: "Copied", text: link });

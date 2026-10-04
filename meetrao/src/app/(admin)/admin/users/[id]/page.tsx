@@ -56,6 +56,7 @@ export default async function AdminUserPage({ params }: { params: Promise<{ id: 
             subscribed: plan?.subscribed ?? false,
             comp: plan?.comp ?? false,
             compUntil: plan?.comp_until ?? null,
+            compPlan: plan?.comp_plan ?? "pro",
             compReason: plan?.comp_reason ?? "",
             compGrantedBy: plan?.comp_granted_by ?? null,
             planUntil: plan?.plan_until ?? null,

@@ -83,8 +83,19 @@ const COMP_DAYS: Record<string, number | null> = {
   forever: null,
 };
 
+/* Keyed rather than compared, so a third grantable tier gets its own entry
+   instead of silently reading as whatever is in the else branch. */
+const GRANT_KIND = { pro: "pro_granted", business: "business_granted" } as const;
+const GRANT_LABEL = { pro: "Pro", business: "Business" } as const;
+
 export const grantPro = mutation({
-  args: { userId: v.string(), length: v.string(), reason: v.string() },
+  args: {
+    userId: v.string(),
+    length: v.string(),
+    reason: v.string(),
+    /* Absent is Pro, which keeps every existing caller correct. */
+    plan: v.optional(v.union(v.literal("pro"), v.literal("business"))),
+  },
   handler: async (ctx, a) => {
     const admin = await requireAdmin(ctx);
     const p = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.userId)).unique();
@@ -102,8 +113,11 @@ export const grantPro = mutation({
     // to compare two dates, and none of them has to learn a special case.
     const until = days === null ? now + 100 * 365 * 24 * 60 * 60_000 : now + days * 24 * 60 * 60_000;
 
+    const tier = a.plan ?? "pro";
+
     await ctx.db.patch(p._id, {
       comp_until: until,
+      comp_plan: tier,
       comp_reason: reason,
       comp_granted_by: admin.id,
       comp_granted_at: now,
@@ -112,11 +126,11 @@ export const grantPro = mutation({
 
     await logActivity(ctx, {
       actorId: admin.id,
-      kind: "pro_granted",
-      summary: `${p.full_name || p.email} was given Pro (${a.length}), ${reason}`,
+      kind: GRANT_KIND[tier],
+      summary: `${p.full_name || p.email} was given ${GRANT_LABEL[tier]} (${a.length}), ${reason}`,
     });
 
-    return { until: new Date(until).toISOString() };
+    return { until: new Date(until).toISOString(), plan: tier };
   },
 });
 
@@ -128,7 +142,8 @@ export const revokePro = mutation({
     if (!p) fail("No such user.");
     if (!p.comp_until) return { revoked: false };
 
-    await ctx.db.patch(p._id, { comp_until: null, updated_at: Date.now() });
+
+    await ctx.db.patch(p._id, { comp_until: null, comp_plan: null, updated_at: Date.now() });
     await logActivity(ctx, {
       actorId: admin.id,
       kind: "pro_revoked",
@@ -161,6 +176,7 @@ export const planFor = query({
       subscribed: hasSubscription(p),
       comp: hasComp(p),
       comp_until: p.comp_until ? new Date(p.comp_until).toISOString() : null,
+      comp_plan: p.comp_plan ?? "pro",
       comp_reason: p.comp_reason ?? "",
       comp_granted_by: grantedBy,
       plan_until: p.plan_until ? new Date(p.plan_until).toISOString() : null,

@@ -22,7 +22,8 @@ import type { Doc } from "../_generated/dataModel";
 export type Plan = "free" | "pro" | "business";
 
 /** Everything the plan is decided from. */
-type PlanFields = Pick<Doc<"profiles">, "plan" | "plan_until" | "comp_until">;
+type PlanFields = Pick<Doc<"profiles">, "plan" | "plan_until" | "comp_until"> &
+  Partial<Pick<Doc<"profiles">, "comp_plan">>;
 
 /** Whether a complimentary grant is live. Absent is none; a past date is spent. */
 export function hasComp(profile: Pick<Doc<"profiles">, "comp_until">): boolean {
@@ -50,11 +51,11 @@ export function hasSubscription(profile: Pick<Doc<"profiles">, "plan" | "plan_un
  */
 export function planOf(profile: PlanFields): Plan {
   /* A live subscription names its own tier, because that is what was paid
-     for. A grant does not: `comp_until` is one date with no tier beside it,
-     so it grants Pro and nothing more. Reading a tier out of a field that
-     does not carry one is how a free grant quietly becomes the top plan. */
+     for. A grant names its own too, since `comp_plan` arrived with Business.
+     Absent means Pro, which is what every grant written before that field
+     existed meant, so none of them silently became the top plan. */
   if (hasSubscription(profile)) return profile.plan === "business" ? "business" : "pro";
-  if (hasComp(profile)) return "pro";
+  if (hasComp(profile)) return profile.comp_plan === "business" ? "business" : "pro";
   return "free";
 }
 

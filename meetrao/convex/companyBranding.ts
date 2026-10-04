@@ -130,7 +130,7 @@ export const generateUploadUrl = mutation({
  */
 const FIELDS = {
   logo: { url: "brand_logo_url", storage: "brand_logo_storage_id", what: "A company logo" },
-  avatar: { url: "brand_avatar_url", storage: "brand_avatar_storage_id", what: "A company picture" },
+  avatar: { url: "brand_avatar_url", storage: "brand_avatar_storage_id", what: "A company avatar" },
 } as const;
 
 const kindArg = v.union(v.literal("logo"), v.literal("avatar"));
