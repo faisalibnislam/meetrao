@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { fail } from "./lib/errors";
 import { v } from "convex/values";
+import { countOtherWorkspaces } from "./lib/workspaces";
 import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
 import { contactOut } from "./lib/serialize";
 import { uuid } from "./lib/ids";
@@ -88,6 +89,17 @@ export const listForScreen = query({
       await ctx.db.query("bookings").withIndex("by_host_starts", (q) => q.eq("host_id", me.id)).collect()
     ).filter((b) => (b.company_id ?? null) === companyId);
 
+    /* Paid only on an empty screen. Unlike bookings, the contacts read is
+       indexed by (user, company), so the other workspaces' rows were never
+       fetched and this is a second collect rather than a free count. */
+    const elsewhere =
+      contacts.length === 0
+        ? countOtherWorkspaces(
+            await ctx.db.query("contacts").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect(),
+            companyId,
+          )
+        : [];
+
     const invitees: Array<{ email: string; booking_id: string }> = [];
     for (const b of bookings) {
       for (const i of await ctx.db.query("booking_invitees").withIndex("by_booking", (q) => q.eq("booking_id", b.id)).collect()) {
@@ -104,6 +116,7 @@ export const listForScreen = query({
         status: b.status,
       })),
       invitees,
+      elsewhere,
     };
   },
 });

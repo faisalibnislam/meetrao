@@ -1,6 +1,7 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { fail } from "./lib/errors";
 import { v } from "convex/values";
+import { countOtherWorkspaces } from "./lib/workspaces";
 import { requireProfile, assertOwnerOrAdmin, AuthError } from "./lib/auth";
 import { bookingOut, inviteeOut } from "./lib/serialize";
 import { uuid, reference as newReference } from "./lib/ids";
@@ -320,12 +321,16 @@ export const listForScreen = query({
     /* Read by host, then filter by company in memory. by_host_starts is what
        orders this screen, and a composite index that also ordered by date
        would be a third index on the busiest table for one screen's filter. */
-    const all = (
-      await ctx.db
-        .query("bookings")
-        .withIndex("by_host_starts", (q) => q.eq("host_id", me.id))
-        .collect()
-    ).filter((b) => (b.company_id ?? null) === companyId);
+    const mine = await ctx.db
+      .query("bookings")
+      .withIndex("by_host_starts", (q) => q.eq("host_id", me.id))
+      .collect();
+    const all = mine.filter((b) => (b.company_id ?? null) === companyId);
+
+    /* Only when this screen has nothing on it. The rows are already in hand so
+       the count is free, but returning it every time would be a field nobody
+       reads on every load of a screen that is working. */
+    const elsewhere = all.length === 0 ? countOtherWorkspaces(mine, companyId) : [];
 
     // "Past" means ENDED, so the boundary is ends_at, not starts_at.
     const upcoming = all.filter((b) => b.ends_at >= now).sort((x, y) => x.starts_at - y.starts_at);
@@ -349,7 +354,7 @@ export const listForScreen = query({
       if (list.length) invitees[b.id] = list.map((i) => ({ name: i.name, email: i.email }));
     }
 
-    return { rows: rows.map(bookingOut), invitees };
+    return { rows: rows.map(bookingOut), invitees, elsewhere };
   },
 });
 

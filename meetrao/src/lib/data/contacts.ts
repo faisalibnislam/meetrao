@@ -4,6 +4,8 @@ import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Contact } from "@/lib/types";
 import { activeContext } from "@/lib/data/context";
+import { namedElsewhere } from "@/lib/data/elsewhere";
+import type { Elsewhere } from "@/lib/elsewhere";
 
 export type ContactView = {
   id: string;
@@ -33,6 +35,31 @@ export type ContactView = {
 type BookingRow = { id: string; guest_email: string; starts_at: string; status: string };
 type InviteeRow = { email: string; booking_id: string };
 
+/**
+ * The list, plus where the contacts are when this workspace has none.
+ *
+ * A second entry point rather than a wider return on `listContacts`: other
+ * callers have no use for this, and a field nobody reads is a field that
+ * rots.
+ */
+export async function listContactsForScreen(
+  userId: string,
+  timeZone: string,
+): Promise<{ contacts: ContactView[]; elsewhere: Elsewhere[] }> {
+  const convex = await convexServer();
+  const context = await activeContext();
+  const r = await convex.query(api.contacts.listForScreen, { companyId: context.companyId });
+  return {
+    contacts: buildContacts(
+      r.contacts as Contact[],
+      r.bookings as BookingRow[],
+      r.invitees as InviteeRow[],
+      timeZone,
+    ),
+    elsewhere: await namedElsewhere(r.elsewhere, context),
+  };
+}
+
 async function sources(
   userId: string,
 ): Promise<{ contactRows: Contact[]; bookingRows: BookingRow[]; inviteeRows: InviteeRow[] }> {
@@ -50,9 +77,19 @@ async function sources(
   };
 }
 
-export async function listContacts(userId: string, timeZone: string): Promise<ContactView[]> {
-  const { contactRows, bookingRows, inviteeRows } = await sources(userId);
-
+/**
+ * The view every contacts entry point returns, built from the three row sets.
+ *
+ * Extracted so the screen loader and the plain list share one path: two
+ * copies of this would drift, and the "last seen" column is exactly the kind
+ * of thing that drifts silently.
+ */
+function buildContacts(
+  contactRows: Contact[],
+  bookingRows: BookingRow[],
+  inviteeRows: InviteeRow[],
+  timeZone: string,
+): ContactView[] {
   const bookings = bookingRows;
   const confirmed = bookings.filter((b) => b.status === "confirmed");
 
@@ -105,4 +142,9 @@ export async function listContacts(userId: string, timeZone: string): Promise<Co
       meetings: times.length,
     };
   });
+}
+
+export async function listContacts(userId: string, timeZone: string): Promise<ContactView[]> {
+  const { contactRows, bookingRows, inviteeRows } = await sources(userId);
+  return buildContacts(contactRows, bookingRows, inviteeRows, timeZone);
 }

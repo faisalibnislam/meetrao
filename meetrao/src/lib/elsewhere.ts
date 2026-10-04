@@ -42,13 +42,41 @@ export function countElsewhere(
   choices: readonly { id: string | null; name: string }[],
   companyId: string | null,
 ): Elsewhere[] {
-  /* ONE place excludes the current workspace, and it is this line. Filtering
-     the rows as well read as belt and braces and was neither: a row in the
-     current workspace can never match another workspace's id, so the second
-     filter did nothing except hide whether this one worked. */
-  return choices
-    .filter((c) => c.id !== companyId)
-    .map((c) => ({ id: c.id, name: c.name, count: rows.filter((r) => (r.company_id ?? null) === c.id).length }))
-    .filter((c) => c.count > 0)
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+  return nameWorkspaces(
+    choices
+      .filter((c) => c.id !== companyId)
+      .map((c) => ({ company_id: c.id, count: rows.filter((r) => (r.company_id ?? null) === c.id).length })),
+    choices,
+    companyId,
+  );
+}
+
+/**
+ * The same answer from counts somebody else did.
+ *
+ * Bookings and contacts filter inside their Convex query and never hand the
+ * unfiltered rows out, so they count there and name here. One naming and
+ * sorting path for all three screens, because three screens that disagreed
+ * about how to list two workspaces would be three bugs waiting.
+ */
+export function nameWorkspaces(
+  counts: readonly { company_id: string | null; count: number }[],
+  choices: readonly { id: string | null; name: string }[],
+  companyId: string | null,
+): Elsewhere[] {
+  const byId = new Map(choices.map((c) => [c.id, c.name]));
+  return (
+    counts
+      /* ONE place excludes the current workspace, and it is this line.
+         Filtering the rows as well read as belt and braces and was neither: a
+         row in the current workspace can never match another workspace's id,
+         so the second filter did nothing except hide whether this one
+         worked. */
+      .filter((c) => c.company_id !== companyId && c.count > 0)
+      /* A workspace the person has since left still has their rows in it, and
+         naming it would offer a switch that cannot happen. */
+      .filter((c) => byId.has(c.company_id))
+      .map((c) => ({ id: c.company_id, name: byId.get(c.company_id) as string, count: c.count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+  );
 }

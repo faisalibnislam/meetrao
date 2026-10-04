@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { countElsewhere, describeElsewhere, type Elsewhere } from "./elsewhere";
+import { countElsewhere, describeElsewhere, nameWorkspaces, type Elsewhere } from "./elsewhere";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    "You have none here" against "you have none at all".
@@ -148,5 +148,86 @@ describe("the screen", () => {
     expect(SERVER).toContain('import "server-only"');
     expect(COMPONENT).toContain('from "@/lib/elsewhere"');
     expect(COMPONENT, "this path is server-only").not.toContain('from "@/lib/data/elsewhere"');
+  });
+});
+
+describe("naming counts somebody else did", () => {
+  /* Bookings and contacts filter inside their Convex query and never hand the
+     unfiltered rows out, so they count there and name here. One naming path
+     for all three screens: three that disagreed about how to list two
+     workspaces would be three bugs waiting. */
+  const choices = [
+    { id: null, name: "Personal" },
+    { id: "c1", name: "Northwind" },
+    { id: "c2", name: "Acme" },
+  ];
+
+  it("puts names on the counts, busiest first", () => {
+    const found = nameWorkspaces(
+      [
+        { company_id: "c2", count: 1 },
+        { company_id: "c1", count: 4 },
+      ],
+      choices,
+      null,
+    );
+    expect(found).toEqual([
+      { id: "c1", name: "Northwind", count: 4 },
+      { id: "c2", name: "Acme", count: 1 },
+    ]);
+  });
+
+  it("drops the workspace you are standing in", () => {
+    expect(nameWorkspaces([{ company_id: "c1", count: 3 }], choices, "c1")).toEqual([]);
+  });
+
+  /* A workspace somebody has since left still holds their rows, and naming it
+     would offer a switch that cannot happen. */
+  it("drops a workspace that is no longer theirs", () => {
+    expect(nameWorkspaces([{ company_id: "gone", count: 2 }], choices, null)).toEqual([]);
+  });
+
+  it("drops an empty count", () => {
+    expect(nameWorkspaces([{ company_id: "c1", count: 0 }], choices, null)).toEqual([]);
+  });
+
+  it("agrees with counting from rows", () => {
+    const rows = [{ company_id: "c1" }, { company_id: "c1" }, { company_id: "c2" }];
+    expect(nameWorkspaces([{ company_id: "c1", count: 2 }, { company_id: "c2", count: 1 }], choices, null)).toEqual(
+      countElsewhere(rows, choices, null),
+    );
+  });
+});
+
+describe("the other two screens", () => {
+  const BOOKINGS = read("src/components/app/bookings-screen.tsx");
+  const CONTACTS = read("src/components/app/contacts-screen.tsx");
+  const CONVEX_BOOKINGS = read("convex/bookings.ts");
+  const CONVEX_CONTACTS = read("convex/contacts.ts");
+
+  /* A search that matches nothing is not a workspace problem, and an empty
+     Past tab beside a full Upcoming one is not either. Saying so on a screen
+     that is working would be noise. */
+  it("bookings asks only when the workspace itself is empty", () => {
+    expect(BOOKINGS).toContain("rows.length === 0 && bookings.length === 0 && !q && elsewhere.length");
+  });
+
+  it("contacts asks only when the workspace itself is empty", () => {
+    expect(CONTACTS).toContain("filtered.length === 0 && contacts.length === 0 && elsewhere.length");
+  });
+
+  /* Both filter inside the query, so the count has to happen there too. */
+  it("both queries count what they filtered out", () => {
+    for (const source of [CONVEX_BOOKINGS, CONVEX_CONTACTS]) {
+      expect(source).toContain("countOtherWorkspaces(");
+      expect(source).toContain("elsewhere");
+    }
+  });
+
+  /* Paid only on a screen that would otherwise mislead. Contacts reads by
+     (user, company), so for it this is a second collect rather than free. */
+  it("neither pays for the count on a screen that has rows", () => {
+    expect(CONVEX_BOOKINGS).toContain("all.length === 0 ? countOtherWorkspaces(mine, companyId) : []");
+    expect(CONVEX_CONTACTS).toContain("contacts.length === 0");
   });
 });

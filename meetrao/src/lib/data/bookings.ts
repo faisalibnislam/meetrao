@@ -5,6 +5,8 @@ import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Booking } from "@/lib/types";
 import { activeContext } from "@/lib/data/context";
+import { namedElsewhere } from "@/lib/data/elsewhere";
+import type { Elsewhere } from "@/lib/elsewhere";
 
 /* Bookings, shaped for the screens. Labels are formatted here, in the host's
    own timezone, so the client components stay presentational and no screen has
@@ -126,6 +128,33 @@ export async function listBookings(
     for (const i of invitees[view.id] ?? []) view.invitees.push({ name: i.name, email: i.email });
   }
   return views;
+}
+
+/**
+ * The same list, plus where the bookings are when this workspace has none.
+ *
+ * A second entry point rather than a wider return on `listBookings`: the
+ * dashboard calls that one and has no use for this, and a field nobody reads
+ * is a field that rots.
+ */
+export async function listBookingsForScreen(
+  hostId: string,
+  timeZone: string,
+): Promise<{ bookings: BookingView[]; elsewhere: Elsewhere[] }> {
+  const now = new Date();
+  const convex = await convexServer();
+  const context = await activeContext();
+  const { rows, invitees, elsewhere } = await convex.query(api.bookings.listForScreen, {
+    history: true,
+    pastLimit: PAST_LIMIT,
+    companyId: context.companyId,
+  });
+
+  const views = (rows as unknown as Booking[]).map((row) => toView(row, timeZone, now));
+  for (const view of views) {
+    for (const i of invitees[view.id] ?? []) view.invitees.push({ name: i.name, email: i.email });
+  }
+  return { bookings: views, elsewhere: await namedElsewhere(elsewhere, context) };
 }
 
 export async function getBooking(hostId: string, bookingId: string, timeZone: string) {

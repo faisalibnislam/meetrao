@@ -1,7 +1,7 @@
 import "server-only";
 
 import { contextChoices, type WorkContext } from "./context";
-import { countElsewhere, type Elsewhere } from "@/lib/elsewhere";
+import { countElsewhere, nameWorkspaces, type Elsewhere } from "@/lib/elsewhere";
 
 export type { Elsewhere };
 
@@ -37,4 +37,18 @@ export async function heldElsewhere(
      workspace and would otherwise pay for a lookup that finds nothing. */
   if (rows.every((r) => (r.company_id ?? null) === context.companyId)) return [];
   return countElsewhere(rows, await contextChoices(), context.companyId);
+}
+
+/**
+ * The same, for a screen whose query did the counting.
+ *
+ * Bookings and contacts filter inside Convex and never hand the unfiltered
+ * rows out, so they return counts and this puts names on them.
+ */
+export async function namedElsewhere(
+  counts: readonly { company_id: string | null; count: number }[],
+  context: WorkContext,
+): Promise<Elsewhere[]> {
+  if (counts.length === 0) return [];
+  return nameWorkspaces(counts, await contextChoices(), context.companyId);
 }
