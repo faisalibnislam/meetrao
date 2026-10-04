@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/controls";
+import { ChoiceChip, Field, Input } from "@/components/ui/controls";
 import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
@@ -223,7 +223,7 @@ export function AvailabilityScreen({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[660px] flex-col gap-[18px]">
+    <div className="flex w-full max-w-[660px] flex-col gap-[18px]">
       <div className="flex flex-wrap items-end gap-[16px] border-b border-line pb-[18px]">
         <div className="flex min-w-[220px] flex-1 flex-col gap-[6px]">
           <span className="text-[12.5px] font-semibold text-ink">Timezone</span>
@@ -427,12 +427,12 @@ export function AvailabilityScreen({
           </Field>
 
           <div className="flex flex-wrap gap-[8px]">
-            <ChoiceRow selected={offAllDay} onClick={() => setOffAllDay(true)}>
+            <ChoiceChip selected={offAllDay} onClick={() => setOffAllDay(true)}>
               Away all day
-            </ChoiceRow>
-            <ChoiceRow selected={!offAllDay} onClick={() => setOffAllDay(false)}>
+            </ChoiceChip>
+            <ChoiceChip selected={!offAllDay} onClick={() => setOffAllDay(false)}>
               Different hours
-            </ChoiceRow>
+            </ChoiceChip>
           </div>
 
           {!offAllDay ? (
@@ -509,32 +509,3 @@ export function AvailabilityScreen({
   );
 }
 
-/** The two-way choice inside the time-off dialog. A pair of chips rather than
-    a Switch: "away all day" and "different hours" are two states of one
-    question, and a switch would have to be labelled as one of them. */
-function ChoiceRow({
-  selected,
-  onClick,
-  children,
-}: {
-  selected: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={selected}
-      className={cx(
-        "inline-flex h-[32px] cursor-pointer items-center rounded-[6px] border px-[12px] text-[12.5px]",
-        "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
-        selected
-          ? "border-accent bg-accent-soft font-semibold text-accent-ink"
-          : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
-      )}
-    >
-      {children}
-    </button>
-  );
-}

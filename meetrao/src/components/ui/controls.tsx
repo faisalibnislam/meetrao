@@ -167,8 +167,13 @@ export function SearchField({
 }
 
 /* ── Switch ───────────────────────────────────────────────────────────────────
-   34×20 track, 14px thumb, 140ms spring travel. Keeps its size. The hit area
-   is widened by the wrapping row, not by growing the control. */
+   34×20 track, 14px thumb, 140ms spring travel. Keeps its size.
+
+   ON A TOUCH SCREEN the hit area grows to 44px tall with an invisible
+   pseudo-element, because 20px is too small to hit with a thumb and the
+   wrapping row is not always there to catch the tap (the Meetings card puts
+   the switch beside the title, not inside a label). Coarse pointers only, so
+   a widened target can never steal a neighbour's click on a mouse. */
 export function Switch({
   checked,
   onChange,
@@ -191,6 +196,7 @@ export function Switch({
       onClick={() => onChange(!checked)}
       className={cx(
         "relative box-border h-[20px] w-[34px] flex-none cursor-pointer rounded-[10px] border p-0",
+        "pointer-coarse:after:absolute pointer-coarse:after:-inset-x-[5px] pointer-coarse:after:-inset-y-[12px] pointer-coarse:after:content-['']",
         "transition-[background-color,border-color] duration-[140ms] ease-[ease] disabled:cursor-not-allowed disabled:opacity-45",
         checked ? "border-accent bg-accent" : "border-line-strong bg-fill-2",
       )}

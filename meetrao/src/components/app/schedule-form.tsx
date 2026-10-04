@@ -94,7 +94,7 @@ export function ScheduleForm({
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[600px] flex-col">
+    <div className="flex w-full max-w-[600px] flex-col">
       <section className="flex flex-col gap-[14px] border-b border-line pb-[20px]">
         <PanelHeading title="What" subtitle="Reuse a meeting type, or set this one up on its own." />
 

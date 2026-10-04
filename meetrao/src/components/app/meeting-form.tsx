@@ -13,7 +13,6 @@ import { useToast } from "@/components/ui/toast";
 import { deleteMeeting, saveMeeting, type MeetingInput } from "@/lib/actions/meetings";
 import type { BookingQuestion } from "@/lib/types";
 import { LOCATION_OPTIONS } from "@/lib/locations";
-import { cx } from "@/lib/cx";
 
 const DURATIONS = [15, 30, 45, 60];
 
@@ -101,7 +100,7 @@ export function MeetingForm({
   const [removing, startRemove] = useTransition();
 
   return (
-    <div className="mx-auto flex w-full max-w-[600px] flex-col">
+    <div className="flex w-full max-w-[600px] flex-col">
       <section className="flex flex-col gap-[14px] border-b border-line pb-[20px]">
         <PanelHeading title="Meeting details" subtitle="What guests see when they open your booking link." />
 
@@ -144,22 +143,13 @@ export function MeetingForm({
         <PanelHeading title="Location" subtitle="Where this one happens. Guests are told on the booking page." />
 
         <div className="flex flex-wrap gap-[8px]">
+          {/* The shared chip, as Duration and Seats above and below use. This
+              was a local copy with a pale selected state, so one form showed
+              two different looks for the same "this one is chosen". */}
           {LOCATION_OPTIONS.map((o) => (
-            <button
-              key={o.value}
-              type="button"
-              aria-pressed={locationKind === o.value}
-              onClick={() => set("location", o.value)}
-              className={cx(
-                "inline-flex h-[32px] cursor-pointer items-center rounded-[6px] border px-[12px] text-[12.5px]",
-                "transition-[background-color,border-color] duration-[120ms] ease-[ease]",
-                locationKind === o.value
-                  ? "border-accent bg-accent-soft font-semibold text-accent-ink"
-                  : "border-line-strong bg-surface font-medium text-ink hover:bg-fill",
-              )}
-            >
+            <ChoiceChip key={o.value} selected={locationKind === o.value} onClick={() => set("location", o.value)}>
               {o.label}
-            </button>
+            </ChoiceChip>
           ))}
         </div>
 
@@ -374,7 +364,10 @@ export function MeetingForm({
             />
           </div>
 
-          <div className="flex min-w-[190px] flex-1 flex-col gap-[6px]">
+          {/* No min-width of its own, like its three siblings: a 190px floor
+              inside a 164px grid track broke out of it and panned the page on
+              a phone. */}
+          <div className="flex flex-col gap-[6px]">
             <span className="text-[12.5px] font-semibold text-ink">Booking window</span>
             <MenuSelect
               aria-label="Booking window"

@@ -23,7 +23,11 @@ export function SettingsNav({
       aria-label="Settings"
       className={cx(
         "flex flex-col gap-[2px] sticky top-0",
-        "max-[820px]:flex-row max-[820px]:gap-[4px] max-[820px]:overflow-x-auto max-[820px]:pb-[2px]",
+        /* w-full and min-w-0 on phones, or the strip takes its natural width
+           and the whole page pans sideways: the wrapper's desktop `items-start`
+           carries into the stacked layout, so nothing stretches this to fit.
+           It scrolls inside itself instead, which is what overflow-x was for. */
+        "max-[820px]:flex-row max-[820px]:gap-[4px] max-[820px]:overflow-x-auto max-[820px]:pb-[2px] max-[820px]:w-full max-[820px]:min-w-0",
       )}
     >
       {tabs.map((tab) => {
