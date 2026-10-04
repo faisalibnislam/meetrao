@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
-import { currentUserId } from "./lib/auth";
+import { currentUserId, optionalProfile } from "./lib/auth";
+import { profileOut } from "./lib/serialize";
 import type { Id } from "./_generated/dataModel";
 
 /**
@@ -43,6 +44,41 @@ export const identity = query({
       emailVerified: verified,
       hasConvexProfile: profile !== null,
       username: profile?.username ?? null,
+    };
+  },
+});
+
+/**
+ * Who is signed in AND their profile, in one round trip.
+ *
+ * `identity` above already reads the profile row to answer "has a profile",
+ * and every page then made a second, sequential round trip to
+ * profiles.current to fetch that same row in its output shape. From the
+ * region the app's functions run in, that second trip costs a full
+ * cross-region hop on every authenticated page and every server action, and
+ * nothing can start until it returns. This returns the row itself.
+ *
+ * The same checks, in the same order, as identity: the raw subject is
+ * translated by currentUserId, which is the only thing authorization uses.
+ */
+export const session = query({
+  args: {},
+  handler: async (ctx) => {
+    const id = await ctx.auth.getUserIdentity();
+    if (!id) return { authenticated: false as const };
+
+    /* The same helper profiles.current used, so the row this returns can
+       never differ from the one the second round trip used to fetch. */
+    const profile = await optionalProfile(ctx);
+
+    const user = await ctx.db.get(id.subject.split("|")[0] as Id<"users">).catch(() => null);
+    const verified = Boolean((user as { emailVerificationTime?: number } | null)?.emailVerificationTime);
+
+    return {
+      authenticated: true as const,
+      email: id.email ?? null,
+      emailVerified: verified,
+      profile: profile ? profileOut(profile) : null,
     };
   },
 });

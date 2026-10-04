@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { bookableDatesInMonth, computeSlots, dateKey, type PlainDate } from "@/lib/booking/slots";
 import { getPublicTeam, getTeamBusy, getTeamHours, teamOpenDates, teamSlotsForDay } from "@/lib/data/team-booking";
-import { getBusy, getMeetingAvailability, getMeetingOverrides, getSeatMap, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getSeatMap, getPublicHost, getPublicMeeting } from "@/lib/data/public-booking";
 
 /* The slot query the booking page calls. Public, because the guest has no
    session, and read-only, so it exposes availability and nothing else about
@@ -65,27 +65,26 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Missing query." }, { status: 400 });
   }
 
-  const host = await getPublicHost(username);
+  /* Two phases rather than a chain of six round trips. This runs every time a
+     guest picks a date or changes month, so each trip was a pause between a
+     click and the times appearing. Nothing within a phase depends on anything
+     else in it. */
+  const [host, meeting] = await Promise.all([getPublicHost(username), getPublicMeeting(username, slug)]);
   if (!host) return NextResponse.json({ error: "Unknown host." }, { status: 404 });
-
-  const meeting = (await getPublicMeetings(username)).find((m) => m.slug === slug);
   if (!meeting) return NextResponse.json({ error: "Unknown meeting." }, { status: 404 });
-
-  // Per meeting, not per host: two meetings can sit on different schedules.
-  const availability = await getMeetingAvailability(meeting.id);
-  const overrides = await getMeetingOverrides(meeting.id);
 
   // A month, with a day either side so a guest-local day that straddles two
   // host-local days is still covered.
   const from = new Date(Date.UTC(year, month - 1, 1) - DAY);
   const to = new Date(Date.UTC(year, month, 1) + DAY);
-  const { busy, calendarChecked } = await getBusy(
-    host.id,
-    from,
-    to,
-    meeting.capacity > 1 ? meeting.id : undefined,
-  );
-  const seats = meeting.capacity > 1 ? await getSeatMap(meeting.id, from, to) : {};
+
+  const [availability, overrides, { busy, calendarChecked }, seats] = await Promise.all([
+    // Per meeting, not per host: two meetings can sit on different schedules.
+    getMeetingAvailability(meeting.id),
+    getMeetingOverrides(meeting.id),
+    getBusy(host.id, from, to, meeting.capacity > 1 ? meeting.id : undefined),
+    meeting.capacity > 1 ? getSeatMap(meeting.id, from, to) : Promise.resolve({} as Record<string, number>),
+  ]);
 
   const shared = {
     guestTimezone: timezone,

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import type { AvailabilityRule, DateOverride, Interval, SlotRules } from "@/lib/booking/slots";
 import type { BookingQuestion } from "@/lib/types";
 import type { PublicBrand } from "@/components/booking/brand";
@@ -81,11 +83,15 @@ function toHost(row: HostRow): PublicHost {
   };
 }
 
-export async function getPublicHost(username: string): Promise<PublicHost | null> {
+/* MEMOISED PER REQUEST. A booking page's metadata and the page itself both
+   read the host and the meeting, and the personal route starts them early
+   while it decides whether to redirect. Without cache() each of those was its
+   own cross-region round trip. */
+export const getPublicHost = cache(async function getPublicHost(username: string): Promise<PublicHost | null> {
   const row = await convexAnonymous().query(api.publicBooking.getHost, { username });
   // A suspended host has no public booking page.
   return !row || row.is_suspended ? null : toHost(row);
-}
+});
 
 type MeetingRow = {
   id: string;
@@ -121,6 +127,23 @@ function toMeeting(row: MeetingRow): PublicMeeting {
     },
   };
 }
+
+/**
+ * ONE meeting with its booking rules, in one round trip.
+ *
+ * The booking page used getPublicMeetings and picked one out, which listed
+ * every meeting the host has and then fetched the rules for each, two trips
+ * in sequence for a page that shows a single meeting. The rules query is
+ * keyed by username and slug already, and refuses exactly what the list did:
+ * a suspended host, or a meeting that is switched off.
+ */
+export const getPublicMeeting = cache(async function getPublicMeeting(
+  username: string,
+  slug: string,
+): Promise<PublicMeeting | null> {
+  const row = await convexAnonymous().query(api.publicBooking.getMeetingAvailability, { username, slug });
+  return row ? toMeeting(row.meeting as MeetingRow) : null;
+});
 
 export async function getPublicMeetings(username: string): Promise<PublicMeeting[]> {
   // getMeetingTypes is the listing shape and omits the booking rules, which
@@ -201,11 +224,21 @@ export async function getBusy(
      in `busy`, the first booking of a workshop would close it. */
   ignoreMeetingId?: string,
 ): Promise<BusyResult> {
-  const rows = await convexAnonymous().query(api.publicBooking.busyForHost, {
-    hostId,
-    from: from.getTime(),
-    to: to.getTime(),
-  });
+  /* Both at once. The Google check does not use the bookings at all, and it
+     was asked only after they came back, which made it a third round trip in
+     sequence on the booking page, and the slowest of the three since it goes
+     on to Google from there.
+
+     A Google failure still falls back to our own bookings rather than failing
+     the page: `null` here is "could not check", not "nothing busy". */
+  const [rows, google] = await Promise.all([
+    convexAnonymous().query(api.publicBooking.busyForHost, {
+      hostId,
+      from: from.getTime(),
+      to: to.getTime(),
+    }),
+    busyPeriods(hostId, from, to).catch(() => null),
+  ]);
 
   const own: Interval[] = rows
     .filter((r) => !ignoreMeetingId || r.meeting_type_id !== ignoreMeetingId)
@@ -214,12 +247,7 @@ export async function getBusy(
       end: new Date(r.ends_at),
     }));
 
-  try {
-    const google = await busyPeriods(hostId, from, to);
-    return { busy: [...own, ...google], calendarChecked: true };
-  } catch {
-    return { busy: own, calendarChecked: false };
-  }
+  return google ? { busy: [...own, ...google], calendarChecked: true } : { busy: own, calendarChecked: false };
 }
 
 /** Whether this meeting is one the given company's domain may serve. */
@@ -238,10 +266,13 @@ export async function meetingIsOnCompany(
 /* ── a company's own address on meetrao.com ──────────────────────────────── */
 
 /** Who `handle` is on this company, or null when the path names nobody. */
-export async function hostOnCompany(companySlug: string, handle: string): Promise<string | null> {
+export const hostOnCompany = cache(async function hostOnCompany(
+  companySlug: string,
+  handle: string,
+): Promise<string | null> {
   const row = await convexAnonymous().query(api.publicBooking.hostOnCompany, { companySlug, handle });
   return row?.username ?? null;
-}
+});
 
 /**
  * Where this meeting's own address is, when it belongs to a company.
@@ -258,7 +289,7 @@ export async function companyPlaceOf(
 }
 
 /** A company's brand by slug, in the shape BrandScope wants. */
-export async function companyBySlug(slug: string): Promise<{
+export const companyBySlug = cache(async function companyBySlug(slug: string): Promise<{
   slug: string;
   name: string;
   unbranded: boolean;
@@ -279,4 +310,4 @@ export async function companyBySlug(slug: string): Promise<{
         }
       : null,
   };
-}
+});

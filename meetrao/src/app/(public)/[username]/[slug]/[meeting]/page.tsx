@@ -7,7 +7,7 @@ import {
   companyBySlug,
   hostOnCompany,
   getPublicHost,
-  getPublicMeetings,
+  getPublicMeeting,
 } from "@/lib/data/public-booking";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -46,10 +46,9 @@ type Params = Promise<{ username: string; slug: string; meeting: string }>;
 /** The host behind a company address, or null when the path names nobody. */
 async function resolve(params: Params) {
   const { username: companySlug, slug: handle, meeting: slug } = await params;
-  const company = await companyBySlug(companySlug);
+  // Independent of each other, so asked together rather than one then the other.
+  const [company, username] = await Promise.all([companyBySlug(companySlug), hostOnCompany(companySlug, handle)]);
   if (!company) return null;
-
-  const username = await hostOnCompany(companySlug, handle);
   if (!username) return null;
 
   return { company, username, handle, slug };
@@ -59,8 +58,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
   const found = await resolve(params);
   if (!found) return { title: "Not found", robots: { index: false, follow: false } };
 
-  const host = await getPublicHost(found.username);
-  const meeting = host ? (await getPublicMeetings(found.username)).find((m) => m.slug === found.slug) : null;
+  const [host, meeting] = await Promise.all([
+    getPublicHost(found.username),
+    getPublicMeeting(found.username, found.slug),
+  ]);
   if (!host || !meeting) return { title: "Book a time", robots: { index: false, follow: false } };
 
   const name = host.fullName || host.username;

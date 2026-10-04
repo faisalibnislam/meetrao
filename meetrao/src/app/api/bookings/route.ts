@@ -4,7 +4,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { isSlotBookable } from "@/lib/booking/slots";
 import { formatDuration, formatLongDate, formatTime, formatTimeRange } from "@/lib/booking/time";
-import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeetings } from "@/lib/data/public-booking";
+import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeeting } from "@/lib/data/public-booking";
 import { noteWithAnswers } from "@/lib/email/booking-mail";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
 import { createEventForBooking } from "@/lib/google/calendar";
@@ -106,16 +106,17 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
 
   let meetUrl: string | null = null;
   let calendarWarning: string | null = null;
-  const event = await createEventForBooking(row.reference);
-  if ("failure" in event) calendarWarning = event.failure;
-  else meetUrl = event.meetUrl;
-
   /* The assigned member is the host of this booking, so the confirmation is
      addressed from them by name. A guest who booked "the sales team" still
-     needs to know who is turning up. */
-  const hostProfile = await convexAnonymous().query(api.publicBooking.hostForBookingMail, {
-    reference: row.reference,
-  });
+     needs to know who is turning up. Fetched alongside the calendar event
+     rather than after it: the two are independent and the event is the slow
+     one. */
+  const [event, hostProfile] = await Promise.all([
+    createEventForBooking(row.reference),
+    convexAnonymous().query(api.publicBooking.hostForBookingMail, { reference: row.reference }),
+  ]);
+  if ("failure" in event) calendarWarning = event.failure;
+  else meetUrl = event.meetUrl;
   const end = new Date(row.ends_at);
   const guestTimezone = input.guestTimezone || team.members[0]?.timezone || "UTC";
   const hostTimezone = team.members.find((m) => m.id === row.host_id)?.timezone ?? guestTimezone;
@@ -157,20 +158,28 @@ export async function POST(request: NextRequest) {
 
   if (input.team) return bookTeam(request, input, start);
 
-  const host = await getPublicHost(input.username);
+  /* Two phases, not a chain: this is the wait between a guest pressing
+     Confirm and seeing that it worked, and every read here was its own
+     sequential round trip. Nothing in a phase depends on anything else in
+     it. The re-check of the slot below is unchanged, and still runs on
+     fresh reads made for this request. */
+  const [host, meeting] = await Promise.all([
+    getPublicHost(input.username),
+    getPublicMeeting(input.username, input.slug),
+  ]);
   if (!host) return NextResponse.json({ error: "Unknown host." }, { status: 404 });
-
-  const meeting = (await getPublicMeetings(input.username)).find((m) => m.slug === input.slug);
   if (!meeting) return NextResponse.json({ error: "Unknown meeting." }, { status: 404 });
 
-  const availability = await getMeetingAvailability(meeting.id);
-  const overrides = await getMeetingOverrides(meeting.id);
-  const { busy } = await getBusy(
-    host.id,
-    new Date(start.getTime() - DAY),
-    new Date(start.getTime() + DAY),
-    meeting.capacity > 1 ? meeting.id : undefined,
-  );
+  const [availability, overrides, { busy }] = await Promise.all([
+    getMeetingAvailability(meeting.id),
+    getMeetingOverrides(meeting.id),
+    getBusy(
+      host.id,
+      new Date(start.getTime() - DAY),
+      new Date(start.getTime() + DAY),
+      meeting.capacity > 1 ? meeting.id : undefined,
+    ),
+  ]);
 
   const guestTimezone = input.guestTimezone || host.timezone;
 
@@ -244,15 +253,16 @@ export async function POST(request: NextRequest) {
   let meetUrl: string | null = null;
   let calendarWarning: string | null = null;
 
-  const event = await createEventForBooking(row.reference);
+  /* The calendar event and the host's mail details are independent, and the
+     event is the slow one (it goes out to Google), so neither waits for the
+     other. The host's details are just enough to address the confirmation
+     email, keyed by the booking's own reference. */
+  const [event, hostProfile] = await Promise.all([
+    createEventForBooking(row.reference),
+    convexAnonymous().query(api.publicBooking.hostForBookingMail, { reference: row.reference }),
+  ]);
   if ("failure" in event) calendarWarning = event.failure;
   else meetUrl = event.meetUrl;
-
-  /* Just enough of the host to address the confirmation email, keyed by the
-     booking's own reference. */
-  const hostProfile = await convexAnonymous().query(api.publicBooking.hostForBookingMail, {
-    reference: row.reference,
-  });
 
   const mail: BookingMail = {
     bookingId: row.id,

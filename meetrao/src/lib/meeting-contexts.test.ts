@@ -36,9 +36,11 @@ const ROUTE = read("src/app/(public)/[username]/[slug]/page.tsx");
 const BACKFILL = read("convex/companiesBackfill.ts");
 
 describe("a company domain serves only its own meetings", () => {
+  /* Now part of the page's first parallel phase rather than a step of its
+     own, but still decided before anything is rendered or branded. */
   it("checks before rendering anything", () => {
-    expect(PAGE).toContain("meetingIsOnCompany(username, meeting.slug, company.slug)");
-    expect(PAGE).toContain("notFound()");
+    expect(PAGE).toContain("meetingIsOnCompany(username, slug, company.slug)");
+    expect(PAGE).toContain("if (!onCompany) notFound();");
   });
 
   /* Ordering matters: a check that runs after the brand is resolved is still
@@ -54,7 +56,7 @@ describe("a company domain serves only its own meetings", () => {
   /* The gate only applies on a company's domain. On meetrao.com `company` is
      null and every meeting resolves, which is what keeps existing links alive. */
   it("applies only when the request arrived on a company domain", () => {
-    expect(PAGE).toContain("if (company && !(await meetingIsOnCompany(");
+    expect(PAGE).toContain("company ? meetingIsOnCompany(username, slug, company.slug) : Promise.resolve(true)");
   });
 
   it("treats a personal meeting as belonging to no company", () => {

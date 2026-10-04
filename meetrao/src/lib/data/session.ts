@@ -33,7 +33,10 @@ export type Session = { userId: string; email: string; verified: boolean; profil
  */
 export const requireSession = cache(async function requireSession(): Promise<Session> {
   const convex = await convexServer();
-  const who = await convex.query(api.whoami.identity, {});
+  /* ONE round trip for identity and profile. This was whoami.identity and
+     then profiles.current, one after the other, on every authenticated page:
+     the second fetched a row the first had already read. */
+  const who = await convex.query(api.whoami.session, {});
 
   if (!who.authenticated) redirect("/login");
 
@@ -48,14 +51,10 @@ export const requireSession = cache(async function requireSession(): Promise<Ses
      the session was issued and is not any more. */
   if (!who.emailVerified) redirect("/verify?unverified=1");
 
-  if (!who.hasConvexProfile) {
-    // Authenticated with no profile is a half-created account. The profile is
-    // written by convex/auth.ts's afterUserCreatedOrUpdated callback, so this
-    // means that callback did not run. There is nothing to show them.
-    redirect("/login?error=no-profile");
-  }
-
-  const profile = (await convex.query(api.profiles.current, {})) as Profile | null;
+  // Authenticated with no profile is a half-created account. The profile is
+  // written by convex/auth.ts's afterUserCreatedOrUpdated callback, so this
+  // means that callback did not run. There is nothing to show them.
+  const profile = who.profile as Profile | null;
   if (!profile) redirect("/login?error=no-profile");
   if (profile.is_suspended) redirect("/suspended");
 
