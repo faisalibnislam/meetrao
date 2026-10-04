@@ -79,7 +79,12 @@ export function CompaniesPanel({
   const [email, setEmail] = useState("");
   const [handle, setHandle] = useState("");
 
-  const current = companies.find((c) => c.id === active) ?? null;
+  /* Falls back to the first company rather than trusting `active` alone.
+     `active` is seeded from the list at FIRST render, and creating the first
+     company re-renders with new props while the state stays null, so the card
+     for the company somebody just made would not appear at all. Deriving it
+     here means the selection is a preference, not the only way to have one. */
+  const current = companies.find((c) => c.id === active) ?? companies[0] ?? null;
 
   function run(work: () => Promise<{ error?: string }>, ok: { title: string; text?: string }) {
     startBusy(async () => {
