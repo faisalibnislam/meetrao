@@ -71,10 +71,11 @@ export const DESCRIPTION =
  * blank grey rectangle in a Slack unfurl and was true of five pages here.
  */
 export const OG_IMAGE = {
-  url: "/og.png",
+  url: "/og.jpg",
   width: 1200,
   height: 630,
-  alt: "Meetrao: meeting scheduling and appointment booking, free",
+  type: "image/jpeg",
+  alt: "Meetrao: meeting scheduling and appointment booking. A booking page with a month calendar and the day's available times.",
 } as const;
 
 /**
