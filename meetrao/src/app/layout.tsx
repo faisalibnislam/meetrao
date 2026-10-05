@@ -83,7 +83,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/og.png"],
+    images: [OG_IMAGE.url],
   },
   robots: {
     index: true,
