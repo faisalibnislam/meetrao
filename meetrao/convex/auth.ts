@@ -1,7 +1,11 @@
+import Apple from "@auth/core/providers/apple";
 import Google from "@auth/core/providers/google";
 import Resend from "@auth/core/providers/resend";
+import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import { Password } from "@convex-dev/auth/providers/Password";
-import { convexAuth } from "@convex-dev/auth/server";
+import { convexAuth, createAccount } from "@convex-dev/auth/server";
+import { verifyAppleIdentityToken } from "./lib/appleIdentity";
+import { resolveRedirect } from "./lib/authRedirect";
 import { passwordCrypto } from "./authCrypto";
 import { sendResetEmail, sendVerifyEmail } from "./lib/emails";
 import type { DataModel } from "./_generated/dataModel";
@@ -74,6 +78,60 @@ const passwordProvider = Password<DataModel>({
   }),
 });
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Sign in with Apple, twice over, and both OFF until they are configured.
+
+   Apple requires an app that offers Google sign-in to offer Apple too, and an
+   account has to be the same account on the phone and on the web. Both need
+   an Apple Developer membership, which is why each is gated on its own
+   environment variables rather than shipped half-working:
+
+     apple-native  the iOS app's button. The app gets an identity token from
+                   Apple and sends it here; see convex/lib/appleIdentity.ts.
+                   Needs APPLE_BUNDLE_ID (com.meetrao.app).
+     apple         the web's button, Auth.js's OAuth flow. Needs AUTH_APPLE_ID
+                   (the Services ID) and AUTH_APPLE_SECRET (the client secret
+                   JWT, which Apple caps at six months).
+
+   Both link to an existing account by email when Apple says the address is
+   verified, which is what makes "Sign in with Apple" on the phone open the
+   account somebody made with Google on the web. A private relay address
+   links to nothing and starts a new account, which is Apple's intent.
+   ───────────────────────────────────────────────────────────────────────────── */
+const appleNative = ConvexCredentials<DataModel>({
+  id: "apple-native",
+  authorize: async (credentials, ctx) => {
+    const audience = process.env.APPLE_BUNDLE_ID;
+    if (!audience) throw new Error("Sign in with Apple is not available yet.");
+
+    const token = typeof credentials.identityToken === "string" ? credentials.identityToken : "";
+    const nonce = typeof credentials.nonce === "string" ? credentials.nonce : "";
+    if (!token || !nonce) throw new Error("Sign in with Apple did not finish. Try again.");
+
+    const apple = await verifyAppleIdentityToken(token, nonce, audience);
+    if (!apple.email) throw new Error("Apple did not share an email address, which Meetrao needs to send your bookings.");
+
+    // Apple sends the name to the app on the FIRST sign-in only, never in the token.
+    const name = typeof credentials.name === "string" ? credentials.name.trim() : "";
+    const { user } = await createAccount(ctx, {
+      provider: "apple-native",
+      account: { id: apple.sub },
+      profile: {
+        email: apple.email,
+        ...(name ? { name } : {}),
+        ...(apple.emailVerified ? { emailVerificationTime: Date.now() } : {}),
+      },
+      shouldLinkViaEmail: apple.emailVerified,
+    });
+    return { userId: user._id };
+  },
+});
+
+const appleWeb =
+  process.env.AUTH_APPLE_ID && process.env.AUTH_APPLE_SECRET
+    ? [Apple({ clientId: process.env.AUTH_APPLE_ID, clientSecret: process.env.AUTH_APPLE_SECRET, allowDangerousEmailAccountLinking: true })]
+    : [];
+
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   /* THE REPLACEMENT FOR `handle_new_user`.
      Postgres created a profile, generated a username and set the admin flag on
@@ -86,6 +144,11 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
      thing every new entry point has to remember, and forgetting it produces an
      account that can authenticate and then lands on "no profile" forever. */
   callbacks: {
+    /* The default rule plus the iOS app's own callback, for Google sign-in
+       from the phone. See convex/lib/authRedirect.ts. */
+    async redirect({ redirectTo }) {
+      return resolveRedirect(redirectTo, process.env.SITE_URL ?? "");
+    },
     async afterUserCreatedOrUpdated(ctx, { userId, existingUserId }) {
       if (existingUserId) return; // an existing account signing in again
       await createProfileForNewUser(ctx, userId);
@@ -100,5 +163,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       allowDangerousEmailAccountLinking: true,
     }),
+    appleNative,
+    ...appleWeb,
   ],
 });
