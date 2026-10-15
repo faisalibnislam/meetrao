@@ -1,0 +1,135 @@
+# The Xcode project is generated from this file: `xcodegen` in this folder.
+# The generated Meetrao.xcodeproj is committed too, so opening the app needs
+# Xcode and nothing else; regenerate after changing this file.
+name: Meetrao
+options:
+  bundleIdPrefix: com.meetrao
+  deploymentTarget:
+    iOS: "26.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  ConvexMobile:
+    url: https://github.com/get-convex/convex-swift
+    exactVersion: 0.8.1
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_DEFAULT_ACTOR_ISOLATION: MainActor
+    SWIFT_APPROACHABLE_CONCURRENCY: YES
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # Empty until you pick your team in Xcode (Signing & Capabilities).
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    # ConvexMobile's Rust core ships arm64 slices only, so Intel simulators are out.
+    "EXCLUDED_ARCHS[sdk=iphonesimulator*]": x86_64
+    # Where the app talks to. xcconfig-style `/$()/` keeps the `//` from being
+    # read as a comment when these are overridden in an .xcconfig.
+    MEETRAO_CONVEX_URL: "https://avid-dotterel-109.convex.cloud"
+    MEETRAO_SITE_URL: "https://meetrao.com"
+    # Both need an Apple Developer membership. See README.md before turning on.
+    MEETRAO_APPLE_SIGN_IN: "NO"
+    MEETRAO_PUSH: "NO"
+
+targets:
+  Meetrao:
+    type: application
+    platform: iOS
+    sources:
+      - path: Meetrao
+      - path: Shared
+    dependencies:
+      - package: ConvexMobile
+      - target: MeetraoWidget
+    entitlements:
+      path: Meetrao/Meetrao.entitlements
+      properties:
+        keychain-access-groups:
+          - "$(AppIdentifierPrefix)com.meetrao.shared"
+    info:
+      path: Meetrao/Info.plist
+      properties:
+        CFBundleDisplayName: Meetrao
+        UILaunchScreen:
+          UIColorName: LaunchBackground
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations~ipad:
+          [UIInterfaceOrientationPortrait, UIInterfaceOrientationPortraitUpsideDown, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UIAppFonts: [InstrumentSerif-Regular.ttf]
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          - CFBundleURLName: com.meetrao.app.auth
+            CFBundleURLSchemes: [meetrao]
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        MeetraoConvexURL: "$(MEETRAO_CONVEX_URL)"
+        MeetraoSiteURL: "$(MEETRAO_SITE_URL)"
+        MeetraoAppleSignIn: "$(MEETRAO_APPLE_SIGN_IN)"
+        MeetraoPush: "$(MEETRAO_PUSH)"
+        MeetraoKeychainGroup: "$(AppIdentifierPrefix)com.meetrao.shared"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.meetrao.app
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.productivity
+
+  MeetraoWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: MeetraoWidget
+      - path: Shared
+    entitlements:
+      path: MeetraoWidget/MeetraoWidget.entitlements
+      properties:
+        keychain-access-groups:
+          - "$(AppIdentifierPrefix)com.meetrao.shared"
+    info:
+      path: MeetraoWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Meetrao
+        UIAppFonts: [InstrumentSerif-Regular.ttf]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        MeetraoKeychainGroup: "$(AppIdentifierPrefix)com.meetrao.shared"
+        MeetraoSiteURL: "$(MEETRAO_SITE_URL)"
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.meetrao.app.widget
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME: WidgetBackground
+        SKIP_INSTALL: YES
+
+  MeetraoTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: MeetraoTests
+    dependencies:
+      - target: Meetrao
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.meetrao.app.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+schemes:
+  Meetrao:
+    build:
+      targets:
+        Meetrao: all
+        MeetraoTests: [test]
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [MeetraoTests]

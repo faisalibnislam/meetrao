@@ -1,0 +1,831 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		01DE502031734CFBE69680D0 /* CompanyAnalytics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C55CF0C71D567EE74CB67DF /* CompanyAnalytics.swift */; };
+		03CC1D6728B7084A7A7A7FD1 /* NotificationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 836F2C36EC636A7DB60EC910 /* NotificationsView.swift */; };
+		0921C1424321FA1802E60A63 /* ConvexHTTP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1859E6E9C3198FEA0AEEAAAD /* ConvexHTTP.swift */; };
+		0BE9A3AE54C9705190FC7914 /* MeetraoError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7CF900CFAABC1807C3A41A99 /* MeetraoError.swift */; };
+		0C5DE9D2752364C0F15BA068 /* Timezones.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35BE011B9BC8BB00BAE6B1B3 /* Timezones.swift */; };
+		10E09104C431699D630132EB /* Dates.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2B8E375F056A0D6E7748BC86 /* Dates.swift */; };
+		1DC21AF2B7103169B3654D35 /* MeetraoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62DC3AFEB6101E7E85B6376E /* MeetraoApp.swift */; };
+		2265816DB70997F2B989D351 /* BackendIntegrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EBB8EEBAB96F571B157802E3 /* BackendIntegrationTests.swift */; };
+		232949A0B4C1D2EE2D4E7239 /* MeetraoWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA213068C0E0AF4CC955CBD2 /* MeetraoWidget.swift */; };
+		31851253C93504A4A9C618F6 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AD4F47EFFFCBD9DE687F49 /* WidgetSnapshot.swift */; };
+		325CC6BD9FD15B1CD2EA030B /* SharedKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258C7A5113CE524925FBDDE1 /* SharedKeychain.swift */; };
+		45055F90A6BE2A48F2E22DEC /* Meeting.swift in Sources */ = {isa = PBXBuildFile; fileRef = A03CF3C14F090B1E8FB5405A /* Meeting.swift */; };
+		46837FED8181FADF3BC9A626 /* AvailabilityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99D048B02201D6D4E704A919 /* AvailabilityView.swift */; };
+		46EECE0E8FF86E27C84622F4 /* MeetraoTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B66070F99CF5AB9A8ADC153 /* MeetraoTests.swift */; };
+		475C2156411DA38164430003 /* SharedKeychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 258C7A5113CE524925FBDDE1 /* SharedKeychain.swift */; };
+		54001089CAC9AF694D60ED4E /* MeetraoAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = F958E437646F9F8A1FD4363A /* MeetraoAPI.swift */; };
+		552D7C06643594B5773E82B7 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09FE790DCC6B1E956DA7E974 /* MainView.swift */; };
+		5D96AAD79224FEB238A354B2 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BCD319AD635820B5A99C3B0D /* Assets.xcassets */; };
+		632847582083D7F73D45009B /* OFL-InstrumentSerif.txt in Resources */ = {isa = PBXBuildFile; fileRef = CB74AB54BBBD813026F4F92D /* OFL-InstrumentSerif.txt */; };
+		656B93CD972F50C76FC34DC2 /* CompanyDashboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFA60E76C6A510749BED0DD9 /* CompanyDashboardView.swift */; };
+		7669759F09C1830C30463402 /* WidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6AD4F47EFFFCBD9DE687F49 /* WidgetSnapshot.swift */; };
+		86AE86587E1BB2E147AC269B /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8601679A5CF1596C53B49E62 /* TodayView.swift */; };
+		86E059EB1E4DACA6CAB67257 /* MeetraoConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86CC2E92B62B6BE1FB3AC13 /* MeetraoConfig.swift */; };
+		90269928285D5093C1F00EDB /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134E6CCA8CA3CA3563A151FE /* Theme.swift */; };
+		92C39162758D6EBC6D92C89D /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCC021673DD8529CDF7075C3 /* RootView.swift */; };
+		A066D2D0A9793A9E9F2A1121 /* Workspace.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1EBC5EC3549FD3E982807197 /* Workspace.swift */; };
+		A3B1EDCFB730929987CC91E5 /* MeetraoWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 381B0FF1D1BDD27286E2C8BF /* MeetraoWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A4BB6C36227204284DAB2627 /* Notice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6AFA787D437EE2FE162CA196 /* Notice.swift */; };
+		AACCB177CAFE395B1A0DE6D7 /* Links.swift in Sources */ = {isa = PBXBuildFile; fileRef = 26171C11ED0F0791CD23298B /* Links.swift */; };
+		B03F3EC0650AB90A30006F2C /* InstrumentSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D0EF08EB65F48B34DD862AFB /* InstrumentSerif-Regular.ttf */; };
+		B28D2724EC1ABD4736995623 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DCE0587058D8A8D6385AA5F /* AppModel.swift */; };
+		B64DDCBA143C01AAD2627917 /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = BB5B53E05076BF19EFAD1405 /* ConvexMobile */; };
+		B73BB5675E1CC408376E64BC /* AuthViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA3E17A474738A3F678AC70 /* AuthViews.swift */; };
+		B912EFB1C5EDFFBAEDCB71BD /* ConvexAuthProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7CD7F4B6503217DFB7A72F3 /* ConvexAuthProvider.swift */; };
+		C2AB7C5AC5094B05465D0CD7 /* Booking.swift in Sources */ = {isa = PBXBuildFile; fileRef = A435D918EA134EE882D9229D /* Booking.swift */; };
+		C8F773C41F33AC2E22237D88 /* AuthTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 681BFD95C870F093AED42B59 /* AuthTokens.swift */; };
+		CDD050BC9FBB7BCF8431E220 /* MeetingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3FE53D8567952AB626146CB /* MeetingsView.swift */; };
+		CE3B8B3E224B1F0845661D09 /* BookingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD2A9BB9AD392E9D2015E496 /* BookingsView.swift */; };
+		D4878DD834373689558F35A0 /* InstrumentSerif-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 4330EC89DBCEA0357D59A355 /* InstrumentSerif-Regular.ttf */; };
+		DA6C9291113C7310052770C5 /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4E7C2D1715E51A545E5C9851 /* AccountView.swift */; };
+		DCBE57007E5E0DA0F041E7EB /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD5A0FEF60B1B97387CC6ED8 /* Session.swift */; };
+		DD246D848358643642754264 /* PushRegistrar.swift in Sources */ = {isa = PBXBuildFile; fileRef = F49FDB7075047F9623159711 /* PushRegistrar.swift */; };
+		FA8A9FB585F8A7D2F49BDAE7 /* MeetraoConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = C86CC2E92B62B6BE1FB3AC13 /* MeetraoConfig.swift */; };
+		FCCCA176AC94D99AA80FE240 /* Live.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59003BDA350838134EFEE8CB /* Live.swift */; };
+		FE019816B252CD79CE84F635 /* Availability.swift in Sources */ = {isa = PBXBuildFile; fileRef = 23199B2A5950F584AF681242 /* Availability.swift */; };
+		FF9FC24F730F1F1F9EDC3D68 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B37697D289623632AEC81859 /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		93A2666D2A83A408A65982E6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F9C63C8126CB78575488CFFB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C8D1F4D02CC9FCA6A4D6F4E6;
+			remoteInfo = MeetraoWidget;
+		};
+		AC0D418EC0B4F46A407AB4D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F9C63C8126CB78575488CFFB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 66257E06694820DE9EB23F05;
+			remoteInfo = Meetrao;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		770E7C956D6493002DA54B97 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A3B1EDCFB730929987CC91E5 /* MeetraoWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		09FE790DCC6B1E956DA7E974 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		134E6CCA8CA3CA3563A151FE /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		161BA48312AC66EC22D36BC1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		1859E6E9C3198FEA0AEEAAAD /* ConvexHTTP.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexHTTP.swift; sourceTree = "<group>"; };
+		1A51FFA3A027EC9B2B8D4D2B /* MeetraoWidget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MeetraoWidget.entitlements; sourceTree = "<group>"; };
+		1EBC5EC3549FD3E982807197 /* Workspace.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Workspace.swift; sourceTree = "<group>"; };
+		23199B2A5950F584AF681242 /* Availability.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Availability.swift; sourceTree = "<group>"; };
+		258C7A5113CE524925FBDDE1 /* SharedKeychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedKeychain.swift; sourceTree = "<group>"; };
+		26171C11ED0F0791CD23298B /* Links.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Links.swift; sourceTree = "<group>"; };
+		2B8E375F056A0D6E7748BC86 /* Dates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Dates.swift; sourceTree = "<group>"; };
+		2DCE0587058D8A8D6385AA5F /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		35BE011B9BC8BB00BAE6B1B3 /* Timezones.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Timezones.swift; sourceTree = "<group>"; };
+		381B0FF1D1BDD27286E2C8BF /* MeetraoWidget.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MeetraoWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		4013BCC72FCE5E3092433376 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		4330EC89DBCEA0357D59A355 /* InstrumentSerif-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Regular.ttf"; sourceTree = "<group>"; };
+		4B66070F99CF5AB9A8ADC153 /* MeetraoTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetraoTests.swift; sourceTree = "<group>"; };
+		4E7C2D1715E51A545E5C9851 /* AccountView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountView.swift; sourceTree = "<group>"; };
+		59003BDA350838134EFEE8CB /* Live.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Live.swift; sourceTree = "<group>"; };
+		62DC3AFEB6101E7E85B6376E /* MeetraoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetraoApp.swift; sourceTree = "<group>"; };
+		681BFD95C870F093AED42B59 /* AuthTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthTokens.swift; sourceTree = "<group>"; };
+		6AFA787D437EE2FE162CA196 /* Notice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notice.swift; sourceTree = "<group>"; };
+		7A7D9EE493797D5F6C508D2B /* MeetraoTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MeetraoTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		7CF900CFAABC1807C3A41A99 /* MeetraoError.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetraoError.swift; sourceTree = "<group>"; };
+		836F2C36EC636A7DB60EC910 /* NotificationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationsView.swift; sourceTree = "<group>"; };
+		8601679A5CF1596C53B49E62 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		99D048B02201D6D4E704A919 /* AvailabilityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvailabilityView.swift; sourceTree = "<group>"; };
+		9C55CF0C71D567EE74CB67DF /* CompanyAnalytics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyAnalytics.swift; sourceTree = "<group>"; };
+		A03CF3C14F090B1E8FB5405A /* Meeting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Meeting.swift; sourceTree = "<group>"; };
+		A435D918EA134EE882D9229D /* Booking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Booking.swift; sourceTree = "<group>"; };
+		AA8347AB8D62ECD1B3D09AE8 /* Meetrao.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Meetrao.entitlements; sourceTree = "<group>"; };
+		AD5A0FEF60B1B97387CC6ED8 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		B37697D289623632AEC81859 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B3FE53D8567952AB626146CB /* MeetingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetingsView.swift; sourceTree = "<group>"; };
+		BCD319AD635820B5A99C3B0D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C064187314719E1F07128E2C /* Meetrao.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Meetrao.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7CD7F4B6503217DFB7A72F3 /* ConvexAuthProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConvexAuthProvider.swift; sourceTree = "<group>"; };
+		C86CC2E92B62B6BE1FB3AC13 /* MeetraoConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetraoConfig.swift; sourceTree = "<group>"; };
+		CB74AB54BBBD813026F4F92D /* OFL-InstrumentSerif.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-InstrumentSerif.txt"; sourceTree = "<group>"; };
+		D0EF08EB65F48B34DD862AFB /* InstrumentSerif-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "InstrumentSerif-Regular.ttf"; sourceTree = "<group>"; };
+		D6AD4F47EFFFCBD9DE687F49 /* WidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshot.swift; sourceTree = "<group>"; };
+		DCC021673DD8529CDF7075C3 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		EA213068C0E0AF4CC955CBD2 /* MeetraoWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetraoWidget.swift; sourceTree = "<group>"; };
+		EBB8EEBAB96F571B157802E3 /* BackendIntegrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendIntegrationTests.swift; sourceTree = "<group>"; };
+		EFA60E76C6A510749BED0DD9 /* CompanyDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompanyDashboardView.swift; sourceTree = "<group>"; };
+		F49FDB7075047F9623159711 /* PushRegistrar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushRegistrar.swift; sourceTree = "<group>"; };
+		F958E437646F9F8A1FD4363A /* MeetraoAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetraoAPI.swift; sourceTree = "<group>"; };
+		FD2A9BB9AD392E9D2015E496 /* BookingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookingsView.swift; sourceTree = "<group>"; };
+		FEA3E17A474738A3F678AC70 /* AuthViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthViews.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E5FC6B8B04A7C60CCFA58994 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B64DDCBA143C01AAD2627917 /* ConvexMobile in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		114627DC6043162DF208EE2A /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C064187314719E1F07128E2C /* Meetrao.app */,
+				7A7D9EE493797D5F6C508D2B /* MeetraoTests.xctest */,
+				381B0FF1D1BDD27286E2C8BF /* MeetraoWidget.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		121F7923A5E344CE6DA456F3 = {
+			isa = PBXGroup;
+			children = (
+				605CA94F67777BCB99782669 /* Meetrao */,
+				1F732EE9BC0AE42A4CC93D57 /* MeetraoTests */,
+				3FEC05A65DA8052457CBB6F1 /* MeetraoWidget */,
+				2E02D5A2D44E51A909B46C00 /* Shared */,
+				114627DC6043162DF208EE2A /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		189951F1C5C16391368B61DC /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				134E6CCA8CA3CA3563A151FE /* Theme.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		1F732EE9BC0AE42A4CC93D57 /* MeetraoTests */ = {
+			isa = PBXGroup;
+			children = (
+				EBB8EEBAB96F571B157802E3 /* BackendIntegrationTests.swift */,
+				4B66070F99CF5AB9A8ADC153 /* MeetraoTests.swift */,
+			);
+			path = MeetraoTests;
+			sourceTree = "<group>";
+		};
+		2892EEA232ECF1C5A922D749 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				2DCE0587058D8A8D6385AA5F /* AppModel.swift */,
+				62DC3AFEB6101E7E85B6376E /* MeetraoApp.swift */,
+				DCC021673DD8529CDF7075C3 /* RootView.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		2A9F7E4B563D652B225AC32D /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				4E7C2D1715E51A545E5C9851 /* AccountView.swift */,
+				99D048B02201D6D4E704A919 /* AvailabilityView.swift */,
+				FD2A9BB9AD392E9D2015E496 /* BookingsView.swift */,
+				EFA60E76C6A510749BED0DD9 /* CompanyDashboardView.swift */,
+				09FE790DCC6B1E956DA7E974 /* MainView.swift */,
+				B3FE53D8567952AB626146CB /* MeetingsView.swift */,
+				836F2C36EC636A7DB60EC910 /* NotificationsView.swift */,
+				8601679A5CF1596C53B49E62 /* TodayView.swift */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		2E02D5A2D44E51A909B46C00 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				C86CC2E92B62B6BE1FB3AC13 /* MeetraoConfig.swift */,
+				258C7A5113CE524925FBDDE1 /* SharedKeychain.swift */,
+				D6AD4F47EFFFCBD9DE687F49 /* WidgetSnapshot.swift */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		3FEC05A65DA8052457CBB6F1 /* MeetraoWidget */ = {
+			isa = PBXGroup;
+			children = (
+				B37697D289623632AEC81859 /* Assets.xcassets */,
+				161BA48312AC66EC22D36BC1 /* Info.plist */,
+				D0EF08EB65F48B34DD862AFB /* InstrumentSerif-Regular.ttf */,
+				1A51FFA3A027EC9B2B8D4D2B /* MeetraoWidget.entitlements */,
+				EA213068C0E0AF4CC955CBD2 /* MeetraoWidget.swift */,
+			);
+			path = MeetraoWidget;
+			sourceTree = "<group>";
+		};
+		558B8CD93ECB720B1327DC47 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				23199B2A5950F584AF681242 /* Availability.swift */,
+				A435D918EA134EE882D9229D /* Booking.swift */,
+				9C55CF0C71D567EE74CB67DF /* CompanyAnalytics.swift */,
+				2B8E375F056A0D6E7748BC86 /* Dates.swift */,
+				A03CF3C14F090B1E8FB5405A /* Meeting.swift */,
+				6AFA787D437EE2FE162CA196 /* Notice.swift */,
+				AD5A0FEF60B1B97387CC6ED8 /* Session.swift */,
+				35BE011B9BC8BB00BAE6B1B3 /* Timezones.swift */,
+				1EBC5EC3549FD3E982807197 /* Workspace.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		605CA94F67777BCB99782669 /* Meetrao */ = {
+			isa = PBXGroup;
+			children = (
+				2892EEA232ECF1C5A922D749 /* App */,
+				A56C9CEF3943D8522E487CE2 /* Auth */,
+				C6996AF8999197F50725482B /* Convex */,
+				189951F1C5C16391368B61DC /* DesignSystem */,
+				2A9F7E4B563D652B225AC32D /* Features */,
+				558B8CD93ECB720B1327DC47 /* Models */,
+				D3BC4E67898E6A9ECC428AFE /* Push */,
+				F2F24D884C2637E9604EB7AB /* Resources */,
+				4013BCC72FCE5E3092433376 /* Info.plist */,
+				AA8347AB8D62ECD1B3D09AE8 /* Meetrao.entitlements */,
+			);
+			path = Meetrao;
+			sourceTree = "<group>";
+		};
+		A56C9CEF3943D8522E487CE2 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				681BFD95C870F093AED42B59 /* AuthTokens.swift */,
+				FEA3E17A474738A3F678AC70 /* AuthViews.swift */,
+				C7CD7F4B6503217DFB7A72F3 /* ConvexAuthProvider.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
+		C6996AF8999197F50725482B /* Convex */ = {
+			isa = PBXGroup;
+			children = (
+				1859E6E9C3198FEA0AEEAAAD /* ConvexHTTP.swift */,
+				26171C11ED0F0791CD23298B /* Links.swift */,
+				59003BDA350838134EFEE8CB /* Live.swift */,
+				F958E437646F9F8A1FD4363A /* MeetraoAPI.swift */,
+				7CF900CFAABC1807C3A41A99 /* MeetraoError.swift */,
+			);
+			path = Convex;
+			sourceTree = "<group>";
+		};
+		D3BC4E67898E6A9ECC428AFE /* Push */ = {
+			isa = PBXGroup;
+			children = (
+				F49FDB7075047F9623159711 /* PushRegistrar.swift */,
+			);
+			path = Push;
+			sourceTree = "<group>";
+		};
+		F2F24D884C2637E9604EB7AB /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BCD319AD635820B5A99C3B0D /* Assets.xcassets */,
+				4330EC89DBCEA0357D59A355 /* InstrumentSerif-Regular.ttf */,
+				CB74AB54BBBD813026F4F92D /* OFL-InstrumentSerif.txt */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		15CB47A3392FC7ED7466FDEB /* MeetraoTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7E4081F5F3C6AD78254DA128 /* Build configuration list for PBXNativeTarget "MeetraoTests" */;
+			buildPhases = (
+				383457F63E3EFFB1FE34BA43 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DAF8C108A0577FDC3E5618E5 /* PBXTargetDependency */,
+			);
+			name = MeetraoTests;
+			packageProductDependencies = (
+			);
+			productName = MeetraoTests;
+			productReference = 7A7D9EE493797D5F6C508D2B /* MeetraoTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		66257E06694820DE9EB23F05 /* Meetrao */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 3486F809479A90F7144AD7CE /* Build configuration list for PBXNativeTarget "Meetrao" */;
+			buildPhases = (
+				0E766456A84F2E1F656BA4D3 /* Sources */,
+				2E94DE65D5266F8D202C0067 /* Resources */,
+				E5FC6B8B04A7C60CCFA58994 /* Frameworks */,
+				770E7C956D6493002DA54B97 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				45707A0BD5DD7EB529D89674 /* PBXTargetDependency */,
+			);
+			name = Meetrao;
+			packageProductDependencies = (
+				BB5B53E05076BF19EFAD1405 /* ConvexMobile */,
+			);
+			productName = Meetrao;
+			productReference = C064187314719E1F07128E2C /* Meetrao.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C8D1F4D02CC9FCA6A4D6F4E6 /* MeetraoWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 911F5EEB8739636403627C09 /* Build configuration list for PBXNativeTarget "MeetraoWidget" */;
+			buildPhases = (
+				ECF3844A7844BD9A2B2C154F /* Sources */,
+				F11A7B36BCFF32F094FD58C5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MeetraoWidget;
+			packageProductDependencies = (
+			);
+			productName = MeetraoWidget;
+			productReference = 381B0FF1D1BDD27286E2C8BF /* MeetraoWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		F9C63C8126CB78575488CFFB /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1430;
+				TargetAttributes = {
+					15CB47A3392FC7ED7466FDEB = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					66257E06694820DE9EB23F05 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					C8D1F4D02CC9FCA6A4D6F4E6 = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 2CEA7C99EA1DB13A5F425DB9 /* Build configuration list for PBXProject "Meetrao" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = 121F7923A5E344CE6DA456F3;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				0D309EEC0ECECDC212021DBA /* XCRemoteSwiftPackageReference "convex-swift" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 114627DC6043162DF208EE2A /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				66257E06694820DE9EB23F05 /* Meetrao */,
+				C8D1F4D02CC9FCA6A4D6F4E6 /* MeetraoWidget */,
+				15CB47A3392FC7ED7466FDEB /* MeetraoTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		2E94DE65D5266F8D202C0067 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5D96AAD79224FEB238A354B2 /* Assets.xcassets in Resources */,
+				D4878DD834373689558F35A0 /* InstrumentSerif-Regular.ttf in Resources */,
+				632847582083D7F73D45009B /* OFL-InstrumentSerif.txt in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F11A7B36BCFF32F094FD58C5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FF9FC24F730F1F1F9EDC3D68 /* Assets.xcassets in Resources */,
+				B03F3EC0650AB90A30006F2C /* InstrumentSerif-Regular.ttf in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		0E766456A84F2E1F656BA4D3 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA6C9291113C7310052770C5 /* AccountView.swift in Sources */,
+				B28D2724EC1ABD4736995623 /* AppModel.swift in Sources */,
+				C8F773C41F33AC2E22237D88 /* AuthTokens.swift in Sources */,
+				B73BB5675E1CC408376E64BC /* AuthViews.swift in Sources */,
+				FE019816B252CD79CE84F635 /* Availability.swift in Sources */,
+				46837FED8181FADF3BC9A626 /* AvailabilityView.swift in Sources */,
+				C2AB7C5AC5094B05465D0CD7 /* Booking.swift in Sources */,
+				CE3B8B3E224B1F0845661D09 /* BookingsView.swift in Sources */,
+				01DE502031734CFBE69680D0 /* CompanyAnalytics.swift in Sources */,
+				656B93CD972F50C76FC34DC2 /* CompanyDashboardView.swift in Sources */,
+				B912EFB1C5EDFFBAEDCB71BD /* ConvexAuthProvider.swift in Sources */,
+				0921C1424321FA1802E60A63 /* ConvexHTTP.swift in Sources */,
+				10E09104C431699D630132EB /* Dates.swift in Sources */,
+				AACCB177CAFE395B1A0DE6D7 /* Links.swift in Sources */,
+				FCCCA176AC94D99AA80FE240 /* Live.swift in Sources */,
+				552D7C06643594B5773E82B7 /* MainView.swift in Sources */,
+				45055F90A6BE2A48F2E22DEC /* Meeting.swift in Sources */,
+				CDD050BC9FBB7BCF8431E220 /* MeetingsView.swift in Sources */,
+				54001089CAC9AF694D60ED4E /* MeetraoAPI.swift in Sources */,
+				1DC21AF2B7103169B3654D35 /* MeetraoApp.swift in Sources */,
+				FA8A9FB585F8A7D2F49BDAE7 /* MeetraoConfig.swift in Sources */,
+				0BE9A3AE54C9705190FC7914 /* MeetraoError.swift in Sources */,
+				A4BB6C36227204284DAB2627 /* Notice.swift in Sources */,
+				03CC1D6728B7084A7A7A7FD1 /* NotificationsView.swift in Sources */,
+				DD246D848358643642754264 /* PushRegistrar.swift in Sources */,
+				92C39162758D6EBC6D92C89D /* RootView.swift in Sources */,
+				DCBE57007E5E0DA0F041E7EB /* Session.swift in Sources */,
+				325CC6BD9FD15B1CD2EA030B /* SharedKeychain.swift in Sources */,
+				90269928285D5093C1F00EDB /* Theme.swift in Sources */,
+				0C5DE9D2752364C0F15BA068 /* Timezones.swift in Sources */,
+				86AE86587E1BB2E147AC269B /* TodayView.swift in Sources */,
+				31851253C93504A4A9C618F6 /* WidgetSnapshot.swift in Sources */,
+				A066D2D0A9793A9E9F2A1121 /* Workspace.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		383457F63E3EFFB1FE34BA43 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				2265816DB70997F2B989D351 /* BackendIntegrationTests.swift in Sources */,
+				46EECE0E8FF86E27C84622F4 /* MeetraoTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		ECF3844A7844BD9A2B2C154F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				86E059EB1E4DACA6CAB67257 /* MeetraoConfig.swift in Sources */,
+				232949A0B4C1D2EE2D4E7239 /* MeetraoWidget.swift in Sources */,
+				475C2156411DA38164430003 /* SharedKeychain.swift in Sources */,
+				7669759F09C1830C30463402 /* WidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		45707A0BD5DD7EB529D89674 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C8D1F4D02CC9FCA6A4D6F4E6 /* MeetraoWidget */;
+			targetProxy = 93A2666D2A83A408A65982E6 /* PBXContainerItemProxy */;
+		};
+		DAF8C108A0577FDC3E5618E5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 66257E06694820DE9EB23F05 /* Meetrao */;
+			targetProxy = AC0D418EC0B4F46A407AB4D2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		3EF3853B42D67EC55710E68A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetrao.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Meetrao.app/Meetrao";
+			};
+			name = Release;
+		};
+		4A2D58023D5B3B66FC22E6C1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MeetraoWidget/MeetraoWidget.entitlements;
+				INFOPLIST_FILE = MeetraoWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetrao.app.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		5538A6B876FAD0B9115FF051 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Meetrao/Meetrao.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Meetrao/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetrao.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7FB011036E86C817F166AEC6 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				MEETRAO_APPLE_SIGN_IN = NO;
+				MEETRAO_CONVEX_URL = "https://avid-dotterel-109.convex.cloud";
+				MEETRAO_PUSH = NO;
+				MEETRAO_SITE_URL = "https://meetrao.com";
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		97ACA710F698726301361C04 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.0;
+				MEETRAO_APPLE_SIGN_IN = NO;
+				MEETRAO_CONVEX_URL = "https://avid-dotterel-109.convex.cloud";
+				MEETRAO_PUSH = NO;
+				MEETRAO_SITE_URL = "https://meetrao.com";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		9B0BB9C22EBC8E180566EEF0 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = MeetraoWidget/MeetraoWidget.entitlements;
+				INFOPLIST_FILE = MeetraoWidget/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetrao.app.widget;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AEAFA93895E7158604C46628 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetrao.app.tests;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Meetrao.app/Meetrao";
+			};
+			name = Debug;
+		};
+		E012725EABDBD5C5FA8B6F7D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Meetrao/Meetrao.entitlements;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				INFOPLIST_FILE = Meetrao/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.meetrao.app;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		2CEA7C99EA1DB13A5F425DB9 /* Build configuration list for PBXProject "Meetrao" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7FB011036E86C817F166AEC6 /* Debug */,
+				97ACA710F698726301361C04 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		3486F809479A90F7144AD7CE /* Build configuration list for PBXNativeTarget "Meetrao" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				5538A6B876FAD0B9115FF051 /* Debug */,
+				E012725EABDBD5C5FA8B6F7D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		7E4081F5F3C6AD78254DA128 /* Build configuration list for PBXNativeTarget "MeetraoTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AEAFA93895E7158604C46628 /* Debug */,
+				3EF3853B42D67EC55710E68A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		911F5EEB8739636403627C09 /* Build configuration list for PBXNativeTarget "MeetraoWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4A2D58023D5B3B66FC22E6C1 /* Debug */,
+				9B0BB9C22EBC8E180566EEF0 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		0D309EEC0ECECDC212021DBA /* XCRemoteSwiftPackageReference "convex-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/get-convex/convex-swift";
+			requirement = {
+				kind = exactVersion;
+				version = 0.8.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BB5B53E05076BF19EFAD1405 /* ConvexMobile */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 0D309EEC0ECECDC212021DBA /* XCRemoteSwiftPackageReference "convex-swift" */;
+			productName = ConvexMobile;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = F9C63C8126CB78575488CFFB /* Project object */;
+}
