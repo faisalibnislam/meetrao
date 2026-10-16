@@ -202,11 +202,26 @@ import Testing
         """
         let data = try JSONDecoder().decode(CompanyAnalyticsData.self, from: Data(json.utf8))
         let summary = CompanySummary(data, timeZone: TimeZone(identifier: "UTC")!, now: now)
-        #expect(summary.cancelled == 1)
-        #expect(summary.team.first?.member.userID == "a")
-        #expect(summary.team.first?.next?.guestName == "G1")
-        #expect(summary.silent.map(\.userID) == ["b"])
-        #expect(summary.perDay.count == 7)
+        // The web's rules: the cancellation in the window counts against the
+        // rate, the meeting still to come is not "held", and the window is
+        // walked a fortnight ahead.
+        #expect(summary.window.held == 0)
+        #expect(summary.window.cancelled == 1)
+        #expect(summary.window.cancelRate == 1)
+        #expect(summary.next7 == 1)
+        #expect(summary.upNext.map(\.guestName) == ["G1"])
+        #expect(summary.members.first?.member.userID == "a")
+        #expect(summary.members.first?.next?.guestName == "G1")
+        #expect(summary.perDay.count == 7 + 14)
+        #expect(summary.perDay.filter(\.future).count == 13)
+        #expect(summary.flags.map(\.kind) == [.cancellations, .noLinks])
+        #expect(summary.flags.last?.detail == "No meeting is switched on, so /bo answers nothing.")
+    }
+
+    @Test func hoursReadAsTheWebWritesThem() {
+        #expect(CompanySummary.hours(30) == "30m")
+        #expect(CompanySummary.hours(60) == "1h")
+        #expect(CompanySummary.hours(90) == "1h 30m")
     }
 }
 
