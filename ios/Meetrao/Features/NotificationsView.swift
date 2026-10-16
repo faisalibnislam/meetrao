@@ -28,6 +28,7 @@ struct NotificationsView: View {
             }
         }
         .navigationTitle("Notifications")
+        .groundBackground()
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Menu {

@@ -43,6 +43,7 @@ struct MeetingsView: View {
                 }
             }
             .navigationTitle("Meetings")
+            .groundBackground()
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) { WorkspaceMenu() }
                 ToolbarItem(placement: .primaryAction) {
@@ -208,6 +209,7 @@ struct MeetingEditorView: View {
             }
         }
         .navigationTitle(meeting == nil ? "New meeting" : "Edit meeting")
+        .groundBackground()
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             if meeting == nil {

@@ -48,6 +48,7 @@ struct AvailabilityView: View {
                 }
             }
             .navigationTitle("Availability")
+            .groundBackground()
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save", action: save).disabled(!isDirty || busy)
@@ -284,6 +285,7 @@ struct TimezonePicker: View {
         }
         .searchable(text: $search, prompt: "City or region")
         .navigationTitle("Timezone")
+        .groundBackground()
         .navigationBarTitleDisplayMode(.inline)
     }
 }
@@ -320,6 +322,7 @@ private struct TimeOffEditor: View {
                 }
             }
             .navigationTitle("Time off")
+            .groundBackground()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }

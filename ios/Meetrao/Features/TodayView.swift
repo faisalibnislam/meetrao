@@ -106,6 +106,7 @@ private struct PersonalTodayView: View {
             }
         }
         .navigationTitle(app.workspace == .personal ? "Today" : app.workspace.title)
+        .groundBackground()
         .task(id: app.workspace) {
             bookings.watch(app.client, "bookings:listForScreen", ["history": false, "companyId": app.workspace.companyID])
             meetings.watch(app.client, "meetingTypes:listOwn")

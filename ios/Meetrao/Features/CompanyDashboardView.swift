@@ -96,6 +96,7 @@ struct CompanyDashboardView: View {
         }
         // The switcher above already names the company.
         .navigationTitle("Dashboard")
+        .groundBackground()
         .task(id: "\(company.id)-\(days)") {
             data.watch(app.client, "companyAnalytics:forCompany", ["id": company.id, "days": Double(days)])
         }
@@ -113,7 +114,7 @@ private struct Tile: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(14)
-        .background(.background, in: .rect(cornerRadius: 16))
+        .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 16))
         .accessibilityElement(children: .combine)
     }
 }
