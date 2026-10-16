@@ -594,6 +594,21 @@ export default defineSchema({
     .index("by_user", ["user_id"])
     .index("by_user_unread", ["user_id", "read_at"]),
 
+  /* An iPhone that asked for push. One row per device token; a token belongs
+     to whoever registered it last, because a phone that changes hands (or
+     accounts) keeps its token. `environment` is which APNs host the token is
+     valid on: a build from Xcode is "sandbox", TestFlight and the App Store
+     are "production", and a token sent to the wrong host is rejected. */
+  push_devices: defineTable({
+    user_id: v.string(),
+    token: v.string(),
+    environment: v.union(v.literal("sandbox"), v.literal("production")),
+    created_at: v.number(),
+    updated_at: v.number(),
+  })
+    .index("by_user", ["user_id"])
+    .index("by_token", ["token"]),
+
   /* Google OAuth tokens. In Postgres this table had RLS on and NO policy, so
      only the service role could reach it. The Convex equivalent is that every
      function touching it is an internalQuery/internalMutation. It is not

@@ -89,14 +89,14 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
       action={submitViaConvex}
       busy={convexPending}
       error={convexError}
-      onGoogle={() =>
+      onProvider={(provider) =>
         startGoogle(async () => {
           setGoogleError(null);
           try {
             // Convex Auth performs the redirect itself.
-            await signIn("google", { redirectTo: "/auth/callback" });
+            await signIn(provider, { redirectTo: "/auth/callback" });
           } catch {
-            setGoogleError("Google sign-in is unavailable.");
+            setGoogleError(provider === "apple" ? "Apple sign-in is unavailable." : "Google sign-in is unavailable.");
           }
         })
       }
@@ -112,7 +112,7 @@ function Fields({
   action,
   busy,
   error,
-  onGoogle,
+  onProvider,
   googleBusy,
   googleError,
 }: {
@@ -121,7 +121,7 @@ function Fields({
   action: (form: FormData) => void;
   busy: boolean;
   error: string | null | undefined;
-  onGoogle: () => void;
+  onProvider: (provider: "google" | "apple") => void;
   googleBusy: boolean;
   googleError: string | null;
 }) {
@@ -206,12 +206,31 @@ function Fields({
           <button
             type="button"
             disabled={googleBusy}
-            onClick={onGoogle}
+            onClick={() => onProvider("google")}
             className={buttonClass("secondary", 40, "w-full")}
           >
             <GoogleG size={16} />
             <span>Continue with Google</span>
           </button>
+
+          {/* Off until the Apple Developer side exists: see the note on Apple in
+              convex/auth.ts. Read at build time, like every NEXT_PUBLIC_ value. */}
+          {process.env.NEXT_PUBLIC_APPLE_SIGN_IN === "1" ? (
+            <button
+              type="button"
+              disabled={googleBusy}
+              onClick={() => onProvider("apple")}
+              className={buttonClass("secondary", 40, "w-full")}
+            >
+              <svg viewBox="0 0 24 24" width={16} height={16} aria-hidden="true" focusable="false" className="block flex-none">
+                <path
+                  fill="currentColor"
+                  d="M16.37 12.6c-.02-2.25 1.84-3.33 1.92-3.38-1.05-1.53-2.68-1.74-3.26-1.76-1.39-.14-2.71.82-3.42.82-.7 0-1.79-.8-2.94-.78-1.51.02-2.91.88-3.69 2.24-1.57 2.73-.4 6.77 1.13 8.98.75 1.08 1.64 2.3 2.81 2.25 1.13-.04 1.55-.73 2.92-.73 1.36 0 1.75.73 2.94.71 1.21-.02 1.98-1.1 2.72-2.19.86-1.25 1.21-2.47 1.23-2.53-.03-.01-2.35-.9-2.36-3.63ZM14.13 5.99c.62-.75 1.04-1.8.93-2.84-.9.04-1.98.6-2.62 1.35-.58.66-1.08 1.72-.94 2.74 1 .08 2.02-.51 2.63-1.25Z"
+                />
+              </svg>
+              <span>Continue with Apple</span>
+            </button>
+          ) : null}
         </div>
       ) : null}
     </div>

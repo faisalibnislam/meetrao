@@ -100,6 +100,40 @@ export async function notifyHost(
     read_at: null,
     created_at: Date.now(),
   });
+
+  /* A push to the host's phones, under the same switch as the email for the
+     same event. The in-app row above is written regardless, as it always
+     has been. Scheduled rather than awaited, so a slow or failing APNs never
+     holds up, or rolls back, the booking that caused it. */
+  const devices = await ctx.db
+    .query("push_devices")
+    .withIndex("by_user", (q) => q.eq("user_id", args.userId))
+    .first();
+  if (!devices) return;
+
+  const profile = await ctx.db
+    .query("profiles")
+    .withIndex("by_uuid", (q) => q.eq("id", args.userId))
+    .unique();
+  if (!profile || !pushWanted(profile, args.kind)) return;
+
+  await ctx.scheduler.runAfter(0, internal.pushNode.deliver, {
+    userId: args.userId,
+    title: args.title,
+    body: args.body,
+    bookingId: args.bookingId,
+  });
+}
+
+/** The email preference that governs each kind, so one switch silences both. */
+export function pushWanted(
+  profile: Pick<Doc<"profiles">, "notify_new_booking" | "notify_booking_changed" | "notify_booking_cancelled">,
+  kind: "booking_new" | "booking_cancelled" | "booking_changed" | "booking_declined",
+): boolean {
+  if (kind === "booking_new") return profile.notify_new_booking;
+  if (kind === "booking_cancelled") return profile.notify_booking_cancelled;
+  // A declined invitation is a change to the meeting as far as the host is concerned.
+  return profile.notify_booking_changed;
 }
 
 async function timezoneOf(ctx: MutationCtx, userId: string): Promise<string> {
