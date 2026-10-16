@@ -69,6 +69,7 @@ struct BookingsView: View {
                 }
             }
             .navigationTitle("Bookings")
+            .groundBackground()
             .searchable(text: $search, prompt: "Guest, email or reference")
             .toolbar { ToolbarItem(placement: .topBarLeading) { WorkspaceMenu() } }
             .navigationDestination(for: String.self) { id in
@@ -219,6 +220,7 @@ struct BookingDetailView: View {
             }
         }
         .navigationTitle("Booking")
+        .groundBackground()
         .navigationBarTitleDisplayMode(.inline)
         .task { detail.watch(app.client, "bookings:getForHost", ["id": id]) }
         .sheet(isPresented: $moving) {
@@ -279,6 +281,7 @@ struct MoveBookingView: View {
                 }
             }
             .navigationTitle("Move booking")
+            .groundBackground()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }

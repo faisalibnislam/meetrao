@@ -24,6 +24,16 @@ extension Font {
 
 extension Color {
     static let accentSoft = Color("AccentSoft")
+    /// The web's --ground: the beige page behind white cards.
+    static let ground = Color("Ground")
+}
+
+extension View {
+    /// Puts a screen's list or form on the beige ground, as on the web.
+    func groundBackground() -> some View {
+        scrollContentBackground(.hidden)
+            .background(Color.ground.ignoresSafeArea())
+    }
 }
 
 /// Times as the host reads them: in the host's own timezone, which is the

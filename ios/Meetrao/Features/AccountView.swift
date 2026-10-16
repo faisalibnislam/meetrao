@@ -81,6 +81,7 @@ struct AccountView: View {
                 }
             }
             .navigationTitle("Account")
+            .groundBackground()
         }
     }
 
