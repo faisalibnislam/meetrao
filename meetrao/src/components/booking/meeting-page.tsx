@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { BookingFlow } from "@/components/booking/booking-flow";
-import { Eyebrow } from "@/components/ui/badge";
 import { bookingStart } from "@/lib/data/booking-start";
 import { PublicFooter } from "@/components/booking/public-footer";
 import { BrandMark, BrandScope } from "@/components/booking/brand";
@@ -50,10 +49,16 @@ export async function MeetingPage({
   return (
     <BrandScope brand={brand}>
     <div className="m-auto flex w-full max-w-[940px] flex-col gap-[14px]">
-      <div className="flex items-center justify-between gap-[12px] px-[2px]">
-        <BrandMark brand={brand} hostName={company?.name || host.fullName || host.username} height={20} />
-        <Eyebrow size={10.5} className="text-on-ground">Booking page</Eyebrow>
-      </div>
+      {/* The mark alone. There used to be a "Booking page" eyebrow opposite
+          it, which told a guest standing on a booking page that they were on
+          a booking page. The row is left out entirely when the host has
+          hidden the mark, rather than kept as an empty strip that still
+          spends the column's gap above the card. */}
+      {brand?.logoHidden ? null : (
+        <div className="flex items-center gap-[12px] px-[2px]">
+          <BrandMark brand={brand} hostName={company?.name || host.fullName || host.username} height={20} />
+        </div>
+      )}
 
       <BookingFlow
         username={host.username}
