@@ -16,20 +16,25 @@ export default function SignupPage() {
     <AuthCard
       title="Create your account"
       blurb="Set up your booking link in about two minutes."
+      panel="signup"
       footer={
-        <>
-          <span className="text-[12.5px] leading-[1.55] text-pretty text-ink-3">
-            By creating an account you agree to our <Link href="/terms">Terms of Service</Link> and{" "}
-            <Link href="/privacy">Privacy Policy</Link>.
-          </span>
-          <div className="flex items-center gap-[6px] text-[13px] text-ink-2">
-            <span>Already have an account?</span>
-            <Link href="/login">Sign in</Link>
-          </div>
-        </>
+        <span className="text-center text-[12.5px] leading-[1.55] text-pretty text-ink-3">
+          By creating an account you agree to our <Link href="/terms">Terms of Service</Link> and{" "}
+          <Link href="/privacy">Privacy Policy</Link>.
+        </span>
       }
     >
-      <AuthForm mode="signup" />
+      <AuthForm
+        mode="signup"
+        switchLink={
+          <>
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold">
+              Sign in
+            </Link>
+          </>
+        }
+      />
     </AuthCard>
   );
 }

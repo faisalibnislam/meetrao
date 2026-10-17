@@ -99,7 +99,7 @@ function Fields({
               id="email"
               name="email"
               type="email"
-              height={38}
+              height={50} look="filled"
               placeholder="you@company.com"
               autoComplete="email"
               defaultValue={email}
@@ -107,7 +107,7 @@ function Fields({
             />
           </Field>
           <Field label="Reset code" htmlFor="code">
-            <Input id="code" name="code" type="text" height={38} placeholder="From the email" required />
+            <Input id="code" name="code" type="text" height={50} look="filled" placeholder="From the email" required />
             <Help>The code in the email we just sent.</Help>
           </Field>
         </>
@@ -118,7 +118,7 @@ function Fields({
           id="password"
           name="password"
           type="password"
-          height={38}
+          height={50} look="filled"
           placeholder="••••••••"
           autoComplete="new-password"
           minLength={8}
@@ -127,7 +127,7 @@ function Fields({
         <Help>At least 8 characters.</Help>
       </Field>
 
-      <Button type="submit" variant="accent" size={40} full busy={busy} className="mt-[2px]">
+      <Button type="submit" variant="accent" size={52} full busy={busy} className="mt-[6px]">
         {busy ? "Saving…" : "Update password"}
       </Button>
     </form>

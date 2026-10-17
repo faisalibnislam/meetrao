@@ -19,7 +19,7 @@ import { cx } from "@/lib/cx";
 export type ButtonVariant = "accent" | "secondary" | "ghost" | "danger" | "amber";
 
 /** Heights the design actually uses. 26 (table row) → 50 (mobile CTA). */
-export type ButtonSize = 24 | 26 | 28 | 30 | 32 | 34 | 36 | 38 | 40 | 42 | 44 | 46 | 50;
+export type ButtonSize = 24 | 26 | 28 | 30 | 32 | 34 | 36 | 38 | 40 | 42 | 44 | 46 | 50 | 52;
 
 const VARIANT: Record<ButtonVariant, string> = {
   accent:
@@ -45,6 +45,8 @@ const SIZE: Record<ButtonSize, string> = {
   44: "h-[44px] px-[16px] text-[14px] gap-[9px] rounded-[6px]",
   46: "h-[46px] px-[18px] text-[14.5px] gap-[9px] rounded-[7px]",
   50: "h-[50px] px-[20px] text-[15px] gap-[10px] rounded-[7px]",
+  /* Sign in and sign up: the one big action on a screen with nothing else on it. */
+  52: "h-[52px] px-[22px] text-[15px] gap-[10px] rounded-[12px]",
 };
 
 export function buttonClass(
