@@ -85,7 +85,7 @@ export function CompanyDashboard({ data, timezone }: { data: CompanyDashboard; t
 
   return (
     <div className="flex flex-col gap-[20px]">
-      <div className="grid grid-cols-2 gap-[11px] min-[1040px]:grid-cols-4 max-[440px]:grid-cols-1">
+      <div className="grid grid-cols-2 gap-[11px] min-[1040px]:grid-cols-4">
         <MetricCard
           icon="calendar"
           tone="accent"

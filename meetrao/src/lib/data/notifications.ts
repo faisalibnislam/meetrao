@@ -11,6 +11,9 @@ export type NotificationView = {
   title: string;
   body: string;
   bookingId: string | null;
+  /** The company the booking belongs to, or null for a personal one. */
+  companyId: string | null;
+  companyName: string | null;
   read: boolean;
   /** "2 hours ago", "Yesterday", relative, because that is how recency reads. */
   when: string;
@@ -47,6 +50,8 @@ type Row = {
   title: string;
   body: string;
   booking_id: string | null;
+  company_id?: string | null;
+  company_name?: string | null;
   read_at: string | null;
   created_at: string;
 };
@@ -60,6 +65,8 @@ function toView(rows: Row[]): NotificationView[] {
     title: n.title,
     body: n.body,
     bookingId: n.booking_id,
+    companyId: n.company_id ?? null,
+    companyName: n.company_name ?? null,
     read: Boolean(n.read_at),
     when: relative(new Date(n.created_at), now),
     at: n.created_at,

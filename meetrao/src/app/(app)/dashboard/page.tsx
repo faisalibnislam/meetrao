@@ -113,7 +113,7 @@ export default async function DashboardPage({
           </Callout>
         ) : null}
 
-        <div className="grid grid-cols-2 gap-[12px] min-[1040px]:grid-cols-4 max-[440px]:grid-cols-1">
+        <div className="grid grid-cols-2 gap-[12px] min-[1040px]:grid-cols-4">
           <MetricCard
             icon="calendar"
             tone="accent"

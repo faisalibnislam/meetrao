@@ -114,13 +114,18 @@ export function BookingsScreen({
           })}
         </div>
 
-        <SearchField
-          value={query}
-          onValueChange={setQuery}
-          placeholder="Search guest or email..."
-          aria-label="Search bookings by guest or email"
-          className="mb-[8px]"
-        />
+        {/* Nothing to search until there is something booked. A search box over
+            "No upcoming bookings" and "Past 0" is a control that cannot do
+            anything. Kept while a query is typed, so clearing it is possible. */}
+        {bookings.length > 0 || q ? (
+          <SearchField
+            value={query}
+            onValueChange={setQuery}
+            placeholder="Search guest or email..."
+            aria-label="Search bookings by guest or email"
+            className="mb-[8px]"
+          />
+        ) : null}
       </div>
 
       {/* Only when the account has no bookings in this workspace at all. A

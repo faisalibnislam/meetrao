@@ -94,18 +94,44 @@ export function AvailabilityEditor({ days, onChange }: { days: Day[]; onChange: 
                   </div>
                 ))}
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    const last = day.ranges.at(-1);
-                    const start = last ? Math.min(last.end + 60, 1380) : 840;
-                    patch(di, { ranges: [...day.ranges, { start, end: Math.min(start + 180, 1440) }] });
-                  }}
-                  className="inline-flex h-[24px] cursor-pointer items-center gap-[6px] self-start rounded-[5px] border border-transparent bg-transparent px-[7px] font-sans text-[12.5px] font-semibold text-accent-ink hover:bg-accent-soft"
-                >
-                  <Icon name="plus" size={10} />
-                  Add hours
-                </button>
+                <div className="flex flex-wrap items-center gap-[4px]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const last = day.ranges.at(-1);
+                      const start = last ? Math.min(last.end + 60, 1380) : 840;
+                      patch(di, { ranges: [...day.ranges, { start, end: Math.min(start + 180, 1440) }] });
+                    }}
+                    className="inline-flex h-[24px] cursor-pointer items-center gap-[6px] self-start rounded-[5px] border border-transparent bg-transparent px-[7px] font-sans text-[12.5px] font-semibold text-accent-ink hover:bg-accent-soft"
+                  >
+                    <Icon name="plus" size={10} />
+                    Add hours
+                  </button>
+                  {/* Setting the same hours seven times was the slow part of
+                    this screen. Copies to the days that are ticked, and
+                    leaves days off alone: a weekend somebody switched off
+                    stays off. */}
+                  <button
+                    type="button"
+                    title="Give every ticked day these hours"
+                    onClick={() =>
+                      onChange(
+                        days.map((d, i) =>
+                          i === di || !d.on
+                            ? d
+                            : {
+                                ...d,
+                                ranges: day.ranges.map((r) => ({ ...r })),
+                              },
+                        ),
+                      )
+                    }
+                    className="inline-flex h-[24px] cursor-pointer items-center gap-[6px] self-start rounded-[5px] border border-transparent bg-transparent px-[7px] font-sans text-[12.5px] font-semibold text-ink-2 hover:bg-fill-2"
+                  >
+                    <Icon name="copy" size={10} />
+                    Copy to other days
+                  </button>
+                </div>
               </>
             ) : (
               <span className="text-[13px] text-ink-3">Unavailable</span>
@@ -116,5 +142,3 @@ export function AvailabilityEditor({ days, onChange }: { days: Day[]; onChange: 
     </div>
   );
 }
-
-

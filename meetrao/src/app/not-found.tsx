@@ -28,6 +28,14 @@ export default function NotFound() {
     >
       The link may have a typo in it, or the page it pointed to has been taken down. If someone sent it to you, it is
       worth asking them for it again.
+      {/* The commonest dead end: somebody shortened a booking link to the
+          person's name. There is no page there by design (no list of what
+          somebody offers, see #48), so say what a whole link looks like. The
+          sentence is the same for every address, so it tells nobody whether
+          a name exists. */}
+      <span className="mt-[10px] block">
+        A booking link names a meeting, like meetrao.com/sam/intro-call. A name on its own does not open anything.
+      </span>
     </StatusPage>
   );
 }

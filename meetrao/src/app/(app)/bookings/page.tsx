@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AppScreen } from "@/components/app/app-screen";
+import { ButtonLink } from "@/components/ui/button";
 import { BookingsScreen } from "@/components/app/bookings-screen";
 import { listBookingsForScreen } from "@/lib/data/bookings";
 import { activeContext } from "@/lib/data/context";
@@ -21,6 +22,13 @@ export default async function BookingsPage() {
     <AppScreen
       title="Bookings"
       subtitle="Everyone who has booked time with you, and everything you scheduled yourself."
+      /* The list of bookings is where somebody looks for how to add one. It
+         was only in the sidebar, under a label that did not say what it did. */
+      actions={
+        <ButtonLink variant="accent" size={32} href="/bookings/new" icon="plus">
+          Schedule a meeting
+        </ButtonLink>
+      }
     >
       <BookingsScreen
         bookings={bookings}
