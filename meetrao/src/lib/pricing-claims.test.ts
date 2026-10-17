@@ -106,15 +106,15 @@ describe("the pricing page argues in the right order", () => {
      call to action turns the page into the thing it is trying not to be.
 
      They used to be a section of their own, headed "What it does not do". The
-     page now compares Free and Pro line by line and carries the limits as one
+     page now compares Free, Pro and Business line by line and carries the limits as one
      sentence under the table, smaller, but it must still come BEFORE the
      invitation to sign up, which is the part this has always been about. */
-  it("puts what neither plan does above the sign-up invitation", () => {
+  it("puts what no plan does above the sign-up invitation", () => {
     const comparison = readFileSync(
       path.join(SRC, "components", "marketing", "plan-comparison.tsx"),
       "utf8",
     );
-    expect(comparison, "the limits sentence is gone").toContain("Neither plan does");
+    expect(comparison, "the limits sentence is gone").toContain("No plan does");
 
     const page = readFileSync(
       path.join(SRC, "components", "marketing", "pricing-page.tsx"),

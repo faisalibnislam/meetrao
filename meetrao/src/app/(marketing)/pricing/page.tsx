@@ -10,15 +10,15 @@ export const metadata: Metadata = {
      pricing" and the answer worth putting in a title is the number. */
   title: "Pricing: free to book, $30 a year for Pro",
   description:
-    "Taking bookings is free: no card, no trial clock, no booking limit. Pro is $30 a year for a " +
-    "custom domain, your own branding and team links.",
+    "Taking bookings is free: no card, no trial clock, no booking limit. Pro is $30 a year for " +
+    "your own domain and branding; Business is $99 a year for teams.",
   alternates: { canonical: "/pricing" },
   openGraph: {
     images: [OG_IMAGE],
     type: "website",
     title: "Meetrao pricing: free to book, $30 a year for Pro",
     description:
-      "Taking bookings is free with no card. Pro adds a custom domain, your own branding, team links and the API.",
+      "Taking bookings is free with no card. Pro adds a custom domain, your own branding, team links and the API. Business runs it across several companies.",
     url: "/pricing",
   },
 };

@@ -79,8 +79,8 @@ export default function TermsPage() {
           share logins.
         </p>
         <p>
-          You choose a username, and it becomes your public booking link, for example{" "}
-          <code>meetrao.com/adam</code>. We may reclaim a username that impersonates someone, infringes a
+          You choose a username, and it becomes part of every public booking link you share, for example{" "}
+          <code>meetrao.com/adam/intro-call</code>. We may reclaim a username that impersonates someone, infringes a
           trademark, or is being held without use.
         </p>
         <p>

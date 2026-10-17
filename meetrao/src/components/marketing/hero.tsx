@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { ImageFrame } from "./image-frame";
-import { DemoMonthGrid, DemoSlot, demoDayLabel } from "./demo-calendar";
+import { DemoMonthGrid, DemoSlot, useDemoMonth } from "./demo-calendar";
+import { demoDayLabel } from "./demo-date";
+import { PRO_YEARLY } from "@/lib/pricing";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The hero. A living ground of drifting colour fields behind a real, clickable
@@ -29,8 +31,19 @@ const FACTS: { icon: "clock" | "video" | "globe"; text: string }[] = [
   { icon: "globe", text: "Times shown in your timezone" },
 ];
 
-export function Hero() {
-  const [day, setDay] = useState(9);
+/**
+ * `today` is the day the server rendered on, as "YYYY-MM-DD". The demo month
+ * hangs off it, and the browser swaps in its own day once hydrated: see
+ * demo-date.ts.
+ */
+export function Hero({ today }: { today: string }) {
+  const month = useDemoMonth(today);
+  /* Null until somebody clicks, so the selection follows the month rather
+     than being a number typed for one particular month. The server's month
+     and the browser's can differ, and a fixed default would then point at a
+     weekend or a day already gone. */
+  const [picked, setPicked] = useState<number | null>(null);
+  const day = picked ?? month.defaultDay;
   const [slot, setSlot] = useState("");
   const heroRef = useRef<HTMLElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
@@ -146,12 +159,20 @@ export function Hero() {
         <div className="mx-auto mt-[6px] flex w-full max-w-[1019px] flex-wrap items-center justify-center gap-x-[16px] gap-y-[12px] border-t border-white/20 pt-[20px]">
           <span className="inline-flex items-center gap-[9px] text-[15.5px] font-semibold tracking-[-0.008em] text-white">
             <Icon name="check" weight="solid" size={12} className="text-[#7FD8C4]" />
-            Free to start. Pro is $30 a year.
+            {/* The same story the pricing section and the footer tell: free
+                to take bookings, and the two paid plans named as paid. "Pro
+                is $30 a year" on its own left Business out, and sat above a
+                footer that said there was no subscription at all. */}
+            Free to take bookings, no card. Paid plans from {PRO_YEARLY}.
           </span>
           <span aria-hidden="true" className="h-[20px] w-[1px] flex-none bg-white/20" />
+          {/* A meeting, not a bare username. meetrao.com/<username> is a 404
+              by design (there is no page listing somebody's meetings, so a
+              link cannot be used to enumerate them), and promising it here
+              would send the first visitor who tried it to a dead end. */}
           <span className="inline-flex items-baseline gap-[8px] text-[13.5px] text-white/75">
             Your link is
-            <span className="text-[14.5px] font-medium text-white">meetrao.com/you</span>
+            <span className="text-[14.5px] font-medium text-white">meetrao.com/you/intro-call</span>
           </span>
         </div>
 
@@ -165,7 +186,7 @@ export function Hero() {
                 <span className="h-[8px] w-[8px] rounded-full bg-line-strong" />
               </span>
               <span className="min-w-0 flex-1 overflow-hidden text-left text-[11px] text-ellipsis whitespace-nowrap text-ink-3">
-                meetrao.com/adam
+                meetrao.com/adam/30-minute-consultation
               </span>
             </div>
 
@@ -212,12 +233,13 @@ export function Hero() {
                     <span className="text-[10px] tracking-[0.07em] text-ink-3 uppercase">
                       Select a date
                     </span>
-                    <span className="text-[13px] font-semibold text-ink">September 2026</span>
+                    <span className="text-[13px] font-semibold text-ink">{month.label}</span>
                   </div>
                   <DemoMonthGrid
+                    month={month}
                     selected={day}
                     onSelect={(d) => {
-                      setDay(d);
+                      setPicked(d);
                       setSlot("");
                     }}
                   />
@@ -228,7 +250,7 @@ export function Hero() {
                     <span className="text-[10px] tracking-[0.07em] text-ink-3 uppercase">
                       Available times
                     </span>
-                    <span className="text-[12.5px] text-ink-2">{demoDayLabel(day)}</span>
+                    <span className="text-[12.5px] text-ink-2">{demoDayLabel(month, day)}</span>
                   </div>
                   <div className="grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-[6px]">
                     {SLOTS.map((label) => (
