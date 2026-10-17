@@ -9,7 +9,8 @@ import { cx } from "@/lib/cx";
 /* ─────────────────────────────────────────────────────────────────────────────
    One card for log in, sign up, forgot and reset.
 
-   TWO PANELS INSIDE ONE FRAME. The left is the brand: the homepage hero's
+   TWO PANELS, EDGE TO EDGE. No card around them: the screen is the frame.
+   The left is the brand: the homepage hero's
    green, drifting, with what comes next written on it. The right is the form
    and nothing else, centred, with soft filled fields and one large button.
 
@@ -50,24 +51,22 @@ export function AuthCard({
   panel?: AuthPanel;
 }) {
   return (
-    <div className="box-border flex min-h-screen items-start justify-center p-[20px] max-[820px]:p-[12px]">
-      <div className="m-auto grid w-full max-w-[1120px] grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] gap-[10px] rounded-[30px] bg-surface p-[10px] shadow-[0_1px_2px_rgba(26,25,23,0.05),0_18px_50px_-24px_rgba(26,25,23,0.25)] max-[820px]:grid-cols-[1fr] max-[820px]:rounded-[22px]">
-        <BrandPanel panel={panel} />
+    <div className="grid min-h-screen w-full grid-cols-[minmax(0,1.08fr)_minmax(0,1fr)] bg-surface max-[820px]:grid-cols-[1fr]">
+      <BrandPanel panel={panel} />
 
-        <div className="flex min-w-0 flex-col items-center justify-center px-[40px] py-[52px] max-[820px]:px-[14px] max-[820px]:py-[26px]">
-          <div className="flex w-full max-w-[420px] flex-col gap-[24px]">
-            <LogoLink height={24} className="hidden max-[820px]:block" />
+      <div className="flex min-w-0 flex-col items-center justify-center px-[48px] py-[56px] max-[820px]:px-[20px] max-[820px]:py-[32px]">
+        <div className="flex w-full max-w-[420px] flex-col gap-[24px]">
+          <LogoLink height={24} className="hidden max-[820px]:block" />
 
-            <div className="flex flex-col items-center gap-[8px] text-center max-[820px]:items-start max-[820px]:text-left">
-              <h1 className="m-0 font-serif text-[44px] leading-[1.02] font-normal tracking-[-0.015em] text-ink max-[820px]:text-[36px]">
-                {title}
-              </h1>
-              <p className="m-0 max-w-[36ch] text-[14px] leading-[1.55] text-pretty text-ink-2">{blurb}</p>
-            </div>
-
-            {children}
-            {footer}
+          <div className="flex flex-col items-center gap-[8px] text-center max-[820px]:items-start max-[820px]:text-left">
+            <h1 className="m-0 font-serif text-[44px] leading-[1.02] font-normal tracking-[-0.015em] text-ink max-[820px]:text-[36px]">
+              {title}
+            </h1>
+            <p className="m-0 max-w-[36ch] text-[14px] leading-[1.55] text-pretty text-ink-2">{blurb}</p>
           </div>
+
+          {children}
+          {footer}
         </div>
       </div>
     </div>
@@ -78,7 +77,7 @@ function BrandPanel({ panel }: { panel: AuthPanel }) {
   const signup = panel === "signup";
 
   return (
-    <aside className="relative isolate flex min-h-[620px] min-w-0 flex-col overflow-hidden rounded-[22px] bg-[#103b33] p-[40px] text-white max-[820px]:hidden">
+    <aside className="sticky top-0 isolate flex h-screen min-h-[620px] min-w-0 flex-col overflow-hidden bg-[#103b33] px-[56px] py-[48px] text-white max-[1100px]:px-[40px] max-[820px]:hidden">
       {/* The hero's light, the same three drifting fields and sweep, so the
           sign-in screen reads as the same place the visitor just came from. */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-1 overflow-hidden">
@@ -107,7 +106,7 @@ function BrandPanel({ panel }: { panel: AuthPanel }) {
           Free to take bookings, no card
         </span>
 
-        <h2 className="m-0 font-serif text-[52px] leading-[1.02] font-normal tracking-[-0.015em] text-pretty text-white">
+        <h2 className="m-0 max-w-[14ch] font-serif text-[60px] leading-[1.02] max-[1100px]:text-[48px] font-normal tracking-[-0.015em] text-pretty text-white">
           {signup ? "Start taking bookings" : "Good to see you again"}
         </h2>
         <p className="m-0 max-w-[40ch] text-[15px] leading-[1.55] text-white/80">
@@ -116,7 +115,7 @@ function BrandPanel({ panel }: { panel: AuthPanel }) {
             : "Everything is where you left it."}
         </p>
 
-        <ol className="m-0 mt-[14px] grid list-none grid-cols-3 gap-[10px] p-0">
+        <ol className="m-0 mt-[14px] grid max-w-[640px] list-none grid-cols-3 gap-[12px] p-0">
           {signup
             ? STEPS.map((step, i) => (
                 <PanelCard key={step.title} lit={i === 0} badge={<StepNumber n={i + 1} lit={i === 0} />}>
@@ -141,8 +140,8 @@ function BrandPanel({ panel }: { panel: AuthPanel }) {
             all. A visitor who finds out about a paid tier after investing an
             afternoon feels misled, even when nothing was hidden. */}
         <p className="m-0 text-[12.5px] leading-[1.55] text-white/70">
-          Pro is {PRO_YEARLY} for your own domain and branding. Business is {BUSINESS_YEARLY} for a company with its
-          own people.{" "}
+          Pro is {PRO_YEARLY} for your own domain and branding. Business is {BUSINESS_YEARLY} for a company with its own
+          people.{" "}
           <Link href="/pricing" className="unlink font-semibold text-white underline underline-offset-2">
             Compare plans
           </Link>
@@ -157,9 +156,7 @@ function PanelCard({ lit = false, badge, children }: { lit?: boolean; badge: Rea
     <li
       className={cx(
         "flex min-h-[132px] flex-col justify-between gap-[14px] rounded-[16px] p-[16px]",
-        lit
-          ? "bg-white text-ink"
-          : "border border-white/15 bg-white/10 text-white/85 backdrop-blur-[8px]",
+        lit ? "bg-white text-ink" : "border border-white/15 bg-white/10 text-white/85 backdrop-blur-[8px]",
       )}
     >
       <span className={cx("inline-flex", lit ? "text-accent" : "text-white")}>{badge}</span>
