@@ -38,7 +38,7 @@ export async function startCheckout(cadence: Cadence, tier: Tier = "pro"): Promi
       email: session.profile.email,
       // The plan is granted by the webhook, not by arriving here, this page
       // just says thank you and reloads it.
-      successUrl: `${siteUrl()}/settings/billing?welcome=1`,
+      successUrl: `${siteUrl()}/settings/plan?welcome=1`,
     });
     return { url: checkout.url };
   } catch (cause) {

@@ -759,7 +759,7 @@ export function BrandingPanel({
         onClose={() => setAskUpgrade(false)}
         title="A page with no mark is part of Pro"
         subtitle="Free booking pages carry the Meetrao mark. Pro puts your own logo there instead, or takes it off entirely."
-        primary={{ label: "See Pro", onClick: () => router.push("/settings/billing") }}
+        primary={{ label: "See Pro", onClick: () => router.push("/settings/plan") }}
         secondary={{ label: "Not now", onClick: () => setAskUpgrade(false) }}
       />
     </div>

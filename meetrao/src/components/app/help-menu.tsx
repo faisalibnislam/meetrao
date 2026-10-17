@@ -6,34 +6,29 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   Settings, help, support and the way out.
+   Help, support and the way out, at the foot of the rail.
 
-   These used to hang off the workspace switcher at the top of the rail, which
-   put two unrelated questions behind one control: WHICH COMPANY AM I WORKING
-   IN, which changes what every screen shows, and WHERE DO I GO TO CHANGE MY
-   OWN THINGS, which changes nothing until you arrive. Switching is something
-   somebody does several times an hour; logging out is something they do once
-   a month, and it does not belong in the same list.
+   SETTINGS USED TO LIVE HERE TOO, behind this collapsible, and that was the
+   wrong call. Settings is a screen like Bookings or Availability: somebody
+   goes there on purpose and expects to find it where the other screens are.
+   Hidden in a menu at the very bottom of the rail it was the one destination
+   that took two clicks and a search, so it is now a plain row in the nav
+   (see sidebar.tsx) and this menu keeps only the things that are genuinely
+   occasional and are not screens of the app: the help centre, support and
+   logging out.
+
+   These still stay off the workspace switcher at the top. Switching is
+   something somebody does several times an hour; logging out is something
+   they do once a month, and it does not belong in the same list.
 
    OPENS UPWARD, because it sits at the bottom of the rail. A menu that opened
    downward from here would run off the screen.
-
-   The settings link still names its workspace, since settings belong to the
-   one in force and that is the whole reason the two controls were ever
-   merged.
    ───────────────────────────────────────────────────────────────────────── */
 
 const item =
   "box-border flex w-full cursor-pointer items-center gap-[9px] rounded-[6px] border-0 bg-transparent px-[9px] py-[7px] text-left text-[12.5px] text-ink no-underline hover:bg-fill";
 
-export function SettingsMenu({
-  settingsLabel,
-  onSignOut,
-}: {
-  /** "Settings" in personal, "Company settings" inside a company. */
-  settingsLabel: string;
-  onSignOut: () => void | Promise<void>;
-}) {
+export function HelpMenu({ onSignOut }: { onSignOut: () => void | Promise<void> }) {
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
 
@@ -60,7 +55,6 @@ export function SettingsMenu({
           role="menu"
           className="animate-in absolute bottom-[calc(100%+6px)] right-0 left-0 z-95 min-w-[180px] rounded-[8px] border border-line bg-surface p-[6px] shadow-[var(--pop)]"
         >
-          <MenuLink href="/settings" icon="gear" label={settingsLabel} />
           <MenuLink href="/help" icon="circle-question" label="Help centre" newTab />
           <MenuLink href="/support" icon="envelope" label="Support" />
           <span aria-hidden="true" className="mx-[2px] my-[5px] block h-[1px] bg-line-soft" />
@@ -82,8 +76,8 @@ export function SettingsMenu({
           open ? "border-line bg-surface text-ink" : "border-transparent bg-transparent text-ink-2 hover:bg-fill hover:text-ink",
         )}
       >
-        <Icon name="gear" size={13} className="flex-none text-ink-3" />
-        <span className="min-w-0 flex-1 text-left">Settings</span>
+        <Icon name="circle-question" size={13} className="flex-none text-ink-3" />
+        <span className="min-w-0 flex-1 text-left">Help and log out</span>
         <Icon
           name="chevron-down"
           size={9}

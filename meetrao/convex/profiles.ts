@@ -109,6 +109,8 @@ export const updateOwn = mutation({
     avatar_url: v.optional(v.union(v.string(), v.null())),
     default_duration_minutes: v.optional(v.number()),
     default_notice_minutes: v.optional(v.number()),
+    default_buffer_minutes: v.optional(v.number()),
+    default_window_days: v.optional(v.number()),
     notify_new_booking: v.optional(v.boolean()),
     notify_booking_changed: v.optional(v.boolean()),
     notify_booking_cancelled: v.optional(v.boolean()),
@@ -145,6 +147,13 @@ export const updateOwn = mutation({
     if (dur !== undefined && (dur < 5 || dur > 480)) fail("Duration must be 5–480 minutes.");
     const notice = patch.default_notice_minutes as number | undefined;
     if (notice !== undefined && notice < 0) fail("Notice cannot be negative.");
+    /* The same lists a meeting offers (src/lib/actions/meetings.ts), because
+       a default is copied onto a new meeting as it stands and a value the
+       meeting form cannot show would arrive as a blank menu. */
+    const buffer = patch.default_buffer_minutes as number | undefined;
+    if (buffer !== undefined && ![0, 5, 10, 15].includes(buffer)) fail("Pick a buffer from the list.");
+    const windowDays = patch.default_window_days as number | undefined;
+    if (windowDays !== undefined && ![7, 14, 30, 60].includes(windowDays)) fail("Pick a booking window from the list.");
 
     await ctx.db.patch(me._id, patch);
     const after = await ctx.db.get(me._id);

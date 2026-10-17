@@ -56,6 +56,9 @@ export const applyPolarSubscription = mutation({
     /* Optional: a delivery from before this existed carries none, and every
        one of those was Pro. */
     productId: v.optional(v.union(v.string(), v.null())),
+    /* Polar's cancel_at_period_end. Optional for the same reason: older
+       deliveries, and older deploys of the route, send none. */
+    cancelAtPeriodEnd: v.optional(v.union(v.boolean(), v.null())),
   },
   handler: async (ctx, a) => {
     const byId = a.profileId
@@ -85,6 +88,12 @@ export const applyPolarSubscription = mutation({
       plan_until: a.currentPeriodEnd,
       polar_customer_id: a.customerId ?? profile.polar_customer_id ?? null,
       polar_subscription_id: a.subscriptionId,
+      /* Kept only so the Plan screen can say "monthly" or "yearly" and
+         "renews" or "ends". Neither decides the plan: that is `plan` and
+         `plan_until` above. An event without a product leaves the stored one
+         alone rather than wiping it, since some Polar events omit it. */
+      polar_product_id: a.productId ?? profile.polar_product_id ?? null,
+      plan_cancels_at_period_end: a.cancelAtPeriodEnd ?? false,
       updated_at: Date.now(),
     });
 
@@ -98,15 +107,47 @@ export const applyPolarSubscription = mutation({
   },
 });
 
+/**
+ * Monthly or yearly, from the product the subscription is for.
+ *
+ * Null when it cannot be told: no product stored yet (a subscription that has
+ * had no event since the field existed), no settings row, or a product the
+ * console does not list. The Plan screen then leaves cadence out rather than
+ * printing a guess as a fact about somebody's money.
+ */
+function cadenceOf(
+  productId: string | null | undefined,
+  settings: Doc<"platform_settings"> | null,
+): "monthly" | "yearly" | null {
+  if (!productId || !settings) return null;
+  if (productId === settings.polar_product_monthly || productId === settings.polar_product_business_monthly) {
+    return "monthly";
+  }
+  if (productId === settings.polar_product_yearly || productId === settings.polar_product_business_yearly) {
+    return "yearly";
+  }
+  return null;
+}
+
 /** The caller's own plan, for the screens that gate on it. */
 export const mine = query({
   args: {},
   handler: async (ctx) => {
     const me = await requireProfile(ctx);
+    const subscribed = hasSubscription(me);
+    /* Only read when there is a subscription to describe. Every page of the
+       app runs this query for the rail's upgrade button, and a free account
+       has no cadence to look up. */
+    const settings = subscribed ? await ctx.db.query("platform_settings").first() : null;
     return {
+      /* How a live subscription is billed, and whether it is set to end at
+         `plan_until` rather than renew. Both describe the subscription only,
+         never a complimentary grant, and neither is read by any gate. */
+      cadence: subscribed ? cadenceOf(me.polar_product_id, settings) : null,
+      cancels_at_period_end: subscribed ? me.plan_cancels_at_period_end === true : false,
       plan: planOf(me),
       plan_until: me.plan_until ? new Date(me.plan_until).toISOString() : null,
-      has_subscription: hasSubscription(me),
+      has_subscription: subscribed,
       /* Pro without paying for it. The host is told plainly rather than shown
          a billing portal with nothing in it, and never shown the operator's
          note, which is written for operators. */

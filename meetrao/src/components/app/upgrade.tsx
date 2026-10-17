@@ -59,7 +59,7 @@ function planLabel(to: UpgradeTo): string {
 export function SidebarUpgrade() {
   return (
     <Link
-      href="/settings/billing"
+      href="/settings/plan"
       className="unlink mt-auto mb-[10px] box-border flex w-full flex-col gap-[2px] rounded-[7px] border border-accent-line bg-accent-soft px-[11px] py-[9px] no-underline transition-colors duration-[120ms] hover:border-accent hover:bg-accent-soft max-[820px]:hidden"
     >
       <span className="flex items-center gap-[6px] text-[12.5px] font-semibold text-accent-ink">
@@ -100,7 +100,7 @@ export function UpgradeCallout({
           {priceLine(to)}.
         </span>
         <Link
-          href="/settings/billing"
+          href="/settings/plan"
           className="unlink inline-flex h-[32px] w-fit items-center rounded-[7px] bg-accent px-[13px] text-[12.5px] font-semibold text-on-accent no-underline hover:bg-accent-2 hover:text-on-accent"
         >
           See {planLabel(to)}
@@ -115,7 +115,7 @@ export function UpgradeHint({ to, feature }: { to: UpgradeTo; feature: string })
   return (
     <span className="text-[12px] leading-[1.5] text-ink-3">
       {feature} needs {planLabel(to)}, {priceLine(to)}.{" "}
-      <Link href="/settings/billing">Upgrade</Link>
+      <Link href="/settings/plan">Upgrade</Link>
     </span>
   );
 }

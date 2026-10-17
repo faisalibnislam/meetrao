@@ -38,6 +38,10 @@ type SubscriptionEvent = {
     product?: { id?: string | null } | null;
     external_customer_id?: string | null;
     metadata?: Record<string, unknown> | null;
+    /* True once somebody has cancelled: the plan stays on until the period
+       ends and then stops, rather than renewing. Read only so the Plan screen
+       can say "Ends" instead of "Renews". */
+    cancel_at_period_end?: boolean | null;
   };
 };
 
@@ -89,6 +93,7 @@ export async function POST(request: NextRequest) {
     status: data.status,
     currentPeriodEnd: endsAt ? Date.parse(endsAt) : null,
     productId: data.product_id ?? data.product?.id ?? null,
+    cancelAtPeriodEnd: typeof data.cancel_at_period_end === "boolean" ? data.cancel_at_period_end : null,
   });
 
   return NextResponse.json({ ok: true, ...result });
