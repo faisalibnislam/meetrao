@@ -20,10 +20,12 @@ export default async function NewMeetingPage() {
           name: "",
           description: "",
           // The booking defaults from Settings apply to every new meeting.
+          // Buffer and window are absent on profiles from before they could
+          // be set, which reads as what every new meeting started with then.
           duration: profile.default_duration_minutes,
-          buffer: 0,
+          buffer: profile.default_buffer_minutes ?? 0,
           notice: profile.default_notice_minutes,
-          window: 30,
+          window: profile.default_window_days ?? 30,
           active: true,
           scheduleId: null,
           questions: [],

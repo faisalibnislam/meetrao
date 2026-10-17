@@ -441,7 +441,7 @@ export function StepReady({
           <span className="text-[12.5px] leading-[1.55] text-ink-2">
             Pro is $30 a year when you want the page to look like yours, your logo, your colour, and your
             own domain at meeting.yourcompany.com/your-name, or one link your whole team answers.{" "}
-            <Link href="/settings/billing" className="font-semibold">
+            <Link href="/settings/plan" className="font-semibold">
               See Pro
             </Link>
           </span>

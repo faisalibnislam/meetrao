@@ -32,6 +32,16 @@ export type WorkspaceOption = {
   avatarUrl: string | null;
   /** Its accent, which tints the initials when there is no mark. */
   color: string | null;
+  /**
+   * The company's link name, null for Personal.
+   *
+   * Shown under each company in the list because the display name is not
+   * unique on its own: companies made before names were checked per owner
+   * can share one, and two rows both reading "Harbour Studio" give nobody a
+   * way to pick. The link name always differs, and it is the thing guests
+   * see in the address bar anyway.
+   */
+  slug?: string | null;
 };
 
 const item =
@@ -175,6 +185,14 @@ export function WorkspaceMenu({
   const active: WorkspaceOption = workspaces.find((w) => w.id === activeId) ??
     workspaces[0] ?? { id: null, name: "Personal", logoUrl: null, color: null };
 
+  /* Whether another workspace wears the same name as the one in force. Only
+     then does the closed control add the link name beside it: in the common
+     case it would be noise, and the email underneath is already the answer
+     to "whose account is this". */
+  const twin = workspaces.some(
+    (w) => w.id !== active.id && w.name.trim().toLowerCase() === active.name.trim().toLowerCase(),
+  );
+
   function choose(id: string | null) {
     setOpen(false);
     if (id === activeId) return;
@@ -231,6 +249,7 @@ export function WorkspaceMenu({
         <span className="flex min-w-0 flex-1 flex-col">
           <span className="overflow-hidden text-left text-[12.5px] font-semibold text-ellipsis whitespace-nowrap text-ink">
             {active.name}
+            {twin && active.slug ? <span className="ml-[5px] font-normal text-ink-3">/{active.slug}</span> : null}
           </span>
           <span className="overflow-hidden text-left text-[11.5px] text-ellipsis whitespace-nowrap text-ink-3">
             {email}
@@ -262,7 +281,22 @@ export function WorkspaceMenu({
               className={cx(item, w.id === activeId && "bg-accent-soft font-semibold text-accent-ink")}
             >
               <WorkspaceMark option={w} avatarUrl={avatarUrl} name={name} size={20} />
-              <span className="min-w-0 flex-1 overflow-hidden text-ellipsis whitespace-nowrap">{w.name}</span>
+              <span className="flex min-w-0 flex-1 flex-col">
+                <span className="overflow-hidden text-ellipsis whitespace-nowrap">{w.name}</span>
+                {/* Every company carries its link name, not only the ones
+                    that share a name: a list where some rows have a second
+                    line and some do not reads as two kinds of thing. */}
+                {w.slug ? (
+                  <span
+                    className={cx(
+                      "overflow-hidden text-[11px] font-normal text-ellipsis whitespace-nowrap",
+                      w.id === activeId ? "text-accent-ink" : "text-ink-3",
+                    )}
+                  >
+                    /{w.slug}
+                  </span>
+                ) : null}
+              </span>
               {w.id === activeId ? (
                 <Icon name="check" weight="solid" size={10} className="flex-none" aria-hidden="true" />
               ) : null}

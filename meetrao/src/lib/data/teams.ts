@@ -4,8 +4,9 @@ import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { AssignableMeeting, TeamView } from "@/components/app/team-panel";
 import type { HookView, KeyView } from "@/components/app/developer-panel";
-import type { DomainView, PlanView, TimingView } from "@/components/app/billing-panel";
+import type { DomainView, PlanView, UsageView } from "@/components/app/billing-panel";
 import { isPaid } from "@/convex/lib/plan";
+import { limitsFor } from "@/convex/lib/limits";
 import type { CompanyRole, CompanyView } from "@/components/app/companies-panel";
 import type { Plan } from "@/convex/lib/plan";
 import { activeContext, contextChoices } from "@/lib/data/context";
@@ -25,15 +26,16 @@ export async function isProNow(): Promise<boolean> {
 export async function billingPanelData(): Promise<{
   plan: PlanView;
   domain: DomainView;
-  timing: TimingView;
+  usage: UsageView;
 }> {
-  /* The profile is the session's, which every settings page has already
-     read; asking Convex for it again was a third query for the same row. */
+  /* The reminder timing used to be read here too. It moved to the
+     Notifications tab, beside the switch it qualifies, and is read from the
+     session's profile there. */
   const convex = await convexServer();
-  const [plan, domain, { profile }] = await Promise.all([
+  const [plan, domain, companies] = await Promise.all([
     ownPlan(),
     convex.query(api.domains.mine, {}),
-    requireSession(),
+    convex.query(api.companies.mine, {}),
   ]);
 
   return {
@@ -43,12 +45,19 @@ export async function billingPanelData(): Promise<{
       hasSubscription: plan.has_subscription,
       complimentary: plan.complimentary,
       compUntil: plan.comp_until,
+      cadence: plan.cadence,
+      cancelsAtPeriodEnd: plan.cancels_at_period_end,
     },
     domain: { domain: domain.domain, verifiedAt: domain.verified_at },
-    timing: {
-      // Absent is the free schedule, which is also where Pro starts.
-      long: profile.reminder_long_minutes ?? 1440,
-      short: profile.reminder_short_minutes ?? 60,
+    /* What the plan's caps are measured against. Companies OWNED, not joined:
+       being a member of somebody else's company costs this account nothing
+       and counts against that owner. The per-company cap comes from the same
+       table the mutations enforce, so the screen cannot promise more than
+       addMember allows. */
+    usage: {
+      companiesOwned: companies.owned,
+      companyLimit: companies.company_limit,
+      membersPerCompany: limitsFor(plan.plan).membersPerCompany,
     },
   };
 }

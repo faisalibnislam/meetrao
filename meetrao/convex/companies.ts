@@ -5,6 +5,7 @@ import { requireProfile, AuthError } from "./lib/auth";
 import { uuid } from "./lib/ids";
 import { planOf } from "./lib/plan";
 import { limitsFor } from "./lib/limits";
+import { clashingCompany, duplicateNameMessage } from "./lib/companyNames";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 
@@ -352,6 +353,14 @@ export const create = mutation({
     if (!name) fail("Give the company a name.");
     if (name.length > MAX_NAME) fail(`Keep the name under ${MAX_NAME} characters.`);
 
+    /* Before the slug, because it is the more specific refusal: somebody
+       typing a name they already use wants to hear that, not that a link
+       derived from it is taken. See convex/lib/companyNames.ts for why the
+       rule is per owner rather than product wide. `owned` is the list read
+       for the cap above, so this costs no extra query. */
+    const twin = clashingCompany(name, owned);
+    if (twin) fail(duplicateNameMessage(twin), "DUPLICATE_NAME");
+
     const slug = normaliseSlug(a.slug || name);
     if (slug.length < 3) fail("That link is too short.");
     if (!(await slugIsFree(ctx, slug))) fail("That name is taken.");
@@ -399,6 +408,19 @@ export const rename = mutation({
     const name = a.name.trim();
     if (!name) fail("Give the company a name.");
     if (name.length > MAX_NAME) fail(`Keep the name under ${MAX_NAME} characters.`);
+
+    /* The OWNER's other companies, not the caller's. An admin renaming
+       somebody else's company must not be able to give it the name of
+       another company that same owner holds, which is the duplicate the
+       owner's switcher would show. The company itself is excluded, so a
+       rename that keeps the name (or only changes its capitalisation) and
+       edits the link passes. */
+    const siblings = await ctx.db
+      .query("companies")
+      .withIndex("by_owner", (q) => q.eq("owner_id", company.owner_id))
+      .collect();
+    const twin = clashingCompany(name, siblings, company.id);
+    if (twin) fail(duplicateNameMessage(twin), "DUPLICATE_NAME");
 
     const slug = normaliseSlug(a.slug || name);
     if (slug.length < 3) fail("That link is too short.");

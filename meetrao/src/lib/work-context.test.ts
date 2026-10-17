@@ -112,32 +112,50 @@ describe("the workspace switcher", () => {
       "aria-label={`${active.name}, signed in as ${email}. Switch workspace.`}",
     );
   });
+
+  /* Two companies made before names were checked per owner can share one.
+     The link name is unique, so every company row carries it. */
+  it("shows each company's link name under its name", () => {
+    expect(SWITCHER).toContain("/{w.slug}");
+  });
 });
 
-describe("the settings menu", () => {
+/* Settings was behind a collapsible at the foot of the rail, the one screen
+   that took two clicks to reach. It is now an ordinary nav row and the foot
+   menu keeps only help, support and logging out. These assertions replaced
+   the ones that pinned Settings inside that menu. */
+describe("settings in the rail", () => {
   const RAIL = read("src/components/app/sidebar.tsx");
-  const MENU = read("src/components/app/settings-menu.tsx");
+  const MENU = read("src/components/app/help-menu.tsx");
 
-  it("sits at the foot of the rail, not on the switcher", () => {
-    expect(RAIL).toContain("<SettingsMenu");
-    const at = RAIL.indexOf("<SettingsMenu");
-    const switcher = RAIL.indexOf("<WorkspaceMenu");
-    expect(at, "below everything a host uses daily").toBeGreaterThan(switcher);
-  });
-
-  it("carries the four things that left the switcher", () => {
-    for (const label of ["Help centre", "Support", "Log out"]) {
-      expect(MENU).toContain(label);
-    }
-    expect(MENU).toContain('href="/settings"');
+  it("is a nav row like the others, for hosts", () => {
+    expect(RAIL).toContain('{ href: "/settings", label: activeContextId ? "Company settings" : "Settings", icon: "gear" }');
+    expect(RAIL).toContain("rows.map((item) =>");
+    // The admin console passes its own Settings row; it must not get two.
+    expect(RAIL).toContain("const rows: NavItem[] = isAdmin");
   });
 
   /* Settings belong to the workspace in force, which is why the label still
      names its KIND. Pasting the company's name in reads as a thing belonging
      to that company, and the row changes width on every switch. */
   it("labels settings by workspace kind, not by name", () => {
-    expect(RAIL).toContain('settingsLabel={activeContextId ? "Company settings" : "Settings"}');
+    expect(RAIL).toContain('activeContextId ? "Company settings" : "Settings"');
     expect(RAIL).not.toContain("`${active.name} settings`");
+  });
+
+  it("is not repeated in the foot menu or the phone drawer", () => {
+    expect(MENU).not.toContain('href="/settings"');
+    expect(RAIL).not.toContain('<DrawerLink href="/settings"');
+  });
+
+  it("leaves help and the way out at the foot of the rail, not on the switcher", () => {
+    expect(RAIL).toContain("<HelpMenu");
+    const at = RAIL.indexOf("<HelpMenu");
+    const switcher = RAIL.indexOf("<WorkspaceMenu");
+    expect(at, "below everything a host uses daily").toBeGreaterThan(switcher);
+    for (const label of ["Help centre", "Support", "Log out"]) {
+      expect(MENU).toContain(label);
+    }
   });
 
   /* It is pinned to the bottom of the rail, so a menu opening downward would

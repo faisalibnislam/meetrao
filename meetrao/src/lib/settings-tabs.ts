@@ -29,7 +29,7 @@ export const PERSONAL_TABS = [
   { key: "calendar", label: "Calendar" },
   { key: "booking", label: "Booking" },
   { key: "branding", label: "Branding" },
-  { key: "billing", label: "Plan" },
+  { key: "plan", label: "Plan" },
   { key: "companies", label: "Companies" },
   { key: "developer", label: "Developer" },
   { key: "notifications", label: "Notifications" },
@@ -55,6 +55,17 @@ export const SETTINGS_TABS = [
 ] as const;
 
 export type SettingsTab = (typeof SETTINGS_TABS)[number]["key"];
+
+/* Tabs that have moved, old segment to new.
+
+   The Plan tab lived at /settings/billing while its label said Plan, so the
+   address and the thing on screen named two different ideas. /settings/plan
+   is the canonical path now, and the old one redirects rather than 404ing
+   because it is in places we cannot edit: Polar checkouts already in flight
+   carry /settings/billing?welcome=1 as their return address, and people have
+   it bookmarked. The settings route keeps the query string on the way
+   through, which is what the welcome note after a checkout depends on. */
+export const MOVED_TABS: Readonly<Record<string, SettingsTab>> = { billing: "plan" };
 
 export function tabsFor(companyId: string | null) {
   return companyId ? COMPANY_TABS : PERSONAL_TABS;

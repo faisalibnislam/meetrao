@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { AppScreen } from "@/components/app/app-screen";
 import { SettingsNav } from "@/components/app/settings-nav";
-import { SETTINGS_TABS, defaultTab, tabsFor, type SettingsTab } from "@/lib/settings-tabs";
+import { MOVED_TABS, SETTINGS_TABS, defaultTab, tabsFor, type SettingsTab } from "@/lib/settings-tabs";
 import { activeContext } from "@/lib/data/context";
 import {
   AccountPanel,
@@ -14,7 +14,7 @@ import {
 import { signOut } from "@/lib/actions/auth";
 import { requireOnboardedSession } from "@/lib/data/session";
 import { connectionStatus } from "@/lib/google/connection";
-import { timezoneOptions } from "@/lib/timezones";
+import { timezoneLabel } from "@/lib/timezones";
 import { TeamPanel } from "@/components/app/team-panel";
 import { TeamPitch } from "@/components/app/team-pitch";
 import { DeveloperPanel } from "@/components/app/developer-panel";
@@ -26,6 +26,7 @@ import {
   brandingPanelData,
   companiesPanelData,
   developerPanelData,
+  isProNow,
   soloCompany,
   teamPanelData,
 } from "@/lib/data/teams";
@@ -45,10 +46,28 @@ export default async function SettingsPage({
   searchParams,
 }: {
   params: Promise<{ tab?: string[] }>;
-  searchParams: Promise<{ calendar?: string; welcome?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { tab: segments } = await params;
-  const { calendar, welcome } = await searchParams;
+  const query = await searchParams;
+  const calendar = typeof query.calendar === "string" ? query.calendar : undefined;
+  const welcome = typeof query.welcome === "string" ? query.welcome : undefined;
+
+  /* A tab that has moved, sent to its new address with the query string
+     intact. Before the session check on purpose: somebody signed out who
+     follows /settings/billing?welcome=1 back from a Polar checkout should be
+     asked to sign in on the right URL, not the old one. The query matters
+     because ?welcome=1 is what tells the Plan tab a payment has just gone
+     through. See MOVED_TABS in src/lib/settings-tabs.ts. */
+  const moved = segments?.length === 1 ? MOVED_TABS[segments[0]] : undefined;
+  if (moved) {
+    const keep = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      for (const one of Array.isArray(value) ? value : value === undefined ? [] : [value]) keep.append(key, one);
+    }
+    const rest = keep.toString();
+    permanentRedirect(`/settings/${moved}${rest ? `?${rest}` : ""}`);
+  }
 
   const session = await requireOnboardedSession();
 
@@ -79,7 +98,7 @@ export default async function SettingsPage({
             Branding screen showed Personal's colours inside a company and
             Save colour would have written them onto the company. */}
         <div key={context.companyId ?? "personal"} className="flex min-w-0 max-w-[560px] flex-col gap-[20px]">
-          {tab === "billing" ? (
+          {tab === "plan" ? (
           <BillingPanel {...(await billingPanelData())} welcome={welcome === "1"} />
         ) : null}
         {tab === "branding" ? (
@@ -106,14 +125,15 @@ export default async function SettingsPage({
           {tab === "calendar" ? (
             <CalendarPanel
               {...(await connectionStatus(session.userId))}
-              timezone={session.profile.timezone}
-              timezones={timezoneOptions()}
+              timezoneLabel={timezoneLabel(session.profile.timezone)}
               failure={calendar && calendar !== "connected" ? (FAILURES[calendar] ?? FAILURES.failed) : null}
             />
           ) : null}
 
           {tab === "booking" ? <BookingPanel profile={session.profile} /> : null}
-          {tab === "notifications" ? <NotificationsPanel profile={session.profile} /> : null}
+          {tab === "notifications" ? (
+            <NotificationsPanel profile={session.profile} pro={await isProNow()} />
+          ) : null}
 
           {tab === "account" ? (
             <AccountPanel profile={session.profile} verified={session.verified} onSignOut={signOut} />
