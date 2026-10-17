@@ -65,7 +65,7 @@ export function toView(row: Booking, timeZone: string, now: Date): BookingView {
       month: "2-digit",
       day: "2-digit",
     }).format(start),
-    dayHeading: dateFormat("en-GB", {
+    dayHeading: dateFormat("en-US", {
       timeZone,
       weekday: "short",
       day: "numeric",

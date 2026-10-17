@@ -19,7 +19,7 @@ export function PlanComparison({ footnote = true }: { footnote?: boolean }) {
           phone width is unreadable either way. The breakpoint moved from 720
           with the extra column. */}
       <div className="overflow-hidden rounded-[12px] border border-line">
-        <div className="grid-cols-[minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.9fr)] bg-fill max-[860px]:hidden">
+        <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,0.9fr)_minmax(0,0.9fr)] bg-fill max-[860px]:hidden">
           <span className="px-[16px] py-[13px] text-[12px] tracking-[0.04em] text-ink-3 uppercase">
             What you get
           </span>
@@ -58,7 +58,7 @@ export function PlanComparison({ footnote = true }: { footnote?: boolean }) {
            that says what it cannot do is more believable than one that does
            not, and this is the smallest honest version of it. */
         <p className="mt-[16px] max-w-[760px] text-[13px] leading-[1.6] text-ink-3">
-          Neither plan does: Outlook, iCloud or CalDAV; payments at booking; a Zoom or Teams integration that
+          No plan does: Outlook, iCloud or CalDAV; payments at booking; a Zoom or Teams integration that
           makes links for you; collective availability or routing forms; or reminders by anything but email.
           The price is governed by <Link href="/terms#t-price">the Terms</Link>, which also says a free
           account is never billed automatically.

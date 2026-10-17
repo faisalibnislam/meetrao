@@ -65,15 +65,23 @@ export async function saveTimezone(timezone: string): Promise<SettingsResult> {
 export async function saveBookingDefaults(input: {
   duration: number;
   notice: number;
+  buffer: number;
+  window: number;
 }): Promise<SettingsResult> {
+  /* The same four lists the meeting form offers, since each default is
+     copied onto a new meeting as it stands. */
   if (![15, 30, 45, 60].includes(input.duration)) return { error: "Pick a duration from the list." };
   if (![60, 120, 240, 720, 1440].includes(input.notice)) return { error: "Pick a notice period from the list." };
+  if (![0, 5, 10, 15].includes(input.buffer)) return { error: "Pick a buffer from the list." };
+  if (![7, 14, 30, 60].includes(input.window)) return { error: "Pick a booking window from the list." };
 
   await requireSession();
   const r = await onConvex((c) =>
     c.mutation(api.profiles.updateOwn, {
       default_duration_minutes: input.duration,
       default_notice_minutes: input.notice,
+      default_buffer_minutes: input.buffer,
+      default_window_days: input.window,
     }),
   );
   if (r.error) return { error: r.error };
@@ -164,6 +172,6 @@ export async function saveReminderTiming(input: { long: number; short: number })
     }),
   );
   if (error) return { error };
-  revalidatePath("/settings/billing");
+  revalidatePath("/settings/notifications");
   return {};
 }

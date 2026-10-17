@@ -37,11 +37,19 @@ export function MetricCard({
   const t = TONE[tone];
 
   return (
-    <div className={cx("flex min-h-[118px] flex-col gap-[14px] rounded-[10px] border px-[15px] py-[14px]", t.card)}>
-      <div className="flex items-start justify-between gap-[10px]">
+    /* Compact on a phone: two across, without the icon tile, so four cards
+       take one screen instead of four. */
+    <div
+      className={cx(
+        "flex min-h-[118px] flex-col gap-[14px] rounded-[10px] border px-[15px] py-[14px]",
+        "max-[480px]:min-h-0 max-[480px]:gap-[8px] max-[480px]:px-[12px] max-[480px]:py-[11px]",
+        t.card,
+      )}
+    >
+      <div className={cx("flex items-start justify-between gap-[10px]", !trend && "max-[480px]:hidden")}>
         <span
           className={cx(
-            "inline-flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[8px] bg-surface",
+            "inline-flex h-[30px] w-[30px] flex-none items-center justify-center rounded-[8px] bg-surface max-[480px]:hidden",
             t.ink,
           )}
         >
@@ -54,7 +62,9 @@ export function MetricCard({
 
       <div className="mt-auto flex flex-col gap-[3px]">
         <div className="flex items-baseline gap-[5px]">
-          <span className={cx("text-[26px] leading-[1] font-semibold tracking-[-0.022em]", t.ink)}>{value}</span>
+          <span className={cx("text-[26px] leading-[1] font-semibold tracking-[-0.022em] max-[480px]:text-[22px]", t.ink)}>
+            {value}
+          </span>
           {unit ? <span className="text-[12.5px] font-medium text-ink-3">{unit}</span> : null}
         </div>
         <span className="text-[12.5px] font-semibold text-ink">{label}</span>

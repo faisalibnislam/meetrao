@@ -37,7 +37,7 @@ const VIEWS: { id: View; label: string }[] = [
   { id: "all", label: "All contacts" },
   { id: "meetings", label: "From meetings" },
   { id: "manual", label: "Added by hand" },
-  { id: "unscheduled", label: "Nothing scheduled" },
+  { id: "unscheduled", label: "No upcoming meeting" },
 ];
 
 const PAGE_SIZES = [
@@ -75,6 +75,7 @@ export function ContactsScreen({
   const [editing, setEditing] = useState<(typeof BLANK & { id?: string }) | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<ContactView | null>(null);
   const [busy, startBusy] = useTransition();
+  const empty = contacts.length === 0;
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -154,13 +155,19 @@ export function ContactsScreen({
   return (
     <div className="flex flex-col gap-[16px]">
       {/* ── toolbar ─────────────────────────────────────────────────────── */}
+      {/* With no contacts the search, the four filters, Export and a second
+          Add contact were all controls with nothing to act on. Until the
+          first one arrives the toolbar is Import alone, and the empty state
+          below carries Add contact. */}
       <div className="flex flex-wrap items-center gap-[10px]">
-        <SearchField
-          value={query}
-          onValueChange={(v) => reset(() => setQuery(v))}
-          placeholder="Search by name, email or company"
-          width={280}
-        />
+        {empty ? null : (
+          <SearchField
+            value={query}
+            onValueChange={(v) => reset(() => setQuery(v))}
+            placeholder="Search by name, email or company"
+            width={280}
+          />
+        )}
         <div className="ml-auto flex flex-wrap items-center gap-[8px]">
           <input
             ref={fileRef}
@@ -181,23 +188,21 @@ export function ContactsScreen({
               file. A plain <a> on purpose: this is a download from an API
               route, and <Link> would try to route to it and prefetch it. The
               style is the shared secondary button's, not a hand copy. */}
-          {contacts.length === 0 ? (
-            <Button variant="secondary" size={32} icon="download" disabled>
-              Export CSV
-            </Button>
-          ) : (
-            <a href="/api/contacts/export" download className={buttonClass("secondary", 32, "unlink")}>
-              <Icon name="download" size={12} />
-              Export CSV
-            </a>
+          {empty ? null : (
+            <>
+              <a href="/api/contacts/export" download className={buttonClass("secondary", 32, "unlink")}>
+                <Icon name="download" size={12} />
+                Export CSV
+              </a>
+              <Button variant="accent" size={32} icon="plus" onClick={() => setEditing({ ...BLANK })}>
+                Add contact
+              </Button>
+            </>
           )}
-          <Button variant="accent" size={32} icon="plus" onClick={() => setEditing({ ...BLANK })}>
-            Add contact
-          </Button>
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-[8px]">
+      <div className={cx("flex flex-wrap items-center gap-[8px]", empty && "hidden")}>
         {VIEWS.map((v) => (
           <button
             key={v.id}

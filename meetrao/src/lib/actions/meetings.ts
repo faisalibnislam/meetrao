@@ -6,6 +6,7 @@ import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 import { slugify } from "@/lib/username";
+import { normaliseSlug, slugProblem, uniqueSlug as freeSlug } from "@/convex/lib/meetingSlugs";
 import type { BookingQuestion } from "@/lib/types";
 import { isLocationKind } from "@/lib/locations";
 import { activeContext } from "@/lib/data/context";
@@ -15,6 +16,13 @@ export type MeetingResult = { error?: string; id?: string };
 export type MeetingInput = {
   id?: string;
   name: string;
+  /**
+   * The last segment of the meeting's address. Absent or empty on a new
+   * meeting means "build one from the name"; on an existing one, absent
+   * means "leave it where it is". Moving it keeps the old link working:
+   * Convex remembers it and the public page redirects (convex/lib/meetingSlugs.ts).
+   */
+  slug?: string;
   description: string;
   duration: number;
   buffer: number;
@@ -36,7 +44,11 @@ export type MeetingInput = {
     is one guests abandon. Convex enforces the same cap. */
 const MAX_QUESTIONS = 5;
 
-const DURATIONS = [15, 30, 45, 60];
+/* A range rather than the four presets. The editor offers 15, 30, 45 and 60
+   and a typed custom length; Convex refuses anything outside the same 5 to
+   480 whole minutes, this only says so before the round trip. */
+const MIN_DURATION = 5;
+const MAX_DURATION = 480;
 const BUFFERS = [0, 5, 10, 15];
 const NOTICES = [60, 120, 240, 720, 1440];
 const WINDOWS = [7, 14, 30, 60];
@@ -44,7 +56,9 @@ const WINDOWS = [7, 14, 30, 60];
 /** Server-side checks; the form's own validation is a convenience. */
 function invalid(input: MeetingInput): string | null {
   if (!input.name.trim()) return "Give the meeting a name guests will recognise.";
-  if (!DURATIONS.includes(input.duration)) return "Pick one of the offered durations.";
+  if (!Number.isInteger(input.duration) || input.duration < MIN_DURATION || input.duration > MAX_DURATION)
+    return `A meeting lasts a whole number of minutes, ${MIN_DURATION} to ${MAX_DURATION}.`;
+  if (input.slug && slugProblem(input.slug)) return slugProblem(input.slug);
   if (!BUFFERS.includes(input.buffer)) return "Pick a buffer from the list.";
   if (!NOTICES.includes(input.notice)) return "Pick a minimum notice from the list.";
   if (!WINDOWS.includes(input.window)) return "Pick a booking window from the list.";
@@ -89,8 +103,9 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
   };
   try {
     const convex = await convexServer();
+    const slug = input.slug ? normaliseSlug(input.slug) : "";
     if (input.id) {
-      await convex.mutation(api.meetingTypes.update, { id: input.id, ...payload });
+      await convex.mutation(api.meetingTypes.update, { id: input.id, ...payload, ...(slug ? { slug } : {}) });
       revalidatePath("/meetings");
       return { id: input.id };
     }
@@ -102,7 +117,7 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
     const created = await convex.mutation(api.meetingTypes.create, {
       ...payload,
       company_id: context.companyId,
-      slug: await uniqueSlug(session.userId, payload.name),
+      slug: slug || (await uniqueSlug(session.userId, payload.name)),
     });
     revalidatePath("/meetings");
     return { id: created.id };
@@ -149,12 +164,12 @@ export async function deleteMeeting(id: string): Promise<MeetingResult> {
   }
 }
 
+/* Free against the host's other meetings' OLD links as well as their current
+   ones. Picking a slug that one of them used to have would be refused by
+   Convex, which protects the old link from opening a different meeting. */
 async function uniqueSlug(userId: string, name: string): Promise<string> {
-  const base = slugify(name);
+  void userId; // scoped by the caller's own identity inside listOwn
   const convex = await convexServer();
   const mine = await convex.query(api.meetingTypes.listOwn, {});
-  const taken = new Set(mine.map((m) => m.slug));
-  if (!taken.has(base)) return base;
-  for (let n = 2; ; n++) if (!taken.has(`${base}-${n}`)) return `${base}-${n}`;
-
+  return freeSlug(slugify(name), mine);
 }

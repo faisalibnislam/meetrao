@@ -85,7 +85,7 @@ export type TimeOffView = {
 };
 
 /**
- * "Fri 25 Dec 2026", from a plain date string.
+ * "Fri, Dec 25, 2026", from a plain date string.
  *
  * Parsed as UTC and formatted as UTC deliberately: "2026-12-25" is a calendar
  * date, not an instant, and letting the browser localise it turns Christmas
@@ -93,7 +93,7 @@ export type TimeOffView = {
  */
 export function formatTimeOffDate(date: string): string {
   const [y, m, d] = date.split("-").map(Number);
-  return new Intl.DateTimeFormat("en-GB", {
+  return new Intl.DateTimeFormat("en-US", {
     timeZone: "UTC",
     weekday: "short",
     day: "numeric",

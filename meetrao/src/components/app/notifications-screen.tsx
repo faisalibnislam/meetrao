@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { EmptyState } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
+import { setContext } from "@/lib/actions/context";
 import { clearRead, markAllRead, markRead } from "@/lib/actions/notifications";
 import type { NotificationKind, NotificationView } from "@/lib/data/notifications";
 import { cx } from "@/lib/cx";
@@ -31,7 +33,15 @@ const LOOK: Record<NotificationKind, { icon: IconName; ring: string; tint: strin
   booking_declined: { icon: "circle-exclamation", ring: "border-amber-line bg-amber-soft", tint: "text-amber", label: "Declined" },
 };
 
-export function NotificationsScreen({ notifications }: { notifications: NotificationView[] }) {
+export function NotificationsScreen({
+  notifications,
+  here,
+}: {
+  notifications: NotificationView[];
+  /** The workspace in force: a company id, or null for Personal. */
+  here: string | null;
+}) {
+  const router = useRouter();
   const toast = useToast();
   const [onlyUnread, setOnlyUnread] = useState(true);
   const [busy, startBusy] = useTransition();
@@ -155,11 +165,35 @@ export function NotificationsScreen({ notifications }: { notifications: Notifica
                     <span className="text-[11.5px] text-ink-3">{n.when}</span>
                     <span aria-hidden="true" className="h-[3px] w-[3px] rounded-full bg-line-strong" />
                     <span className="text-[11.5px] text-ink-3">{look.label}</span>
+                    {/* Named when it happened somewhere else, so a company
+                        booking in Personal says whose it is. */}
+                    {n.companyId !== here ? (
+                      <>
+                        <span aria-hidden="true" className="h-[3px] w-[3px] rounded-full bg-line-strong" />
+                        <span className="text-[11.5px] font-semibold text-ink-2">{n.companyName ?? "Personal"}</span>
+                      </>
+                    ) : null}
                   </span>
                 </div>
 
                 <div className="flex flex-none flex-wrap items-center gap-[6px]">
-                  {n.bookingId ? (
+                  {n.bookingId && n.companyId !== here ? (
+                    /* Its booking lives in another workspace: switch there
+                       first, or the list it opens would not have it. */
+                    <Button
+                      variant="ghost"
+                      size={28}
+                      busy={busy}
+                      onClick={() =>
+                        startBusy(async () => {
+                          await setContext(n.companyId);
+                          router.push("/bookings");
+                        })
+                      }
+                    >
+                      View in {n.companyName ?? "Personal"}
+                    </Button>
+                  ) : n.bookingId ? (
                     <Link
                       href="/bookings"
                       className="unlink inline-flex h-[28px] items-center rounded-[6px] border border-transparent px-[10px] text-[12.5px] font-semibold text-ink-2 hover:bg-fill hover:text-ink"

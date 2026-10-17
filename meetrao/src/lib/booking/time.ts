@@ -76,7 +76,9 @@ export function formatDayLabel(instant: Date, timeZone: string, now: Date = new 
   if (days === -1) return "Yesterday";
 
   const withWeekday = days > 1 && days < 7;
-  return dateFormat("en-GB", {
+  /* US style, as every other date in the product is: "Mon, Oct 19", never
+     "Mon 19 Oct" on one screen and "Monday, October 19" on the next. */
+  return dateFormat("en-US", {
     weekday: withWeekday ? "short" : undefined,
     day: "numeric",
     month: "short",
@@ -114,7 +116,8 @@ export function minutesToLabel(minutes: number): string {
   const m = minutes % 60;
   const meridiem = h24 >= 12 ? "PM" : "AM";
   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
-  return `${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${meridiem}`;
+  // "9:00 AM", as formatTime writes it, not "09:00 AM".
+  return `${h12}:${String(m).padStart(2, "0")} ${meridiem}`;
 }
 
 /** Every half hour of the day. `includeMidnightEnd` adds 24:00 for range ends. */

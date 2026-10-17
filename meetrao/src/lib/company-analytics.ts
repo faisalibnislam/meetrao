@@ -141,9 +141,9 @@ function weekdayIn(ts: number, timezone: string): number {
   return ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(name);
 }
 
-/** "4 Oct", for a column nobody should have to decode. */
+/** "Oct 4", for a column nobody should have to decode. */
 function dayLabel(ts: number, timezone: string): string {
-  return dateFormat("en-GB", { timeZone: timezone, day: "numeric", month: "short" }).format(
+  return dateFormat("en-US", { timeZone: timezone, day: "numeric", month: "short" }).format(
     new Date(ts),
   );
 }

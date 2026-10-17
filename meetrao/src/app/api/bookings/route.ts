@@ -46,9 +46,51 @@ const Body = z.object({
      so a request cannot invent a question it was never asked. */
   answers: z.array(z.object({ id: z.string().min(1), value: z.string().max(2000) })).max(5).optional(),
   pageViewId: z.string().uuid().optional(),
+  /* "Add guests": extra people who get the same invitation. Checked here so
+     the form gets a readable 400, and again inside the mutation, which is
+     the check that counts because anyone can call it directly. */
+  guests: z
+    .array(z.string().trim().email("One of the guest emails is not an email address."))
+    .max(5, "Add at most 5 guests.")
+    .optional(),
 });
 
+/**
+ * The extra guests' confirmations, and the line that tells the host about them.
+ *
+ * Each extra guest gets the same guest email the booker does, addressed to
+ * them, exactly as every invitee of a host-scheduled meeting does in
+ * src/lib/actions/schedule.ts. They are on the calendar event too (convex/
+ * google.ts reads booking_invitees), but not everybody uses Google Calendar,
+ * and the email is what carries the .ics and the booking's own page.
+ *
+ * The host learns about them through the note, as one more labelled line
+ * beside the answers, so the host email needs no new template slot.
+ */
+function guestMails(mail: BookingMail, invitees: readonly string[]): Promise<unknown>[] {
+  return invitees.map((email) => sendBookingNewToGuest({ ...mail, guestName: email, guestEmail: email }));
+}
+
+/*
+ * Sent only when there are some. Convex rejects an argument a deployed
+ * function does not declare, so always sending `invitees: []` would make
+ * EVERY booking fail in the window between this shipping and the Convex
+ * functions that accept it going live. Left out, a guest who books alone
+ * never depends on that order.
+ */
+function inviteesArg(guests: readonly string[] | undefined): { invitees?: string[] } {
+  return guests?.length ? { invitees: [...guests] } : {};
+}
+
+function alsoInvited(invitees: readonly string[]): { label: string; value: string }[] {
+  return invitees.length ? [{ label: "Also invited", value: invitees.join(", ") }] : [];
+}
+
 const DAY = 86_400_000;
+
+/* The mutation's refusals of the "Add guests" list. They are the guest's to
+   fix, so they come back as a 400 with the message, not as a server error. */
+const GUEST_REFUSAL = /not an email address|at most \d+ guests|group meeting/i;
 
 /**
  * A booking on a team link.
@@ -79,6 +121,7 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
     duration: number;
     host_id: string;
     answers: { label: string; value: string }[];
+    invitees: string[];
   };
 
   let row: TeamRow;
@@ -93,6 +136,7 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
       guestTimezone: input.guestTimezone ?? null,
       answers: input.answers ?? [],
       callerKey,
+      ...inviteesArg(input.guests),
     })) as TeamRow;
   } catch (cause) {
     const message = convexMessage(cause, "That booking could not be made.");
@@ -101,6 +145,7 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
     }
     if (/unknown host|unknown meeting/i.test(message)) return NextResponse.json({ error: message }, { status: 404 });
     if (/too many|try again shortly/i.test(message)) return NextResponse.json({ error: message }, { status: 429 });
+    if (GUEST_REFUSAL.test(message)) return NextResponse.json({ error: message }, { status: 400 });
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
@@ -127,7 +172,7 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
     meetingName: row.meeting_name,
     guestName: input.guestName,
     guestEmail: input.guestEmail,
-    guestNote: noteWithAnswers(input.guestNote ?? "", row.answers ?? []),
+    guestNote: noteWithAnswers(input.guestNote ?? "", [...(row.answers ?? []), ...alsoInvited(row.invitees ?? [])]),
     hostName: hostProfile?.full_name || team.name,
     hostEmail: hostProfile?.email ?? "",
     startLong: `${formatLongDate(start, hostTimezone)} · ${formatTimeRange(start, end, hostTimezone)}`,
@@ -142,6 +187,7 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
   await Promise.allSettled([
     hostProfile?.email ? sendBookingNewToHost(mail, hostProfile) : Promise.resolve(),
     sendBookingNewToGuest(mail),
+    ...guestMails(mail, row.invitees ?? []),
   ]);
 
   return NextResponse.json({ reference: row.reference, calendarWarning });
@@ -206,6 +252,7 @@ export async function POST(request: NextRequest) {
     meeting_name: string;
     duration: number;
     answers: { label: string; value: string }[];
+    invitees: string[];
   };
   let row: CreatedRow;
 
@@ -229,6 +276,7 @@ export async function POST(request: NextRequest) {
       guestTimezone,
       pageViewId: input.pageViewId ?? null,
       callerKey,
+      ...inviteesArg(input.guests),
     })) as CreatedRow;
   } catch (cause) {
     // These are create_booking's own refusals, carried across as messages.
@@ -242,6 +290,7 @@ export async function POST(request: NextRequest) {
     if (/too many|try again shortly/i.test(message)) {
       return NextResponse.json({ error: message }, { status: 429 });
     }
+    if (GUEST_REFUSAL.test(message)) return NextResponse.json({ error: message }, { status: 400 });
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
@@ -270,7 +319,7 @@ export async function POST(request: NextRequest) {
     meetingName: row.meeting_name,
     guestName: input.guestName,
     guestEmail: input.guestEmail,
-    guestNote: noteWithAnswers(input.guestNote ?? "", row.answers ?? []),
+    guestNote: noteWithAnswers(input.guestNote ?? "", [...(row.answers ?? []), ...alsoInvited(row.invitees ?? [])]),
     hostName: hostProfile?.full_name || host.fullName || host.username,
     hostEmail: hostProfile?.email ?? "",
     startLong: `${formatLongDate(start, host.timezone)} · ${formatTimeRange(start, end, host.timezone)}`,
@@ -286,6 +335,7 @@ export async function POST(request: NextRequest) {
   await Promise.allSettled([
     hostProfile?.email ? sendBookingNewToHost(mail, hostProfile) : Promise.resolve(),
     sendBookingNewToGuest(mail),
+    ...guestMails(mail, row.invitees ?? []),
   ]);
 
   return NextResponse.json({ reference: row.reference, calendarWarning });

@@ -84,7 +84,7 @@ export function dayPhrase(startsAt: number, now: number, timeZone: string): stri
   if (target === today) return "later today";
   if (target === day(now + DAY)) return "tomorrow";
 
-  const weekday = new Intl.DateTimeFormat("en-GB", { timeZone, weekday: "long" }).format(new Date(startsAt));
+  const weekday = new Intl.DateTimeFormat("en-US", { timeZone, weekday: "long" }).format(new Date(startsAt));
   return `on ${weekday}`;
 }
 

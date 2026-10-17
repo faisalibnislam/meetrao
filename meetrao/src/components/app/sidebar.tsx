@@ -9,7 +9,7 @@ import { useToast } from "@/components/ui/toast";
 import { Logo } from "@/components/ui/logo";
 import { cx } from "@/lib/cx";
 import { SidebarUpgrade } from "./upgrade";
-import { SettingsMenu } from "./settings-menu";
+import { HelpMenu } from "./help-menu";
 import { WorkspaceMenu, type WorkspaceOption } from "./workspace-menu";
 import { copyText } from "@/lib/clipboard";
 
@@ -26,10 +26,15 @@ import { copyText } from "@/lib/clipboard";
    bare #EFEDE7 above the account block; these fill it with work rather than
    decoration. Nothing here is new state (the links are the meeting types.
 
-   Settings is NOT a nav row) it lives in the account menu. The admin console
-   keeps its own Settings row, because that is a different screen; an account
-   menu offering Settings as well would give an admin two identical adjacent
-   rows, the second dropping them out of the console.
+   SETTINGS IS A NAV ROW, the last one, styled exactly like the others. It
+   used to sit behind a collapsible at the very foot of the rail, which made
+   the one screen people go looking for the hardest one to find. The row is
+   added here rather than by each caller so the label can follow the
+   workspace ("Company settings" inside a company, since that is what the
+   screen edits there) and so the admin console, which passes its own Settings
+   row for a different screen, does not get two.
+
+   What is left at the foot (help, support, log out) is in HelpMenu.
    ───────────────────────────────────────────────────────────────────────────── */
 
 /** One bookable link. `id` "all" is the account link that offers every type. */
@@ -134,6 +139,12 @@ export function Sidebar({
     (!item.exact && pathname.startsWith(`${item.href}/`)) ||
     (item.match ?? []).some((m) => pathname === m || pathname.startsWith(`${m}/`));
 
+  /* The host's rows plus Settings, last. Not for the admin console, which
+     passes its own Settings row pointing at a different screen. */
+  const rows: NavItem[] = isAdmin
+    ? items
+    : [...items, { href: "/settings", label: activeContextId ? "Company settings" : "Settings", icon: "gear" }];
+
   const initials = name
     .split(" ")
     .slice(0, 2)
@@ -183,8 +194,8 @@ export function Sidebar({
         href="/bookings/new"
         className="unlink mb-[12px] box-border inline-flex h-[32px] w-full items-center justify-center gap-[7px] rounded-[6px] border border-accent bg-accent px-[11px] text-[12.5px] font-semibold text-on-accent transition-colors duration-[120ms] hover:border-accent-2 hover:bg-accent-2 hover:text-on-accent max-[820px]:hidden"
       >
-        <Icon name="user-plus" size={12} />
-        Invite to Meet
+        <Icon name="plus" size={12} />
+        Schedule a meeting
       </Link>
 
       <button
@@ -225,7 +236,7 @@ export function Sidebar({
           drawerOpen ? "max-[820px]:animate-in max-[820px]:flex" : "max-[820px]:hidden",
         )}
       >
-        {items.map((item) => {
+        {rows.map((item) => {
           const active = isActive(item);
           return (
             <Link
@@ -259,8 +270,9 @@ export function Sidebar({
           );
         })}
 
-        {/* Mobile only: the account block below is hidden at this width, so
-            without these Settings and Log out are unreachable on a phone. */}
+        {/* Mobile only: the help menu below is hidden at this width, so
+            without these Help and Log out are unreachable on a phone.
+            Settings is not repeated here: it is a nav row above now. */}
         <div className="hidden max-[820px]:block">
           <div className="mt-[8px] flex items-center gap-[11px] border-t border-line-soft px-[12px] pt-[12px] pb-[11px]">
             {avatarUrl ? (
@@ -279,8 +291,7 @@ export function Sidebar({
               </span>
             </span>
           </div>
-          {!isAdmin ? <DrawerLink href="/bookings/new" icon="user-plus" label="Invite to Meet" /> : null}
-          {!isAdmin ? <DrawerLink href="/settings" icon="gear" label="Settings" /> : null}
+          {!isAdmin ? <DrawerLink href="/bookings/new" icon="plus" label="Schedule a meeting" /> : null}
           <DrawerLink href="/help" icon="circle-question" label="Help centre" newTab />
           <DrawerLink href="/support" icon="envelope" label="Contact support" />
           <button type="button" onClick={onSignOut} className={drawerItem}>
@@ -337,16 +348,11 @@ export function Sidebar({
 
       {showUpgrade ? <SidebarUpgrade /> : null}
 
-      {/* The foot of the rail, under everything a host uses daily. Settings,
-          help and the way out are all things somebody does rarely, and they
-          used to sit on the workspace switcher, which is something they do
-          several times an hour. */}
-      {!isAdmin ? (
-        <SettingsMenu
-          settingsLabel={activeContextId ? "Company settings" : "Settings"}
-          onSignOut={onSignOut}
-        />
-      ) : null}
+      {/* The foot of the rail, under everything a host uses daily. Help and
+          the way out are things somebody does rarely, and they used to sit on
+          the workspace switcher, which is something they do several times an
+          hour. Settings left this menu for the nav above. */}
+      {!isAdmin ? <HelpMenu onSignOut={onSignOut} /> : null}
 
     </nav>
   );

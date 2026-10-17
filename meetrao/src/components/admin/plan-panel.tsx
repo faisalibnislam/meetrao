@@ -56,7 +56,7 @@ function when(iso: string | null): string {
   // A hundred years out is the "forever" grant; printing the date would be
   // technically true and useless.
   if (date.getFullYear() > new Date().getFullYear() + 50) return "no end date";
-  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" }).format(date);
 }
 
 export function PlanPanel({ userId, name, info }: { userId: string; name: string; info: PlanInfo }) {

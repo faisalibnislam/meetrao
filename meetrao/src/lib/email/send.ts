@@ -230,11 +230,20 @@ export async function sendBookingNewToHost(
    No preference parameter anywhere below: a guest confirmation is not a
    subscription and can never be switched off by anyone's settings. */
 
+/*
+ * GUEST KEYS NAME THE RECIPIENT. One booking can have several guests: the
+ * invitees of a meeting the host scheduled, and the people a guest adds under
+ * "Add guests". Each of them gets this same email, addressed to them, with the
+ * same bookingId. A key that named only the booking made every send after the
+ * first a reuse of that key with a different payload, which Resend refuses, so
+ * only the first person on the list was ever told. The host keys stay as they
+ * are: a booking has exactly one host.
+ */
 export async function sendBookingNewToGuest(mail: BookingMail): Promise<SendResult> {
   return deliver({
     to: mail.guestEmail,
     subject: `You're booked with ${mail.hostName}: ${mail.startShort}`,
-    idempotencyKey: `booking-new-guest:${mail.bookingId}`,
+    idempotencyKey: `booking-new-guest:${mail.bookingId}:${mail.guestEmail.toLowerCase()}`,
     html: render("booking-new-guest", {
       ...chrome(),
       ...bookingUrls(mail.reference),
@@ -284,7 +293,8 @@ export async function sendCancellationToGuest(mail: CancellationMail): Promise<S
   return deliver({
     to: mail.guestEmail,
     subject: `Cancelled: ${mail.meetingName} on ${mail.startShort}`,
-    idempotencyKey: `booking-cancelled-guest:${mail.bookingId}`,
+    // Names the recipient, for the reason given above sendBookingNewToGuest.
+    idempotencyKey: `booking-cancelled-guest:${mail.bookingId}:${mail.guestEmail.toLowerCase()}`,
     html: render("booking-cancelled", {
       ...chrome(),
       bookings_url: `${siteUrl()}/${mail.hostName}`,
@@ -317,7 +327,12 @@ export async function sendRescheduled(
   return deliver({
     to: to === "host" ? mail.hostEmail : mail.guestEmail,
     subject: `Moved: ${mail.meetingName} is now ${mail.startShort}`,
-    idempotencyKey: `booking-changed-${to}:${mail.bookingId}:${mail.startLong}`,
+    /* A guest key also names the recipient, for the reason given above
+       sendBookingNewToGuest: every invitee is sent this with the same id. */
+    idempotencyKey:
+      to === "host"
+        ? `booking-changed-host:${mail.bookingId}:${mail.startLong}`
+        : `booking-changed-guest:${mail.bookingId}:${mail.startLong}:${mail.guestEmail.toLowerCase()}`,
     html: render("booking-changed", {
       ...chrome(),
       ...bookingUrls(mail.reference),

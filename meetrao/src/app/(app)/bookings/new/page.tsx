@@ -7,7 +7,7 @@ import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { timezoneLabel } from "@/lib/timezones";
 
-export const metadata: Metadata = { title: "Invite to Meet" };
+export const metadata: Metadata = { title: "Schedule a meeting" };
 
 export default async function NewBookingPage() {
   const { profile } = await requireOnboardedSession();
@@ -32,9 +32,9 @@ export default async function NewBookingPage() {
 
   return (
     <AppScreen
-      title="Invite to Meet"
+      title="Schedule a meeting"
       crumb={{ label: "Bookings", href: "/bookings" }}
-      crumbCurrent="Invite"
+      crumbCurrent="Schedule"
       subtitle="Pick the time yourself and invite the people who should be there."
     >
       <ScheduleForm

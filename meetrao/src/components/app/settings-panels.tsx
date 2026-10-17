@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { Badge, Eyebrow } from "@/components/ui/badge";
@@ -20,11 +21,12 @@ import {
   saveBookingDefaults,
   saveNotifications,
   saveProfile,
-  saveTimezone,
+  saveReminderTiming,
 } from "@/lib/actions/settings";
 import { cx } from "@/lib/cx";
-import type { TimezoneOption } from "@/lib/timezones";
+import { LONG_OPTIONS, SHORT_OPTIONS, leadsOf, remindersText } from "@/lib/reminder-timing";
 import type { NotificationKey, Profile } from "@/lib/types";
+import { UpgradeHint } from "./upgrade";
 import { bookingLink, isBadStatus, sanitizeUsername, usernameNote, usernameStatus, type UsernameStatus } from "@/lib/username";
 
 const DURATIONS = [
@@ -42,18 +44,52 @@ const NOTICES = [
   { value: "1440", label: "24 hours" },
 ];
 
+/* The same lists a meeting offers, in src/components/app/meeting-form.tsx.
+   A default is copied onto a new meeting as it stands, so it can only be
+   something that form can show. */
+const BUFFERS = [
+  { value: "0", label: "None" },
+  { value: "5", label: "5 minutes" },
+  { value: "10", label: "10 minutes" },
+  { value: "15", label: "15 minutes" },
+];
+
+const WINDOWS = [
+  { value: "7", label: "7 days ahead" },
+  { value: "14", label: "14 days ahead" },
+  { value: "30", label: "30 days ahead" },
+  { value: "60", label: "60 days ahead" },
+];
+
 const NOTIFY_ROWS: { key: NotificationKey; label: string; text: string }[] = [
   { key: "notify_new_booking", label: "New booking", text: "When someone books a time with you." },
   { key: "notify_booking_changed", label: "Booking changed", text: "When a booking is rescheduled or edited." },
   { key: "notify_booking_cancelled", label: "Booking cancelled", text: "When you or your guest cancels." },
-  {
-    key: "notify_reminders",
-    label: "Meeting reminders",
-    text: "A nudge the day before and an hour before. Your guest is reminded either way.",
-  },
+  // The text is replaced at render with the configured times; see remindersText.
+  { key: "notify_reminders", label: "Meeting reminders", text: "" },
   { key: "notify_daily_agenda", label: "Daily agenda", text: "One email each morning listing the day’s meetings." },
   { key: "notify_product_news", label: "Product news", text: "Occasional updates about new Meetrao features." },
 ];
+
+/**
+ * Why the email cannot be edited here, and who can change it.
+ *
+ * Said the same way on Profile and Account, because the two screens used to
+ * point at each other: Profile sent people to Account, which only showed the
+ * address. A support link is the honest answer while there is no
+ * self-service change.
+ */
+function EmailHelp() {
+  return (
+    <>
+      This is the address you sign in with. To change it,{" "}
+      <Link href="/support" className="font-semibold">
+        contact support
+      </Link>
+      .
+    </>
+  );
+}
 
 /** "Save changes" → "Saving…" → "Saved". */
 function SaveButton({ saving, saved, onClick }: { saving: boolean; saved: boolean; onClick: () => void }) {
@@ -142,7 +178,14 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
           />
         </Field>
 
-        <Field label="Email" htmlFor="prof-email" help="Change this from the Account tab.">
+        {/* This used to send people to the Account tab to change it, and the
+            Account tab has no way to change it. Convex Auth has no
+            change-of-address flow: the address is the id of the password
+            and email-link accounts, and the key Google and Apple sign-in
+            link on, so swapping it safely means verifying the new address
+            and moving every one of those records together. Until that exists
+            support does it by hand, and the help text says so. */}
+        <Field label="Email" htmlFor="prof-email" help={<EmailHelp />}>
           <Input id="prof-email" type="email" value={profile.email} readOnly disabled />
         </Field>
 
@@ -261,14 +304,13 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
 export function CalendarPanel({
   connected,
   accountEmail,
-  timezone,
-  timezones,
+  timezoneLabel,
   failure,
 }: {
   connected: boolean;
   accountEmail: string | null;
-  timezone: string;
-  timezones: TimezoneOption[];
+  /** The host's zone as the timezone menus word it, e.g. "London (GMT+1)". */
+  timezoneLabel: string;
   failure: string | null;
 }) {
   const router = useRouter();
@@ -288,15 +330,19 @@ export function CalendarPanel({
         </Callout>
       ) : null}
 
+      {/* One status line and one button. This card used to say it three
+          times over when disconnected: "Not connected" under the name, a
+          Disconnected badge beside it, and a Connect button, and the badge
+          added nothing the other two had not. The line under the name is the
+          status; the button is what to do about it. */}
       <div className="flex flex-wrap items-center gap-[13px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
         <Icon name="calendar" size={17} className="flex-none text-accent-ink" />
         <div className="flex min-w-[150px] flex-1 flex-col gap-[2px]">
           <span className="text-[13.5px] font-semibold text-ink">Google Calendar</span>
           <span className="text-[12.5px] text-ink-3">
-            {connected ? (accountEmail ?? "Connected") : "Not connected"}
+            {connected ? (accountEmail ? `Connected as ${accountEmail}` : "Connected") : "Not connected"}
           </span>
         </div>
-        <Badge tone={connected ? "ok" : "off"}>{connected ? "Connected" : "Disconnected"}</Badge>
 
         {connected ? (
           <Button
@@ -333,25 +379,18 @@ export function CalendarPanel({
         )}
       </div>
 
-      <div className="flex max-w-[320px] flex-col gap-[6px]">
-        <span className="text-[12.5px] font-semibold text-ink">Timezone</span>
-        <MenuSelect
-          searchable
-          aria-label="Timezone"
-          options={timezones}
-          value={timezone}
-          onChange={(v) =>
-            startAction(async () => {
-              const result = await saveTimezone(v);
-              if (result.error) {
-                toast({ tone: "bad", title: "Could not save", text: result.error });
-                return;
-              }
-              toast({ tone: "ok", title: "Timezone saved", text: "Your hours are read in this zone." });
-              router.refresh();
-            })
-          }
-        />
+      {/* Read here, set on Availability. The zone used to be editable in
+          both places, and two controls for one value meant changing it in one
+          left somebody unsure whether the other had followed. It belongs
+          beside the hours it is read in, so that is where it is edited. */}
+      <div className="flex flex-wrap items-center gap-[13px] rounded-[8px] border border-line bg-surface px-[15px] py-[13px]">
+        <div className="flex min-w-[150px] flex-1 flex-col gap-[2px]">
+          <span className="text-[13px] font-semibold text-ink">Timezone</span>
+          <span className="text-[12.5px] text-ink-3">{timezoneLabel}</span>
+        </div>
+        <ButtonLink href="/availability" variant="secondary" size={30}>
+          Change on Availability
+        </ButtonLink>
       </div>
     </div>
   );
@@ -359,42 +398,61 @@ export function CalendarPanel({
 
 /* ── Booking defaults ─────────────────────────────────────────────────────── */
 
+/* Four defaults, the four scheduling rules every meeting carries: how long it
+   is, how much room it leaves after itself, how soon it can be booked and how
+   far ahead. The screen used to set only the first and the third, so the
+   other two were fixed at no buffer and 30 days and changed meeting by
+   meeting. Each is copied onto a NEW meeting when it is created (see
+   meetings/new); a meeting that already exists keeps its own, so changing a
+   default here never moves somebody's existing links. */
+
+/** One labelled menu, for the four defaults below. */
+function DefaultSelect({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: { value: string; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-[6px]">
+      <span className="text-[12.5px] font-semibold text-ink">{label}</span>
+      <MenuSelect aria-label={label} options={options} value={value} onChange={onChange} />
+    </div>
+  );
+}
+
 export function BookingPanel({ profile }: { profile: Profile }) {
   const toast = useToast();
   const [duration, setDuration] = useState(String(profile.default_duration_minutes));
+  const [buffer, setBuffer] = useState(String(profile.default_buffer_minutes ?? 0));
   const [notice, setNotice] = useState(String(profile.default_notice_minutes));
+  const [windowDays, setWindowDays] = useState(String(profile.default_window_days ?? 30));
   const [saving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
 
+  /** Every menu's change marks the form unsaved. */
+  const edit = (set: (v: string) => void) => (v: string) => {
+    set(v);
+    setSaved(false);
+  };
+
   return (
     <div className="flex flex-col gap-[15px]">
-      <PanelHeading title="Booking defaults" subtitle="Applied to every new meeting you create." />
+      <PanelHeading
+        title="Booking defaults"
+        subtitle="What every new meeting starts with. Each meeting can change its own, and meetings you already have keep theirs."
+      />
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(186px,1fr))] gap-[13px]">
-        <div className="flex flex-col gap-[6px]">
-          <span className="text-[12.5px] font-semibold text-ink">Default duration</span>
-          <MenuSelect
-            aria-label="Default duration"
-            options={DURATIONS}
-            value={duration}
-            onChange={(v) => {
-              setDuration(v);
-              setSaved(false);
-            }}
-          />
-        </div>
-        <div className="flex flex-col gap-[6px]">
-          <span className="text-[12.5px] font-semibold text-ink">Default minimum notice</span>
-          <MenuSelect
-            aria-label="Default minimum notice"
-            options={NOTICES}
-            value={notice}
-            onChange={(v) => {
-              setNotice(v);
-              setSaved(false);
-            }}
-          />
-        </div>
+        <DefaultSelect label="Duration" options={DURATIONS} value={duration} onChange={edit(setDuration)} />
+        <DefaultSelect label="Buffer after each meeting" options={BUFFERS} value={buffer} onChange={edit(setBuffer)} />
+        <DefaultSelect label="Minimum notice" options={NOTICES} value={notice} onChange={edit(setNotice)} />
+        <DefaultSelect label="Booking window" options={WINDOWS} value={windowDays} onChange={edit(setWindowDays)} />
       </div>
 
       <div>
@@ -403,13 +461,18 @@ export function BookingPanel({ profile }: { profile: Profile }) {
           saved={saved}
           onClick={() =>
             startSave(async () => {
-              const result = await saveBookingDefaults({ duration: Number(duration), notice: Number(notice) });
+              const result = await saveBookingDefaults({
+                duration: Number(duration),
+                notice: Number(notice),
+                buffer: Number(buffer),
+                window: Number(windowDays),
+              });
               if (result.error) {
                 toast({ tone: "bad", title: "Could not save", text: result.error });
                 return;
               }
               setSaved(true);
-              toast({ tone: "ok", title: "Settings saved", text: "Your changes are live." });
+              toast({ tone: "ok", title: "Settings saved", text: "New meetings start with these." });
             })
           }
         />
@@ -420,7 +483,22 @@ export function BookingPanel({ profile }: { profile: Profile }) {
 
 /* ── Notifications ────────────────────────────────────────────────────────── */
 
-export function NotificationsPanel({ profile }: { profile: Profile }) {
+/* REMINDER TIMING LIVES HERE NOW. It was on the Plan tab, "When reminders go
+   out", while this tab described reminders as fixed at a day and an hour, so
+   the two screens contradicted each other for every Pro host who had moved
+   them. It sits under the reminders switch it qualifies, and the switch's own
+   description is written from the times in force.
+
+   The plan gate is unchanged: Free sees the times, disabled, with the one-line
+   upgrade note under them (rule 3 in upgrade.tsx, show the feature, do not
+   hide it), and Convex refuses the write for Free whatever the screen does.
+
+   Saving is one button for the whole panel. The timing is written only when
+   it changed and only for a paid plan, so a Free host saving their switches
+   never sends a write Convex would refuse. */
+
+export function NotificationsPanel({ profile, pro }: { profile: Profile; pro: boolean }) {
+  const router = useRouter();
   const toast = useToast();
   const [prefs, setPrefs] = useState<Record<NotificationKey, boolean>>({
     notify_new_booking: profile.notify_new_booking,
@@ -431,8 +509,15 @@ export function NotificationsPanel({ profile }: { profile: Profile }) {
     notify_daily_agenda: profile.notify_daily_agenda,
     notify_product_news: profile.notify_product_news,
   });
+  /* The times in force, which for a lapsed Pro account can still be the ones
+     it chose: convex/reminders.ts reads the stored pair whatever the plan. */
+  const inForce = leadsOf(profile);
+  const [long, setLong] = useState(String(inForce.long));
+  const [short, setShort] = useState(String(inForce.short));
   const [saving, startSave] = useTransition();
   const [saved, setSaved] = useState(false);
+
+  const timingChanged = Number(long) !== inForce.long || Number(short) !== inForce.short;
 
   return (
     <div className="flex flex-col gap-[15px]">
@@ -452,7 +537,9 @@ export function NotificationsPanel({ profile }: { profile: Profile }) {
           >
             <div className="flex min-w-[180px] flex-1 flex-col gap-[2px]">
               <span className="text-[13.5px] font-semibold text-ink">{row.label}</span>
-              <span className="text-[12.5px] leading-[1.45] text-ink-3">{row.text}</span>
+              <span className="text-[12.5px] leading-[1.45] text-ink-3">
+                {row.key === "notify_reminders" ? remindersText(inForce.long, inForce.short) : row.text}
+              </span>
             </div>
             <Switch
               checked={prefs[row.key]}
@@ -462,6 +549,51 @@ export function NotificationsPanel({ profile }: { profile: Profile }) {
                 setSaved(false);
               }}
             />
+
+            {/* The timing, inside the reminders row so it reads as part of
+                it. Shown whether the host's own copy is switched on or not,
+                because the guest's reminders follow the same times. */}
+            {row.key === "notify_reminders" ? (
+              <div className="flex w-full flex-col gap-[10px] rounded-[7px] bg-fill px-[12px] py-[11px]">
+                <div className="flex flex-wrap items-center gap-[8px]">
+                  <span className="text-[12.5px] font-semibold text-ink">When reminders go out</span>
+                  {!pro ? (
+                    <Badge tone="off" dot={false}>
+                      Pro
+                    </Badge>
+                  ) : null}
+                </div>
+                <div className="flex flex-wrap gap-[12px]">
+                  <div className="flex min-w-[160px] flex-1 flex-col gap-[6px]">
+                    <span className="text-[12px] font-semibold text-ink-2">First reminder</span>
+                    <MenuSelect
+                      aria-label="First reminder"
+                      options={LONG_OPTIONS}
+                      value={long}
+                      disabled={!pro}
+                      onChange={(v) => {
+                        setLong(v);
+                        setSaved(false);
+                      }}
+                    />
+                  </div>
+                  <div className="flex min-w-[160px] flex-1 flex-col gap-[6px]">
+                    <span className="text-[12px] font-semibold text-ink-2">Second reminder</span>
+                    <MenuSelect
+                      aria-label="Second reminder"
+                      options={SHORT_OPTIONS}
+                      value={short}
+                      disabled={!pro}
+                      onChange={(v) => {
+                        setShort(v);
+                        setSaved(false);
+                      }}
+                    />
+                  </div>
+                </div>
+                {!pro ? <UpgradeHint to="pro" feature="Choosing when reminders go out" /> : null}
+              </div>
+            ) : null}
           </div>
         ))}
       </Card>
@@ -481,8 +613,17 @@ export function NotificationsPanel({ profile }: { profile: Profile }) {
                 toast({ tone: "bad", title: "Could not save", text: result.error });
                 return;
               }
+              if (pro && timingChanged) {
+                const timing = await saveReminderTiming({ long: Number(long), short: Number(short) });
+                if (timing.error) {
+                  toast({ tone: "bad", title: "Could not save the reminder times", text: timing.error });
+                  return;
+                }
+              }
               setSaved(true);
               toast({ tone: "ok", title: "Settings saved", text: "Your changes are live." });
+              // The reminders description is written from the saved times.
+              router.refresh();
             })
           }
         />
@@ -511,12 +652,18 @@ export function AccountPanel({
 
   return (
     <div className="flex flex-col gap-[15px]">
-      <PanelHeading title="Account" subtitle="Sign-in and account removal." />
+      <PanelHeading title="Account" subtitle="How you sign in, signing out, and removing the account." />
 
+      {/* The address, and the same sentence Profile uses about changing it.
+          Profile used to send people here to change it, and this card only
+          ever showed it. */}
       <div className="flex flex-wrap items-center gap-[12px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px]">
         <div className="flex min-w-[170px] flex-1 flex-col gap-[2px]">
           <span className="text-[13.5px] font-semibold text-ink">Email address</span>
-          <span className="text-[12px] text-ink-3">{profile.email}</span>
+          <span className="text-[12px] text-ink-2">{profile.email}</span>
+          <Help>
+            <EmailHelp />
+          </Help>
         </div>
         <Badge tone={verified ? "ok" : "warn"}>{verified ? "Verified" : "Unverified"}</Badge>
       </div>
@@ -531,22 +678,33 @@ export function AccountPanel({
         </Button>
       </div>
 
-      <div className="flex items-center gap-[14px] rounded-[8px] border border-red-line bg-red-soft px-[14px] py-[12px]">
+      {/* Log out before the danger zone, and the danger zone last. It used
+          to be the other way round, so the everyday button sat underneath
+          the one that cannot be undone, and reaching for the first meant
+          passing the second. */}
+      <div className="flex items-center gap-[14px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px]">
         <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-          <span className="text-[13.5px] font-semibold text-red">Delete account</span>
-          <span className="text-[12.5px] leading-[1.45] text-red-ink">
-            Removes your booking page and cancels every upcoming meeting.
-          </span>
+          <span className="text-[13.5px] font-semibold text-ink">Log out</span>
+          <span className="text-[12.5px] text-ink-3">Sign out of Meetrao in this browser.</span>
         </div>
-        <Button variant="danger" size={30} className="flex-none" onClick={() => setDialog("delete")}>
-          Delete
+        <Button variant="secondary" size={30} icon="sign-out" className="flex-none" onClick={onSignOut}>
+          Log out
         </Button>
       </div>
 
-      <div>
-        <Button variant="secondary" size={32} icon="sign-out" onClick={onSignOut}>
-          Log out
-        </Button>
+      <div className="mt-[6px] flex flex-col gap-[8px]">
+        <Eyebrow size={10.5}>Danger zone</Eyebrow>
+        <div className="flex items-center gap-[14px] rounded-[8px] border border-red-line bg-red-soft px-[14px] py-[12px]">
+          <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
+            <span className="text-[13.5px] font-semibold text-red">Delete account</span>
+            <span className="text-[12.5px] leading-[1.45] text-red-ink">
+              Removes your booking page and cancels every upcoming meeting.
+            </span>
+          </div>
+          <Button variant="danger" size={30} className="flex-none" onClick={() => setDialog("delete")}>
+            Delete
+          </Button>
+        </div>
       </div>
 
       <Modal

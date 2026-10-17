@@ -10,8 +10,9 @@ import { membersOf } from "./teams";
 import { isPro } from "./lib/plan";
 import type { Doc } from "./_generated/dataModel";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
-import { notifyBookingCancelled, logActivity } from "./lib/effects";
+import { notifyBookingCancelled, logActivity, upsertContact } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
+import { findBySlug, normaliseSlug } from "./lib/meetingSlugs";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The guest path. Every function here is reachable with NO session, exactly
@@ -60,6 +61,36 @@ function publicBrand(
   return logo || color || background || hidden
     ? { logo_url: logo, logo_hidden: hidden, color, background }
     : null;
+}
+
+/**
+ * The host's meeting at this slug, by its current link or one it used to have.
+ *
+ * A meeting whose link was moved keeps answering at the old one (see
+ * convex/lib/meetingSlugs.ts), so every copy of the old address already
+ * pasted into a signature or a calendar still reaches it. The row returned
+ * carries its CURRENT slug; a page that sees it differ from the one it was
+ * asked for redirects there, and a booking started on a page loaded just
+ * before the rename still lands on the right meeting.
+ *
+ * The index answers the ordinary case in one read. Only an address that
+ * names no current slug pays for the scan of the host's meetings, and a host
+ * has a handful of those.
+ */
+async function meetingAtSlug(
+  ctx: QueryCtx | MutationCtx,
+  hostId: string,
+  raw: string,
+): Promise<Doc<"meeting_types"> | null> {
+  const slug = normaliseSlug(raw);
+  if (!slug) return null;
+  const current = await ctx.db
+    .query("meeting_types")
+    .withIndex("by_user_slug", (q) => q.eq("user_id", hostId).eq("slug", slug))
+    .unique();
+  if (current) return current;
+  const mine = await ctx.db.query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", hostId)).collect();
+  return findBySlug(mine, slug)?.meeting ?? null;
 }
 
 export const getHost = query({
@@ -123,10 +154,7 @@ export const meetingIsOnCompany = query({
       .unique();
     if (!host || host.is_suspended) return false;
 
-    const meeting = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
-      .unique();
+    const meeting = await meetingAtSlug(ctx, host.id, a.slug);
     if (!meeting || !meeting.is_active) return false;
     if (!meeting.company_id) return false;
 
@@ -148,10 +176,7 @@ export const getMeetingAvailability = query({
       .unique();
     if (!host || host.is_suspended) return null;
 
-    const meeting = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
-      .unique();
+    const meeting = await meetingAtSlug(ctx, host.id, a.slug);
     if (!meeting || !meeting.is_active) return null;
 
     const rules = await rulesForMeeting(ctx, host.id, meeting.schedule_id);
@@ -540,10 +565,7 @@ export const companyPlaceOf = query({
       .unique();
     if (!host) return null;
 
-    const meeting = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
-      .unique();
+    const meeting = await meetingAtSlug(ctx, host.id, a.slug);
     if (!meeting || !meeting.company_id) return null;
 
     const company = await ctx.db
@@ -562,7 +584,10 @@ export const companyPlaceOf = query({
        them nowhere is better than sending them to a handle that 404s. */
     if (!mine) return null;
 
-    return { companySlug: company.slug, handle: mine.handle };
+    /* The meeting's CURRENT slug beside the place, so an old link to a
+       company's meeting is sent to the company address in one hop rather
+       than to the stale slug there and then on again. */
+    return { companySlug: company.slug, handle: mine.handle, slug: meeting.slug };
   },
 });
 
@@ -702,6 +727,90 @@ async function fitsAvailability(
   return ranges.some((r) => minute >= r.start_minute && minute + args.durationMinutes <= r.end_minute);
 }
 
+/** How many extra people a guest may bring. Small on purpose: see below. */
+const MAX_GUEST_INVITEES = 5;
+const INVITEE_EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/**
+ * The extra addresses a guest typed under "Add guests", cleaned.
+ *
+ * A guest is anonymous, so every address here is one we are about to send an
+ * invitation to on a stranger's say-so. That is why the list is short (five),
+ * why it is checked here and not only in the form (anyone can call this
+ * mutation directly), and why a list that is too long REFUSES rather than
+ * being quietly cut: silently dropping the sixth person would leave somebody
+ * expecting an invitation that never comes.
+ *
+ * Lower-cased and de-duplicated, because Ada@x.com and ada@x.com are one
+ * person and would otherwise be two invitations. The guest's own address and
+ * the host's are dropped rather than refused: the guest already gets the
+ * confirmation, the host already owns the event, and neither mistake is worth
+ * stopping a booking over. The host's address is never shown to a guest, so
+ * refusing on it would also tell them what it is.
+ */
+function cleanGuestInvitees(raw: readonly string[] | undefined, exclude: readonly string[]): string[] {
+  if (!raw || raw.length === 0) return [];
+  if (raw.length > MAX_GUEST_INVITEES) fail(`Add at most ${MAX_GUEST_INVITEES} guests.`);
+
+  const skip = new Set(exclude.map((e) => e.trim().toLowerCase()));
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const value of raw) {
+    const email = value.trim().toLowerCase();
+    if (!email) continue;
+    if (email.length > 254 || !INVITEE_EMAIL.test(email)) fail(`${value.trim()} is not an email address.`);
+    if (skip.has(email) || seen.has(email)) continue;
+    seen.add(email);
+    out.push(email);
+  }
+  return out;
+}
+
+/**
+ * The cleaned list for one meeting, or a refusal.
+ *
+ * A group meeting takes none. Each seat there is one booking and one person,
+ * counted against the meeting's capacity; five extra people riding in on one
+ * seat would fill a workshop past the number the host set, and the seats
+ * share one calendar event that guests are deliberately not added to.
+ */
+function guestInviteesFor(
+  meeting: Doc<"meeting_types">,
+  raw: readonly string[] | undefined,
+  exclude: readonly string[],
+): string[] {
+  const invitees = cleanGuestInvitees(raw, exclude);
+  if (invitees.length && (meeting.capacity ?? 1) > 1) fail("Guests cannot be added to a group meeting.");
+  return invitees;
+}
+
+/**
+ * Writes a guest booking's extra invitees, the same rows createAsHost writes.
+ *
+ * Same table, same shape, same contact upsert, so everything downstream that
+ * already reads `booking_invitees` (the calendar event's attendee list in
+ * convex/google.ts, the host's cancel and move mail in
+ * src/lib/booking/host-changes.ts, the contacts list) treats a guest's
+ * colleague exactly as it treats someone the host invited. Name is empty:
+ * the guest gave an address, not a name, and inventing one from the address
+ * would put a wrong name on somebody's contact card.
+ *
+ * Inside the booking's own mutation, so a booking can never exist with half
+ * its guests attached, and a refused list refuses the booking with it.
+ */
+async function insertGuestInvitees(ctx: MutationCtx, booking: Doc<"bookings">, emails: readonly string[]) {
+  for (const email of emails) {
+    await ctx.db.insert("booking_invitees", {
+      id: uuid(),
+      booking_id: booking.id,
+      name: "",
+      email,
+      created_at: Date.now(),
+    });
+    await upsertContact(ctx, { userId: booking.host_id, name: "", email, companyId: booking.company_id ?? null });
+  }
+}
+
 /**
  * A booking on a team link, assigned to whoever's turn it is.
  *
@@ -726,6 +835,8 @@ export const createTeamBooking = mutation({
     answers: v.optional(v.array(v.object({ id: v.string(), value: v.string() }))),
     pageViewId: v.optional(v.union(v.string(), v.null())),
     callerKey: v.optional(v.string()),
+    /** Extra addresses the guest added. Cleaned by cleanGuestInvitees. */
+    invitees: v.optional(v.array(v.string())),
   },
   handler: async (ctx, a) => {
     const team = await ctx.db
@@ -811,6 +922,11 @@ export const createTeamBooking = mutation({
       if (value) answers.push({ label: q.label, value });
     }
 
+    /* Excluded against the member the rotation chose, the one who owns the
+       event; a teammate who is not hosting is a perfectly good extra guest. */
+    const chosenEmail = members.find((m) => m.profile.id === chosen.userId)?.profile.email ?? "";
+    const invitees = guestInviteesFor(meeting, a.invitees, [a.guestEmail, chosenEmail]);
+
     const booking = await insertBooking(ctx, {
       hostId: chosen.userId,
       meetingTypeId: meeting.id,
@@ -829,9 +945,10 @@ export const createTeamBooking = mutation({
       locationDetail: meeting.location_detail ?? "",
       capacity: meeting.capacity ?? 1,
     });
+    await insertGuestInvitees(ctx, booking, invitees);
 
     return {
-      reference: booking.reference, id: booking.id, answers,
+      reference: booking.reference, id: booking.id, answers, invitees,
       starts_at: new Date(booking.starts_at).toISOString(),
       ends_at: new Date(booking.ends_at).toISOString(),
       meeting_name: booking.meeting_name, duration: booking.duration_minutes, host_id: booking.host_id,
@@ -851,6 +968,8 @@ export const createBooking = mutation({
     answers: v.optional(v.array(v.object({ id: v.string(), value: v.string() }))),
     /** A coarse caller key from our own route handler, which can see the IP. */
     callerKey: v.optional(v.string()),
+    /** Extra addresses the guest added. Cleaned by cleanGuestInvitees. */
+    invitees: v.optional(v.array(v.string())),
   },
   handler: async (ctx, a) => {
     const host = await ctx.db
@@ -860,10 +979,7 @@ export const createBooking = mutation({
     if (!host) fail("unknown host");
     if (host.is_suspended) fail("host is not accepting bookings");
 
-    const meeting = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
-      .unique();
+    const meeting = await meetingAtSlug(ctx, host.id, a.slug);
     if (!meeting || !meeting.is_active) fail("unknown meeting");
 
     const now = Date.now();
@@ -902,6 +1018,8 @@ export const createBooking = mutation({
       if (value) answers.push({ label: q.label, value });
     }
 
+    const invitees = guestInviteesFor(meeting, a.invitees, [a.guestEmail, host.email]);
+
     const booking = await insertBooking(ctx, {
       hostId: host.id,
       meetingTypeId: meeting.id,
@@ -920,9 +1038,10 @@ export const createBooking = mutation({
       locationDetail: meeting.location_detail ?? "",
       capacity: meeting.capacity ?? 1,
     });
+    await insertGuestInvitees(ctx, booking, invitees);
 
     return {
-      reference: booking.reference, id: booking.id, answers,
+      reference: booking.reference, id: booking.id, answers, invitees,
       starts_at: new Date(booking.starts_at).toISOString(),
       ends_at: new Date(booking.ends_at).toISOString(),
       meeting_name: booking.meeting_name, duration: booking.duration_minutes, host_id: booking.host_id,

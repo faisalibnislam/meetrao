@@ -9,14 +9,17 @@ import { requirePro } from "./lib/plan";
 import type { MutationCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { logActivity } from "./lib/effects";
-
-const SLUG = /^[a-z0-9](?:[a-z0-9-]{0,78}[a-z0-9])?$/;
+import { MEETING_SLUG, clashMessage, previousSlugsAfter, slugClash } from "./lib/meetingSlugs";
 
 /** The CHECK constraints from migration 0001, which no longer have a database. */
 function validate(a: { name: string; slug: string; duration_minutes: number; buffer_minutes: number; minimum_notice_minutes: number; booking_window_days: number }) {
   if (!a.name.trim()) fail("Give the meeting a name.");
-  if (!SLUG.test(a.slug)) fail("The link is letters, numbers and hyphens.");
-  if (a.duration_minutes < 5 || a.duration_minutes > 480) fail("Duration must be 5–480 minutes.");
+  if (!MEETING_SLUG.test(a.slug)) fail("The link is letters, numbers and hyphens.");
+  /* Whole minutes. The editor now takes a typed duration as well as the four
+     presets, and a fractional one would put every slot a few seconds off the
+     minute it claims to start on. */
+  if (!Number.isInteger(a.duration_minutes) || a.duration_minutes < 5 || a.duration_minutes > 480)
+    fail("Duration must be a whole number of minutes, 5–480.");
   if (a.buffer_minutes < 0 || a.buffer_minutes > 120) fail("Buffer must be 0–120 minutes.");
   if (a.minimum_notice_minutes < 0) fail("Notice cannot be negative.");
   if (a.booking_window_days < 1 || a.booking_window_days > 365) fail("Window must be 1–365 days.");
@@ -43,6 +46,18 @@ async function companyForMeeting(
     .collect();
   if (!rows.some((r) => r.company_id === companyId)) fail("That is not one of your companies.");
   return companyId;
+}
+
+/**
+ * Refuses a slug another of this host's meetings holds, now or in the past.
+ *
+ * Every meeting of the host, read by the user index: there is no index into
+ * an array field, and a host has a handful of meetings, not thousands.
+ */
+async function assertSlugFree(ctx: MutationCtx, userId: string, slug: string, selfId: string | null) {
+  const mine = await ctx.db.query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", userId)).collect();
+  const clash = slugClash(slug, mine, selfId);
+  if (clash) fail(clashMessage(clash));
 }
 
 export const listOwn = query({
@@ -160,12 +175,11 @@ export const create = mutation({
     };
     validate(row);
 
-    // unique (user_id, slug), Postgres had an index; this is the replacement.
-    const clash = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", me.id).eq("slug", row.slug))
-      .first();
-    if (clash) fail("You already have a meeting with that link.");
+    /* unique (user_id, slug), Postgres had an index; this is the
+       replacement. Checked against the host's other meetings' OLD links too,
+       so a new meeting cannot take over an address that still forwards to
+       an existing one. See convex/lib/meetingSlugs.ts. */
+    await assertSlugFree(ctx, me.id, row.slug, null);
 
     const now = Date.now();
     const id = uuid();
@@ -257,12 +271,14 @@ export const update = mutation({
     const merged = { ...m, ...patch } as typeof m;
     validate(merged);
 
+    /* A MOVED LINK KEEPS ITS OLD ADDRESS. The slug it is leaving goes into
+       the meeting's history, so every copy of the old link already pasted
+       somewhere still reaches this meeting and is redirected to the new
+       one. The new slug must be free of the host's other meetings, current
+       and previous, or an old link of theirs would start opening this one. */
     if (patch.slug && patch.slug !== m.slug) {
-      const clash = await ctx.db
-        .query("meeting_types")
-        .withIndex("by_user_slug", (q) => q.eq("user_id", m.user_id).eq("slug", patch.slug as string))
-        .first();
-      if (clash) fail("You already have a meeting with that link.");
+      await assertSlugFree(ctx, m.user_id, patch.slug as string, m.id);
+      patch.previous_slugs = previousSlugsAfter(m.previous_slugs, m.slug, patch.slug as string);
     }
 
     await ctx.db.patch(m._id, patch);

@@ -21,6 +21,7 @@ import { absoluteUrl } from "@/lib/seo";
 const PAGES: [path: string, priority: number, changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"]][] = [
   ["/", 1.0, "weekly"],
   ["/pricing", 0.9, "monthly"],
+  ["/product", 0.8, "monthly"],
   ["/alternatives", 0.9, "monthly"],
   ["/custom-domain", 0.8, "monthly"],
   /* Same arrangement as the comparisons: the data decides, not a second list

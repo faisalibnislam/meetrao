@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BUSINESS_LIMITS } from "@/lib/pricing";
 import Link from "next/link";
 import {
   DocContextStrip,
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-const UPDATED = "12 September 2026";
+const UPDATED = "17 October 2026";
 
 const TOC: TocEntry[] = [
   { id: "t-who", label: "1. Who we are" },
@@ -79,8 +80,8 @@ export default function TermsPage() {
           share logins.
         </p>
         <p>
-          You choose a username, and it becomes your public booking link, for example{" "}
-          <code>meetrao.com/adam</code>. We may reclaim a username that impersonates someone, infringes a
+          You choose a username, and it becomes part of every public booking link you share, for example{" "}
+          <code>meetrao.com/adam/intro-call</code>. We may reclaim a username that impersonates someone, infringes a
           trademark, or is being held without use.
         </p>
         <p>
@@ -131,16 +132,20 @@ export default function TermsPage() {
 
         <h2 id="t-price">5. What it costs</h2>
         <p>
-          There are two plans. <strong>Free</strong> covers taking bookings, your link, your meeting types,
+          There are three plans. <strong>Free</strong> covers taking bookings, your link, your meeting types,
           your calendar, reminders, rescheduling and cancellation, with no card and no limit on how many
           bookings you take. <strong>Pro</strong> is $30 a year, or $3 a month, and adds a custom domain,
           removal of Meetrao branding, team links, shared sessions, the API and control over reminder timing.
+          Pro includes one company, with you as its only member. <strong>Business</strong> is $99 a year, or $9
+          a month, and adds everything in Pro plus up to {BUSINESS_LIMITS.companies} companies of up to{" "}
+          {BUSINESS_LIMITS.membersPerCompany} people each, with their own links on the company&rsquo;s domain.
+          The price is for the account that owns the companies, not for each person in them.
         </p>
         <p>
-          <strong>A free account is never billed automatically.</strong> Pro begins only when you choose it and
-          complete a payment, and it ends when you cancel. If you cancel, Pro runs to the end of the period you
-          have already paid for and then the account returns to Free, your bookings, your link and your data
-          stay where they are.
+          <strong>A free account is never billed automatically.</strong> A paid plan begins only when you choose
+          it and complete a payment, and it ends when you cancel. If you cancel, the plan runs to the end of the
+          period you have already paid for and then the account returns to Free, your bookings, your link and
+          your data stay where they are. The people in a company you own keep their own Meetrao accounts.
         </p>
         <p>
           Payments are handled by Polar, which is the merchant of record: Polar takes the payment, issues the
@@ -148,7 +153,7 @@ export default function TermsPage() {
           payment method or cancel at any time through the billing portal linked from your settings.
         </p>
         <p>
-          Features may still change while Meetrao is young, and some that were free have moved to Pro as the
+          Features may still change while Meetrao is young, and some that were free have moved to a paid plan as the
           product has grown. We will not do that in a way designed to break bookings you have already taken:
           existing bookings, and the links guests already hold, keep working either way.
         </p>

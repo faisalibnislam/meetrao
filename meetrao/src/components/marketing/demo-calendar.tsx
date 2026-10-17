@@ -1,46 +1,61 @@
 "use client";
 
+import { useMemo } from "react";
 import { cx } from "@/lib/cx";
+import { useClientValue } from "@/lib/use-client-value";
+import { dayKey, demoMonth, isOpen, type DemoMonth } from "./demo-date";
 
-/* The month the marketing demos use. September 2026 starts on a Tuesday, so
-   the 1st sits in column 2. These are fabricated screens, not live data,
-   nothing here talks to the booking engine. */
+/* The month grid the marketing demos use. These are fabricated screens, not
+   live data, nothing here talks to the booking engine.
+
+   The month is worked out from today rather than written down: see
+   demo-date.ts for how, and for why the day arrives as a string prop. */
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-const FIRST_DOW = 2;
-const DAYS = 30;
-const TODAY = 7;
-const LAST_BOOKABLE = 30;
+/**
+ * Today, as the visitor's own browser sees it.
+ *
+ * `serverDay` is what the server rendered with, and it is what this returns
+ * during hydration, so the HTML and the first client render match. Straight
+ * afterwards useSyncExternalStore re-reads `dayKey(new Date())` and the demos
+ * move to the real day. On a static page those two differ by however long ago
+ * the last deploy was; without the swap that gap is what made the demo look
+ * stale.
+ */
+export function useDemoToday(serverDay: string): string {
+  return useClientValue(() => dayKey(new Date()), serverDay);
+}
 
-export type DemoCell = { day: number | null; closed: boolean; today: boolean };
+/** The demo month for that day, rebuilt only when the day changes. */
+export function useDemoMonth(serverDay: string): DemoMonth {
+  const today = useDemoToday(serverDay);
+  return useMemo(() => demoMonth(today), [today]);
+}
 
-function demoMonth(): DemoCell[] {
-  const cells: DemoCell[] = Array.from({ length: FIRST_DOW }, () => ({
+type DemoCell = { day: number | null; closed: boolean; today: boolean };
+
+function cells(m: DemoMonth): DemoCell[] {
+  const out: DemoCell[] = Array.from({ length: m.firstDow }, () => ({
     day: null,
     closed: true,
     today: false,
   }));
 
-  for (let d = 1; d <= DAYS; d++) {
-    const dow = (FIRST_DOW + d - 1) % 7;
-    const closed = dow === 0 || dow === 6 || d < TODAY || d > LAST_BOOKABLE;
-    cells.push({ day: d, closed, today: d === TODAY });
+  for (let d = 1; d <= m.days; d++) {
+    out.push({ day: d, closed: !isOpen(m, d), today: d === m.today });
   }
 
-  return cells;
-}
-
-export function demoDayLabel(day: number): string {
-  const names = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-  return `${names[(FIRST_DOW + day - 1) % 7]}, September ${day}`;
+  return out;
 }
 
 export function DemoMonthGrid({
+  month,
   selected,
   onSelect,
   cellHeight = 30,
 }: {
+  month: DemoMonth;
   selected: number;
   onSelect: (day: number) => void;
   cellHeight?: number;
@@ -56,7 +71,7 @@ export function DemoMonthGrid({
         </span>
       ))}
 
-      {demoMonth().map((cell, i) => {
+      {cells(month).map((cell, i) => {
         if (cell.day === null) return <span key={`e${i}`} aria-hidden="true" />;
         const on = !cell.closed && cell.day === selected;
         return (
@@ -64,7 +79,7 @@ export function DemoMonthGrid({
             key={cell.day}
             type="button"
             disabled={cell.closed}
-            aria-label={cell.closed ? `September ${cell.day}, unavailable` : `September ${cell.day}`}
+            aria-label={cell.closed ? `${month.name} ${cell.day}, unavailable` : `${month.name} ${cell.day}`}
             onClick={() => onSelect(cell.day as number)}
             style={{ height: cellHeight }}
             className={cx(

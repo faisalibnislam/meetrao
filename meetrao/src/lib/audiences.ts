@@ -172,7 +172,7 @@ export const FREELANCERS: Audience = {
   does: [
     [
       "Your own domain, for $30 a year",
-      "meet.yourname.com/you, and the bare subdomain works too. One CNAME record and the certificate is handled. Calendly has no custom-domain feature at any price; SavvyCal puts it on a plan costing more per month than this does per year.",
+      "meet.yourname.com/you/intro-call. One CNAME record and the certificate is handled. Calendly has no custom-domain feature at any price; SavvyCal puts it on a plan costing more per month than this does per year.",
     ],
     [
       "Your logo and your colours",

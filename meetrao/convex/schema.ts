@@ -88,6 +88,15 @@ export default defineSchema({
     is_suspended: v.boolean(),
     default_duration_minutes: v.number(),
     default_notice_minutes: v.number(),
+    /**
+     * The buffer and booking window a NEW meeting starts with, from Settings,
+     * Booking defaults. Optional because every profile written before they
+     * existed has neither; absent reads as what new meetings always started
+     * with, no buffer and 30 days ahead. Each meeting keeps its own copy, so
+     * changing a default never moves a meeting that already exists.
+     */
+    default_buffer_minutes: v.optional(v.number()),
+    default_window_days: v.optional(v.number()),
     notify_new_booking: v.boolean(),
     notify_booking_changed: v.boolean(),
     notify_booking_cancelled: v.boolean(),
@@ -123,6 +132,22 @@ export default defineSchema({
     plan_until: v.optional(nullableNumber),
     polar_customer_id: v.optional(nullableString),
     polar_subscription_id: v.optional(nullableString),
+    /**
+     * The Polar product the live subscription is for, which is how the Plan
+     * screen says whether somebody pays monthly or yearly: the four product
+     * ids in `platform_settings` each name a tier and a cadence. Written by
+     * the webhook alongside `plan`, so absent on every subscription that has
+     * not had an event since this existed, and the screen says nothing about
+     * cadence rather than guessing.
+     */
+    polar_product_id: v.optional(nullableString),
+    /**
+     * Polar's cancel_at_period_end. True means `plan_until` is when the plan
+     * ENDS rather than when it renews, which is the difference between
+     * "Renews 3 Mar" and "Ends 3 Mar" on the Plan screen. Absent is unknown
+     * and reads as renewing, which is what an active subscription does.
+     */
+    plan_cancels_at_period_end: v.optional(v.boolean()),
     /**
      * Pro given by an operator rather than bought, a friend, a refund in
      * kind, an early user, a charity.
@@ -330,6 +355,19 @@ export default defineSchema({
     name: v.string(),
     description: v.string(),
     slug: v.string(),
+    /**
+     * The links this meeting used to have, oldest first.
+     *
+     * A host who renames a meeting and moves its link would otherwise break
+     * every copy of the old address already pasted into signatures and other
+     * people's calendars. Each old slug still resolves to this meeting and
+     * the public page redirects to the current one. They also count as taken
+     * for the host's other meetings, so an old link can never start opening a
+     * different meeting. See convex/lib/meetingSlugs.ts.
+     *
+     * Optional because every row written before links could move has none.
+     */
+    previous_slugs: v.optional(v.array(v.string())),
     duration_minutes: v.number(),
     buffer_minutes: v.number(),
     minimum_notice_minutes: v.number(),

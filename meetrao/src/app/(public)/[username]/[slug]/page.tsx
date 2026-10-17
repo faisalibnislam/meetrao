@@ -4,6 +4,7 @@ import { companyForRequest, publicUrl } from "@/lib/public-origin";
 import { permanentRedirect } from "next/navigation";
 import { MeetingPage } from "@/components/booking/meeting-page";
 import { companyPlaceOf, getPublicHost, getPublicMeeting } from "@/lib/data/public-booking";
+import { movedTo } from "@/convex/lib/meetingSlugs";
 
 export const dynamic = "force-dynamic";
 
@@ -75,8 +76,19 @@ export default async function BookingPage({
     void getPublicHost(username);
     void getPublicMeeting(username, slug);
     const place = await companyPlaceOf(username, slug);
-    if (place) permanentRedirect(`/${place.companySlug}/${place.handle}/${slug}`);
+    /* The place carries the meeting's CURRENT slug, so a company meeting
+       reached by an old link goes to its company address in one hop. */
+    if (place) permanentRedirect(`/${place.companySlug}/${place.handle}/${place.slug ?? slug}`);
   }
+
+  /* AN OLD LINK. The meeting's slug was moved and this is one it used to
+     have: Convex still resolves it, and the guest is sent on to the current
+     address with a 308 rather than served here, so the stale address does
+     not live on in bookmarks and search results. On a host's own domain this
+     path is the one the guest typed, with the username where their handle
+     is, and the proxy maps it back the same way. */
+  const moved = movedTo(slug, await getPublicMeeting(username, slug), `/${username}`);
+  if (moved) permanentRedirect(moved);
 
   return <MeetingPage username={username} slug={slug} company={company} />;
 }

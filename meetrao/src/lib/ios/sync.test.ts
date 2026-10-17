@@ -58,10 +58,31 @@ describe("both sides offer the same choices", () => {
   it("the same meeting lengths, buffers, notices and windows", () => {
     const web = read("src/lib/actions/meetings.ts");
     const app = readFileSync(path.join(IOS, "Meetrao/Models/Meeting.swift"), "utf8");
-    for (const name of ["DURATIONS", "BUFFERS", "NOTICES", "WINDOWS"]) {
+    for (const name of ["BUFFERS", "NOTICES", "WINDOWS"]) {
       const webList = web.match(new RegExp(`const ${name} = \\[([^\\]]+)\\]`))?.[1].replace(/\s/g, "");
       const appList = app.match(new RegExp(`static let ${name.toLowerCase()} = \\[([^\\]]+)\\]`))?.[1].replace(/\s/g, "");
       expect(appList, name).toBe(webList);
+    }
+  });
+
+  /* Durations are a RANGE on the web now, not a list: the editor offers the
+     four presets plus a typed custom length, and the action accepts any whole
+     number of minutes inside the bounds. So the app's presets need not equal
+     a web list any more; each one must be a length the web accepts. */
+  it("meeting lengths the app offers are ones the web accepts", () => {
+    const web = read("src/lib/actions/meetings.ts");
+    const app = readFileSync(path.join(IOS, "Meetrao/Models/Meeting.swift"), "utf8");
+    const min = Number(web.match(/const MIN_DURATION = (\d+);/)?.[1]);
+    const max = Number(web.match(/const MAX_DURATION = (\d+);/)?.[1]);
+    const appList = app
+      .match(/static let durations = \[([^\]]+)\]/)?.[1]
+      .split(",")
+      .map((s) => Number(s.trim()));
+    expect(min, "MIN_DURATION").toBeGreaterThan(0);
+    expect(max, "MAX_DURATION").toBeGreaterThan(min);
+    expect(appList?.length, "the app's duration list").toBeGreaterThan(0);
+    for (const d of appList ?? []) {
+      expect(Number.isInteger(d) && d >= min && d <= max, `${d} min`).toBe(true);
     }
   });
 

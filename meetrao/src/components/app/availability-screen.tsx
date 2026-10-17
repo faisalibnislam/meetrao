@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChoiceChip, Field, Input } from "@/components/ui/controls";
@@ -88,6 +88,14 @@ export function AvailabilityScreen({
   const active = schedules.find((s) => s.id === activeId) ?? schedules[0];
   const activeTimeOff = timeOff.filter((t) => t.scheduleId === active?.id);
   const unsaved = dirty.length > 0 || tzDirty;
+
+  /* Leaving with unsaved hours loses them without a word otherwise. */
+  useEffect(() => {
+    if (!unsaved) return;
+    const warn = (event: BeforeUnloadEvent) => event.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [unsaved]);
 
   function addTimeOff() {
     if (!offDate) {
@@ -390,8 +398,18 @@ export function AvailabilityScreen({
         )}
       </div>
 
-      <div className="flex flex-wrap items-center gap-[12px]">
-        <Button variant="accent" size={36} busy={saving} onClick={save}>
+      {/* Saving is explicit, and the bar says so. It used to sit at the foot of
+          a long page showing "Save availability" beside "All changes saved",
+          which read as two answers to one question. Now the button only works
+          when there is something to save, and while there is, the bar stays on
+          screen, so the change cannot scroll out of sight unsaved. */}
+      <div
+        className={cx(
+          "flex flex-wrap items-center gap-[12px]",
+          unsaved && "sticky bottom-0 z-10 -mx-[4px] border-t border-line bg-ground px-[4px] py-[12px]",
+        )}
+      >
+        <Button variant="accent" size={36} busy={saving} disabled={!unsaved} onClick={save}>
           {saving ? "Saving…" : "Save availability"}
         </Button>
         <span

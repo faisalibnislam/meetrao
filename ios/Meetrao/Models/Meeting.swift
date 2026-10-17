@@ -77,6 +77,12 @@ nonisolated enum MeetingLocation: String, CaseIterable, Identifiable, Sendable {
 /// server-side validation in src/lib/actions/meetings.ts accepts.
 nonisolated enum MeetingChoices {
     static let durations = [15, 30, 45, 60]
+
+    /// The presets, plus the meeting's own length when the web gave it a
+    /// custom one (anything from 5 to 480), so the picker never opens blank.
+    static func durations(including current: Int) -> [Int] {
+        durations.contains(current) ? durations : (durations + [current]).sorted()
+    }
     static let buffers = [0, 5, 10, 15]
     static let notices = [60, 120, 240, 720, 1440]
     static let windows = [7, 14, 30, 60]

@@ -241,9 +241,12 @@ describe("tables keep their actions reachable", () => {
     );
   });
 
+  /* Not a disabled Export beside an empty list any more: with no contacts the
+     toolbar is Import alone, and Export appears with the first one. */
   it("does not offer to export nothing", () => {
     const c = read("src/components/app/contacts-screen.tsx");
-    expect(c).toContain("contacts.length === 0 ? (");
+    expect(c).toContain("const empty = contacts.length === 0;");
+    expect(c).toMatch(/\{empty \? null : \(\s*<>\s*<a href="\/api\/contacts\/export"/);
     expect(c).toContain('buttonClass("secondary", 32, "unlink")');
   });
 });

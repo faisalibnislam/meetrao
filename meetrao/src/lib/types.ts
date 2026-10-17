@@ -10,6 +10,10 @@ export type Profile = {
   is_suspended: boolean;
   default_duration_minutes: number;
   default_notice_minutes: number;
+  /** What a new meeting's buffer and booking window start as. Absent on
+      every profile written before they existed: none, and 30 days. */
+  default_buffer_minutes?: number;
+  default_window_days?: number;
   notify_new_booking: boolean;
   notify_booking_changed: boolean;
   notify_booking_cancelled: boolean;
@@ -44,6 +48,9 @@ export type MeetingType = {
   name: string;
   description: string;
   slug: string;
+  /** Links this meeting used to have. They still resolve and redirect here,
+      and count as taken for the host's other meetings. */
+  previous_slugs?: string[];
   duration_minutes: number;
   buffer_minutes: number;
   minimum_notice_minutes: number;

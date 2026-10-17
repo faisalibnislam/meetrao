@@ -59,8 +59,15 @@ describe("an app screen reads in one round after the session", () => {
   });
 
   it("the meeting form reads its plan and schedules beside the meeting", () => {
-    expect(read("src/app/(app)/meetings/[id]/edit/page.tsx")).toContain("const [data, pro, schedules] = await Promise.all([");
-    expect(read("src/app/(app)/meetings/new/page.tsx")).toContain("const [pro, schedules] = await Promise.all([");
+    /* And now the host's other meetings, the workspaces and the calendar
+       connection too, for the Link field and the Meet warning: still one
+       round, not four in a row. */
+    expect(read("src/app/(app)/meetings/[id]/edit/page.tsx")).toContain(
+      "const [data, pro, schedules, meetings, choices, calendar] = await Promise.all([",
+    );
+    expect(read("src/app/(app)/meetings/new/page.tsx")).toContain(
+      "const [pro, schedules, meetings, context, choices, calendar] = await Promise.all([",
+    );
   });
 
   /* The rail and the page used to ask for the same rows separately. */
