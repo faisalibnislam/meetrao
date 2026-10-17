@@ -60,13 +60,13 @@ describe("the demo bookings", () => {
     expect(d.today).toBe("Today");
     expect(d.tomorrow).toBe("Tomorrow");
     // Saturday the 17th: three days out is Tuesday the 20th.
-    expect(d.soon).toBe("Tue 20 Oct");
-    expect(d.recent).toBe("11 Oct");
-    expect(d.earlier).toBe("28 Sept");
+    expect(d.soon).toBe("Tue, Oct 20");
+    expect(d.recent).toBe("Oct 11");
+    expect(d.earlier).toBe("Sep 28");
   });
 
   it.each(DAYS.filter((_, i) => i % 5 === 0))("%s puts the next booking on a weekday", (key) => {
-    expect(demoBookingDates(key).soon).toMatch(/^(Mon|Tue|Wed|Thu|Fri) /);
+    expect(demoBookingDates(key).soon).toMatch(/^(Mon|Tue|Wed|Thu|Fri), /);
   });
 });
 
