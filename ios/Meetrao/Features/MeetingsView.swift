@@ -158,7 +158,7 @@ struct MeetingEditorView: View {
 
             Section("Length and place") {
                 Picker("Length", selection: $draft.duration) {
-                    ForEach(MeetingChoices.durations, id: \.self) { Text(Format.duration($0)).tag($0) }
+                    ForEach(MeetingChoices.durations(including: draft.duration), id: \.self) { Text(Format.duration($0)).tag($0) }
                 }
                 Picker("Where", selection: $draft.location) {
                     ForEach(MeetingLocation.allCases) { Label($0.label, systemImage: $0.symbol).tag($0) }

@@ -277,7 +277,7 @@ export function MeetingsTable({
       </div>
 
       <span className="text-[12.5px] text-ink-3">
-        Inactive meetings stay in this list but can&rsquo;t be booked from your link.
+        Meetings switched off stay in this list, but nobody can book them until you switch them back on.
       </span>
 
       <Modal
