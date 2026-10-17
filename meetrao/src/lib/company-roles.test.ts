@@ -186,7 +186,8 @@ describe("the People screen draws what the mutations allow", () => {
      than a control that is missing, so these two predicates have to match the
      rules above exactly. */
   it("shows Delete company to the owner alone", () => {
-    expect(PANEL).toContain('{mine === "owner" && canDelete ? (');
+    expect(PANEL).toContain('{mine === "owner" && canDelete ? <DeleteCompanyRow');
+    expect(PANEL, "the Pro company's own tab").toContain("{current.isOwner ? <DeleteCompanyRow");
     expect(PANEL).toContain("Delete company");
   });
 
@@ -241,12 +242,13 @@ describe("the company's own People tab", () => {
     expect(PANEL).toContain("{current && soloCompany ? (");
   });
 
-  /* Offering it from inside the company is offering to delete the room you
-     are standing in, and leaves the workspace switcher pointing at something
-     that no longer exists. */
-  it("never offers to delete the company you are standing in", () => {
-    expect(PANEL).toContain("canDelete={!only}");
-    expect(PANEL).toContain('{mine === "owner" && canDelete ? (');
+  /* Owners looked for it inside the company and found nothing, so it is
+     offered there too. What must not happen is the workspace switcher left
+     pointing at a company that is gone: deleting from inside moves them back
+     to Personal first. */
+  it("deletes from inside the company and leaves for Personal", () => {
+    expect(PANEL).toContain("canDelete\n");
+    expect(PANEL).toMatch(/if \(!result\.error && only\) \{\s*await setContext\(null\);/);
   });
 
   /* The gate is the OWNER's cap, not the viewer's plan: a member of a

@@ -18,6 +18,7 @@ import {
   setCompanyHandle,
 } from "@/lib/actions/companies";
 import { cx } from "@/lib/cx";
+import { setContext } from "@/lib/actions/context";
 import { BUSINESS_PITCH, UpgradeCallout } from "./upgrade";
 import { BUSINESS_LIMITS } from "@/lib/pricing";
 import { isPaid, type Plan } from "@/convex/lib/plan";
@@ -230,9 +231,12 @@ export function CompaniesPanel({
           ) : null}
 
           {current && soloCompany ? (
-            <UpgradeCallout to="business" feature="Adding people to a company">
-              {BUSINESS_PITCH}
-            </UpgradeCallout>
+            <>
+              <UpgradeCallout to="business" feature="Adding people to a company">
+                {BUSINESS_PITCH}
+              </UpgradeCallout>
+              {current.isOwner ? <DeleteCompanyRow boxed busy={busy} onDelete={() => setDialog("delete")} /> : null}
+            </>
           ) : current ? (
             <CompanyCard
               /* One card per company, not one card shown for each in turn.
@@ -242,11 +246,11 @@ export function CompaniesPanel({
                  them onto the company now selected. */
               key={current.id}
               company={current}
-              /* Deleting a company belongs to the owner's personal space,
-                 beside the list of every company they have. Offering it from
-                 inside the company is offering to delete the room you are
-                 standing in. */
-              canDelete={!only}
+              /* From inside the company too: owners went looking for it there
+                 and found nothing. Deleting from inside moves them back to
+                 Personal, so the switcher never points at a company that is
+                 gone. */
+              canDelete
               busy={busy}
               onInvite={() => setDialog("invite")}
               onDelete={() => setDialog("delete")}
@@ -367,13 +371,30 @@ export function CompaniesPanel({
       <Modal
         open={dialog === "delete"}
         onClose={() => setDialog(null)}
-        title="Delete this company?"
-        subtitle="The people in it keep their accounts, their meetings and their own links. What goes is this company, its people list and anything on its domain."
+        title={current ? `Delete ${current.name}?` : "Delete this company?"}
+        subtitle={`The people in it keep their accounts, their meetings and their own links. What goes is this company, its people list and anything on its domain.${
+          only ? " You will be moved back to Personal." : ""
+        }`}
         primary={{
-          label: "Delete",
+          label: "Delete company",
           variant: "danger",
           busy,
-          onClick: () => (current ? run(() => deleteCompany({ id: current.id }), { title: "Deleted" }) : undefined),
+          onClick: () =>
+            current
+              ? run(
+                  async () => {
+                    const result = await deleteCompany({ id: current.id });
+                    /* Deleted from inside it: leave before the page asks for
+                       a company that no longer exists. */
+                    if (!result.error && only) {
+                      await setContext(null);
+                      router.push("/settings/companies");
+                    }
+                    return result;
+                  },
+                  { title: "Company deleted" },
+                )
+              : undefined,
         }}
         secondary={{ label: "Keep it", onClick: () => setDialog(null) }}
       />
@@ -488,19 +509,8 @@ function CompanyCard({
 
       {/* Deleting is the owner's alone. An admin looking after the company's
           face and its people must not be able to take the company away from
-          the person who pays for it.
-
-          And only from Personal, where it sits beside the list of every
-          company they have. From inside the company it is an offer to delete
-          the room you are standing in, with the workspace switcher left
-          pointing at something that no longer exists. */}
-      {mine === "owner" && canDelete ? (
-        <div className="flex flex-wrap items-center gap-[8px]">
-          <Button variant="ghost" size={32} disabled={busy} onClick={onDelete}>
-            Delete company
-          </Button>
-        </div>
-      ) : null}
+          the person who pays for it. */}
+      {mine === "owner" && canDelete ? <DeleteCompanyRow busy={busy} onDelete={onDelete} /> : null}
 
       {/* Beside the button that is not there, rather than at the top of the
           panel: this is the moment somebody wanted to add a colleague. */}
@@ -673,6 +683,43 @@ function MemberRow({
             : "No meetings on this company yet."}
         </span>
       )}
+    </div>
+  );
+}
+
+/**
+ * The way out, set apart from everything above it.
+ *
+ * It was a grey ghost button under the people list, which read as disabled:
+ * an owner looking for how to delete their company did not find it. Red, with
+ * a sentence saying what it does, and the confirmation still in the modal.
+ */
+function DeleteCompanyRow({
+  busy,
+  onDelete,
+  boxed = false,
+}: {
+  busy: boolean;
+  onDelete: () => void;
+  /** On its own rather than at the foot of a company card. */
+  boxed?: boolean;
+}) {
+  return (
+    <div
+      className={cx(
+        "flex flex-wrap items-center justify-between gap-[12px]",
+        boxed ? "rounded-[10px] border border-line bg-surface px-[18px] py-[14px]" : "border-t border-line-soft pt-[14px]",
+      )}
+    >
+      <span className="flex min-w-0 flex-col gap-[2px]">
+        <span className="text-[13px] font-semibold text-red">Delete company</span>
+        <span className="text-[12.5px] text-ink-3">
+          Removes the company, its people list and its domain. Everyone keeps their own account.
+        </span>
+      </span>
+      <Button variant="danger" size={32} disabled={busy} onClick={onDelete}>
+        Delete company
+      </Button>
     </div>
   );
 }

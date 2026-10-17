@@ -85,7 +85,7 @@ export function CompanyDashboard({ data, timezone }: { data: CompanyDashboard; t
 
   return (
     <div className="flex flex-col gap-[20px]">
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(190px,1fr))] gap-[11px]">
+      <div className="grid grid-cols-2 gap-[11px] min-[1040px]:grid-cols-4 max-[440px]:grid-cols-1">
         <MetricCard
           icon="calendar"
           tone="accent"
@@ -131,7 +131,7 @@ export function CompanyDashboard({ data, timezone }: { data: CompanyDashboard; t
       {data.flags.length > 0 ? (
         <section className="flex flex-col gap-[9px]">
           <SectionHeading title="Worth a look" />
-          <Card>
+          <Card className="p-[14px]">
             <ul className="m-0 flex list-none flex-col gap-[8px] p-0">
               {data.flags.map((f, i) => (
                 <li key={`${f.kind}-${f.who}-${i}`} className="flex items-start gap-[9px] text-[13px]">
@@ -247,7 +247,7 @@ export function CompanyDashboard({ data, timezone }: { data: CompanyDashboard; t
 
       <section className="flex flex-col gap-[9px]">
         <SectionHeading title="Meetings a day" />
-        <Card>
+        <Card className="p-[14px]">
           <div className="flex items-end gap-[2px]" style={{ height: 90 }}>
             {/* Lighter ahead of today: those are bookings held, not work
                 done, and one fill for both would draw two different facts as
@@ -284,7 +284,7 @@ export function CompanyDashboard({ data, timezone }: { data: CompanyDashboard; t
       <div className="grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-[14px]">
         <section className="flex flex-col gap-[9px]">
           <SectionHeading title="What gets booked" />
-          <Card>
+          <Card className="p-[14px]">
             {data.byMeeting.length === 0 ? (
               <span className="text-[12.5px] text-ink-3">Nothing held in this window.</span>
             ) : (
@@ -314,13 +314,13 @@ export function CompanyDashboard({ data, timezone }: { data: CompanyDashboard; t
 
         <section className="flex flex-col gap-[9px]">
           <SectionHeading title="When people book" />
-          <Card>
+          <Card className="p-[14px]">
             <span className="mb-[6px] block text-[11px] font-semibold tracking-[0.06em] text-ink-3 uppercase">
               By day
             </span>
             <div className="flex items-end gap-[5px]" style={{ height: 52 }}>
               {data.byWeekday.map((n, i) => (
-                <span key={WEEKDAYS[i]} className="flex flex-1 flex-col items-center gap-[4px]">
+                <span key={WEEKDAYS[i]} className="flex h-full flex-1 flex-col items-center gap-[4px]">
                   <span className="flex w-full flex-1 items-end">
                     <span
                       title={`${WEEKDAYS[i]}: ${n}`}
