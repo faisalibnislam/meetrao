@@ -12,6 +12,7 @@ import type { Doc } from "./_generated/dataModel";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
+import { findBySlug, normaliseSlug } from "./lib/meetingSlugs";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The guest path. Every function here is reachable with NO session, exactly
@@ -60,6 +61,36 @@ function publicBrand(
   return logo || color || background || hidden
     ? { logo_url: logo, logo_hidden: hidden, color, background }
     : null;
+}
+
+/**
+ * The host's meeting at this slug, by its current link or one it used to have.
+ *
+ * A meeting whose link was moved keeps answering at the old one (see
+ * convex/lib/meetingSlugs.ts), so every copy of the old address already
+ * pasted into a signature or a calendar still reaches it. The row returned
+ * carries its CURRENT slug; a page that sees it differ from the one it was
+ * asked for redirects there, and a booking started on a page loaded just
+ * before the rename still lands on the right meeting.
+ *
+ * The index answers the ordinary case in one read. Only an address that
+ * names no current slug pays for the scan of the host's meetings, and a host
+ * has a handful of those.
+ */
+async function meetingAtSlug(
+  ctx: QueryCtx | MutationCtx,
+  hostId: string,
+  raw: string,
+): Promise<Doc<"meeting_types"> | null> {
+  const slug = normaliseSlug(raw);
+  if (!slug) return null;
+  const current = await ctx.db
+    .query("meeting_types")
+    .withIndex("by_user_slug", (q) => q.eq("user_id", hostId).eq("slug", slug))
+    .unique();
+  if (current) return current;
+  const mine = await ctx.db.query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", hostId)).collect();
+  return findBySlug(mine, slug)?.meeting ?? null;
 }
 
 export const getHost = query({
@@ -123,10 +154,7 @@ export const meetingIsOnCompany = query({
       .unique();
     if (!host || host.is_suspended) return false;
 
-    const meeting = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
-      .unique();
+    const meeting = await meetingAtSlug(ctx, host.id, a.slug);
     if (!meeting || !meeting.is_active) return false;
     if (!meeting.company_id) return false;
 
@@ -148,10 +176,7 @@ export const getMeetingAvailability = query({
       .unique();
     if (!host || host.is_suspended) return null;
 
-    const meeting = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
-      .unique();
+    const meeting = await meetingAtSlug(ctx, host.id, a.slug);
     if (!meeting || !meeting.is_active) return null;
 
     const rules = await rulesForMeeting(ctx, host.id, meeting.schedule_id);
@@ -540,10 +565,7 @@ export const companyPlaceOf = query({
       .unique();
     if (!host) return null;
 
-    const meeting = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
-      .unique();
+    const meeting = await meetingAtSlug(ctx, host.id, a.slug);
     if (!meeting || !meeting.company_id) return null;
 
     const company = await ctx.db
@@ -562,7 +584,10 @@ export const companyPlaceOf = query({
        them nowhere is better than sending them to a handle that 404s. */
     if (!mine) return null;
 
-    return { companySlug: company.slug, handle: mine.handle };
+    /* The meeting's CURRENT slug beside the place, so an old link to a
+       company's meeting is sent to the company address in one hop rather
+       than to the stale slug there and then on again. */
+    return { companySlug: company.slug, handle: mine.handle, slug: meeting.slug };
   },
 });
 
@@ -860,10 +885,7 @@ export const createBooking = mutation({
     if (!host) fail("unknown host");
     if (host.is_suspended) fail("host is not accepting bookings");
 
-    const meeting = await ctx.db
-      .query("meeting_types")
-      .withIndex("by_user_slug", (q) => q.eq("user_id", host.id).eq("slug", a.slug.trim().toLowerCase()))
-      .unique();
+    const meeting = await meetingAtSlug(ctx, host.id, a.slug);
     if (!meeting || !meeting.is_active) fail("unknown meeting");
 
     const now = Date.now();

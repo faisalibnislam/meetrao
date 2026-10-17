@@ -122,8 +122,17 @@ export function CopyLinkControl({ meetings }: { meetings: CopyTarget[] }) {
   );
 }
 
-/** The small link chip in the Meetings table. */
-export function CopyLinkChip({ link }: { link: string }) {
+/**
+ * The small link chip in the Meetings table.
+ *
+ * `fill` lets it take whatever width its container has and truncate only
+ * when the link is longer than that. The fixed 168px cap cut
+ * "meetrao.com/faisal/30-minute-consultation" to "meetrao.com/faisal/30..."
+ * on a wide screen with room to spare, which hid exactly the part of the
+ * link that tells two meetings apart. Without it the chip keeps the cap,
+ * for rows that sit beside other content in a wrapping line.
+ */
+export function CopyLinkChip({ link, fill = false }: { link: string; fill?: boolean }) {
   const toast = useToast();
   const [copied, setCopied] = useState(false);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -144,7 +153,10 @@ export function CopyLinkChip({ link }: { link: string }) {
         toast({ tone: "ok", title: "Copied", text: link });
         timer.current = setTimeout(() => setCopied(false), FLASH_MS);
       }}
-      className="inline-flex h-[26px] max-w-[168px] cursor-pointer items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[8px] text-[11.5px] text-ink-2 hover:bg-fill-2 hover:text-ink"
+      className={cx(
+        "inline-flex h-[26px] cursor-pointer items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[8px] text-[11.5px] text-ink-2 hover:bg-fill-2 hover:text-ink",
+        fill ? "max-w-full" : "max-w-[168px]",
+      )}
     >
       <span className="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">{link}</span>
       <Icon name={copied ? "check" : "copy"} weight={copied ? "solid" : "light"} size={10} className="flex-none" />

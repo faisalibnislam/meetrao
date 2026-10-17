@@ -47,6 +47,7 @@ export default async function MeetingsPage() {
     slug: m.slug,
     active: m.is_active,
     link: addressOf(m.slug),
+    location: m.location,
     /* Preview opens the real page, which for a company is the company's. */
     previewHref:
       here && here.slug ? `/${here.slug}/${here.handle}/${m.slug}` : `/${profile.username}/${m.slug}`,
