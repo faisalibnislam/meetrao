@@ -115,7 +115,10 @@ describe("the old address keeps working", () => {
   it("sends a company's meeting on to the company's address", () => {
     expect(PERSONAL_ROUTE).toContain("companyPlaceOf(username, slug)");
     expect(PERSONAL_ROUTE).toContain(
-      "permanentRedirect(`/${place.companySlug}/${place.handle}/${slug}`)",
+      /* With the meeting's CURRENT slug, so a company meeting reached by a
+         link it used to have goes to its company address in one hop. Falls
+         back to the requested slug if Convex is older than the site. */
+      "permanentRedirect(`/${place.companySlug}/${place.handle}/${place.slug ?? slug}`)",
     );
   });
 

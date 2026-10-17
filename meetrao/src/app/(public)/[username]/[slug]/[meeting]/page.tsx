@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { OG_IMAGE } from "@/lib/seo";
-import { publicUrl } from "@/lib/public-origin";
+import { companyForRequest, publicUrl } from "@/lib/public-origin";
 import { MeetingPage } from "@/components/booking/meeting-page";
 import {
   companyBySlug,
   hostOnCompany,
   getPublicHost,
   getPublicMeeting,
+  meetingIsOnCompany,
 } from "@/lib/data/public-booking";
+import { movedTo } from "@/convex/lib/meetingSlugs";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    A company's own address: meetrao.com/<company>/<handle>/<meeting>.
@@ -86,6 +88,30 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function CompanyBookingPage({ params }: { params: Params }) {
   const found = await resolve(params);
   if (!found) notFound();
+
+  /* AN OLD LINK, as on the personal route: the meeting's slug was moved and
+     this is one it used to have. Sent on with a 308 to the current address,
+     but only once the meeting is confirmed to be THIS company's, so a stale
+     slug cannot be used to find out where somebody's other meetings live.
+
+     The base is what the guest's browser shows. On the company's own domain
+     the proxy rewrote /<handle>/<meeting> to this route, so the redirect has
+     to name the handle alone; on meetrao.com it names the company too.
+
+     The meeting read is memoised and the page makes it anyway, so the
+     ordinary visit costs nothing extra; the two further checks run only for
+     an address that actually used an old slug. */
+  void getPublicHost(found.username);
+  const meeting = await getPublicMeeting(found.username, found.slug);
+  if (meeting && movedTo(found.slug, meeting, "")) {
+    const [ours, domainCompany] = await Promise.all([
+      meetingIsOnCompany(found.username, meeting.slug, found.company.slug),
+      companyForRequest(),
+    ]);
+    const base = domainCompany ? `/${found.handle}` : `/${found.company.slug}/${found.handle}`;
+    const moved = ours ? movedTo(found.slug, meeting, base) : null;
+    if (moved) permanentRedirect(moved);
+  }
 
   return <MeetingPage username={found.username} slug={found.slug} company={found.company} />;
 }

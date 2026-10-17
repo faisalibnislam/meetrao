@@ -13,6 +13,7 @@ import { embedSnippet } from "@/lib/embed";
 import { Modal } from "@/components/ui/modal";
 import { cx } from "@/lib/cx";
 import { copyText } from "@/lib/clipboard";
+import { LOCATION_OPTIONS } from "@/lib/locations";
 
 export type MeetingRow = {
   id: string;
@@ -23,7 +24,65 @@ export type MeetingRow = {
   active: boolean;
   link: string;
   previewHref: string;
+  /** "google_meet", "phone", "in_person" or "custom". */
+  location: string;
 };
+
+/**
+ * How the meeting happens, in the words the editor offers it under.
+ *
+ * "Something else" is the editor's prompt for the fourth kind, and reads as
+ * nonsense on a card, so the list calls it a custom location instead.
+ */
+function locationLabel(kind: string): string {
+  if (kind === "custom") return "Custom location";
+  return LOCATION_OPTIONS.find((o) => o.value === kind)?.label ?? "Google Meet";
+}
+
+/**
+ * The card's one-line summary: duration, then location.
+ *
+ * Built from the parts that exist and joined, rather than written as
+ * "{duration} · {description}", which printed "15 min ·" with a stray dot for
+ * every meeting without a description. The description has a line of its
+ * own now, clamped, so a long one cannot push the rest of the card down.
+ */
+function summary(m: MeetingRow): string {
+  return [`${m.duration} min`, locationLabel(m.location)].filter(Boolean).join(" · ");
+}
+
+/**
+ * The bookable switch with its state written beside it.
+ *
+ * A bare switch said nothing to anybody who does not already read the
+ * green-means-on convention. The visible On/Off is aria-hidden because
+ * role="switch" already announces checked or not; the accessible name says
+ * what the switch controls, which is the part a screen reader cannot work
+ * out on its own. The label wraps both, so the word is a click target too.
+ */
+function BookableSwitch({
+  meeting,
+  checked,
+  disabled,
+  onToggle,
+}: {
+  meeting: MeetingRow;
+  checked: boolean;
+  disabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <label className="inline-flex cursor-pointer items-center gap-[8px]">
+      <Switch checked={checked} disabled={disabled} onChange={onToggle} label={`Bookable: ${meeting.name}`} />
+      <span
+        aria-hidden="true"
+        className={cx("w-[22px] text-[12.5px]", checked ? "font-semibold text-ink" : "text-ink-3")}
+      >
+        {checked ? "On" : "Off"}
+      </span>
+    </label>
+  );
+}
 
 /* Inactive meetings stay in the list but cannot be booked, so the name drops to
    --ink-2 rather than the row disappearing. */
@@ -90,10 +149,14 @@ export function MeetingsTable({
         <Table minWidth={640}>
           <thead>
             <tr>
-              <Th className="w-[36%] min-w-[230px]">Meeting</Th>
+              <Th className="w-[32%] min-w-[230px]">Meeting</Th>
               <Th>Duration</Th>
-              <Th>Booking link</Th>
-              <Th>Active</Th>
+              {/* A share of the width with no floor. With max-w-0 on its
+                  cells the column's minimum is nothing, so it takes the room
+                  that is left and the chip truncates only once there is not
+                  enough of it, rather than at a fixed 168px on any screen. */}
+              <Th className="w-[34%]">Booking link</Th>
+              <Th>Bookable</Th>
               <Th align="right">
                 <span className="sr-only">Actions</span>
               </Th>
@@ -103,26 +166,30 @@ export function MeetingsTable({
             {meetings.map((m) => (
               <Tr key={m.id}>
                 <Td className="py-[11px]">
-                  <div className="flex max-w-[270px] flex-col gap-[2px]">
+                  <div className="flex max-w-[300px] flex-col gap-[2px]">
                     <span
                       className={cx("text-[13.5px] font-semibold", isActive(m) ? "text-ink" : "text-ink-2")}
                     >
                       {m.name}
                     </span>
-                    <span className="text-[12.5px] leading-[1.45] text-pretty text-ink-3">{m.description}</span>
+                    {/* Where it happens, because a phone call and a Meet
+                        looked identical in this list. */}
+                    <span className="text-[12px] text-ink-2">{locationLabel(m.location)}</span>
+                    {/* Two lines at most. A paragraph-long description made
+                        one row as tall as the rest of the list together. */}
+                    {m.description ? (
+                      <span className="line-clamp-2 text-[12.5px] leading-[1.45] text-pretty text-ink-3">
+                        {m.description}
+                      </span>
+                    ) : null}
                   </div>
                 </Td>
                 <Td className="py-[11px] text-[13px] whitespace-nowrap text-ink">{m.duration} min</Td>
-                <Td className="py-[11px]">
-                  <CopyLinkChip link={m.link} />
+                <Td className="max-w-0 py-[11px]">
+                  <CopyLinkChip link={m.link} fill />
                 </Td>
-                <Td className="py-[11px]">
-                  <Switch
-                    checked={isActive(m)}
-                    disabled={pending}
-                    onChange={() => toggle(m)}
-                    label={`${m.name} bookable`}
-                  />
+                <Td className="py-[11px] whitespace-nowrap">
+                  <BookableSwitch meeting={m} checked={isActive(m)} disabled={pending} onToggle={() => toggle(m)} />
                 </Td>
                 <Td className="py-[11px] text-right whitespace-nowrap">
                   <Button
@@ -167,22 +234,22 @@ export function MeetingsTable({
         {meetings.map((m) => (
           <div key={m.id} className="flex flex-col gap-[10px] rounded-[8px] border border-line bg-surface p-[14px]">
             <div className="flex items-start justify-between gap-[12px]">
-              <div className="flex flex-col gap-[2px]">
+              <div className="flex min-w-0 flex-col gap-[2px]">
                 <span className={cx("text-[13.5px] font-semibold", isActive(m) ? "text-ink" : "text-ink-2")}>
                   {m.name}
                 </span>
-                <span className="text-[12.5px] leading-[1.45] text-ink-3">
-                  {m.duration} min · {m.description}
-                </span>
+                <span className="text-[12.5px] leading-[1.45] text-ink-2">{summary(m)}</span>
+                {m.description ? (
+                  <span className="line-clamp-2 text-[12.5px] leading-[1.45] text-ink-3">{m.description}</span>
+                ) : null}
               </div>
-              <Switch
-                checked={isActive(m)}
-                disabled={pending}
-                onChange={() => toggle(m)}
-                label={`${m.name} bookable`}
-              />
+              <BookableSwitch meeting={m} checked={isActive(m)} disabled={pending} onToggle={() => toggle(m)} />
             </div>
-            <CopyLinkChip link={m.link} />
+            {/* A block wrapper, so the chip is as wide as its link (up to the
+                card) rather than stretched across it by the column. */}
+            <div className="min-w-0">
+              <CopyLinkChip link={m.link} fill />
+            </div>
             <div className="flex flex-wrap gap-[8px]">
               <Button
                 variant="ghost"

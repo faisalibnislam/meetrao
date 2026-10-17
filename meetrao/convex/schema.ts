@@ -355,6 +355,19 @@ export default defineSchema({
     name: v.string(),
     description: v.string(),
     slug: v.string(),
+    /**
+     * The links this meeting used to have, oldest first.
+     *
+     * A host who renames a meeting and moves its link would otherwise break
+     * every copy of the old address already pasted into signatures and other
+     * people's calendars. Each old slug still resolves to this meeting and
+     * the public page redirects to the current one. They also count as taken
+     * for the host's other meetings, so an old link can never start opening a
+     * different meeting. See convex/lib/meetingSlugs.ts.
+     *
+     * Optional because every row written before links could move has none.
+     */
+    previous_slugs: v.optional(v.array(v.string())),
     duration_minutes: v.number(),
     buffer_minutes: v.number(),
     minimum_notice_minutes: v.number(),

@@ -272,7 +272,14 @@ export const hostOnCompany = cache(async function hostOnCompany(
 export async function companyPlaceOf(
   username: string,
   slug: string,
-): Promise<{ companySlug: string; handle: string } | null> {
+): Promise<{
+  companySlug: string;
+  handle: string;
+  /* The meeting's current slug. Optional because a Convex deployment older
+     than this site does not send it, and the caller must then fall back to
+     the slug it was asked about rather than redirect to "undefined". */
+  slug?: string;
+} | null> {
   return await convexAnonymous().query(api.publicBooking.companyPlaceOf, { username, slug });
 }
 
