@@ -10,7 +10,7 @@ import { membersOf } from "./teams";
 import { isPro } from "./lib/plan";
 import type { Doc } from "./_generated/dataModel";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
-import { notifyBookingCancelled, logActivity } from "./lib/effects";
+import { notifyBookingCancelled, logActivity, upsertContact } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -702,6 +702,90 @@ async function fitsAvailability(
   return ranges.some((r) => minute >= r.start_minute && minute + args.durationMinutes <= r.end_minute);
 }
 
+/** How many extra people a guest may bring. Small on purpose: see below. */
+const MAX_GUEST_INVITEES = 5;
+const INVITEE_EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/**
+ * The extra addresses a guest typed under "Add guests", cleaned.
+ *
+ * A guest is anonymous, so every address here is one we are about to send an
+ * invitation to on a stranger's say-so. That is why the list is short (five),
+ * why it is checked here and not only in the form (anyone can call this
+ * mutation directly), and why a list that is too long REFUSES rather than
+ * being quietly cut: silently dropping the sixth person would leave somebody
+ * expecting an invitation that never comes.
+ *
+ * Lower-cased and de-duplicated, because Ada@x.com and ada@x.com are one
+ * person and would otherwise be two invitations. The guest's own address and
+ * the host's are dropped rather than refused: the guest already gets the
+ * confirmation, the host already owns the event, and neither mistake is worth
+ * stopping a booking over. The host's address is never shown to a guest, so
+ * refusing on it would also tell them what it is.
+ */
+function cleanGuestInvitees(raw: readonly string[] | undefined, exclude: readonly string[]): string[] {
+  if (!raw || raw.length === 0) return [];
+  if (raw.length > MAX_GUEST_INVITEES) fail(`Add at most ${MAX_GUEST_INVITEES} guests.`);
+
+  const skip = new Set(exclude.map((e) => e.trim().toLowerCase()));
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const value of raw) {
+    const email = value.trim().toLowerCase();
+    if (!email) continue;
+    if (email.length > 254 || !INVITEE_EMAIL.test(email)) fail(`${value.trim()} is not an email address.`);
+    if (skip.has(email) || seen.has(email)) continue;
+    seen.add(email);
+    out.push(email);
+  }
+  return out;
+}
+
+/**
+ * The cleaned list for one meeting, or a refusal.
+ *
+ * A group meeting takes none. Each seat there is one booking and one person,
+ * counted against the meeting's capacity; five extra people riding in on one
+ * seat would fill a workshop past the number the host set, and the seats
+ * share one calendar event that guests are deliberately not added to.
+ */
+function guestInviteesFor(
+  meeting: Doc<"meeting_types">,
+  raw: readonly string[] | undefined,
+  exclude: readonly string[],
+): string[] {
+  const invitees = cleanGuestInvitees(raw, exclude);
+  if (invitees.length && (meeting.capacity ?? 1) > 1) fail("Guests cannot be added to a group meeting.");
+  return invitees;
+}
+
+/**
+ * Writes a guest booking's extra invitees, the same rows createAsHost writes.
+ *
+ * Same table, same shape, same contact upsert, so everything downstream that
+ * already reads `booking_invitees` (the calendar event's attendee list in
+ * convex/google.ts, the host's cancel and move mail in
+ * src/lib/booking/host-changes.ts, the contacts list) treats a guest's
+ * colleague exactly as it treats someone the host invited. Name is empty:
+ * the guest gave an address, not a name, and inventing one from the address
+ * would put a wrong name on somebody's contact card.
+ *
+ * Inside the booking's own mutation, so a booking can never exist with half
+ * its guests attached, and a refused list refuses the booking with it.
+ */
+async function insertGuestInvitees(ctx: MutationCtx, booking: Doc<"bookings">, emails: readonly string[]) {
+  for (const email of emails) {
+    await ctx.db.insert("booking_invitees", {
+      id: uuid(),
+      booking_id: booking.id,
+      name: "",
+      email,
+      created_at: Date.now(),
+    });
+    await upsertContact(ctx, { userId: booking.host_id, name: "", email, companyId: booking.company_id ?? null });
+  }
+}
+
 /**
  * A booking on a team link, assigned to whoever's turn it is.
  *
@@ -726,6 +810,8 @@ export const createTeamBooking = mutation({
     answers: v.optional(v.array(v.object({ id: v.string(), value: v.string() }))),
     pageViewId: v.optional(v.union(v.string(), v.null())),
     callerKey: v.optional(v.string()),
+    /** Extra addresses the guest added. Cleaned by cleanGuestInvitees. */
+    invitees: v.optional(v.array(v.string())),
   },
   handler: async (ctx, a) => {
     const team = await ctx.db
@@ -811,6 +897,11 @@ export const createTeamBooking = mutation({
       if (value) answers.push({ label: q.label, value });
     }
 
+    /* Excluded against the member the rotation chose, the one who owns the
+       event; a teammate who is not hosting is a perfectly good extra guest. */
+    const chosenEmail = members.find((m) => m.profile.id === chosen.userId)?.profile.email ?? "";
+    const invitees = guestInviteesFor(meeting, a.invitees, [a.guestEmail, chosenEmail]);
+
     const booking = await insertBooking(ctx, {
       hostId: chosen.userId,
       meetingTypeId: meeting.id,
@@ -829,9 +920,10 @@ export const createTeamBooking = mutation({
       locationDetail: meeting.location_detail ?? "",
       capacity: meeting.capacity ?? 1,
     });
+    await insertGuestInvitees(ctx, booking, invitees);
 
     return {
-      reference: booking.reference, id: booking.id, answers,
+      reference: booking.reference, id: booking.id, answers, invitees,
       starts_at: new Date(booking.starts_at).toISOString(),
       ends_at: new Date(booking.ends_at).toISOString(),
       meeting_name: booking.meeting_name, duration: booking.duration_minutes, host_id: booking.host_id,
@@ -851,6 +943,8 @@ export const createBooking = mutation({
     answers: v.optional(v.array(v.object({ id: v.string(), value: v.string() }))),
     /** A coarse caller key from our own route handler, which can see the IP. */
     callerKey: v.optional(v.string()),
+    /** Extra addresses the guest added. Cleaned by cleanGuestInvitees. */
+    invitees: v.optional(v.array(v.string())),
   },
   handler: async (ctx, a) => {
     const host = await ctx.db
@@ -902,6 +996,8 @@ export const createBooking = mutation({
       if (value) answers.push({ label: q.label, value });
     }
 
+    const invitees = guestInviteesFor(meeting, a.invitees, [a.guestEmail, host.email]);
+
     const booking = await insertBooking(ctx, {
       hostId: host.id,
       meetingTypeId: meeting.id,
@@ -920,9 +1016,10 @@ export const createBooking = mutation({
       locationDetail: meeting.location_detail ?? "",
       capacity: meeting.capacity ?? 1,
     });
+    await insertGuestInvitees(ctx, booking, invitees);
 
     return {
-      reference: booking.reference, id: booking.id, answers,
+      reference: booking.reference, id: booking.id, answers, invitees,
       starts_at: new Date(booking.starts_at).toISOString(),
       ends_at: new Date(booking.ends_at).toISOString(),
       meeting_name: booking.meeting_name, duration: booking.duration_minutes, host_id: booking.host_id,
