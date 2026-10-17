@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { ImageFrame } from "./image-frame";
-import { BrowserFrame, DemoMonthGrid, DemoSlot, demoDayLabel } from "./demo-calendar";
+import { BrowserFrame, DemoMonthGrid, DemoSlot, useDemoMonth } from "./demo-calendar";
+import { demoDayLabel } from "./demo-date";
 import { cx } from "@/lib/cx";
 import { useMediaQuery } from "@/lib/use-client-value";
 
@@ -33,9 +34,9 @@ const WALK: { key: StageKey; n: string; title: string; text: string; outcome: st
     key: "booking",
     n: "02",
     title: "Share one link",
-    text: "meetrao.com/adam, always reflecting your calendar exactly as it is right now.",
+    text: "meetrao.com/adam/30-minute-consultation, always reflecting your calendar exactly as it is right now.",
     outcome: "One link. It never goes stale and never double-books.",
-    url: "meetrao.com/adam",
+    url: "meetrao.com/adam/30-minute-consultation",
   },
   {
     key: "guest",
@@ -43,7 +44,7 @@ const WALK: { key: StageKey; n: string; title: string; text: string; outcome: st
     title: "Your guest picks",
     text: "A name, an email, done. No account, no download, no timezone maths.",
     outcome: "Your guest sees your hours in their own timezone.",
-    url: "meetrao.com/adam, confirm",
+    url: "meetrao.com/adam/30-minute-consultation, confirm",
   },
   {
     key: "confirm",
@@ -51,7 +52,7 @@ const WALK: { key: StageKey; n: string; title: string; text: string; outcome: st
     title: "Booked, both sides",
     text: "One calendar event with a Google Meet link, and your guest invited to the same event.",
     outcome: "On both calendars, with a Meet link, automatically.",
-    url: "meetrao.com/adam, booked",
+    url: "meetrao.com/adam/30-minute-consultation, booked",
   },
 ];
 
@@ -64,7 +65,9 @@ const AVAIL_DAYS: [string, string, [string, string][]][] = [
 ];
 
 
-export function Walkthrough() {
+/** `today` is the server's day, "YYYY-MM-DD", the same prop the hero takes. */
+export function Walkthrough({ today }: { today: string }) {
+  const month = useDemoMonth(today);
   const compact = useMediaQuery("(max-width: 1000px)");
   const [stage, setStage] = useState<StageKey>("avail");
   const [auto, setAuto] = useState(true);
@@ -76,7 +79,10 @@ export function Walkthrough() {
     thu: true,
     fri: true,
   });
-  const [day, setDay] = useState(9);
+  /* Null until a click, for the same reason as the hero's: the default has
+     to follow whichever month is showing. */
+  const [picked, setPicked] = useState<number | null>(null);
+  const day = picked ?? month.defaultDay;
   const [slot, setSlot] = useState("10:00");
   const [booked, setBooked] = useState(false);
 
@@ -319,14 +325,14 @@ export function Walkthrough() {
                             />
                             <div className="flex min-w-0 flex-col gap-[1px]">
                               <span className="text-[13px] font-semibold text-ink">Adam Voigt</span>
-                              <span className="text-[11px] text-ink-3">meetrao.com/adam</span>
+                              <span className="text-[11px] text-ink-3">meetrao.com/adam/30-minute-consultation</span>
                             </div>
                             <span className="ml-auto inline-flex h-[24px] flex-none items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[9px] text-[11.5px] text-ink-2">
                               30 min · Google Meet
                             </span>
                           </div>
 
-                          <DemoMonthGrid selected={day} onSelect={setDay} />
+                          <DemoMonthGrid month={month} selected={day} onSelect={setPicked} />
 
                           <div className="grid grid-cols-[repeat(auto-fill,minmax(78px,1fr))] gap-[5px] border-t border-line pt-[11px]">
                             {["9:00", "9:30", "10:00", "10:30", "11:00", "2:00", "2:30", "3:00"].map((label) => (
@@ -351,7 +357,7 @@ export function Walkthrough() {
                               30 Minute Consultation · 30 min
                             </span>
                             <span className="text-[12.5px] text-ink-2">
-                              {demoDayLabel(day)} · {slot || "10:00"} – 10:30 AM
+                              {demoDayLabel(month, day)} · {slot || "10:00"} – 10:30 AM
                             </span>
                           </div>
 
@@ -401,7 +407,7 @@ export function Walkthrough() {
                             {[
                               ["Meeting", "30 Minute Consultation", false],
                               ["Host", "Adam Voigt", false],
-                              ["When", `${demoDayLabel(day)} · ${slot || "10:00"} – 10:30 AM`, false],
+                              ["When", `${demoDayLabel(month, day)} · ${slot || "10:00"} – 10:30 AM`, false],
                               ["Where", "meet.google.com/qvd-mspt-jrb", true],
                             ].map(([k, v, machine], ri) => (
                               <div

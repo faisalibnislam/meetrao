@@ -53,7 +53,11 @@ export function SiteNav({
 
         {sectionLinks ? (
           <nav className="ml-[10px] flex min-w-0 flex-wrap gap-[22px] max-[720px]:hidden">
-            <NavLink href="/#product">Product</NavLink>
+            {/* /product, not /#product: the page now holds the problem, the
+                before and after, and the live screens the landing page no
+                longer has room for. "What you get" on the landing page is
+                still linked from the footer. */}
+            <NavLink href="/product">Product</NavLink>
             <NavLink href="/#how">How it works</NavLink>
             <NavLink href="/#usecases">Use cases</NavLink>
             <NavLink href="/pricing">Pricing</NavLink>
@@ -88,8 +92,17 @@ function NavLink({ href, children }: { href: string; children: string }) {
   );
 }
 
+/* "Completely free, no subscription" used to sit here, on every page, under a
+   hero quoting Pro at $30 a year and a pricing section selling it. Both were
+   true once and only one is now. What stays true is the narrower claim:
+   taking bookings costs nothing and needs no card, and a paid plan is
+   something you choose (Terms §5). */
 const FOOTER_TRUST: { glyph: IconName; title: string; text: string }[] = [
-  { glyph: "tag", title: "Completely free", text: "No subscription, no card, no trial that expires." },
+  {
+    glyph: "tag",
+    title: "Free to take bookings",
+    text: "No card and no trial that expires. Pro and Business are paid, and start only when you choose one.",
+  },
   {
     glyph: "eye-slash",
     title: "Your calendar stays private",
@@ -112,6 +125,7 @@ export function SiteFooter() {
         ["How it works", "/#how"],
         ["Use cases", "/#usecases"],
         ["What you get", "/#product"],
+        ["See it up close", "/product"],
         ["Your own domain", "/custom-domain"],
         demo ? ["See a booking page", demo] : ["Read the FAQ", "/#faq"],
       ],
@@ -166,7 +180,8 @@ export function SiteFooter() {
               Your calendar already knows when you&rsquo;re free.
             </h2>
             <p className="m-0 max-w-[46ch] text-[15.5px] leading-[1.6] text-pretty text-white/75">
-              Let Meetrao handle the scheduling. It&rsquo;s completely free to use, no card, no subscription.
+              Let Meetrao handle the scheduling. Taking bookings is free, with no card. Pro and Business add
+              your own domain, your branding and a team, when you want them.
             </p>
           </div>
           {/* flex-initial, not flex-none. The design file says `flex:none` here, which

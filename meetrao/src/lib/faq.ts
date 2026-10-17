@@ -9,6 +9,19 @@
    really read it.
    ───────────────────────────────────────────────────────────────────────────── */
 
+import {
+  BUSINESS_LIMITS,
+  BUSINESS_MONTHLY,
+  BUSINESS_YEARLY,
+  PRO_MONTHLY,
+  PRO_YEARLY,
+} from "@/lib/pricing";
+
+/* The prices come from lib/pricing.ts rather than being typed into the
+   answers. Business shipped and this page kept describing two plans, which
+   is what a typed price does: it stays right about the world it was written
+   in. */
+
 /* The answers are deliberately plain about what Meetrao does not do, one
    calendar provider, one meeting location, one weekly schedule, no promise of
    "free forever" that could not be kept. */
@@ -22,12 +35,12 @@ export const FAQS: [string, string, string][] = [
   [
     "free",
     "What is free, and what costs money?",
-    "Taking bookings is free: your link, your meeting types, calendar conflict checks, Meet links, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is $30 a year (or $3 a month) and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API.",
+    `Taking bookings is free: your links, your meeting types, calendar conflict checks, Meet links, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is ${PRO_YEARLY} (or ${PRO_MONTHLY}) and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API. Business is ${BUSINESS_YEARLY} (or ${BUSINESS_MONTHLY}) and runs all of that across up to ${BUSINESS_LIMITS.companies} companies, with up to ${BUSINESS_LIMITS.membersPerCompany} people on each.`,
   ],
   [
     "forever",
     "Will the free plan stay free?",
-    'We cannot honestly promise "forever", and the Terms say so rather than burying it. What we do commit to: a free account is never billed automatically. Pro begins only when you choose it, and if you cancel it runs to the end of the period you paid for.',
+    'We cannot honestly promise "forever", and the Terms say so rather than burying it. What we do commit to: a free account is never billed automatically. A paid plan begins only when you choose it, and if you cancel it runs to the end of the period you paid for.',
   ],
   [
     "account",
@@ -82,6 +95,6 @@ export const FAQS: [string, string, string][] = [
   [
     "compare",
     "How does it compare with paid tools?",
-    "Taking bookings is free and always has been, the link, the calendar checks, reminders, rescheduling and time off, with no card. Pro is $30 a year for a custom domain, your own branding, team links, shared sessions and the API. It is still deliberately narrow: one calendar provider, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.",
+    `Taking bookings is free: the links, the calendar checks, reminders, rescheduling and time off, with no card. Pro is ${PRO_YEARLY} for a custom domain, your own branding, team links, shared sessions and the API, and Business is ${BUSINESS_YEARLY} for several companies with other people on them. It is still deliberately narrow: one calendar provider, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.`,
   ],
 ];

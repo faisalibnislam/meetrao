@@ -8,17 +8,23 @@ import { LIMITS as PLAN_LIMITS } from "@/convex/lib/limits";
    something calls `.map` on it and the page 500s. That happened once with the
    FAQ array; `lib/faq.ts` exists for the same reason this file does.
 
-   ── on writing a pricing page with two tiers on it ──
+   ── on writing a pricing page with paid tiers on it ──
 
    This page used to say there was no paid tier at all, and its credibility
-   came from that. There is one now, so the credibility has to come from
-   somewhere else: saying plainly what Free actually is (the whole booking
-   product, not a trial of it) and what Pro is, which is the parts a business
-   needs rather than the parts a person does.
+   came from that. There are two now, Pro and Business, so the credibility has
+   to come from somewhere else: saying plainly what Free actually is (the
+   whole booking product, not a trial of it), what Pro is (the parts a
+   business needs rather than the parts a person does) and what Business is
+   (Pro across several companies, with other people on them).
 
-   The order is: Free and what it includes, then Pro and what it adds, then
-   what NEITHER does. That last section is the reason the first two are
-   believable and it goes before any invitation to sign up.
+   Some of the questions below were written for the no-paid-tier version and
+   kept saying "there is no paid tier" after Pro shipped, on the page selling
+   it. Anything here that describes the plans has to be re-read whenever a
+   plan is added.
+
+   The order is: Free and what it includes, then the paid plans and what they
+   add, then what NONE of them does. That last section is the reason the
+   first two are believable and it goes before any invitation to sign up.
 
    Every claim has to survive being read next to /terms §5. Nothing here says
    "free forever", it says free today, no card to use it, and that an
@@ -28,12 +34,6 @@ import { LIMITS as PLAN_LIMITS } from "@/convex/lib/limits";
 
 /** The headline claim, and the three denials under it. */
 export const HEADLINE = "Book meetings free. Pay only to make it yours.";
-
-export const DENIALS: readonly [string, string][] = [
-  ["No credit card to start", "Free needs no card, at sign-up or later. Taking bookings costs nothing."],
-  ["No trial clock", "Free is not a countdown. Nothing you set up stops working in 14 days."],
-  ["No per-seat pricing", "Pro is $30 a year for the account, not per person and not per booking."],
-];
 
 /** What Pro costs, in both cadences. Rendered, and used in the copy below. */
 export const PRO_YEARLY = "$30 a year";
@@ -72,6 +72,18 @@ export const BUSINESS_PRICES = {
  */
 export const BUSINESS_LIMITS = PLAN_LIMITS.business;
 
+/* Below the prices and limits rather than above them, because the third
+   denial now quotes both: "per account, not per seat" is only checkable with
+   the figure and the cap side by side. */
+export const DENIALS: readonly [string, string][] = [
+  ["No credit card to start", "Free needs no card, at sign-up or later. Taking bookings costs nothing."],
+  ["No trial clock", "Free is not a countdown. Nothing you set up stops working in 14 days."],
+  [
+    "No per-seat pricing",
+    `Pro is ${PRO_YEARLY} for the account. Business is ${BUSINESS_YEARLY} for up to ${BUSINESS_LIMITS.membersPerCompany} people in each company, not per person and not per booking.`,
+  ],
+];
+
 /**
  * What a year saves against twelve monthly payments, for either plan.
  *
@@ -105,7 +117,7 @@ export function yearlySaving(): { dollars: number; percent: number } {
  * letting their guests down is the wrong business.
  */
 export const INCLUDED: readonly string[] = [
-  "One public booking link: meetrao.com/your-name",
+  "A public booking link for every meeting: meetrao.com/your-name/intro-call",
   "Unlimited meeting types and weekly schedules",
   "Unlimited bookings a month",
   "Google Calendar connected, and checked for conflicts before a slot is offered",
@@ -130,7 +142,7 @@ export const INCLUDED: readonly string[] = [
 export type PlanCell = boolean | string;
 
 export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCell; business: PlanCell }[] = [
-  { feature: "Your booking link: meetrao.com/your-name", free: true, pro: true, business: true },
+  { feature: "Booking links: meetrao.com/your-name/intro-call", free: true, pro: true, business: true },
   { feature: "Unlimited meeting types and weekly schedules", free: true, pro: true, business: true },
   { feature: "Unlimited bookings", free: true, pro: true, business: true },
   { feature: "Google Calendar checked before a slot is offered", free: true, pro: true, business: true },
@@ -146,7 +158,7 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
   { feature: "Your own logo on your booking page", free: false, pro: true, business: true },
   { feature: "Your own colours: accent and page background", free: false, pro: true, business: true },
   { feature: "No Meetrao colours anywhere a guest looks", free: false, pro: true, business: true },
-  { feature: "Your own domain: meeting.yourcompany.com/your-name", free: false, pro: true, business: true },
+  { feature: "Your own domain: meeting.yourcompany.com/your-name/intro-call", free: false, pro: true, business: true },
   { feature: "Companies, each with its own domain and branding", free: false, pro: "One", business: `Up to ${PLAN_LIMITS.business.companies}` },
   { feature: "People on a company domain, each with their own link", free: false, pro: "Just you", business: `Up to ${PLAN_LIMITS.business.membersPerCompany}` },
   { feature: "People you add keep their own free accounts", free: false, pro: false, business: true },
@@ -184,6 +196,7 @@ export const WHY: readonly string[] = [
   "Meetrao is built and run by one person. There is no sales team to fund and no investor expecting a return this quarter, which is why the free plan is the real product rather than a demonstration of one.",
   "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free, never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
   "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; hosting a logo means storage and bandwidth on every page view; a team link means several calendars checked on every page load. Thirty dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
+  `Business costs more because it carries more. Every person on a company domain is another published booking page, another calendar checked on every view and more reminder emails sent. ${BUSINESS_YEARLY} covers up to ${BUSINESS_LIMITS.companies} companies of up to ${BUSINESS_LIMITS.membersPerCompany} people, and the caps are there to bound that cost, not to sell the next plan up.`,
 ];
 
 /**
@@ -197,17 +210,17 @@ export const PRICING_FAQ: readonly (readonly [string, string, string])[] = [
   [
     "really-free",
     "Is Meetrao really free?",
-    "Yes. Every feature listed on this page is on every account, with no card required and no subscription. There is no paid tier, which is why there is nothing on this page to compare against.",
+    `Taking bookings is. Everything in the Free column above is on every account, with no card, no subscription and no limit on bookings. Pro (${PRO_YEARLY} or ${PRO_MONTHLY}) and Business (${BUSINESS_YEARLY} or ${BUSINESS_MONTHLY}) are paid plans for your own domain, your branding, a team and more than one company. Nothing moves you onto one unless you choose it.`,
   ],
   [
     "forever",
     "Is it free forever?",
-    'We will not promise "forever". Nobody can, and a promise that cannot be kept is worth less than none. What the Terms commit to instead: Meetrao is free today, and if paid plans ever arrive you would be emailed before anything became chargeable and would have to opt in. A free account is never billed automatically. If you chose not to pay, you could export your data and close the account.',
+    'We will not promise "forever". Nobody can, and a promise that cannot be kept is worth less than none. What the Terms commit to instead: a free account is never billed automatically, and Pro or Business begins only when you opt in and complete a payment. If a change to the Terms materially affects you, you are told by email at least 14 days before it takes effect. If you chose not to pay, you could export your data and close the account.',
   ],
   [
     "catch",
     "So what is the catch?",
-    "The limits, and they are listed above rather than discovered later: Google Calendar only, no payments, no Zoom or Teams integration, round-robin without collective availability, and email-only reminders. There is no paid tier to be upsold to, so nothing here is a trial, but if you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
+    "The limits, and they are listed above rather than discovered later: Google Calendar only, no payments, no Zoom or Teams integration, round-robin without collective availability, and email-only reminders. None of the plans lifts those, so paying will not fix one, and Free is not a trial of something better. If you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
   ],
   [
     "data",
@@ -217,11 +230,11 @@ export const PRICING_FAQ: readonly (readonly [string, string, string])[] = [
   [
     "limits",
     "Are there usage limits?",
-    "No published caps on bookings, meeting types or guests. Because this is a beta, the Terms do reserve the right to set limits on usage. That clause exists so an abusive account can be stopped, and it will not be used in a way designed to break bookings you already have.",
+    `None on bookings, on any plan, and none published on meeting types or guests. The paid plans do cap what they hold: Pro is one company with just you on it, and Business is up to ${BUSINESS_LIMITS.companies} companies of up to ${BUSINESS_LIMITS.membersPerCompany} people each. Separately, the Terms let an account that abuses the service be suspended.`,
   ],
   [
     "card",
     "Do I need a credit card to sign up?",
-    "No. Sign-up is an email address and a password, or your Google account. There is no card field anywhere in the product.",
+    "No. Sign-up is an email address and a password, or your Google account, and Free never asks for a card. If you choose Pro or Business, the payment happens on Polar's checkout, and Meetrao never sees the card number.",
   ],
 ];

@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/components/ui/icon";
 import { Switch } from "@/components/ui/controls";
 import { ImageFrame } from "./image-frame";
 import { cx } from "@/lib/cx";
 import { useMediaQuery } from "@/lib/use-client-value";
+import { useDemoToday } from "./demo-calendar";
+import { demoBookingDates } from "./demo-date";
 
 /* Live replicas of the Meetings and Bookings screens. They are demonstrations,
    toggling and copying here changes nothing, and the status line says so. */
@@ -33,16 +35,27 @@ function guestPhoto(name: string): string {
   return `/people/${slug}.webp`;
 }
 
-const UPCOMING = [
-  ["John Smith", "john@example.com", "30 Minute Consultation", "Today", "3:00 – 3:30 PM", 30, true],
-  ["Amina Chowdhury", "amina@northbridge.io", "Project Deep Dive", "Tomorrow", "11:00 – 12:00 PM", 60, true],
-  ["Dan Whitfield", "dan@whitfield.dev", "Intro Call", "Mon 7 Sep", "9:30 – 9:45 AM", 15, true],
-] as const;
+/* guest, email, meeting, date, time, minutes, joinable (null: cancelled).
 
-const PAST = [
-  ["Priya Nair", "priya@nairstudio.com", "30 Minute Consultation", "2 Sep", "4:00 – 4:30 PM", 30, false],
-  ["Tomás Rivera", "tomas@rivera.mx", "Intro Call", "28 Aug", "10:00 – 10:15 AM", 15, null],
-] as const;
+   The dates are not written down. They were once ("Mon 7 Sep", "2 Sep"), and
+   by October the upcoming bookings were all in the past, which on a demo of
+   a scheduling product reads as abandoned. `demoBookingDates` works them out
+   from today, in the same words the real Bookings screen uses. */
+type Row = readonly [string, string, string, string, string, number, boolean | null];
+
+function bookingRows(dates: ReturnType<typeof demoBookingDates>): { upcoming: Row[]; past: Row[] } {
+  return {
+    upcoming: [
+      ["John Smith", "john@example.com", "30 Minute Consultation", dates.today, "3:00 – 3:30 PM", 30, true],
+      ["Amina Chowdhury", "amina@northbridge.io", "Project Deep Dive", dates.tomorrow, "11:00 – 12:00 PM", 60, true],
+      ["Dan Whitfield", "dan@whitfield.dev", "Intro Call", dates.soon, "9:30 – 9:45 AM", 15, true],
+    ],
+    past: [
+      ["Priya Nair", "priya@nairstudio.com", "30 Minute Consultation", dates.recent, "4:00 – 4:30 PM", 30, false],
+      ["Tomás Rivera", "tomas@rivera.mx", "Intro Call", dates.earlier, "10:00 – 10:15 AM", 15, null],
+    ],
+  };
+}
 
 
 const TH = "text-[10px] tracking-[0.07em] uppercase whitespace-nowrap text-ink-2";
@@ -217,10 +230,13 @@ export function LiveMeetingsTable() {
   );
 }
 
-export function LiveBookingsTable() {
+/** `today` is the server's day, "YYYY-MM-DD": see demo-date.ts. */
+export function LiveBookingsTable({ today }: { today: string }) {
   const phone = useMediaQuery("(max-width: 640px)");
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
-  const rows = tab === "upcoming" ? UPCOMING : PAST;
+  const day = useDemoToday(today);
+  const all = useMemo(() => bookingRows(demoBookingDates(day)), [day]);
+  const rows = all[tab];
 
   return (
     <div className="flex flex-col gap-[8px] pt-[24px]">
@@ -357,7 +373,10 @@ export function LiveBookingsTable() {
           </div>
         ) : (
           <div className="flex flex-col">
-            {rows.map(([guest, email, type, date, time, joinable]) => {
+            {/* The minutes are skipped, not dropped: this row once read
+                index 5 (the duration) as `joinable`, so on a phone a
+                cancelled booking showed as Confirmed. */}
+            {rows.map(([guest, email, type, date, time, , joinable]) => {
               const cancelled = joinable === null;
               return (
                 <div key={guest} className="flex flex-col gap-[11px] border-t border-line-soft px-[15px] py-[14px]">

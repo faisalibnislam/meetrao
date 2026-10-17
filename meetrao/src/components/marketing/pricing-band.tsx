@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { ButtonLink } from "@/components/ui/button";
 import { PlanPrice } from "@/components/marketing/plan-price";
+import { BUSINESS_LIMITS } from "@/lib/pricing";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Pricing, on the landing page.
@@ -12,9 +13,15 @@ import { PlanPrice } from "@/components/marketing/plan-price";
    a scroll, nineteen rows of ticks is a wall to get past, not an argument.
 
    What a reader needs here is the shape of the deal: free is the whole booking
-   product, Pro is for running a business on it, and it costs a tenner. Anyone
-   who wants the row-by-row has a button to it, and that is a cheap click from
-   somebody who has already decided to care.
+   product, Pro is for running a business on it, Business is for running
+   several with other people on them. Anyone who wants the row-by-row has a
+   button to it, and that is a cheap click from somebody who has already
+   decided to care.
+
+   THREE CARDS, because three plans are on sale. This band showed Free and Pro
+   only, so the plan that holds a team (and the caps it carries, which come
+   from convex/lib/limits.ts via BUSINESS_LIMITS, not from this file) could
+   only be found by somebody who had already clicked through to /pricing.
 
    Dark, because the sections above and below it are light and this is the one
    place on the page asking for a decision.
@@ -22,7 +29,7 @@ import { PlanPrice } from "@/components/marketing/plan-price";
 
 /** Short enough to read in a glance. The full list lives on /pricing. */
 const FREE = [
-  "Your booking link, and unlimited bookings on it",
+  "Your booking links, and unlimited bookings on them",
   "Google Calendar checked before any time is offered",
   "A Meet link, reminders, and guests who reschedule themselves",
 ];
@@ -33,21 +40,38 @@ const PRO = [
   "API keys, webhooks, and no Meetrao badge",
 ];
 
+const BUSINESS = [
+  `Up to ${BUSINESS_LIMITS.companies} companies, each with its own domain and branding`,
+  `Up to ${BUSINESS_LIMITS.membersPerCompany} people on a company, each with their own link`,
+  "Everyone you add keeps their own free account",
+];
+
 export function PricingBand() {
   return (
     <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] gap-[14px]">
+      {/* "$0, no card" rather than "$0 forever". The Terms do not promise
+          forever and neither does anything else on the site; a price card
+          is the last place to start. */}
       <Plan
         name="Free"
         price="$0"
-        per="forever"
+        per="no card"
         note="The whole booking product, not a trial of it."
         points={FREE}
         tone="quiet"
       />
       <Plan
         name="Pro"
+        plan="pro"
         note="Everything in Free, plus the parts a business needs."
         points={PRO}
+        tone="loud"
+      />
+      <Plan
+        name="Business"
+        plan="business"
+        note="Everything in Pro, for more than one company and the people on them."
+        points={BUSINESS}
         tone="loud"
       />
     </div>
@@ -58,18 +82,21 @@ function Plan({
   name,
   price,
   per,
+  plan = "pro",
   note,
   points,
   tone,
 }: {
   name: string;
-  /* Absent on Pro, which renders <PlanPrice> instead: its figure depends on a
-     cadence the reader chooses, so it cannot be a string passed in. */
+  /* Absent on the paid plans, which render <PlanPrice> instead: its figure
+     depends on a cadence the reader chooses, so it cannot be a string passed
+     in. `plan` says whose figure. */
   price?: string;
   per?: string;
+  plan?: "pro" | "business";
   note: string;
   points: readonly string[];
-  /* `loud` is the paid card. Both sit on the same dark ground, so the
+  /* `loud` is a paid card. All three sit on the same dark ground, so the
      difference is a filled panel against a bordered one rather than a colour.
      There is no second accent available on a ground that is already the
      accent. */
@@ -104,7 +131,7 @@ function Plan({
             <span className="text-[13px] text-white/60">{per}</span>
           </span>
         ) : (
-          <PlanPrice />
+          <PlanPrice plan={plan} />
         )}
         <span className={loud ? "text-[13px] leading-[1.5] text-ink-2" : "text-[13px] leading-[1.5] text-white/70"}>
           {note}

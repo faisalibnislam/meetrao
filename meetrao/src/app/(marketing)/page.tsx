@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CostCalculator } from "@/components/marketing/cost-calculator";
+import { dayKey } from "@/components/marketing/demo-date";
 import { Faq } from "@/components/marketing/faq";
 import { Hero } from "@/components/marketing/hero";
-import { ImageFrame } from "@/components/marketing/image-frame";
-import { LiveBookingsTable, LiveMeetingsTable } from "@/components/marketing/live-tables";
 import { Reveal } from "@/components/marketing/reveal";
 import { PricingBand, PricingBandActions } from "@/components/marketing/pricing-band";
 import { ProductShowcase } from "@/components/marketing/product-showcase";
 import { Kicker } from "@/components/marketing/site-chrome";
 import { UseCases } from "@/components/marketing/use-cases";
 import { Walkthrough } from "@/components/marketing/walkthrough";
-import { Icon, type IconName } from "@/components/ui/icon";
-import { cx } from "@/lib/cx";
+import { Icon } from "@/components/ui/icon";
 import { DESCRIPTION, OG_IMAGE, faqLd, graph } from "@/lib/seo";
 import { JsonLd } from "@/components/seo/json-ld";
 import { FAQS } from "@/lib/faq";
@@ -29,157 +26,46 @@ export const metadata: Metadata = {
   openGraph: { url: "/", images: [OG_IMAGE] },
 };
 
-const THREAD: [string, boolean][] = [
-  ["Are you free Tuesday?", false],
-  ["I'm busy Tuesday. Wednesday?", true],
-  ["Wednesday at 3?", false],
-  ["Which timezone?", true],
-  ["Can we do Thursday instead?", false],
-];
+/* ── what this page is ─────────────────────────────────────────────────────
 
-const RESEARCH = [
-  {
-    tone: "slate" as const,
-    tag: "Peer-reviewed",
-    figure: "23%",
-    text: "Average appointment no-show rate across all specialties, from a review of 105 studies.",
-    source: "Dantas et al., Health Policy, 2018 (13.2% Oceania – 43.0% Africa).",
-  },
-  {
-    tone: "accent" as const,
-    tag: "Peer-reviewed",
-    figure: "Lower",
-    text: "No-show rate for appointments booked online versus offline, in one practice.",
-    source: "Frontiers in Digital Health, 2025. Single-practice study, not generalisable alone.",
-  },
-  {
-    tone: "plain" as const,
-    tag: "Vendor",
-    figure: "Higher",
-    text: "Deal-close rates among customers using its meeting scheduler.",
-    source: "HubSpot, self-reported. Marketing data, not independent research.",
-  },
-];
+   Six sections and the footer: hero, how it works, what you get, use cases,
+   pricing, FAQ. It was thirteen, and every one of the extra seven was
+   individually defensible and collectively the reason nobody reached the
+   price.
 
-const RESEARCH_TONE = {
-  slate: { figure: "text-slate", tag: "border-slate-line bg-slate-soft text-slate" },
-  accent: { figure: "text-accent-ink", tag: "border-accent-line bg-accent-soft text-accent-ink" },
-  plain: { figure: "text-ink-2", tag: "border-line bg-fill text-ink-2" },
-};
+   Where the rest went:
+   - the problem, before and after, and the two live tables: /product, which
+     the nav links as "Product" and the "See it up close" link under What you
+     get points at. Worth seeing for somebody who has decided to look closer; not worth
+     scrolling past for somebody who has not.
+   - "why it matters" and the cost calculator: deleted, not moved. The figures
+     were "Lower" and "Higher" without a number, each with a disclaimer under
+     it saying not to rely on it, and the calculator ended on "Meetrao: $0"
+     beside two paid plans. A page whose pricing has to be believed cannot
+     carry either.
 
-const BEFORE: [string, boolean][] = [
-  ['Email: "when are you free?"', false],
-  ["Reply with three options", false],
-  ["Check your calendar", false],
-  ["Suggest a time", false],
-  ["No answer for a day", true],
-  ["That slot has gone: reschedule", false],
-  ["Confirm the new time", false],
-  ["Send a meeting link", false],
-];
+   The section ids are what the nav and footer link to (#how, #product,
+   #usecases, #pricing, #faq). Renaming one breaks a link on every page of the
+   site, silently, because a missing fragment still loads the page. */
 
-const AFTER: [string, string, string, IconName][] = [
-  ["01", "Share your link", "One URL, in an email signature or a DM.", "link"],
-  ["02", "They pick a time", "Only times you are genuinely free, in their timezone.", "calendar"],
-  ["03", "Booked", "On both calendars, with a Meet link attached.", "check"],
-];
+/** The day the demos open on. On this static page that is the build day; the
+    browser replaces it with its own after hydration (see demo-date.ts).
+    Outside the component so the read is plainly not part of rendering. */
+function renderDay(): string {
+  return dayKey(new Date());
+}
 
 export default function LandingPage() {
-  // Read off disk at build time: a photo dropped into public/use-cases/ shows up
-  // on the next deploy, with no code change.
+  const today = renderDay();
 
   return (
     <>
-      <Hero />
-
-      {/* ── The problem ─────────────────────────────────────────────────── */}
-      <section className="bg-accent-2">
-        <div className="mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-center gap-[36px] px-[26px] py-[68px] max-[560px]:px-[18px]">
-          <Reveal className="min-w-0">
-            <div className="flex flex-col gap-[13px]">
-              <Kicker>The problem</Kicker>
-              <h2 className="m-0 font-serif text-[clamp(30px,4.2vw,50px)] leading-[1.03] font-normal tracking-[-0.02em] text-balance text-white">
-                Scheduling shouldn&rsquo;t be a conversation.
-              </h2>
-              <p className="m-0 max-w-[44ch] text-[15px] leading-[1.6] text-pretty text-white/80">
-                Timezone confusion, double bookings, meetings that slip a week waiting on a reply. It repeats
-                for every meeting, with every person.
-              </p>
-              <div className="flex flex-col gap-[2px] pt-[8px]">
-                <span className="font-serif text-[clamp(26px,3.2vw,38px)] leading-[1.05] text-white/55">
-                  You don&rsquo;t need another thread.
-                </span>
-                <span className="font-serif text-[clamp(30px,4vw,46px)] leading-[1.05] tracking-[-0.02em] text-white">
-                  You need one link.
-                </span>
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={80} className="min-w-0">
-            <div className="flex flex-col gap-[11px] rounded-[14px] border border-line bg-surface px-[24px] pt-[24px] pb-[22px]">
-              <div className="mb-[2px] flex items-center gap-[12px] border-b border-line-soft pb-[13px]">
-                <span className="flex flex-none">
-                  <ImageFrame
-                    label="Guest"
-                    avatar
-                    src="/people/chat-guest.webp"
-                    sizes="34px"
-                    className="h-[34px] w-[34px] shadow-[0_0_0_2px_var(--surface)]"
-                    rounded="rounded-full"
-                  />
-                  <ImageFrame
-                    label="Host"
-                    avatar
-                    src="/people/chat-host.webp"
-                    sizes="34px"
-                    className="-ml-[11px] h-[34px] w-[34px] shadow-[0_0_0_2px_var(--surface)]"
-                    rounded="rounded-full"
-                    ground="bg-accent-soft"
-                  />
-                </span>
-                <div className="flex min-w-0 flex-1 flex-col gap-[1px]">
-                  <span className="text-[13.5px] font-semibold text-ink">Priya Nair &amp; you</span>
-                  <span className="text-[12px] text-ink-3">Trying to find half an hour</span>
-                </div>
-                <span className="flex-none text-[10px] tracking-[0.06em] text-ink-3 uppercase">
-                  Thu–Mon
-                </span>
-              </div>
-
-              {THREAD.map(([text, mine], i) => (
-                <div key={i} className={cx("flex", mine ? "justify-end" : "justify-start")}>
-                  <span
-                    className={cx(
-                      "max-w-[82%] px-[14px] py-[10px] text-[13.5px] leading-[1.5]",
-                      mine
-                        ? "rounded-[14px_14px_4px_14px] bg-accent text-on-accent"
-                        : "rounded-[14px_14px_14px_4px] border border-line bg-fill text-ink",
-                    )}
-                  >
-                    {text}
-                  </span>
-                </div>
-              ))}
-
-              <div className="mt-[2px] flex items-center gap-[12px] border-t border-line-soft pt-[13px]">
-                <span className="font-serif text-[32px] leading-[1] text-ink">5</span>
-                <span className="text-[13.5px] leading-[1.45] text-ink-2">
-                  messages later, and still
-                  <br />
-                  nothing on the calendar.
-                </span>
-              </div>
-            </div>
-          </Reveal>
-        </div>
-      </section>
+      <Hero today={today} />
 
       {/* ── How it works ────────────────────────────────────────────────── */}
-      {/* Full-bleed, on the same ground as the before-and-after band further
-          down. That band paints edge to edge and carries the 1200px column
-          inside it, rather than the section BEING that column: a centred
-          section cannot have a background that reaches the window. */}
+      {/* Full-bleed: the band paints edge to edge and carries the 1200px
+          column inside it, rather than the section BEING that column: a
+          centred section cannot have a background that reaches the window. */}
       <section id="how" className="bg-[#E7E3DC]">
         <div className="mx-auto max-w-[1200px] px-[26px] pt-[72px] pb-[72px] max-[560px]:px-[18px]">
           <Reveal>
@@ -193,187 +79,7 @@ export default function LandingPage() {
             </div>
           </Reveal>
 
-          <Walkthrough />
-        </div>
-      </section>
-
-      {/* ── Why it matters ──────────────────────────────────────────────── */}
-      <section className="border-t border-b border-line bg-fill">
-        <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-stretch gap-[34px]">
-            <Reveal className="min-w-0">
-              <div className="flex flex-col gap-[14px]">
-                <Kicker tone="dark">Why it matters</Kicker>
-                <h2 className="m-0 font-serif text-[clamp(28px,3.6vw,42px)] leading-[1.05] font-normal tracking-[-0.02em] text-balance text-ink">
-                  Scheduling isn&rsquo;t admin. It shows up in your numbers.
-                </h2>
-
-                <div className="mt-[2px] flex flex-col gap-[1px] overflow-hidden rounded-[12px] border border-line bg-line">
-                  {RESEARCH.map((row) => {
-                    const tone = RESEARCH_TONE[row.tone];
-                    return (
-                      <div
-                        key={row.text}
-                        className="flex flex-wrap items-center gap-[14px] bg-surface px-[16px] py-[15px]"
-                      >
-                        <span
-                          className={cx(
-                            "min-w-[76px] flex-none font-serif text-[30px] leading-[1] tracking-[-0.018em]",
-                            tone.figure,
-                          )}
-                        >
-                          {row.figure}
-                        </span>
-                        <div className="flex min-w-[170px] flex-1 flex-col gap-[3px]">
-                          <span className="text-[13.5px] leading-[1.5] text-ink">{row.text}</span>
-                          <span className="text-[11.5px] leading-[1.45] text-ink-3">{row.source}</span>
-                        </div>
-                        <span
-                          className={cx(
-                            "inline-flex h-[20px] flex-none items-center rounded-[5px] border px-[8px] text-[10px] tracking-[0.06em] uppercase",
-                            tone.tag,
-                          )}
-                        >
-                          {row.tag}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <span className="text-[12px] leading-[1.55] text-ink-3">
-                  About appointment scheduling in general, not evidence about Meetrao.
-                </span>
-              </div>
-            </Reveal>
-
-            <Reveal delay={80} className="min-w-0 self-start">
-              <CostCalculator />
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Before & after ──────────────────────────────────────────────── */}
-      <section id="compare" className="border-t border-line bg-[#E7E3DC]">
-        <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
-          <Reveal>
-            <div className="flex max-w-[600px] flex-col gap-[11px]">
-              <Kicker tone="dark">Before &amp; after</Kicker>
-              <h2 className="m-0 font-serif text-[clamp(28px,3.8vw,44px)] leading-[1.04] font-normal tracking-[-0.02em] text-balance text-ink">
-                Eight steps become three.
-              </h2>
-            </div>
-          </Reveal>
-
-          <div className="mt-[26px] grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] items-stretch gap-[16px]">
-            <Reveal className="min-w-0">
-              <div className="flex h-full flex-col overflow-hidden rounded-[14px] border border-red-line bg-surface">
-                <div className="flex flex-wrap items-center gap-[10px] border-b border-red-line bg-red-soft px-[18px] py-[14px]">
-                  <span className="inline-flex h-[26px] w-[26px] flex-none items-center justify-center rounded-full bg-red text-white">
-                    <Icon name="xmark" weight="solid" size={11} />
-                  </span>
-                  <span className="min-w-0 flex-1 text-[14.5px] font-semibold text-red">The email thread</span>
-                  <span className="flex-none text-[10.5px] tracking-[0.06em] text-red-ink uppercase">
-                    Days, not minutes
-                  </span>
-                </div>
-
-                <div className="flex flex-1 flex-col gap-[5px] px-[18px] pt-[16px] pb-[18px]">
-                  {BEFORE.map(([label, waiting], i) => (
-                    <div
-                      key={label}
-                      style={{ marginLeft: i * 7 }}
-                      className={cx(
-                        "flex items-center gap-[11px] rounded-[8px] border px-[10px] py-[7px]",
-                        waiting ? "border-red-line bg-red-soft" : "border-line bg-fill",
-                      )}
-                    >
-                      <span
-                        className={cx(
-                          "flex-none text-[10.5px] tracking-[0.05em]",
-                          waiting ? "text-red" : "text-ink-3",
-                        )}
-                      >
-                        {String(i + 1).padStart(2, "0")}
-                      </span>
-                      <span className="min-w-0 flex-1 text-[13.5px] text-ink">{label}</span>
-                      {waiting ? (
-                        <span className="flex-none text-[10px] tracking-[0.05em] text-red uppercase">
-                          waiting
-                        </span>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap gap-[16px] border-t border-red-line bg-red-soft px-[18px] py-[13px]">
-                  {[
-                    ["8", "Steps"],
-                    ["2", "People"],
-                    ["~2 days", "Elapsed"],
-                  ].map(([value, label]) => (
-                    <div key={label} className="flex flex-col gap-[1px]">
-                      <span className="font-serif text-[22px] leading-[1] text-red">{value}</span>
-                      <span className="text-[10px] tracking-[0.06em] text-red-ink uppercase">
-                        {label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-
-            <Reveal delay={100} className="min-w-0">
-              <div className="flex h-full flex-col overflow-hidden rounded-[16px] bg-accent-2">
-                <div className="flex flex-wrap items-center justify-between gap-[12px] border-b border-white/15 px-[20px] py-[15px]">
-                  <span className="inline-flex items-center gap-[10px] text-[13.5px] font-semibold text-white">
-                    <Icon name="check" size={13} className="text-[#7FD8C4]" />
-                    With Meetrao
-                  </span>
-                  <span className="text-[10px] font-medium tracking-[0.1em] text-[#7FD8C4] uppercase">
-                    Minutes, not days
-                  </span>
-                </div>
-
-                <div className="flex flex-1 flex-col justify-center px-[20px] pt-[6px] pb-[12px]">
-                  {AFTER.map(([n, label, text, glyph], i) => (
-                    <div
-                      key={n}
-                      className={cx(
-                        "flex items-center gap-[14px] py-[17px]",
-                        i > 0 && "border-t border-white/15",
-                      )}
-                    >
-                      <span className="w-[40px] flex-none font-serif text-[30px] leading-[1] tracking-[-0.016em] text-[#7FD8C4]">
-                        {n}
-                      </span>
-                      <div className="flex min-w-0 flex-1 flex-col gap-[3px]">
-                        <span className="text-[15px] font-semibold tracking-[-0.005em] text-white">{label}</span>
-                        <span className="text-[13px] leading-[1.5] text-pretty text-white/70">{text}</span>
-                      </div>
-                      <Icon name={glyph} size={14} className="flex-none text-white/50" />
-                    </div>
-                  ))}
-                </div>
-
-                <div className="flex flex-wrap gap-[16px] border-t border-white/15 bg-white/5 px-[20px] py-[13px]">
-                  {[
-                    ["3", "Steps"],
-                    ["1", "Link"],
-                    ["~30 sec", "Elapsed"],
-                  ].map(([value, label]) => (
-                    <div key={label} className="flex flex-col gap-[1px]">
-                      <span className="font-serif text-[22px] leading-[1] text-white">{value}</span>
-                      <span className="text-[10px] tracking-[0.06em] text-[#7FD8C4] uppercase">
-                        {label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </Reveal>
-          </div>
+          <Walkthrough today={today} />
         </div>
       </section>
 
@@ -397,21 +103,18 @@ export default function LandingPage() {
         <Reveal className="mt-[26px]">
           <ProductShowcase />
         </Reveal>
-      </section>
 
-      {/* ── The live tables ───────────────────────────────────────────────
-          Full-bleed on the before-and-after band's ground, so the one part of
-          the page that is the real product rather than a description of it
-          reads as its own thing. A centred section cannot carry a background
-          that reaches the window, so the band holds the column. */}
-      <section className="bg-[#E7E3DC]">
-        <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
-          <Reveal>
-            <div className="flex flex-col gap-[16px]">
-              <LiveMeetingsTable />
-              <LiveBookingsTable />
-            </div>
-          </Reveal>
+        {/* The way into what this page no longer carries. One quiet link,
+            not a band of its own: a section that only points elsewhere is
+            the kind of section this page just lost seven of. */}
+        <div className="mt-[22px]">
+          <Link
+            href="/product"
+            className="inline-flex min-h-[40px] items-center gap-[7px] text-[13.5px] font-semibold text-accent-ink"
+          >
+            See it up close: the before and after, and the live screens
+            <Icon name="arrow-right" size={12} className="flex-none" />
+          </Link>
         </div>
       </section>
 
@@ -426,9 +129,13 @@ export default function LandingPage() {
       </section>
 
       {/* ── pricing ─────────────────────────────────────────────────────
-          Dark, and compact. The nineteen-row comparison that used to sit here
-          moved to the button: see src/components/marketing/pricing-band.tsx
-          for why a table is the wrong thing mid-scroll.
+          Dark, and compact. The full comparison moved to the button: see
+          src/components/marketing/pricing-band.tsx for why a table is the
+          wrong thing mid-scroll.
+
+          All three plans, because all three are on sale. This section used
+          to show Free and Pro only, so the one plan that holds a team was
+          invisible on the page most people decide from.
 
           A darker green than --accent-2, which the use-cases band above it
           already uses. Two adjacent sections in the same green read as one
@@ -440,14 +147,15 @@ export default function LandingPage() {
       <section id="pricing" className="bg-[#082620]">
         <div className="mx-auto max-w-[1200px] px-[26px] py-[60px] max-[560px]:px-[18px]">
           <Reveal>
-            <div className="flex max-w-[640px] flex-col gap-[10px]">
+            <div className="flex max-w-[680px] flex-col gap-[10px]">
               <Kicker>Pricing</Kicker>
               <h2 className="m-0 font-serif text-[clamp(26px,3.4vw,38px)] leading-[1.05] font-normal tracking-[-0.02em] text-balance text-white">
-                Free to take bookings. $30 a year to make it yours.
+                Free to take bookings. Pay to make it yours, or to run a team on it.
               </h2>
-              <p className="m-0 max-w-[52ch] text-[14.5px] leading-[1.6] text-pretty text-white/70">
-                The whole booking product is free: link, calendar, reminders, rescheduling. Pro is for
-                running a business on it.
+              <p className="m-0 max-w-[56ch] text-[14.5px] leading-[1.6] text-pretty text-white/70">
+                The whole booking product is free, with no card: link, calendar, reminders, rescheduling.
+                Pro is for running a business on it. Business is for running several, with other people on
+                them.
               </p>
             </div>
           </Reveal>

@@ -32,7 +32,7 @@ export const metadata: Metadata = {
     type: "website",
     title: "Meetrao: your booking link on your own domain",
     description:
-      "meet.yourcompany.com/your-name, with your logo and your colours, for $30 a year. One CNAME record and the certificate is handled.",
+      "meet.yourcompany.com/your-name/intro, with your logo and your colours, for $30 a year. One CNAME record and the certificate is handled.",
     url: "/custom-domain",
   },
 };

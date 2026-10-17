@@ -312,7 +312,7 @@ function TeamPanel({ active }: { active: boolean }) {
   return (
     <div className="flex w-full max-w-[330px] flex-col gap-[10px]">
       <span className="rounded-[7px] bg-surface px-[12px] py-[9px] text-[12.5px] text-ink-2">
-        meetrao.com/<span className="font-semibold text-ink">acme</span>
+        meetrao.com/team/<span className="font-semibold text-ink">acme</span>/intro
       </span>
 
       <div className="flex flex-col gap-[7px]">
@@ -386,9 +386,9 @@ function BrandPanel({ active }: { active: boolean }) {
      its yellow is the case the contrast code exists for, and it gets a dark
      label where the other two get white. */
   const BRANDS = [
-    { key: "airly", name: "Airly", logo: "/demo-brands/airly.png", ratio: 2100 / 1024, accent: "#013e88", domain: "meet.airlystudio.com/alex" },
-    { key: "involets", name: "Involets", logo: "/demo-brands/involets.png", ratio: 2550 / 512, accent: "#12100c", domain: "book.involets.com/alex" },
-    { key: "taskeni", name: "Taskeni", logo: "/demo-brands/taskeni.svg", ratio: 1884 / 512, accent: "#f8e77f", domain: "meet.taskeni.app/alex" },
+    { key: "airly", name: "Airly", logo: "/demo-brands/airly.png", ratio: 2100 / 1024, accent: "#013e88", domain: "meet.airlystudio.com/alex/intro" },
+    { key: "involets", name: "Involets", logo: "/demo-brands/involets.png", ratio: 2550 / 512, accent: "#12100c", domain: "book.involets.com/alex/intro" },
+    { key: "taskeni", name: "Taskeni", logo: "/demo-brands/taskeni.svg", ratio: 1884 / 512, accent: "#f8e77f", domain: "meet.taskeni.app/alex/intro" },
   ];
 
   const [which, setWhich] = useState(0);

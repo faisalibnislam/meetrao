@@ -23,9 +23,10 @@ import { PlanComparison } from "./plan-comparison";
    underneath it. Somebody who needs Outlook should learn that here, in ten
    seconds, rather than after connecting a calendar.
 
-   There is one price and one tier, so there is no plan grid. Three columns of
-   ticks where two columns are empty is a layout that exists to make an upsell
-   legible, and inventing one here would be pure theatre.
+   Three plans, Free, Pro and Business, and one comparison with a column each.
+   This comment used to say there was one tier and so no plan grid; that was
+   true when it was written and is the kind of sentence that survives the
+   change it describes, so it is worth saying what replaced it.
    ───────────────────────────────────────────────────────────────────────────── */
 
 export function PricingPage() {
@@ -108,7 +109,10 @@ export function PricingPage() {
       </section>
 
       {/* ── the two plans, side by side ───────────────────────────────────── */}
-      <section className="border-t border-line bg-surface">
+      {/* id="compare": the landing page's "What you get" panels link to
+          /pricing#compare, and for a while nothing here carried that id, so
+          the link landed at the top of the page instead of on the table. */}
+      <section id="compare" className="border-t border-line bg-surface">
         <div className="mx-auto max-w-[1200px] px-[26px] py-[56px] max-[560px]:px-[18px]">
           <Reveal>
             <h2 className="m-0 font-serif text-[clamp(26px,3.2vw,38px)] leading-[1.06] font-normal tracking-[-0.02em] text-ink">
@@ -116,8 +120,8 @@ export function PricingPage() {
             </h2>
             <p className="mt-[10px] mb-[26px] max-w-[660px] text-[14px] leading-[1.6] text-ink-2">
               Free is the whole booking product, not a trial of it. Pro is for people running a business on
-              it, their own domain, their own branding, a team. Nothing your guests touch is behind the paid
-              plan.
+              it: their own domain, their own branding, a team link. Business is Pro across several
+              companies, with other people on them. Nothing your guests touch is behind a paid plan.
             </p>
 
             <PlanComparison />
@@ -155,7 +159,7 @@ export function PricingPage() {
 
             <div className="mt-[32px] flex flex-wrap items-center gap-[12px] rounded-[10px] border border-accent-line bg-accent-soft px-[18px] py-[16px]">
               <span className="min-w-[220px] flex-1 text-[14.5px] leading-[1.5] text-ink">
-                Nothing to choose and nothing to cancel. Three screens and your link works.
+                Start on Free: no card to enter and nothing to cancel. Three screens and your link works.
               </span>
               <Link
                 href="/signup"
