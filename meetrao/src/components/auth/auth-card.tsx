@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Icon } from "@/components/ui/icon";
 import { Eyebrow } from "@/components/ui/badge";
 import { LogoLink } from "@/components/ui/logo";
+import { BUSINESS_YEARLY, PRO_YEARLY } from "@/lib/pricing";
 
 /* One two-column card for log in, sign up and forgot password.
    The right column is a value proposition, not a control surface, so it is
@@ -61,8 +62,9 @@ export function AuthCard({
               afternoon feels misled, even when nothing was hidden. */}
           <div className="mt-[6px] rounded-[8px] border border-line bg-surface px-[14px] py-[12px]">
             <span className="text-[12.5px] leading-[1.55] text-ink-2">
-              <strong className="font-semibold text-ink">Free to take bookings.</strong> Pro is $30 a year
-              when you want your own domain, your own branding or a team link.{" "}
+              <strong className="font-semibold text-ink">Free to take bookings.</strong> Pro is {PRO_YEARLY} for
+              your own domain, branding and a team link. Business is {BUSINESS_YEARLY} for a company with its own
+              people.{" "}
               <Link href="/pricing" className="font-semibold">
                 Compare
               </Link>
