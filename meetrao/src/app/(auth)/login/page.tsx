@@ -33,12 +33,7 @@ export default async function LoginPage({
     <AuthCard
       title="Welcome back"
       blurb="Sign in to see your bookings and manage your availability."
-      footer={
-        <div className="flex items-center gap-[6px] text-[13px] text-ink-2">
-          <span>New to Meetrao?</span>
-          <Link href="/signup">Create an account</Link>
-        </div>
-      }
+      panel="login"
     >
       {sent === "reset" ? (
         <Callout tone="accent">
@@ -50,7 +45,18 @@ export default async function LoginPage({
           Sign up again, or contact support if this keeps happening.
         </Callout>
       ) : null}
-      <AuthForm mode="login" next={next} />
+      <AuthForm
+        mode="login"
+        next={next}
+        switchLink={
+          <>
+            New to Meetrao?{" "}
+            <Link href="/signup" className="font-semibold">
+              Create an account
+            </Link>
+          </>
+        }
+      />
     </AuthCard>
   );
 }

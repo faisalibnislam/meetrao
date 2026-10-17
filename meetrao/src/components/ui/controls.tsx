@@ -72,28 +72,35 @@ export function Field({
 }
 
 const inputBase =
-  "box-border w-full rounded-[6px] border bg-surface font-sans text-[13.5px] text-ink outline-none " +
+  "box-border w-full border font-sans text-ink outline-none " +
   "transition-[border-color,box-shadow] duration-[120ms] ease-[ease] " +
   "focus:border-accent focus:shadow-[var(--ring)] disabled:bg-fill disabled:text-ink-3";
 
 export type InputProps = ComponentProps<"input"> & {
-  /** 34 = settings · 36 = meeting form · 38 = auth and guest details */
-  height?: 34 | 36 | 38 | 42;
+  /** 34 = settings · 36 = meeting form · 38 = guest details · 50 = sign in and sign up */
+  height?: 34 | 36 | 38 | 42 | 50;
   invalid?: boolean;
+  /** "filled": a soft fill and no border until focused, for the sign-in screens. */
+  look?: "outline" | "filled";
 };
 
-export function Input({ height = 34, invalid = false, className, ...rest }: InputProps) {
+export function Input({ height = 34, invalid = false, look = "outline", className, ...rest }: InputProps) {
   return (
     <input
       aria-invalid={invalid || undefined}
       className={cx(
         inputBase,
-        "px-[12px]",
+        /* The big size changes the corners, padding and type with it. Kept as
+           alternatives rather than overrides: cx joins classes, it does not
+           merge them, so two paddings would both apply. */
+        height === 50 ? "h-[50px] rounded-[12px] px-[16px] text-[14.5px]" : "rounded-[6px] px-[12px] text-[13.5px]",
         height === 34 && "h-[34px]",
         height === 36 && "h-[36px]",
         height === 38 && "h-[38px]",
         height === 42 && "h-[42px]",
-        invalid ? "border-red" : "border-line-strong",
+        look === "filled"
+          ? cx("bg-fill focus:bg-surface", invalid ? "border-red" : "border-transparent")
+          : cx("bg-surface", invalid ? "border-red" : "border-line-strong"),
         className,
       )}
       {...rest}
@@ -113,7 +120,7 @@ export function Textarea({
       aria-invalid={invalid || undefined}
       className={cx(
         inputBase,
-        "resize-y px-[12px] py-[9px] leading-[1.5]",
+        "resize-y rounded-[6px] bg-surface px-[12px] py-[9px] text-[13.5px] leading-[1.5]",
         invalid ? "border-red" : "border-line-strong",
         className,
       )}

@@ -3,13 +3,12 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { safePath } from "@/lib/safe-path";
-import { useState, useTransition } from "react";
+import { useState, useTransition, type ReactNode } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Field, Help, Input } from "@/components/ui/controls";
 import { Callout } from "@/components/ui/panels";
 import { GoogleG } from "@/components/ui/logo";
-import { Eyebrow } from "@/components/ui/badge";
 import { buttonClass } from "@/components/ui/button-class";
 import { useClientValue } from "@/lib/use-client-value";
 import { detectTimezone, nearestSupportedTimezone } from "@/lib/timezones";
@@ -33,7 +32,16 @@ const CTA = { login: "Sign in", signup: "Create account", forgot: "Send reset li
  * are not server actions: Convex Auth has no server-side `signIn`, and the
  * cookie the proxy reads is written HERE, in the browser.
  */
-export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
+export function AuthForm({
+  mode,
+  next,
+  switchLink,
+}: {
+  mode: AuthMode;
+  next?: string;
+  /** "Already have an account? Sign in", set directly under the main button. */
+  switchLink?: ReactNode;
+}) {
   const [googlePending, startGoogle] = useTransition();
   const [googleError, setGoogleError] = useState<string | null>(null);
 
@@ -86,6 +94,7 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
     <Fields
       mode={mode}
       next={next}
+      switchLink={switchLink}
       action={submitViaConvex}
       busy={convexPending}
       error={convexError}
@@ -109,6 +118,7 @@ export function AuthForm({ mode, next }: { mode: AuthMode; next?: string }) {
 function Fields({
   mode,
   next,
+  switchLink,
   action,
   busy,
   error,
@@ -118,6 +128,7 @@ function Fields({
 }: {
   mode: AuthMode;
   next?: string;
+  switchLink?: ReactNode;
   action: (form: FormData) => void;
   busy: boolean;
   error: string | null | undefined;
@@ -135,11 +146,11 @@ function Fields({
   const timezone = useClientValue(() => nearestSupportedTimezone(detectTimezone()), "UTC");
 
   return (
-    <div className="flex flex-col gap-[14px]">
+    <div className="flex flex-col gap-[18px]">
       {error ? <Callout tone="red">{error}</Callout> : null}
       {googleError ? <Callout tone="red">{googleError}</Callout> : null}
 
-      <form action={action} className="flex flex-col gap-[14px]">
+      <form action={action} className="flex flex-col gap-[18px]">
         {next ? <input type="hidden" name="next" value={next} /> : null}
         {/* Registration sets the host's timezone from their own device, so a
             new account never offers its hours in UTC by accident. Changed
@@ -148,7 +159,7 @@ function Fields({
 
         {isSignup ? (
           <Field label="Full name" htmlFor="full_name">
-            <Input id="full_name" name="full_name" type="text" height={38} placeholder="Adam Voigt" autoComplete="name" required />
+            <Input id="full_name" name="full_name" type="text" height={50} look="filled" placeholder="Adam Voigt" autoComplete="name" required />
           </Field>
         ) : null}
 
@@ -157,7 +168,7 @@ function Fields({
             id="email"
             name="email"
             type="email"
-            height={38}
+            height={50} look="filled"
             placeholder="you@company.com"
             autoComplete="email"
             required
@@ -180,7 +191,7 @@ function Fields({
               id="password"
               name="password"
               type="password"
-              height={38}
+              height={50} look="filled"
               placeholder="••••••••"
               autoComplete={isSignup ? "new-password" : "current-password"}
               required
@@ -190,16 +201,18 @@ function Fields({
           </Field>
         ) : null}
 
-        <Button type="submit" variant="accent" size={40} full busy={busy} className="mt-[2px]">
+        <Button type="submit" variant="accent" size={52} full busy={busy} className="mt-[6px]">
           {busy && mode === "login" ? "Signing in…" : CTA[mode]}
         </Button>
       </form>
 
+      {switchLink ? <div className="-mt-[4px] text-center text-[13.5px] text-ink-2">{switchLink}</div> : null}
+
       {!isForgot ? (
         <div className="flex flex-col gap-[14px]">
-          <div className="flex items-center gap-[12px]">
+          <div className="flex items-center gap-[14px] px-[40px]">
             <span aria-hidden="true" className="h-[1px] flex-1 bg-line" />
-            <Eyebrow size={10.5}>or</Eyebrow>
+            <span className="text-[13px] text-ink-3">Or</span>
             <span aria-hidden="true" className="h-[1px] flex-1 bg-line" />
           </div>
 
@@ -207,10 +220,10 @@ function Fields({
             type="button"
             disabled={googleBusy}
             onClick={() => onProvider("google")}
-            className={buttonClass("secondary", 40, "w-full")}
+            className={buttonClass("secondary", 52, "w-full")}
           >
-            <GoogleG size={16} />
-            <span>Continue with Google</span>
+            <GoogleG size={18} />
+            <span>{mode === "signup" ? "Sign up with Google" : "Continue with Google"}</span>
           </button>
 
           {/* Off until the Apple Developer side exists: see the note on Apple in
@@ -220,7 +233,7 @@ function Fields({
               type="button"
               disabled={googleBusy}
               onClick={() => onProvider("apple")}
-              className={buttonClass("secondary", 40, "w-full")}
+              className={buttonClass("secondary", 52, "w-full")}
             >
               <svg viewBox="0 0 24 24" width={16} height={16} aria-hidden="true" focusable="false" className="block flex-none">
                 <path

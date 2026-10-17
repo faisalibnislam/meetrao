@@ -521,6 +521,15 @@
   to { width: 100%; }
 }
 
+/* The sign-in showcase: product cards that hang in the air and breathe. */
+@keyframes mr-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -10px, 0); }
+}
+
+.float-a { animation: mr-float 7s ease-in-out infinite; }
+.float-b { animation: mr-float 8.5s ease-in-out -2.5s infinite; }
+.float-c { animation: mr-float 6.5s ease-in-out -4s infinite; }
 .drift-a { animation: mr-drift-a 15s ease-in-out infinite; }
 .drift-b { animation: mr-drift-b 19s ease-in-out infinite; }
 .drift-c { animation: mr-drift-c 17s ease-in-out infinite; }
