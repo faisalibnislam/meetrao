@@ -21,7 +21,7 @@ const PILLARS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "link",
     title: "One link, always current",
-    text: "Share meetrao.com/your-name once. It reflects your calendar and hours as they are today, not as they were when you sent it.",
+    text: "Share meetrao.com/your-name/intro-call once. It reflects your calendar and hours as they are today, not as they were when you sent it.",
   },
   {
     icon: "calendar",
