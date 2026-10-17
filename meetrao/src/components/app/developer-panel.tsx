@@ -33,7 +33,7 @@ export type HookView = {
 
 function when(iso: string | null): string {
   if (!iso) return "never";
-  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
+  return new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" }).format(new Date(iso));
 }
 
 export function DeveloperPanel({

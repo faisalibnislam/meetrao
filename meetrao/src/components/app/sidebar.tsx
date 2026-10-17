@@ -194,8 +194,8 @@ export function Sidebar({
         href="/bookings/new"
         className="unlink mb-[12px] box-border inline-flex h-[32px] w-full items-center justify-center gap-[7px] rounded-[6px] border border-accent bg-accent px-[11px] text-[12.5px] font-semibold text-on-accent transition-colors duration-[120ms] hover:border-accent-2 hover:bg-accent-2 hover:text-on-accent max-[820px]:hidden"
       >
-        <Icon name="user-plus" size={12} />
-        Invite to Meet
+        <Icon name="plus" size={12} />
+        Schedule a meeting
       </Link>
 
       <button
@@ -291,7 +291,7 @@ export function Sidebar({
               </span>
             </span>
           </div>
-          {!isAdmin ? <DrawerLink href="/bookings/new" icon="user-plus" label="Invite to Meet" /> : null}
+          {!isAdmin ? <DrawerLink href="/bookings/new" icon="plus" label="Schedule a meeting" /> : null}
           <DrawerLink href="/help" icon="circle-question" label="Help centre" newTab />
           <DrawerLink href="/support" icon="envelope" label="Contact support" />
           <button type="button" onClick={onSignOut} className={drawerItem}>

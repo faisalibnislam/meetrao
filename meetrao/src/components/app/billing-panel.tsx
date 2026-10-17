@@ -62,7 +62,7 @@ export type DomainView = { domain: string | null; verifiedAt: string | null };
 /** What the plan's caps are measured against. */
 export type UsageView = { companiesOwned: number; companyLimit: number; membersPerCompany: number };
 
-const DATE = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", year: "numeric" });
+const DATE = new Intl.DateTimeFormat("en-US", { day: "numeric", month: "short", year: "numeric" });
 
 /* A grant written as "indefinite" is stored as a far-future date. Printing
    "through 2126" would read as a typo, so past fifty years it is no date. */
