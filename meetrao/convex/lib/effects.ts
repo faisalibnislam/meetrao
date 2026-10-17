@@ -29,7 +29,7 @@ import { uuid } from "./ids";
 
 /** public.local_when, the host's wall clock, formatted as the emails write it. */
 export function localWhen(atMs: number, timezone: string): string {
-  const parts = new Intl.DateTimeFormat("en-GB", {
+  const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: timezone || "UTC",
     weekday: "long",
     day: "numeric",
@@ -40,7 +40,8 @@ export function localWhen(atMs: number, timezone: string): string {
   }).formatToParts(new Date(atMs));
   const get = (t: string) => parts.find((p) => p.type === t)?.value ?? "";
   const ampm = get("dayPeriod").toUpperCase();
-  return `${get("weekday")} ${get("day")} ${get("month")}, ${get("hour")}:${get("minute")} ${ampm}`;
+  // "Monday, Oct 19, 9:00 AM", the product's one way of writing a date.
+  return `${get("weekday")}, ${get("month")} ${get("day")}, ${get("hour")}:${get("minute")} ${ampm}`;
 }
 
 /**

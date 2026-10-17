@@ -41,7 +41,7 @@ function relative(at: Date, now: number): string {
   const d = Math.floor(ago / DAY);
   if (d === 1) return "Yesterday";
   if (d < 7) return `${d} days ago`;
-  return at.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+  return at.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" });
 }
 
 type Row = {
