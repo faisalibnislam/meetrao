@@ -6,6 +6,7 @@ import {
   chooseAttachments,
   forwardHtml,
   forwardSubject,
+  isAddressedToMeetrao,
   parseReceived,
   refuseToForward,
   skippedNote,
@@ -58,6 +59,10 @@ export async function POST(request: Request) {
 
   const mail = parseReceived(payload);
   if (!mail) return Response.json({ ignored: "not an email.received event" });
+
+  // Mail for the other apps sharing this Resend account. 200 so Resend does
+  // not retry: it was never ours, and never will be.
+  if (!isAddressedToMeetrao(mail)) return Response.json({ ignored: "not addressed to meetrao.com" });
 
   if (!destination) {
     console.error(

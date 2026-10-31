@@ -92,6 +92,8 @@ export type ReceivedEmail = {
   id: string;
   from: string;
   to: string[];
+  cc: string[];
+  bcc: string[];
   subject: string;
   /**
    * The body, and it does NOT come from the webhook.
@@ -179,11 +181,37 @@ export function parseReceived(payload: unknown): ReceivedEmail | null {
     id: asString(data.id ?? data.email_id),
     from: asString(data.from),
     to: asAddresses(data.to),
+    cc: asAddresses(data.cc),
+    bcc: asAddresses(data.bcc),
     subject: asString(data.subject),
     text: asString(data.text),
     html: asString(data.html),
     attachments: asAttachments(data.attachments),
   };
+}
+
+/* ── whose mail is it ───────────────────────────────────────────────────────
+   The Resend account is shared with other apps (macloving.app,
+   folevi.com, taskeni.app, …), and Resend delivers every domain's received mail
+   to every `email.received` webhook in the account. Without this check a reply
+   to support@macloving.app was forwarded here as if someone had written to
+   Meetrao. */
+
+/** The bare address out of `Name <addr@host>` or `addr@host`, lowercased. */
+function bareAddress(value: string): string {
+  const angled = value.match(/<([^>]+)>/);
+  return (angled ? angled[1] : value).trim().toLowerCase();
+}
+
+function isMeetraoAddress(value: string): boolean {
+  const address = bareAddress(value);
+  const domain = address.slice(address.lastIndexOf("@") + 1);
+  return address.includes("@") && (domain === "meetrao.com" || domain.endsWith(".meetrao.com"));
+}
+
+/** True when any recipient (to, cc or bcc) is on meetrao.com. */
+export function isAddressedToMeetrao(mail: Pick<ReceivedEmail, "to" | "cc" | "bcc">): boolean {
+  return [...mail.to, ...mail.cc, ...mail.bcc].some(isMeetraoAddress);
 }
 
 /* ── attachments ────────────────────────────────────────────────────────────

@@ -4,6 +4,7 @@ import {
   asAttachments,
   chooseAttachments,
   forwardHtml,
+  isAddressedToMeetrao,
   parseReceived,
   refuseToForward,
   skippedNote,
@@ -166,7 +167,48 @@ describe("parseReceived", () => {
 
   it("survives a payload missing every optional field", () => {
     const mail = parseReceived({ type: "email.received" });
-    expect(mail).toEqual({ id: "", from: "", to: [], subject: "", text: "", html: "", attachments: [] });
+    expect(mail).toEqual({ id: "", from: "", to: [], cc: [], bcc: [], subject: "", text: "", html: "", attachments: [] });
+  });
+});
+
+describe("isAddressedToMeetrao", () => {
+  // The account is shared, and Resend sends every app's received mail to every
+  // email.received webhook. This is the payload that got forwarded on 2026-10-31.
+  const forMacloving = parseReceived({
+    type: "email.received",
+    data: {
+      email_id: "e9",
+      from: "Customer <customer@example.com>",
+      to: ["support@macloving.app"],
+      cc: [],
+      bcc: [],
+      subject: "Re: [#1001] Need support",
+    },
+  })!;
+
+  it("ignores mail for another app's domain", () => {
+    expect(isAddressedToMeetrao(forMacloving)).toBe(false);
+  });
+
+  it("does not take a look-alike domain for meetrao.com", () => {
+    expect(isAddressedToMeetrao({ to: ["a@notmeetrao.com", "b@meetrao.com.evil.io"], cc: [], bcc: [] })).toBe(false);
+  });
+
+  it("accepts meetrao.com in to, cc or bcc, in any case or display-name form", () => {
+    expect(isAddressedToMeetrao({ to: ["hello@meetrao.com"], cc: [], bcc: [] })).toBe(true);
+    expect(isAddressedToMeetrao({ to: ["Meetrao <Hello@MeetRao.com>"], cc: [], bcc: [] })).toBe(true);
+    expect(isAddressedToMeetrao({ to: ["support@macloving.app"], cc: ["hello@meetrao.com"], bcc: [] })).toBe(true);
+    expect(isAddressedToMeetrao({ to: [], cc: [], bcc: ["hi@mail.meetrao.com"] })).toBe(true);
+  });
+
+  it("reads cc and bcc from the payload", () => {
+    const mail = parseReceived({
+      type: "email.received",
+      data: { to: ["support@folevi.com"], cc: [{ email: "hello@meetrao.com" }], bcc: "x@y.com" },
+    })!;
+    expect(mail.cc).toEqual(["hello@meetrao.com"]);
+    expect(mail.bcc).toEqual(["x@y.com"]);
+    expect(isAddressedToMeetrao(mail)).toBe(true);
   });
 });
 
@@ -193,6 +235,8 @@ describe("forwardHtml", () => {
     id: "e1",
     from: "a@b.com",
     to: ["hello@meetrao.com"],
+    cc: [],
+    bcc: [],
     subject: "Help",
     text: "",
     html: "",
@@ -343,6 +387,8 @@ describe("forwardHtml with a notice", () => {
       id: "e1",
       from: "a@b.com",
       to: ["hello@meetrao.com"],
+      cc: [],
+      bcc: [],
       subject: "Help",
       text: "",
       html: "<p>body</p>",
