@@ -41,7 +41,7 @@ describe("the Where line", () => {
   });
 
   it("names the number, the room, or the arrangement", () => {
-    expect(whereText("phone", "+880 1711-000000", null)).toBe("Phone: +880 1711-000000");
+    expect(whereText("phone", "+1 555 010 0100", null)).toBe("Phone: +1 555 010 0100");
     expect(whereText("in_person", "12 Example Road", null)).toBe("12 Example Road");
     expect(whereText("custom", "Zoom link in the invite", null)).toBe("Zoom link in the invite");
   });
@@ -54,6 +54,6 @@ describe("the Where line", () => {
 
   it("never shows a Meet link for a meeting that is not one", () => {
     // The snapshot on an old booking can hold a stale link; the kind wins.
-    expect(whereText("phone", "+880 1711-000000", "https://meet.google.com/abc")).not.toContain("meet.google.com");
+    expect(whereText("phone", "+1 555 010 0100", "https://meet.google.com/abc")).not.toContain("meet.google.com");
   });
 });

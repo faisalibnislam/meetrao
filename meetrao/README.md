@@ -203,7 +203,7 @@ change through several doors — the guest RPC granted to `anon`, the host's own
 scheduling action on the service role, the cancel action, the guest cancellation
 page — and application code would have to remember every one. Three kinds:
 booked, cancelled, moved. The times are rendered in the host's own zone by
-`local_when()`, because a notification that says 09:00 UTC to someone in Dhaka
+`local_when()`, because a notification that says 09:00 UTC to someone in Tokyo
 is worse than none.
 
 A booking the host scheduled themselves raises nothing. They already know.

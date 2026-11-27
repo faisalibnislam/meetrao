@@ -523,7 +523,7 @@ Props: `options` (strings or `{value,label}`), `value`, `onChange`, `placeholder
 
 94 IANA zones, sorted by UTC offset, labelled `GMT±HH:MM  City` (offsets computed at runtime via
 `Intl.DateTimeFormat` with `timeZoneName: 'shortOffset'`, so they follow DST). Default
-`Asia/Dhaka`. Displayed as "Detected from your browser." — in production, actually detect it.
+`America/New_York`. Displayed as "Detected from your browser." — in production, actually detect it.
 
 ## Landing pages
 

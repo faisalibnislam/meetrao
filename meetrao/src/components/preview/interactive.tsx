@@ -29,8 +29,8 @@ import { Row, Specimen } from "./kit";
 const DURATIONS = [15, 30, 45, 60];
 
 const ZONES = [
-  { value: "Asia/Dhaka", label: "Asia/Dhaka" },
   { value: "America/New_York", label: "America/New_York" },
+  { value: "America/Los_Angeles", label: "America/Los_Angeles" },
   { value: "Europe/London", label: "Europe/London" },
   { value: "Australia/Sydney", label: "Australia/Sydney" },
 ];
@@ -39,7 +39,7 @@ export function InteractiveControls() {
   const [on, setOn] = useState(true);
   const [checked, setChecked] = useState(true);
   const [duration, setDuration] = useState(30);
-  const [zone, setZone] = useState("Asia/Dhaka");
+  const [zone, setZone] = useState("America/New_York");
   const [query, setQuery] = useState("");
 
   return (

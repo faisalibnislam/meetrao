@@ -306,12 +306,12 @@ describe("geoFromHeaders", () => {
     expect(
       geoFromHeaders(
         headers({
-          "x-vercel-ip-country": "bd",
-          "x-vercel-ip-country-region": "C",
-          "x-vercel-ip-city": "Cumilla",
+          "x-vercel-ip-country": "de",
+          "x-vercel-ip-country-region": "BY",
+          "x-vercel-ip-city": "Munich",
         }),
       ),
-    ).toEqual({ country: "BD", region: "C", city: "Cumilla" });
+    ).toEqual({ country: "DE", region: "BY", city: "Munich" });
   });
 
   it("decodes a percent-encoded city", () => {

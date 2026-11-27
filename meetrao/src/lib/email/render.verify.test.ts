@@ -56,7 +56,7 @@ const mail = {
   hostEmail: "host@example.invalid",
   startLong: "Wednesday, 16 September 2026 at 10:00",
   startShort: "16 Sep",
-  hostTimezoneLabel: "Asia/Dhaka (GMT+6)",
+  hostTimezoneLabel: "America/New_York (GMT-4)",
   guestTimezoneLabel: "Europe/London (GMT+1)",
   durationLabel: "30 minutes",
   where: "meet.google.com/abc-defg-hij",

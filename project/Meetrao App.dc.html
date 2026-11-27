@@ -1796,13 +1796,13 @@ class Component extends DCLogic {
     { id: 'u2', name: 'Sarah Okonkwo', email: 'sarah@brightpath.io', username: 'sarah', tz: 'GMT+01:00 London', types: 3, bookings: 41, joined: 'Aug 28, 2026' },
     { id: 'u3', name: 'Mike Delgado', email: 'mike@delgado.studio', username: 'mikedelgado', tz: 'GMT−07:00 Los Angeles', types: 1, bookings: 6, joined: 'Aug 21, 2026' },
     { id: 'u4', name: 'Jane Whitfield', email: 'jane@whitfield.dev', username: 'janew', tz: 'GMT+10:00 Sydney', types: 2, bookings: 23, joined: 'Aug 14, 2026', suspended: true },
-    { id: 'u5', name: 'Amina Chowdhury', email: 'amina@northbridge.io', username: 'amina', tz: 'GMT+06:00 Dhaka', types: 4, bookings: 58, joined: 'Jul 30, 2026' },
+    { id: 'u5', name: 'Amina Chowdhury', email: 'amina@northbridge.io', username: 'amina', tz: 'GMT-05:00 New York', types: 4, bookings: 58, joined: 'Jul 30, 2026' },
     { id: 'u6', name: 'Tomás Rivera', email: 'tomas@rivera.mx', username: 'tomas', tz: 'GMT−06:00 Mexico City', types: 1, bookings: 3, joined: 'Jul 22, 2026' }
   ];
 
   ADMIN_BOOKINGS = [
     { id: 'ab1', host: 'Sarah Okonkwo', hostEmail: 'sarah@brightpath.io', guest: 'Daniel Poole', guestEmail: 'daniel@poole.co', meeting: '30 Minute Consultation', duration: 30, date: 'Sep 7, 2026', time: '10:00 – 10:30 AM', tz: 'GMT+01:00 London', status: 'Confirmed', meet: 'meet.google.com/xrq-hvzp-nkd', upcoming: true },
-    { id: 'ab2', host: 'Amina Chowdhury', hostEmail: 'amina@northbridge.io', guest: 'Lena Fischer', guestEmail: 'lena@fischer.de', meeting: 'Project Deep Dive', duration: 60, date: 'Sep 7, 2026', time: '2:00 – 3:00 PM', tz: 'GMT+06:00 Dhaka', status: 'Confirmed', meet: 'meet.google.com/bqt-mkfd-oyu', upcoming: true },
+    { id: 'ab2', host: 'Amina Chowdhury', hostEmail: 'amina@northbridge.io', guest: 'Lena Fischer', guestEmail: 'lena@fischer.de', meeting: 'Project Deep Dive', duration: 60, date: 'Sep 7, 2026', time: '2:00 – 3:00 PM', tz: 'GMT-05:00 New York', status: 'Confirmed', meet: 'meet.google.com/bqt-mkfd-oyu', upcoming: true },
     { id: 'ab3', host: 'John Smith', hostEmail: 'john@example.com', guest: 'Priya Nair', guestEmail: 'priya@nairstudio.com', meeting: 'Intro Call', duration: 15, date: 'Sep 6, 2026', time: '9:30 – 9:45 AM', tz: 'GMT−04:00 New York', status: 'Confirmed', meet: 'meet.google.com/kdo-wsnp-tra', upcoming: true },
     { id: 'ab4', host: 'Jane Whitfield', hostEmail: 'jane@whitfield.dev', guest: 'Marcus Lee', guestEmail: 'marcus@leeworks.io', meeting: '30 Minute Consultation', duration: 30, date: 'Sep 4, 2026', time: '4:00 – 4:30 PM', tz: 'GMT+10:00 Sydney', status: 'Cancelled', meet: 'meet.google.com/zpc-vlmt-hja', upcoming: false },
     { id: 'ab5', host: 'Mike Delgado', hostEmail: 'mike@delgado.studio', guest: 'Ruth Adeyemi', guestEmail: 'ruth@adeyemi.ng', meeting: 'Portfolio Review', duration: 45, date: 'Sep 3, 2026', time: '11:00 – 11:45 AM', tz: 'GMT−07:00 Los Angeles', status: 'Confirmed', meet: 'meet.google.com/nfe-qtbx-rwl', upcoming: false },
@@ -1843,7 +1843,7 @@ class Component extends DCLogic {
     authLoading: false,
     connected: this.props.calendarConnected === true,
     connecting: false, calFailed: false, calAttempts: 0,
-    tz: 'Asia/Dhaka',
+    tz: 'America/New_York',
     tab: 'upcoming', meetingQuery: '',
     settingsTab: 'profile', settingsSaved: false, settingsSaving: false,
     saving: false, savedAvail: false,
@@ -3139,7 +3139,7 @@ class Component extends DCLogic {
       resetProto: () => this.setState({
         viewport: 'auto', narrow: this._mq ? this._mq.matches : false,
         screen: 'login', authLoading: false, connected: this.props.calendarConnected === true, connecting: false,
-        calFailed: false, calAttempts: 0, tz: 'Asia/Dhaka', tab: 'upcoming', meetingQuery: '', settingsTab: 'profile',
+        calFailed: false, calAttempts: 0, tz: 'America/New_York', tab: 'upcoming', meetingQuery: '', settingsTab: 'profile',
         settingsSaved: false, saving: false, savedAvail: false, editing: null, formTouched: false,
         month: 0, selectedMonth: 0, selectedDate: 7, selectedSlot: null, taken: [], slotError: false,
         bookingError: false, bookingFailed: false, guestName: '', guestEmail: '', guestNote: '', guestTouched: false,

@@ -31,7 +31,7 @@ nonisolated enum Timezones {
         "Pacific/Tongatapu", "Pacific/Kiritimati",
     ]
 
-    /// "GMT+06:00  Dhaka", ordered west to east, as the web labels them.
+    /// "GMT+09:00  Tokyo", ordered west to east, as the web labels them.
     static func label(_ identifier: String, at date: Date = .now) -> String {
         guard let zone = TimeZone(identifier: identifier) else { return identifier }
         let seconds = zone.secondsFromGMT(for: date)

@@ -13,7 +13,7 @@ import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "./contact";
    somebody has already failed to reach us.
 
    The same then happened to the operator's identity: a studio's name in the
-   footer, a US address on the Terms, a Bangladeshi one on the Privacy Policy,
+   footer, a US address on the Terms, a second one on the Privacy Policy,
    and a third address again in the email footers. That is not a typo. It is the
    first thing a Google verification reviewer compares against the OAuth consent
    screen, and the first thing a regulator asks about.
@@ -142,10 +142,10 @@ describe("one operator, one address", () => {
     "301 King St",
     "22314",
     "Judge Court",
-    "Cumilla 3500",
+    "Cumilla",
+    "Bangladesh",
+    "+880",
     "sole proprietor",
-    "operated from Bangladesh",
-    "laws of Bangladesh",
   ];
   /* "Alexandria, VA" was on this list for the old King St address. It left
      on 2026-11-27, when Space Cherries LLC at 5242 Elbetee Lane, Alexandria,

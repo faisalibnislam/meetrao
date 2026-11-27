@@ -140,7 +140,7 @@ function durationLabel(minutes: number): string {
   return rest ? `${hours} hr ${rest} min` : `${hours} hr`;
 }
 
-/** IANA name as the mail prints it: "Asia/Dhaka" reads as "Asia/Dhaka". */
+/** IANA name as the mail prints it: "Asia/Tokyo" reads as "Asia/Tokyo". */
 function zoneLabel(zone: string): string {
   return zone.replace(/_/g, " ");
 }

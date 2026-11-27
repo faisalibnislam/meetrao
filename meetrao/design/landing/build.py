@@ -484,7 +484,7 @@ def walkthrough(w, m):
               f'<span style="font-size:15px;font-weight:600;color:{INK}">Availability</span>'
               f'<span style="display:inline-flex;height:30px;align-items:center;gap:8px;border-radius:6px;'
               f'border:1px solid {LINE_STRONG};background:{SURFACE};padding:0 11px;font-size:12.5px;'
-              f'color:{INK}">{icon("globe", 11, INK3)}GMT+06:00 Dhaka</span></div>'
+              f'color:{INK}">{icon("globe", 11, INK3)}GMT-05:00 New York</span></div>'
               f'<div style="overflow:hidden;border-radius:9px;border:1px solid {LINE}">{rows}</div>'
               f'<span style="font-size:12.5px;line-height:1.5;color:{INK3}">'
               f'5 days a week. Tick a day off and watch it grey out — it is live.</span>'

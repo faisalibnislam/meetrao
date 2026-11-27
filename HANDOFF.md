@@ -212,9 +212,8 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
 
 ## 10. Next steps / open work
 
-0. **Vercel still has an old `EMAIL_POSTAL_ADDRESS`** (set 2026-09-12 on Production, Preview, Development, value
-   hidden). It overrides the code default in the five web-sent emails, so they likely still carry the Cumilla
-   address. Remove it (`vercel env rm EMAIL_POSTAL_ADDRESS <env>`) or set it to `OPERATOR_LINE`, then redeploy.
+0. Vercel `EMAIL_POSTAL_ADDRESS` was updated to `OPERATOR_LINE` on 2026-11-27 (Production, Preview, Development);
+   it applies from the next production deploy.
    Also: the App Store seller name comes from the Apple Developer enrollment (Individual, "Abu Mohammad Faisal");
    showing Space Cherries LLC needs an Organization enrollment.
 1. iOS signing per the account conventions: set `DEVELOPMENT_TEAM: 7K32QQ2FX8` in `ios/project.yml`, rename bundle
@@ -250,5 +249,6 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
 ## 12. Change log
 
 - 2026-11-27 — Space Cherries LLC named as operator everywhere (site, legal pages, emails, iOS, design files);
-  Convex email footer env updated on dev and prod.
+  Convex and Vercel email footer env updated; demo time zones, placeholders and fixtures
+  no longer point at the old location.
 - 2026-11-19 — Handoff created.
