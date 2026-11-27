@@ -12,6 +12,7 @@ import type { Doc } from "./_generated/dataModel";
 import { zonedDateKey, zonedWeekdayMinute } from "./lib/zoned";
 import { notifyBookingCancelled, logActivity, upsertContact } from "./lib/effects";
 import { consume } from "./lib/rateLimit";
+import { assertServerCall } from "./lib/serverSecret";
 import { findBySlug, normaliseSlug } from "./lib/meetingSlugs";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -260,8 +261,11 @@ export const overridesForMeetingPublic = query({
  * end state and is noted in docs/convex-migration-status.md.
  */
 export const busyForHost = query({
-  args: { hostId: v.string(), from: v.number(), to: v.number() },
+  args: { hostId: v.string(), from: v.number(), to: v.number(), secret: v.optional(v.string()) },
   handler: async (ctx, a) => {
+    /* Server only. Anyone holding a host id (it is in the booking page's own
+       data) could otherwise read that host's exact busy blocks for 90 days. */
+    assertServerCall(a.secret);
     const host = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.hostId)).unique();
     if (!host || host.is_suspended) return [];
 
@@ -309,9 +313,38 @@ export const getBusyIntervals = internalQuery({
   },
 });
 
+/** Page views a single host can collect per minute before more are ignored. */
+const PAGE_VIEWS_PER_HOST_PER_MINUTE = 60;
+
 export const recordPageView = mutation({
-  args: { hostId: v.string(), meetingTypeId: v.union(v.string(), v.null()) },
-  handler: async (ctx, a) => {
+  args: { hostId: v.string(), meetingTypeId: v.union(v.string(), v.null()), secret: v.optional(v.string()) },
+  handler: async (ctx, a): Promise<string | null> => {
+    /* Server only, for a real host and one of their own meetings, and braked.
+       This was callable by anyone with any id, wrote a row every time, and
+       the rows are never pruned: enough of them for one host and deleting
+       that account ran past a mutation's write limit. */
+    assertServerCall(a.secret);
+    const host = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.hostId)).unique();
+    if (!host || host.is_suspended) return null;
+    if (a.meetingTypeId !== null) {
+      const meeting = await ctx.db
+        .query("meeting_types")
+        .withIndex("by_uuid", (q) => q.eq("id", a.meetingTypeId as string))
+        .unique();
+      if (!meeting || meeting.user_id !== host.id) return null;
+    }
+    /* A burst past the limit is dropped, not failed: a page view is a
+       statistic, and the guest's page must render either way. */
+    try {
+      await consume(ctx, [{
+        key: `pageview:${host.id}`,
+        limit: PAGE_VIEWS_PER_HOST_PER_MINUTE,
+        windowMs: 60_000,
+        message: "Too many page views.",
+      }]);
+    } catch {
+      return null;
+    }
     const id = uuid();
     await ctx.db.insert("booking_page_views", {
       id, host_id: a.hostId, meeting_type_id: a.meetingTypeId, opened_at: Date.now(),

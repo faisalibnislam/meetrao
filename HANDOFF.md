@@ -150,7 +150,7 @@ with `TEST_RUNNER_MEETRAO_IT_*` variables set (see `ios/README.md`); never again
 
 | Secret / setting | Where it lives |
 | --- | --- |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_RESEND_KEY`, `EMAIL_FROM`, `EMAIL_POSTAL_ADDRESS`, `SITE_URL`, `JWT_PRIVATE_KEY`, `JWKS`, `ANALYTICS_INGEST_SECRET`, optional `APPLE_BUNDLE_ID`, `AUTH_APPLE_ID`, `AUTH_APPLE_SECRET`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY`, `APNS_BUNDLE_ID` | Convex deployment env (`npx convex env list`), separately for dev and production |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_RESEND_KEY`, `EMAIL_FROM`, `EMAIL_POSTAL_ADDRESS`, `SITE_URL`, `JWT_PRIVATE_KEY`, `JWKS`, `ANALYTICS_INGEST_SECRET`, `CONVEX_SERVER_SECRET` (same value also on Vercel), optional `APPLE_BUNDLE_ID`, `AUTH_APPLE_ID`, `AUTH_APPLE_SECRET`, `APNS_KEY_ID`, `APNS_TEAM_ID`, `APNS_PRIVATE_KEY`, `APNS_BUNDLE_ID` | Convex deployment env (`npx convex env list`), separately for dev and production |
 | `NEXT_PUBLIC_CONVEX_URL`, `GOOGLE_CLIENT_ID/SECRET`, `RESEND_API_KEY`, `RESEND_WEBHOOK_SECRET`, `SUPPORT_INBOX`/`SUPPORT_EMAIL`, `POLAR_ACCESS_TOKEN`, `POLAR_WEBHOOK_SECRET`, `POLAR_SERVER`, `POLAR_PRODUCT_MONTHLY/YEARLY`, `ANALYTICS_SALT`, `VERCEL_API_TOKEN`, `VERCEL_PROJECT_ID`, `VERCEL_TEAM_ID` (custom domains), `NEXT_PUBLIC_GA_MEASUREMENT_ID`, `NEXT_PUBLIC_APPLE_SIGN_IN`, `NEXT_PUBLIC_SITE_URL` | Vercel project env (see `src/lib/env.ts` for which are optional) |
 | Polar product ids per tier (Pro/Business, monthly/yearly) | `platform_settings` in the Convex database, set from the admin console |
 | Production Convex deploy key | Convex dashboard (generate when deploying); not stored in the repo |
@@ -187,6 +187,14 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   Web records are DNS-only: apex `A 76.76.21.21`, `www CNAME cname.vercel-dns.com`. Resend re-added meetrao.com
   (us-east-1, sending + receiving, all verified): `send`/`rsend` CNAMEs to `*.forge.rmta.net`, apex
   `MX 9 receive.forge.rmta.net`, same DKIM as before. Stale `_domainconnect` CNAME left in Cloudflare (harmless).
+- **Security pass (2026-11-27):** `publicBooking.busyForHost`, `google.busyForHost` and
+  `publicBooking.recordPageView` accept only calls carrying `CONVEX_SERVER_SECRET` (`convex/lib/serverSecret.ts`;
+  separate values for dev and prod, set on each Convex deployment and on Vercel: Production = prod value,
+  Preview/Development = dev value, because previews use dev Convex). `recordPageView` also checks the host and
+  meeting exist and allows 60 per host per minute. `admin.purgeAccount` deletes page views in batches of 1,000 and
+  schedules `admin.purgePageViews` for the rest. The public API sends the raw key to `convex/apiPublic.ts`, which
+  hashes it there (`hash` is no longer accepted), `resolveKey` was removed, and `touchKey` writes at most once a
+  minute. `LEGACY_CALLERS_ALLOWED` in `serverSecret.ts` is a deploy-only switch: committed false.
 - **Speed pass (2026-11-27):** `/help` is static (nav reads the session in the browser); `optionalSession` and
   `/api/me` skip Convex when there is no session token; guest booking page and `/api/slots` reuse the hours that
   come back with the meeting; `google.busyForHost` reads host + connection in one internal query and calls the token
@@ -245,18 +253,12 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
    2026-10-31 fix drops non-meetrao mail).
 6. `@convex-dev/auth` is 0.0.95 and 2.1.0 is out (needs `convex ^1.48`; installed 1.46.0): upgrade `convex`
    first, then auth, on a branch, testing sign-in, `src/proxy.ts` and `convexAuthNextjsToken`.
-7. From the 2026-11-27 Convex audit (not fixed yet, ranked):
-   - `publicBooking.recordPageView` is public, unauthenticated, unlimited, and `booking_page_views` is never pruned;
-     enough rows make `admin.purgeAccount` exceed the per-mutation write limit. Rate-limit it, validate ids, prune
-     (owner decides retention), and batch `purgeAccount`.
-   - `apiPublic.*` accept the stored key hash as an argument, so a leaked `api_keys` export is replayable; add a
-     server secret or hash inside Convex.
-   - `google.busyForHost` / `publicBooking.busyForHost` return raw busy blocks to anyone with a host id; computing
-     slots inside Convex fixes this and saves a round trip.
+7. From the 2026-11-27 Convex audit, still open (the three security items were fixed the same day, see Current
+   state):
    - `reminders.claimDue` and `rsvp.due` use `take(200)` over a window then filter in JS; past 200 bookings in the
      window, reminders/RSVP syncs are skipped. Query narrower index ranges or paginate.
-   - Low: `bookings.listForScreen` and `contacts` collect a host's whole history; admin counts scan whole tables;
-     `apiPublic.touchKey` writes on every call.
+   - `booking_page_views` is never pruned (now rate-limited and server-only); decide a retention period.
+   - Low: `bookings.listForScreen` and `contacts` collect a host's whole history; admin counts scan whole tables.
 
 ## 11. Gotchas
 
@@ -274,6 +276,9 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   here afterwards.
 
 ## 12. Change log
+
+- 2026-11-27 — Security pass: server-only secret on busy-time lookups and page views, page-view validation and rate
+  limit, batched page-view purge, API key hashed inside Convex.
 
 - 2026-11-27 — DNS moved to Cloudflare; Resend domain re-added and verified. Speed pass: static Help Centre, no
   Convex call for signed-out session checks, fewer booking-page reads, single-step Google busy check, indexed

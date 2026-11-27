@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { presentedKeyHash, touch, unauthorized } from "@/lib/api/auth";
+import { presentedKey, touch, unauthorized } from "@/lib/api/auth";
 import { convexAnonymous } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
@@ -34,12 +34,12 @@ function count(value: string | null): number | undefined {
 }
 
 export async function GET(request: NextRequest) {
-  const hash = await presentedKeyHash(request);
-  if (!hash) return unauthorized();
+  const key = presentedKey(request);
+  if (!key) return unauthorized();
 
   const params = request.nextUrl.searchParams;
   const rows = await convexAnonymous().query(api.apiPublic.bookings, {
-    hash,
+    key,
     from: instant(params.get("from")),
     to: instant(params.get("to")),
     limit: count(params.get("limit")),
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   // null means the key resolved to nobody, same answer as no key at all.
   if (rows === null) return unauthorized();
-  touch(hash);
+  touch(key);
 
   return NextResponse.json(
     { object: "list", data: rows, has_more: rows.length >= 200 },

@@ -1,6 +1,8 @@
 import { query, mutation } from "./_generated/server";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
+import { hashApiKey } from "./lib/apiAuth";
+import { LEGACY_CALLERS_ALLOWED } from "./lib/serverSecret";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    The read-only API's own doors.
@@ -10,13 +12,28 @@ import { v } from "convex/values";
    There is no identity for Convex to check, and the key itself is the
    credential.
 
-   Each one takes a HASH, never a key, and answers only for the account that
-   hash belongs to. A hash is not a bearer credential: it cannot be replayed
-   against Google, against a session, or against anything but this function,
-   and it is what the database already holds.
+   Each one takes the KEY and hashes it here. They used to take the hash,
+   hashed by the route, and that made the stored hash a working credential:
+   anyone who could read the api_keys table (an export, a backup, a dashboard
+   viewer) could replay a row's hash against `bookings` and read that host's
+   guests. A hash computed in here from a presented key cannot be replayed;
+   only the key itself opens anything.
+
+   `hash` is still accepted while LEGACY_CALLERS_ALLOWED is true, for the
+   minutes between the Convex deploy and the site deploy, and ignored after.
    ───────────────────────────────────────────────────────────────────────────── */
 
-async function ownerOf(ctx: QueryCtx | MutationCtx, hash: string) {
+const credential = { key: v.optional(v.string()), hash: v.optional(v.string()) };
+
+/** The hash to look up: from the key, or (during a deploy only) as sent. */
+async function presentedHash(a: { key?: string; hash?: string }): Promise<string | null> {
+  if (a.key) return await hashApiKey(a.key);
+  if (a.hash && LEGACY_CALLERS_ALLOWED) return a.hash;
+  return null;
+}
+
+async function ownerOf(ctx: QueryCtx | MutationCtx, hash: string | null) {
+  if (!hash) return null;
   const row = await ctx.db.query("api_keys").withIndex("by_hash", (q) => q.eq("hash", hash)).unique();
   if (!row || row.revoked_at !== null) return null;
   const profile = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", row.user_id)).unique();
@@ -24,25 +41,25 @@ async function ownerOf(ctx: QueryCtx | MutationCtx, hash: string) {
   return { keyId: row.id, userId: row.user_id };
 }
 
-export const resolveKey = query({
-  args: { hash: v.string() },
-  handler: async (ctx, a) => await ownerOf(ctx, a.hash),
-});
-
 export const touchKey = mutation({
-  args: { hash: v.string() },
+  args: credential,
   handler: async (ctx, a) => {
-    const row = await ctx.db.query("api_keys").withIndex("by_hash", (q) => q.eq("hash", a.hash)).unique();
+    const hash = await presentedHash(a);
+    if (!hash) return false;
+    const row = await ctx.db.query("api_keys").withIndex("by_hash", (q) => q.eq("hash", hash)).unique();
     if (!row || row.revoked_at !== null) return false;
+    /* At most once a minute. Every API request used to write this row, which
+       is a write conflict waiting to happen under concurrent use. */
+    if (row.last_used_at && Date.now() - row.last_used_at < 60_000) return true;
     await ctx.db.patch(row._id, { last_used_at: Date.now() });
     return true;
   },
 });
 
 export const bookings = query({
-  args: { hash: v.string(), from: v.optional(v.number()), to: v.optional(v.number()), limit: v.optional(v.number()) },
+  args: { ...credential, from: v.optional(v.number()), to: v.optional(v.number()), limit: v.optional(v.number()) },
   handler: async (ctx, a) => {
-    const owner = await ownerOf(ctx, a.hash);
+    const owner = await ownerOf(ctx, await presentedHash(a));
     if (!owner) return null;
 
     const from = a.from ?? Date.now() - 30 * 24 * 60 * 60_000;
@@ -76,9 +93,9 @@ export const bookings = query({
 });
 
 export const meetings = query({
-  args: { hash: v.string() },
+  args: credential,
   handler: async (ctx, a) => {
-    const owner = await ownerOf(ctx, a.hash);
+    const owner = await ownerOf(ctx, await presentedHash(a));
     if (!owner) return null;
 
     const rows = await ctx.db

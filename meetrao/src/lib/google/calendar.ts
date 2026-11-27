@@ -1,7 +1,7 @@
 import "server-only";
 
 import type { Interval } from "@/lib/booking/slots";
-import { convexAnonymous } from "@/lib/convex/server";
+import { convexAnonymous, serverSecret } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -45,6 +45,7 @@ export async function busyPeriods(userId: string, from: Date, to: Date): Promise
     hostId: userId,
     from: from.getTime(),
     to: to.getTime(),
+    secret: serverSecret(),
   });
   if (!r.checked) throw new CalendarError("api-unavailable", "Google Calendar could not be reached.");
   return r.busy.map((b) => ({ start: new Date(b.start), end: new Date(b.end) }));

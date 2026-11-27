@@ -81,7 +81,17 @@ describe("the API is read-only", () => {
   const convexDoor = read("convex/apiPublic.ts");
 
   it("guards the guard", () => {
-    for (const route of routes) expect(route).toContain("presentedKeyHash");
+    for (const route of routes) expect(route).toContain("presentedKey(request)");
+  });
+
+  /* The stored hash used to be what the route sent, so a leaked api_keys row
+     was a working credential. The key goes to Convex and is hashed there. */
+  it("never accepts the stored hash as a credential", () => {
+    for (const route of routes) expect(route).not.toMatch(/\bhash\b/);
+    expect(convexDoor).toContain("hashApiKey(a.key)");
+    expect(convexDoor).toContain("a.hash && LEGACY_CALLERS_ALLOWED");
+    expect(read("convex/lib/serverSecret.ts")).toContain("export const LEGACY_CALLERS_ALLOWED = false;");
+    expect(convexDoor, "an unused public door that resolved a hash to its owner").not.toContain("resolveKey");
   });
 
   /* Every booking rule is enforced at a door built for guests. A write API is

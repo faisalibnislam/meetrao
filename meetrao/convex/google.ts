@@ -9,6 +9,7 @@ import {
   freeBusy, createEvent, deleteEvent, patchEventTime, GoogleAuthError,
 } from "./lib/googleApi";
 import { needsMeetLink } from "./lib/locations";
+import { assertServerCall } from "./lib/serverSecret";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Google Calendar, entirely inside Convex.
@@ -147,8 +148,11 @@ export const accessTokenFor = internalAction({
  * caller says "we could not check Google" instead of failing the page.
  */
 export const busyForHost = action({
-  args: { hostId: v.string(), from: v.number(), to: v.number() },
+  args: { hostId: v.string(), from: v.number(), to: v.number(), secret: v.optional(v.string()) },
   handler: async (ctx, a): Promise<{ busy: Array<{ start: number; end: number }>; checked: boolean }> => {
+    /* Server only. Without this, anyone holding a host id could read their
+       Google busy blocks and spend their Google quota, unthrottled. */
+    assertServerCall(a.secret);
     /* ONE read for both questions: is this host bookable, and what is their
        calendar connection. These were a query, then an action that ran a
        second query, one after the other on every booking page. */
