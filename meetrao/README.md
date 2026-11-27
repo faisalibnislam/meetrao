@@ -766,11 +766,13 @@ contradicts your own Terms is how a rich result gets pulled.
   source rather than 1024 to be crisp at 2×.
 - **A lawyer has still not read `/terms` and `/privacy`.** Both were rewritten
   for publication: the amber draft banner and the five open callouts are gone,
-  because each question behind them has been answered (sole proprietor in
-  Cumilla; minimum age 16; SCCs for EU/UK transfers; liability capped at the
-  greater of fees paid in twelve months or US$50; a consent banner that now
-  exists). Those are defensible answers, not reviewed ones — worth an hour of a
-  Bangladeshi lawyer's time before anyone relies on the cap.
+  because each question behind them has been answered (operated by Space
+  Cherries LLC, 5242 Elbetee Lane, Alexandria, VA 22312, USA, since
+  2026-11-27; Virginia law, Fairfax County courts; minimum age 16; SCCs for
+  EU/UK transfers; liability capped at the greater of fees paid in twelve
+  months or US$50; a consent banner that now exists). Those are defensible
+  answers, not reviewed ones — worth an hour of a Virginia lawyer's time before
+  anyone relies on the cap.
 - **No reschedule flow.** Guests cancel and rebook. `booking-changed.html` and
   `sendRescheduled()` exist, unwired, for whenever it is built.
 - **Vercel Hobby allows ~100 deployments a day**, counting every PR preview and

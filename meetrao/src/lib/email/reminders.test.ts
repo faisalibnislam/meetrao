@@ -57,7 +57,7 @@ const BASE = {
   meetUrl: "https://meet.google.com/abc-defg-hij",
   reference: "ref-1",
   site: "https://meetrao.com",
-  postalAddress: "1 Example Road, Cumilla, Bangladesh",
+  postalAddress: "1 Example Road, Springfield, VA 22150, USA",
 } as const;
 
 describe("which day a reminder claims", () => {
@@ -122,7 +122,7 @@ describe("what a reminder says", () => {
   });
 
   it("carries the postal address every message needs", () => {
-    expect(renderReminder({ ...BASE, lead: "1h", to: "guest" }).html).toContain("Cumilla");
+    expect(renderReminder({ ...BASE, lead: "1h", to: "guest" }).html).toContain("Springfield");
   });
 
   it("falls back to the booking when there is no Meet link", () => {

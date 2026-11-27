@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
+import { OPERATOR_LINE, SUPPORT_EMAIL } from "@/lib/contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Environment.
@@ -61,10 +61,11 @@ const serverSchema = z.object({
   /**
    * Shown in the footer of every email; required by anti-spam law.
    *
-   * Defaults to the real address rather than to "", so a deployment that never
-   * sets it still sends compliant mail. Set it on Vercel only to override.
+   * Defaults to the operator line (Space Cherries LLC and its postal address)
+   * rather than to "", so a deployment that never sets it still sends
+   * compliant mail. Set it on Vercel only to override.
    */
-  EMAIL_POSTAL_ADDRESS: optional(POSTAL_ADDRESS),
+  EMAIL_POSTAL_ADDRESS: optional(OPERATOR_LINE),
 
   /* Inbound mail. Both optional: unset, /api/resend/inbound does nothing and
      the rest of the app is unaffected. See README § "Receiving support mail". */

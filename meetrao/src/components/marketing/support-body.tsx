@@ -126,7 +126,7 @@ export function SupportBody({
                   Within one working day
                 </span>
                 <span className="text-[12.5px] leading-[1.5] text-ink-3">
-                  We are a small team across Bangladesh and the US, so replies
+                  We are a small team in the US, so replies can
                   land at odd hours.
                 </span>
               </div>

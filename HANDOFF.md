@@ -2,7 +2,7 @@
 
 > Read this first if you are a Claude (or any agent) picking this project up, on this Mac or another one. Then read CLAUDE.md / AGENTS.md. Keep this file current: after every change to the project, update "Current state", "Next steps" and "Change log", and commit it.
 
-Last updated: 2026-11-19 · Written on: Faisal's MacBook Pro M5
+Last updated: 2026-11-27 · Written on: Faisal's MacBook Pro M5
 
 ## 1. What this is
 
@@ -180,8 +180,14 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   dashes out of the comments too").
 - Commit messages end with the Claude co-author line; PRs from `claude/*` branches.
 
-## 9. Current state (as of 2026-11-19)
+## 9. Current state (as of 2026-11-19, operator change 2026-11-27)
 
+- **Operator (2026-11-27):** Meetrao is operated by **Space Cherries LLC**, 5242 Elbetee Lane, Alexandria, VA 22312,
+  USA (www.spacecherries.com). One definition in `meetrao/src/lib/contact.ts` (`POSTAL_ADDRESS`, `OPERATOR_NAME`,
+  `OPERATOR_URL`, `OPERATOR_LINE`). Terms: Virginia law, Fairfax County courts. Privacy: controller Space Cherries
+  LLC, operated from the US. Footer, JSON-LD, pricing and comparison copy, iOS Account screen and the design files
+  all name it; the "built by one person" line is gone. Convex `EMAIL_POSTAL_ADDRESS` set to `OPERATOR_LINE` on dev
+  (`festive-meerkat-460`) and prod (`avid-dotterel-109`).
 - Git: `main` at `cf81234`, equal to `origin/main`. No stashes; no extra worktrees (`.claude/worktrees/` is empty).
 - **1 uncommitted file, only on this Mac:** `.gitignore` (generic "local junk & regenerable caches" block from a
   2026-11-11 cleanup). Harmless.
@@ -206,6 +212,11 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
 
 ## 10. Next steps / open work
 
+0. **Vercel still has an old `EMAIL_POSTAL_ADDRESS`** (set 2026-09-12 on Production, Preview, Development, value
+   hidden). It overrides the code default in the five web-sent emails, so they likely still carry the Cumilla
+   address. Remove it (`vercel env rm EMAIL_POSTAL_ADDRESS <env>`) or set it to `OPERATOR_LINE`, then redeploy.
+   Also: the App Store seller name comes from the Apple Developer enrollment (Individual, "Abu Mohammad Faisal");
+   showing Space Cherries LLC needs an Organization enrollment.
 1. iOS signing per the account conventions: set `DEVELOPMENT_TEAM: 7K32QQ2FX8` in `ios/project.yml`, rename bundle
    IDs from `com.meetrao.app` to `app.meetrao.Meetrao` (widget `app.meetrao.Meetrao.MeetraoWidget`), keychain group
    `com.meetrao.shared` accordingly, and update `APPLE_BUNDLE_ID` / `APNS_BUNDLE_ID` on Convex. The app is
@@ -238,4 +249,6 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
 
 ## 12. Change log
 
+- 2026-11-27 — Space Cherries LLC named as operator everywhere (site, legal pages, emails, iOS, design files);
+  Convex email footer env updated on dev and prod.
 - 2026-11-19 — Handoff created.

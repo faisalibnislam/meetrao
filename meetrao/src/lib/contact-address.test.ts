@@ -139,17 +139,25 @@ describe("one operator, one address", () => {
   const RETIRED = [
     "Airly",
     "airlystudio",
-    "Alexandria, VA",
     "301 King St",
     "22314",
+    "Judge Court",
+    "Cumilla 3500",
+    "sole proprietor",
+    "operated from Bangladesh",
+    "laws of Bangladesh",
   ];
+  /* "Alexandria, VA" was on this list for the old King St address. It left
+     on 2026-11-27, when Space Cherries LLC at 5242 Elbetee Lane, Alexandria,
+     VA 22312 became the operator; the street and ZIP above still retire the
+     old one. */
 
   /* ONE EXEMPT FILE, and the distinction it rests on.
 
      This rule is about who OPERATES Meetrao. A retired operator identity
      reappearing in the footer, the Terms or an email is the defect: a Google
      verification reviewer compares the site against the OAuth consent screen,
-     and the Terms say there is no company behind this and no team.
+     and the Terms name Space Cherries LLC as the one operator.
 
      The branding showcase is a different claim. The logos in it are examples
      of what a HOST can put on their own booking page, captioned as such and
@@ -249,6 +257,6 @@ describe("one operator, one address", () => {
     // wrong thing. The invariant is that the default comes from the shared
     // constant, not how it is wrapped; env.test.ts checks the behaviour.
     const env = FILES.find((f) => f.file === path.join("src", "lib", "env.ts"));
-    expect(env!.text).toMatch(/EMAIL_POSTAL_ADDRESS:.*\bPOSTAL_ADDRESS\b/);
+    expect(env!.text).toMatch(/EMAIL_POSTAL_ADDRESS:.*\bOPERATOR_LINE\b/);
   });
 });

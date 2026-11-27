@@ -192,7 +192,7 @@ FOOTER_COLS = [
     ("Product", ["How it works", "Use cases", "What you get", "Read the FAQ"]),
     ("Get started", ["Create a free link", "Log in", "Connect Google Calendar", "Set your availability"]),
     ("Support", ["Help centre", "Contact support", "FAQ"]),
-    ("Company", ["Privacy Policy", "Terms of Service", "Operated by Airly Studio"]),
+    ("Company", ["Privacy Policy", "Terms of Service", "Operated by Space Cherries LLC"]),
 ]
 
 HERO_PROOF = ["Completely free", "No double bookings", "On both calendars",
@@ -1029,9 +1029,9 @@ def footer(w, m):
             f'background:{FOOTER_INNER};padding:26px 30px;margin-bottom:30px">{trust}</div>'
 
             f'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:22px 0 34px">'
-            f'<span style="font-size:13px;color:rgba(255,255,255,0.6)">© 2026 Meetrao · Operated by '
+            f'<span style="font-size:13px;color:rgba(255,255,255,0.6)">© 2026 Space Cherries LLC · Operated by '
             f'<a href="#" style="color:rgba(255,255,255,0.85);text-decoration:underline;'
-            f'text-decoration-color:rgba(255,255,255,0.35);text-underline-offset:2px">Airly Studio</a>'
+            f'text-decoration-color:rgba(255,255,255,0.35);text-underline-offset:2px">Space Cherries LLC</a>'
             f'</span>'
             f'<div style="margin-left:auto;display:flex;flex-wrap:wrap;gap:20px">'
             + "".join(f'<a href="#" style="font-size:13px;color:rgba(255,255,255,0.75);'

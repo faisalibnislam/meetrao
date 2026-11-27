@@ -8,7 +8,7 @@ import {
   DocLayout,
   type TocEntry,
 } from "@/components/marketing/legal-doc";
-import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
+import { OPERATOR_NAME, OPERATOR_SITE, OPERATOR_URL, POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-const UPDATED = "17 October 2026";
+const UPDATED = "27 November 2026";
 
 const TOC: TocEntry[] = [
   { id: "t-who", label: "1. Who we are" },
@@ -44,23 +44,28 @@ export default function TermsPage() {
           eyebrow="Terms of Service"
           title="The agreement between you and Meetrao"
           intro="Meetrao is a scheduling tool. You share one link, guests pick a time you are genuinely free, and each booking gets a Google Meet link. These terms say what you can expect from us and what we expect from you. They are written plainly on purpose."
-          meta={[`Last updated ${UPDATED}`, "Operated by Meetrao, Cumilla, Bangladesh"]}
+          meta={[`Last updated ${UPDATED}`, `Operated by ${OPERATOR_NAME}, Alexandria, Virginia, USA`]}
         />
 
         <p>
-          These terms are a contract between you and Meetrao. By creating an account, or by booking a meeting
+          <strong>What changed on {UPDATED}:</strong> Meetrao is now operated by {OPERATOR_NAME}, a company in
+          Virginia, USA. These terms now name it as the operator, and Virginia law now governs them (section 11).
+          Nothing else about how the service works has changed.
+        </p>
+
+        <p>
+          These terms are a contract between you and {OPERATOR_NAME}, which operates Meetrao. By creating an account, or by booking a meeting
           through somebody&rsquo;s Meetrao link, you accept them. If you do not, do not use the service.
         </p>
 
         <h2 id="t-who">1. Who we are</h2>
         <p>
-          Meetrao is built and run by one person, trading as a sole proprietor under the name Meetrao, from{" "}
-          {POSTAL_ADDRESS}. There is no company behind it and no team, which is why this page says what it says
-          about support times and about liability, rather than implying an organisation that does not exist.
+          Meetrao is a product and service operated by {OPERATOR_NAME}, a limited liability company, at{" "}
+          {POSTAL_ADDRESS}. More about the company is at <a href={OPERATOR_URL}>{OPERATOR_SITE}</a>.
         </p>
         <p>
-          When these terms say &ldquo;we&rdquo;, &ldquo;us&rdquo; or &ldquo;Meetrao&rdquo;, they mean that
-          operator. When they say &ldquo;you&rdquo;, they mean the person or organisation using the service.
+          When these terms say &ldquo;we&rdquo;, &ldquo;us&rdquo; or &ldquo;Meetrao&rdquo;, they mean{" "}
+          {OPERATOR_NAME}. When they say &ldquo;you&rdquo;, they mean the person or organisation using the service.
         </p>
         <p>
           You can reach us at <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>, or by post at{" "}
@@ -233,7 +238,8 @@ export default function TermsPage() {
 
         <h2 id="t-law">11. Governing law</h2>
         <p>
-          These terms are governed by the laws of Bangladesh, and the courts of Cumilla, Bangladesh have
+          These terms are governed by the laws of the Commonwealth of Virginia, USA, without regard to its
+          conflict-of-law rules. The state and federal courts located in Fairfax County, Virginia have
           jurisdiction over any dispute. If you are a consumer somewhere else, this does not take away rights
           your local law gives you that cannot be waived by agreement, or your right to bring a claim in your own
           country where your law allows it.

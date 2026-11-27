@@ -96,7 +96,7 @@ export const CALENDLY: Comparison = {
     ["It does considerably more", "Payments at booking, collective scheduling, routing forms, several video providers, SMS reminders, and a long list of integrations. Meetrao has round-robin team links and none of the rest, and is not planning most of them."],
     ["Calendars beyond Google", "Outlook, iCloud and Exchange, and six of them at once on a paid plan. Meetrao connects to one Google Calendar and nothing else."],
     ["Reminders you control", "Calendly lets you decide how many reminders go out, when, and whether by email or SMS. Meetrao sends two, by email, the day before and an hour before, and there is no setting for it."],
-    ["It is not one person", "Calendly has a support organisation, an uptime commitment and a company behind it. Meetrao is built and run by one person, and this page would be dishonest if it pretended otherwise."],
+    ["A bigger organisation behind it", "Calendly has a large support organisation and an uptime commitment. Meetrao is run by Space Cherries LLC, a small company, and this page would be dishonest if it pretended otherwise."],
   ],
   meetraoWins: [
     ["No limit that exists to sell you something", "Taking bookings is free and has no cap on it. The paid tier adds a domain, branding and team links, not the ability to book."],
@@ -170,7 +170,7 @@ export const CAL_COM: Comparison = {
     ["More of everything", "Routing forms, workflows, several calendar providers, several video providers, payments, collective scheduling. On features this is not close, and pretending otherwise would waste your time."],
     ["Self-hosting", "You can run Cal.com on your own infrastructure, which is a thing Meetrao cannot offer at any price and is the right answer for anybody whose data cannot leave their own servers."],
     ["Teams", "Cal.com has the full set: round-robin, collective availability, routing, per-team billing. Meetrao has a round-robin team link and stops there."],
-    ["A company behind it", "Cal.com is a funded company with a roadmap and a support function. Meetrao is one person, which is the whole reason the free plan can be what it is and also the reason to think twice."],
+    ["A bigger company behind it", "Cal.com is a funded company with a roadmap and a support function. Meetrao is run by Space Cherries LLC, a small company, which is the whole reason the free plan can be what it is and also the reason to think twice."],
   ],
   meetraoWins: [
     ["Less to set up", "Connect Google, describe one meeting, tick your hours. Three screens and the link works."],
@@ -202,7 +202,7 @@ export const CAL_COM: Comparison = {
     ],
     [
       "Will Meetrao add teams and payments?",
-      "Team links exist on Pro. Payments, routing and collective availability are not planned. It is built and maintained by one person, and the things on this page it does not do are mostly things it has chosen not to do.",
+      "Team links exist on Pro. Payments, routing and collective availability are not planned. It is built and maintained by a small company, Space Cherries LLC, and the things on this page it does not do are mostly things it has chosen not to do.",
     ],
   ],
 };

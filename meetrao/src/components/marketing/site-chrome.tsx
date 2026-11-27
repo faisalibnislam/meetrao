@@ -4,7 +4,7 @@ import { Logo } from "@/components/ui/logo";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { SiteAccountMenu } from "./site-account-menu";
 import { SiteAccountLive, SignedOutActions } from "./site-account-live";
-import { POSTAL_ADDRESS } from "@/lib/contact";
+import { OPERATOR_NAME, OPERATOR_URL, POSTAL_ADDRESS } from "@/lib/contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Marketing chrome, one sticky nav and one footer, shared by the landing page
@@ -244,7 +244,11 @@ export function SiteFooter() {
 
         <div className="flex flex-wrap items-center gap-[16px] pt-[22px] pb-[34px]">
           <span className="text-[13px] text-white/60">
-            © 2026 Meetrao · {POSTAL_ADDRESS}
+            © 2026 {OPERATOR_NAME} · Meetrao is operated by{" "}
+            <a href={OPERATOR_URL} className="unlink text-white/75 hover:text-white" rel="noopener">
+              {OPERATOR_NAME}
+            </a>
+            , {POSTAL_ADDRESS}
           </span>
           <div className="ml-auto flex flex-wrap gap-[20px]">
             <Link href="/pricing" className="unlink text-[13px] text-white/75 hover:text-white">

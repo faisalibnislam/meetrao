@@ -369,8 +369,8 @@ function BrandPanel({ active }: { active: boolean }) {
      AIRLY IS HERE BY DECISION, not by oversight. Meetrao used to be published
      under that studio's name, and src/lib/contact-address.test.ts keeps every
      retired operator identity off the site: a Google verification reviewer
-     compares the site against the OAuth consent screen, and the Terms say
-     there is no company behind this and no team. That guard now exempts this
+     compares the site against the OAuth consent screen, and the Terms name
+     Space Cherries LLC as the only operator. That guard now exempts this
      one file by name, which is the narrowest shape the exception can take.
 
      The distinction it rests on: these are examples of what a HOST puts on

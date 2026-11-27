@@ -7,6 +7,30 @@ Every entry states the change, the old → new values, and whether it needs anyt
 
 ---
 
+## 27 November 2026 — Space Cherries LLC operates Meetrao
+
+Meetrao is now operated by **Space Cherries LLC**, 5242 Elbetee Lane, Alexandria, VA 22312, USA
+(www.spacecherries.com). Earlier entries below that name Airly Studio, a sole proprietor, Cumilla
+or Bangladesh are history and describe the old operator.
+
+- **Footers** (Landing, Help, Support, Terms, Privacy): "© 2026 Meetrao · Operated by Airly Studio"
+  → "© 2026 Space Cherries LLC · Meetrao is operated by Space Cherries LLC, <address>", linked to
+  spacecherries.com. Footer column link "Operated by Airly Studio" → "Operated by Space Cherries LLC".
+- **Email footers** (all six mocks and the Emails board note): "Meetrao · Operated by Airly Studio ·
+  44/A Judge Court Road, Cumilla, Bangladesh" → "Meetrao is operated by Space Cherries LLC · 5242
+  Elbetee Lane, Alexandria, VA 22312, USA". The shipped value is `OPERATOR_LINE` in
+  `meetrao/src/lib/contact.ts`.
+- **Terms**: operator and controller are Space Cherries LLC; governing law Bangladesh → the
+  Commonwealth of Virginia, courts of Fairfax County, Virginia.
+- **Privacy**: controller Space Cherries LLC, operated from the United States only; the
+  "Bangladesh has no EU adequacy decision" note is gone (SCCs still cover EU/UK data).
+- **Support**: "a small team across Bangladesh and the US" → "a small team in the US".
+- **Contact**: every hello@airlystudio.com → hello@meetrao.com.
+
+Copy only. No layout or token changes.
+
+---
+
 ## 7 September 2026 (later) — repackaged for a greenfield build on a decided stack
 
 The owner restarted: build everything from scratch, on **Vercel + Supabase + Resend + Google

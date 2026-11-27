@@ -1,4 +1,4 @@
-import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
+import { OPERATOR_NAME, OPERATOR_URL, POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
 import { siteUrl } from "@/lib/env";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -113,21 +113,29 @@ type Json = Record<string, unknown>;
  * point of lib/contact.ts.
  */
 export function organizationLd(): Json {
-  const [street, city, country] = POSTAL_ADDRESS.split(", ");
+  /* "street, city, ST 12345, country" */
+  const [street, city, regionZip, country] = POSTAL_ADDRESS.split(", ");
+  const [region, postalCode] = (regionZip ?? "").split(" ");
   return {
     "@type": "Organization",
     "@id": absoluteUrl("/#organization"),
     name: SITE_NAME,
     url: absoluteUrl("/"),
-    description: `${TAGLINE}, operated by one person.`,
+    description: `${TAGLINE}, operated by ${OPERATOR_NAME}.`,
     logo: absoluteUrl("/brand/meetrao-email-logo.png"),
     email: SUPPORT_EMAIL,
     address: {
       "@type": "PostalAddress",
       streetAddress: street,
-      addressLocality: (city ?? "").replace(/\s+\d+$/, ""),
-      postalCode: (city ?? "").match(/\d+$/)?.[0] ?? "",
-      addressCountry: country ?? "Bangladesh",
+      addressLocality: city,
+      addressRegion: region,
+      postalCode,
+      addressCountry: country === "USA" ? "US" : country,
+    },
+    parentOrganization: {
+      "@type": "Organization",
+      name: OPERATOR_NAME,
+      url: OPERATOR_URL,
     },
     contactPoint: {
       "@type": "ContactPoint",
