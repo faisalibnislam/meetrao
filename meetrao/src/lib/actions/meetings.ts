@@ -8,7 +8,7 @@ import { api } from "@/convex/_generated/api";
 import { slugify } from "@/lib/username";
 import { normaliseSlug, slugProblem, uniqueSlug as freeSlug } from "@/convex/lib/meetingSlugs";
 import type { BookingQuestion } from "@/lib/types";
-import { isLocationKind } from "@/lib/locations";
+import { isLocationKind, usesVideoLink } from "@/lib/locations";
 import { activeContext } from "@/lib/data/context";
 
 export type MeetingResult = { error?: string; id?: string };
@@ -84,6 +84,12 @@ export async function saveMeeting(input: MeetingInput): Promise<MeetingResult> {
   if (problem) return { error: problem };
 
   const session = await requireSession();
+
+  /* A video call sends guests to the host's saved link. Without one the
+     meeting could never be booked, so it is not saved as one either. */
+  if (usesVideoLink(input.location ?? "google_meet") && !session.profile.video_link) {
+    return { error: "Add your video link in Settings, under Calendar, or pick another location." };
+  }
 
   const payload = {
     name: input.name.trim(),

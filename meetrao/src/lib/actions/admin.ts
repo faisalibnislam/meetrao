@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createProduct, type Cadence, type Tier } from "@/lib/polar";
 import { env } from "@/lib/env";
 import { requireAdmin } from "@/lib/data/session";
-import { disconnect } from "@/lib/google/connection";
 import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
@@ -76,10 +75,6 @@ export async function removeAccount(userId: string): Promise<AdminResult> {
   const admin = await requireAdmin();
   if (userId === admin.userId) return { error: "You cannot remove your own account from here." };
 
-  // Same reason as deleteOwnAccount: the cascade would drop the token without
-  // ever telling Google, leaving Meetrao listed in the permissions of an
-  // account that no longer exists here.
-  await disconnect(userId);
   try {
     const convex = await convexServer();
     await convex.mutation(api.admin.removeAccountAsAdmin, { userId });

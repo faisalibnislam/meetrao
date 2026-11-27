@@ -10,7 +10,6 @@ import type { MeetingType } from "@/lib/types";
 import { isProNow } from "@/lib/data/teams";
 import { ownMeetings } from "@/lib/data/own";
 import { contextChoices } from "@/lib/data/context";
-import { connectionStatus } from "@/lib/google/connection";
 import { meetingAddress } from "../../meeting-address";
 
 export const metadata: Metadata = { title: "Edit meeting" };
@@ -25,13 +24,12 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
   // the other inside the JSX. So are the host's other meetings (for the Link
   // field's "taken"), the workspaces (for its address) and the calendar
   // connection (for the Meet warning).
-  const [data, pro, schedules, meetings, choices, calendar] = await Promise.all([
+  const [data, pro, schedules, meetings, choices] = await Promise.all([
     convex.query(api.meetingTypes.getOwn, { id }),
     isProNow(),
     scheduleOptions(profile.id),
     ownMeetings(),
     contextChoices(),
-    connectionStatus(profile.id),
   ]);
 
   if (!data) notFound();
@@ -51,7 +49,7 @@ export default async function EditMeetingPage({ params }: { params: Promise<{ id
         linkPrefix={prefix}
         previewHref={`${previewBase}/${meeting.slug}`}
         siblings={meetings.map((m) => ({ id: m.id, name: m.name, slug: m.slug, previous_slugs: m.previous_slugs ?? [] }))}
-        google={{ connected: calendar.connected, needsReconnect: calendar.needsReconnect }}
+        videoLink={profile.video_link ? "set" : "missing"}
         initial={{
           id: meeting.id,
           name: meeting.name,

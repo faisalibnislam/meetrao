@@ -36,7 +36,7 @@ export type MeetingRow = {
  */
 function locationLabel(kind: string): string {
   if (kind === "custom") return "Custom location";
-  return LOCATION_OPTIONS.find((o) => o.value === kind)?.label ?? "Google Meet";
+  return LOCATION_OPTIONS.find((o) => o.value === kind)?.label ?? "Video call";
 }
 
 /**

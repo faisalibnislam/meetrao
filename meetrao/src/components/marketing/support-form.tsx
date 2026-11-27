@@ -11,7 +11,7 @@ import { cx } from "@/lib/cx";
 
 const TOPICS: [string, string][] = [
   ["account", "My account"],
-  ["calendar", "Calendar or Meet"],
+  ["calendar", "Calendar feed or video link"],
   ["booking", "A booking went wrong"],
   ["billing", "Billing"],
   ["other", "Something else"],
@@ -19,8 +19,8 @@ const TOPICS: [string, string][] = [
 
 const PLACEHOLDERS: Record<string, string> = {
   account: "I cannot sign in even though I confirmed my email…",
-  calendar: "My calendar is connected but a booked time was still offered…",
-  booking: "A guest booked 3pm Tuesday but it is not on my calendar…",
+  calendar: "My calendar feed is added but a busy time was still offered…",
+  booking: "A guest booked 3pm Tuesday but I never got the calendar invite…",
   billing: "A question about plans or an invoice…",
   other: "Tell us what you were trying to do and what happened instead…",
 };

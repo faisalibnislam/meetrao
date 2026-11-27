@@ -27,7 +27,7 @@ export function CopyMeetLink({ url }: { url: string }) {
           timer.current = setTimeout(() => setCopied(false), 1800);
         }}
       >
-        {copied ? "Copied" : "Copy Meet link"}
+        {copied ? "Copied" : "Copy call link"}
       </Button>
     </div>
   );

@@ -346,9 +346,9 @@ export default async function PreviewPage() {
           </Grid>
 
           <Bare>
-            <Callout tone="amber" align="center" action={<Button variant="amber" size={28}><GoogleG size={13} />Connect</Button>}>
-              <strong className="font-semibold">Google Calendar isn&rsquo;t connected.</strong> Meetrao can&rsquo;t
-              check for conflicts or add bookings to your calendar.
+            <Callout tone="amber" align="center" action={<Button variant="amber" size={28}>Add feed</Button>}>
+              <strong className="font-semibold">No calendar feed yet.</strong> Meetrao can only block its own
+              bookings until you add one.
             </Callout>
             <Caption>{`align="center", the banner form, glyph and action on one line`}</Caption>
           </Bare>

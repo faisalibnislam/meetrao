@@ -30,8 +30,8 @@ import { BUSINESS_LIMITS } from "@/lib/pricing";
 /** Short enough to read in a glance. The full list lives on /pricing. */
 const FREE = [
   "Your booking links, and unlimited bookings on them",
-  "Google Calendar checked before any time is offered",
-  "A Meet link, reminders, and guests who reschedule themselves",
+  "Your calendar feed checked before any time is offered",
+  "Calendar invites, reminders, and guests who reschedule themselves",
 ];
 
 const PRO = [

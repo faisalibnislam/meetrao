@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LOCATION_KINDS, LOCATION_OPTIONS, isLocationKind, needsMeetLink, whereText } from "./locations";
+import { LOCATION_KINDS, LOCATION_OPTIONS, isLocationKind, usesVideoLink, whereText } from "./locations";
 
 /* The list is written twice (here and in convex/lib/locations.ts) because a
    Convex function cannot import from src/. The same arrangement the timezone
@@ -26,8 +26,8 @@ describe("what gets a Meet link", () => {
   /* Asking Google for a conference on a meeting that happens in a room puts a
      video link in front of a guest who is supposed to turn up somewhere. */
   it("is Meet, and only Meet", () => {
-    expect(needsMeetLink("google_meet")).toBe(true);
-    for (const kind of ["phone", "in_person", "custom"]) expect(needsMeetLink(kind)).toBe(false);
+    expect(usesVideoLink("google_meet")).toBe(true);
+    for (const kind of ["phone", "in_person", "custom"]) expect(usesVideoLink(kind)).toBe(false);
   });
 });
 
@@ -36,8 +36,9 @@ describe("the Where line", () => {
     expect(whereText("google_meet", "", "https://meet.google.com/abc-defg-hij")).toBe("meet.google.com/abc-defg-hij");
   });
 
-  it("promises the link by email when there is not one yet", () => {
-    expect(whereText("google_meet", "", null)).toBe("Link to follow by email");
+  it("reads as a video call until the booking carries the host's link", () => {
+    expect(whereText("google_meet", "", null)).toBe("Video call");
+    expect(whereText("google_meet", "", "https://zoom.us/j/123")).toBe("zoom.us/j/123");
   });
 
   it("names the number, the room, or the arrangement", () => {

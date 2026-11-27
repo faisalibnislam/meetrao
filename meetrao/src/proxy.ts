@@ -72,8 +72,7 @@ const AUTH_CODE_ROUTE = "/auth/callback";
  * a working sign-in rather than a silent dead end.
  *
  * Deliberately narrow: only the site root, and only when nothing else claims
- * the parameter. `/api/google/callback` carries its own `code` for Calendar
- * consent and must never be touched by this.
+ * the parameter.
  */
 function strandedAuthCode(request: NextRequest): URL | null {
   const { pathname, searchParams } = request.nextUrl;
@@ -134,10 +133,9 @@ async function convexProxyOnce() {
          its own loses it before the page can read it, and signs the visitor
          out for good measure.
 
-         Three routes in this app carry a code that is not an auth code, and
-         each one redeems it itself:
+         Routes in this app that carry a code that is not an auth code redeem
+         it themselves (the Google Calendar callback was one until 2026-11-27):
 
-           /api/google/callback   Google Calendar consent, exchanged in Convex
            /verify                the emailed confirmation code
            /reset                 the emailed password-reset code
 

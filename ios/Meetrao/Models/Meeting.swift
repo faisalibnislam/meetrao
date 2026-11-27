@@ -43,7 +43,7 @@ nonisolated enum MeetingLocation: String, CaseIterable, Identifiable, Sendable {
 
     var label: String {
         switch self {
-        case .googleMeet: "Google Meet"
+        case .googleMeet: "Video call"
         case .phone: "Phone call"
         case .inPerson: "In person"
         case .custom: "Something else"

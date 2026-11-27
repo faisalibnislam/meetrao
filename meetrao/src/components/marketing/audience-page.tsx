@@ -86,8 +86,7 @@ export function AudiencePage({ data }: { data: Audience }) {
               What it will not do for you
             </h2>
             <p className="mt-[10px] mb-[22px] max-w-[640px] text-[14px] leading-[1.6] text-ink-2">
-              Here rather than at the end, so anybody this rules out finds out before connecting a
-              calendar.
+              Here rather than at the end, so anybody this rules out finds out before signing up.
             </p>
             <div className="grid grid-cols-[repeat(auto-fit,minmax(min(300px,100%),1fr))] gap-[14px]">
               {data.cannot.map(([title, body]) => (

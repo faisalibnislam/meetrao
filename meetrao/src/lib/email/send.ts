@@ -4,6 +4,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { Resend } from "resend";
 import { env, siteUrl } from "@/lib/env";
+import { SUPPORT_EMAIL } from "@/lib/contact";
+import { buildInvite, type InviteMethod } from "@/lib/calendar/invite";
 import type { Profile } from "@/lib/types";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -82,6 +84,8 @@ type SendInput = {
   to: string;
   subject: string;
   html: string;
+  /** A calendar invitation (.ics) to attach: what puts the meeting on calendars. */
+  invite?: { ics: string; method: InviteMethod };
   /** One key per booking event and recipient, so a retry sends once. */
   idempotencyKey?: string;
   /** Transactional mail must not carry List-Unsubscribe. */
@@ -90,7 +94,7 @@ type SendInput = {
 
 export type SendResult = { sent: boolean; error?: string };
 
-async function deliver({ to, subject, html, idempotencyKey, marketing }: SendInput): Promise<SendResult> {
+async function deliver({ to, subject, html, idempotencyKey, marketing, invite }: SendInput): Promise<SendResult> {
   try {
     const e = env();
     const { error } = await resend().emails.send(
@@ -99,6 +103,18 @@ async function deliver({ to, subject, html, idempotencyKey, marketing }: SendInp
         to,
         subject,
         html,
+        /* Mail clients look for text/calendar with a METHOD to treat the
+           attachment as an invitation (an "Add to calendar" card, or straight
+           onto the calendar) rather than as a file. */
+        attachments: invite
+          ? [
+              {
+                filename: invite.method === "CANCEL" ? "cancel.ics" : "invite.ics",
+                content: Buffer.from(invite.ics, "utf8"),
+                contentType: `text/calendar; charset=UTF-8; method=${invite.method}`,
+              },
+            ]
+          : undefined,
         headers: marketing
           ? { "List-Unsubscribe": `<${siteUrl()}/settings/notifications>`, "List-Unsubscribe-Post": "List-Unsubscribe=One-Click" }
           : undefined,
@@ -172,7 +188,55 @@ export type BookingMail = {
   meetUrl: string;
   /** The "Where" line as the guest should read it: a link, a number, a room. */
   where: string;
+  /** The meeting's own times, for the calendar invitation. */
+  startsAt: Date;
+  endsAt: Date;
+  /** The booking's revision: the invitation's SEQUENCE. */
+  sequence: number;
+  /** Everyone else invited alongside the guest of record. */
+  otherGuests?: { name: string; email: string }[];
 };
+
+/**
+ * The invitation attached to a booking email.
+ *
+ * The guest's copy is organised by the host, so an accept or decline from the
+ * guest's calendar goes to the host. The host's copy is organised by Meetrao,
+ * with the host already accepted: Gmail and Outlook ignore an invitation that
+ * names the recipient as its own organiser.
+ */
+export function inviteFor(mail: BookingMail, to: "host" | "guest", method: InviteMethod): string {
+  const guests = [{ name: mail.guestName, email: mail.guestEmail }, ...(mail.otherGuests ?? [])];
+  const manage = `${siteUrl()}/booking/${mail.reference}`;
+  const join = mail.meetUrl ? `Join: ${mail.meetUrl}` : mail.where ? `Where: ${mail.where}` : null;
+  const description = [
+    join,
+    to === "host" && mail.guestNote ? `Note from ${mail.guestName}: ${mail.guestNote}` : null,
+    `Booked through Meetrao. Details, rescheduling and cancelling: ${manage}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
+
+  return buildInvite({
+    method,
+    reference: mail.reference,
+    sequence: mail.sequence,
+    start: mail.startsAt,
+    end: mail.endsAt,
+    summary: to === "host" ? `${mail.meetingName}: ${mail.guestName}` : `${mail.meetingName} with ${mail.hostName}`,
+    description,
+    location: mail.meetUrl || mail.where,
+    url: manage,
+    organizer:
+      to === "guest" && mail.hostEmail
+        ? { name: mail.hostName, email: mail.hostEmail }
+        : { name: "Meetrao", email: SUPPORT_EMAIL },
+    attendees:
+      to === "host"
+        ? [{ name: mail.hostName, email: mail.hostEmail, accepted: true }, ...guests]
+        : guests,
+  });
+}
 
 function bookingUrls(reference: string) {
   const base = `${siteUrl()}/booking/${reference}`;
@@ -182,10 +246,10 @@ function bookingUrls(reference: string) {
 /**
  * The "Where" line and the button above it.
  *
- * A Meet link is a thing to click; an address is not. When there is nothing to
- * join, the button points at the booking itself (which is where the guest
- * moves or cancels it) and says so, rather than offering "Join Google Meet"
- * for a meeting that happens in a room.
+ * A video link is a thing to click; an address is not. When there is nothing
+ * to join, the button points at the booking itself (which is where the guest
+ * moves or cancels it) and says so, rather than offering "Join the call" for a
+ * meeting that happens in a room.
  */
 function meetFields(mail: Pick<BookingMail, "meetUrl" | "reference" | "where">) {
   const display = mail.meetUrl.replace(/^https?:\/\//, "");
@@ -193,7 +257,7 @@ function meetFields(mail: Pick<BookingMail, "meetUrl" | "reference" | "where">) 
   return {
     meet_url: joinable ? mail.meetUrl : `${siteUrl()}/booking/${mail.reference}`,
     meet_url_display: mail.where || display || "Link to follow",
-    where_cta: joinable ? "Join Google Meet" : "View your booking",
+    where_cta: joinable ? "Join the call" : "View your booking",
   };
 }
 
@@ -210,6 +274,7 @@ export async function sendBookingNewToHost(
     to: mail.hostEmail,
     subject: `New booking: ${mail.guestName}: ${mail.meetingName}`,
     idempotencyKey: `booking-new-host:${mail.bookingId}`,
+    invite: { method: "REQUEST", ics: inviteFor(mail, "host", "REQUEST") },
     html: render("booking-new-host", {
       ...chrome(),
       ...bookingUrls(mail.reference),
@@ -244,6 +309,7 @@ export async function sendBookingNewToGuest(mail: BookingMail): Promise<SendResu
     to: mail.guestEmail,
     subject: `You're booked with ${mail.hostName}: ${mail.startShort}`,
     idempotencyKey: `booking-new-guest:${mail.bookingId}:${mail.guestEmail.toLowerCase()}`,
+    invite: { method: "REQUEST", ics: inviteFor(mail, "guest", "REQUEST") },
     html: render("booking-new-guest", {
       ...chrome(),
       ...bookingUrls(mail.reference),
@@ -275,6 +341,7 @@ export async function sendCancellationToHost(
     to: mail.hostEmail,
     subject: `Cancelled: ${mail.meetingName} on ${mail.startShort}`,
     idempotencyKey: `booking-cancelled-host:${mail.bookingId}`,
+    invite: { method: "CANCEL", ics: inviteFor(mail, "host", "CANCEL") },
     html: render("booking-cancelled", {
       ...chrome(),
       bookings_url: `${siteUrl()}/bookings`,
@@ -295,6 +362,7 @@ export async function sendCancellationToGuest(mail: CancellationMail): Promise<S
     subject: `Cancelled: ${mail.meetingName} on ${mail.startShort}`,
     // Names the recipient, for the reason given above sendBookingNewToGuest.
     idempotencyKey: `booking-cancelled-guest:${mail.bookingId}:${mail.guestEmail.toLowerCase()}`,
+    invite: { method: "CANCEL", ics: inviteFor(mail, "guest", "CANCEL") },
     html: render("booking-cancelled", {
       ...chrome(),
       bookings_url: `${siteUrl()}/${mail.hostName}`,
@@ -333,6 +401,8 @@ export async function sendRescheduled(
       to === "host"
         ? `booking-changed-host:${mail.bookingId}:${mail.startLong}`
         : `booking-changed-guest:${mail.bookingId}:${mail.startLong}:${mail.guestEmail.toLowerCase()}`,
+    // Same UID, higher SEQUENCE: the calendar moves the meeting it already has.
+    invite: { method: "REQUEST", ics: inviteFor(mail, to, "REQUEST") },
     html: render("booking-changed", {
       ...chrome(),
       ...bookingUrls(mail.reference),

@@ -1,4 +1,5 @@
-import { query, mutation, internalMutation } from "./_generated/server";
+import { query, mutation } from "./_generated/server";
+import { NO_VIDEO_LINK, usesVideoLink } from "./lib/locations";
 import { fail } from "./lib/errors";
 import { v } from "convex/values";
 import { countOtherWorkspaces } from "./lib/workspaces";
@@ -153,6 +154,21 @@ export async function insertBooking(
     ? await ctx.db.query("meeting_types").withIndex("by_uuid", (q) => q.eq("id", args.meetingTypeId as string)).unique()
     : null;
 
+  /* Where it happens: what the caller said, else the meeting's own setting,
+     else a video call, which is what a meeting with neither always was. A
+     video call uses the host's saved link, copied onto the booking now, so a
+     link changed later does not move meetings already confirmed. With no link
+     there is nothing to send anyone to, so the booking is refused, clearly,
+     rather than confirmed with "link to follow" and no link ever following. */
+  const location = args.location ?? meetingType?.location ?? "google_meet";
+  const locationDetail = args.locationDetail ?? meetingType?.location_detail ?? "";
+  let meetUrl: string | null = null;
+  if (usesVideoLink(location)) {
+    const host = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", args.hostId)).unique();
+    meetUrl = host?.video_link?.trim() || null;
+    if (!meetUrl) fail(NO_VIDEO_LINK, "NO_VIDEO_LINK");
+  }
+
   const now = Date.now();
   const row = {
     id: uuid(),
@@ -172,15 +188,15 @@ export async function insertBooking(
     cancelled_at: null,
     cancelled_by: null,
     google_event_id: null,
-    meet_url: null,
+    meet_url: meetUrl,
     guest_rsvp: null,
     guest_rsvp_synced_at: null,
     guest_rsvp_notified_at: null,
     host_created: args.hostCreated,
     page_view_id: args.pageViewId ?? null,
     answers: args.answers ?? [],
-    location: args.location ?? "google_meet",
-    location_detail: args.locationDetail ?? "",
+    location,
+    location_detail: usesVideoLink(location) ? "" : locationDetail,
     created_at: now,
     updated_at: now,
   };
@@ -480,40 +496,6 @@ export const cancelAsHost = mutation({
       summary: `${after.guest_name}'s ${after.meeting_name} was cancelled`,
     });
     return bookingOut(after);
-  },
-});
-
-/**
- * Google event linkage for the guest path.
- *
- * Keyed by the booking's reference, which is 32 hex characters of CSPRNG and is
- * the guest's only credential, the same thing that authorises reading and
- * cancelling that booking. It sets two fields and nothing else, and refuses if
- * either is already set, so a leaked reference cannot be used to repoint a
- * booking at another calendar event.
- */
-export const attachGoogleEventByReference = mutation({
-  args: { reference: v.string(), googleEventId: v.union(v.string(), v.null()), meetUrl: v.union(v.string(), v.null()) },
-  handler: async (ctx, a) => {
-    const b = await ctx.db.query("bookings").withIndex("by_reference", (q) => q.eq("reference", a.reference.trim())).unique();
-    if (!b) return null;
-    if (b.google_event_id !== null) fail("This booking already has a calendar event.", "ALREADY_SET");
-    await ctx.db.patch(b._id, { google_event_id: a.googleEventId, meet_url: a.meetUrl, updated_at: Date.now() });
-    return bookingOut((await ctx.db.get(b._id))!);
-  },
-});
-
-/** Google event linkage, written by server code only, never by a browser. */
-export const attachGoogleEvent = internalMutation({
-  args: { id: v.string(), googleEventId: v.union(v.string(), v.null()), meetUrl: v.union(v.string(), v.null()) },
-  handler: async (ctx, a) => {
-    const b = await ctx.db
-      .query("bookings")
-      .withIndex("by_uuid", (q) => q.eq("id", a.id))
-      .unique();
-    if (!b) return null;
-    await ctx.db.patch(b._id, { google_event_id: a.googleEventId, meet_url: a.meetUrl, updated_at: Date.now() });
-    return bookingOut((await ctx.db.get(b._id))!);
   },
 });
 

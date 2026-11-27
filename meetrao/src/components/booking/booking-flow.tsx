@@ -344,8 +344,8 @@ export function BookingFlow(props: FlowProps) {
     }
   }
 
-  /* Before a booking exists there is no Meet link to name, so this reads as
-     the KIND ("Google Meet") and the confirmation carries the actual link. */
+  /* Before a booking exists the link is not shown, so this reads as the KIND
+     ("Video call") and the confirmation carries the actual link. */
   const locationLine =
     props.location === "phone"
       ? props.locationDetail
@@ -355,7 +355,7 @@ export function BookingFlow(props: FlowProps) {
         ? props.locationDetail || "In person"
         : props.location === "custom"
           ? props.locationDetail || "Details to follow"
-          : "Google Meet";
+          : "Video call";
   const locationIcon: IconName =
     props.location === "in_person" ? "globe" : props.location === "phone" ? "user" : "video";
 
@@ -377,7 +377,7 @@ export function BookingFlow(props: FlowProps) {
               Move this meeting?
             </h1>
             <p className="m-0 text-[13.5px] leading-[1.55] text-ink-2">
-              {firstName(props.hostName)} is told, both calendars are updated, and your Google Meet link stays
+              {firstName(props.hostName)} is told, your calendar invite is updated, and the call link stays
               the same.
             </p>
           </div>
@@ -533,7 +533,7 @@ export function BookingFlow(props: FlowProps) {
             <Field
               label="Email address"
               htmlFor="guest-email"
-              help="The confirmation and Meet link go here."
+              help="The confirmation and calendar invite go here."
               error={touched && !guestEmail.includes("@") ? "Enter an email we can send the confirmation to." : undefined}
             >
               <Input

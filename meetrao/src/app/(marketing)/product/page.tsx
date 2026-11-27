@@ -68,7 +68,7 @@ const BEFORE: [string, boolean][] = [
 const AFTER: [string, string, string, IconName][] = [
   ["01", "Share your link", "One URL, in an email signature or a DM.", "link"],
   ["02", "They pick a time", "Only times you are genuinely free, in their timezone.", "calendar"],
-  ["03", "Booked", "On both calendars, with a Meet link attached.", "check"],
+  ["03", "Booked", "A calendar invite for both of you, with your video link in it.", "check"],
 ];
 
 /** Read once per render. On this static page that is the build, and the

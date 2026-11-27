@@ -23,19 +23,19 @@ import {
    in. */
 
 /* The answers are deliberately plain about what Meetrao does not do, one
-   calendar provider, one meeting location, one weekly schedule, no promise of
+   calendar feed, one meeting location, one weekly schedule, no promise of
    "free forever" that could not be kept. */
 
 export const FAQS: [string, string, string][] = [
   [
     "what",
     "What is Meetrao?",
-    "A meeting and appointment scheduler. Connect your Google Calendar, set the hours you are free, and share one link. People pick from what is actually open, and the meeting is booked with a Google Meet link on both calendars.",
+    "A meeting and appointment scheduler. Add your calendar's feed, set the hours you are free, and share one link. People pick from what is actually open, and you both get a calendar invite by email.",
   ],
   [
     "free",
     "What is free, and what costs money?",
-    `Taking bookings is free: your links, your meeting types, calendar conflict checks, Meet links, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is ${PRO_YEARLY} (or ${PRO_MONTHLY}) and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API. Business is ${BUSINESS_YEARLY} (or ${BUSINESS_MONTHLY}) and runs all of that across up to ${BUSINESS_LIMITS.companies} companies, with up to ${BUSINESS_LIMITS.membersPerCompany} people on each.`,
+    `Taking bookings is free: your links, your meeting types, calendar conflict checks, calendar invites, reminders, rescheduling and time off, with no card and no limit on bookings. Pro is ${PRO_YEARLY} (or ${PRO_MONTHLY}) and adds your own domain, removal of the Meetrao badge, a team link, sessions several guests share, and the API. Business is ${BUSINESS_YEARLY} (or ${BUSINESS_MONTHLY}) and runs all of that across up to ${BUSINESS_LIMITS.companies} companies, with up to ${BUSINESS_LIMITS.membersPerCompany} people on each.`,
   ],
   [
     "forever",
@@ -50,17 +50,17 @@ export const FAQS: [string, string, string][] = [
   [
     "google",
     "Does it work with Google Calendar?",
-    "Yes: it is the integration Meetrao is built on, and currently the only calendar it connects to.",
+    "Yes, and with Outlook, iCloud and any calendar that publishes an .ics feed. You paste your calendar's private feed address in Settings and Meetrao checks it for busy times. Google can take a few hours to update its feed, so an event you have just added may not block a slot straight away. Meetrao never asks for access to your Google account's calendar.",
   ],
   [
     "meet",
-    "Does it create Google Meet links?",
-    "Yes. Every confirmed booking gets its own Meet link, attached to the calendar event on both sides.",
+    "Does it create video links?",
+    "No. You save your own video link once, a Zoom, Google Meet, Teams or Whereby room, and every video booking carries it in the confirmation and the calendar invite.",
   ],
   [
     "double",
     "How does it prevent double booking?",
-    "Before offering any slot, Meetrao checks your calendar for conflicts and hides anything you are already busy for. It checks again at the moment of booking, so if two people pick the same slot only the first gets it.",
+    "Before offering any slot, Meetrao checks your bookings and the busy times from your calendar feed, and hides anything you are already busy for. It checks again at the moment of booking, so if two people pick the same slot only the first gets it.",
   ],
   [
     "tz",
@@ -80,12 +80,12 @@ export const FAQS: [string, string, string][] = [
   [
     "cancel",
     "Can people cancel or reschedule?",
-    "Both. Cancelling notifies the other side, removes the calendar event and reopens the slot. Moving a meeting keeps the same booking and the same Google Meet link. The guest picks a new time from the link in their confirmation, and both calendars follow.",
+    "Both. Cancelling notifies the other side, removes the meeting from both calendars through the emailed invite, and reopens the slot. Moving a meeting keeps the same booking and the same video link. The guest picks a new time from the link in their confirmation, and the updated invite moves it on both calendars.",
   ],
   [
     "private",
     "Is my calendar private?",
-    "Meetrao reads only whether a period is busy or free, never event titles, descriptions, locations or attachments. The one exception is the events it creates itself: for those, and only those, it reads whether your guest accepted or declined, so you are told before you sit in an empty Meet. Disconnect any time from Settings.",
+    "From your calendar feed Meetrao keeps only busy start and end times, never event titles, descriptions, attendees or locations. The feed address is stored privately and shown masked. It never asks for access to your calendar account and never writes to it. Remove the feed any time from Settings, and the address and the busy times kept from it are deleted.",
   ],
   [
     "who",
@@ -95,6 +95,6 @@ export const FAQS: [string, string, string][] = [
   [
     "compare",
     "How does it compare with paid tools?",
-    `Taking bookings is free: the links, the calendar checks, reminders, rescheduling and time off, with no card. Pro is ${PRO_YEARLY} for a custom domain, your own branding, team links, shared sessions and the API, and Business is ${BUSINESS_YEARLY} for several companies with other people on them. It is still deliberately narrow: one calendar provider, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.`,
+    `Taking bookings is free: the links, the calendar checks, reminders, rescheduling and time off, with no card. Pro is ${PRO_YEARLY} for a custom domain, your own branding, team links, shared sessions and the API, and Business is ${BUSINESS_YEARLY} for several companies with other people on them. It is still deliberately narrow: one calendar feed, no payments at booking, no routing forms. There are full comparisons with Calendly and with Cal.com, including where each of them is the better choice.`,
   ],
 ];

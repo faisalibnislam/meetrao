@@ -11,7 +11,7 @@ struct MeetraoAPI {
     let client: ConvexClientWithAuth<AuthTokens>
     let auth: ConvexAuthProvider
 
-    // MARK: Bookings (through meetrao.com, which sends the emails and updates Google Calendar)
+    // MARK: Bookings (through meetrao.com, which sends the emails and their calendar invites)
 
     nonisolated struct ChangeResult: Decodable, Sendable {
         let calendarWarning: String?
@@ -232,11 +232,10 @@ struct MeetraoAPI {
 
     // MARK: Account
 
-    /// The web's order (src/lib/actions/settings.ts): revoke Google first,
-    /// because deleting the account takes the stored refresh token with it,
-    /// and a grant with nothing left to revoke it outlives the account.
+    /// Meetrao no longer holds Google Calendar tokens, so there is nothing to
+    /// revoke first; deleting the profile removes the calendar feed with it.
     func deleteAccount(userID: String) async throws {
-        try? await act("google:disconnectFor", ["userId": userID])
+        _ = userID
         try await run("profiles:deleteOwnAccount")
     }
 

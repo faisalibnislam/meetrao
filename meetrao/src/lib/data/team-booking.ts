@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { bookableDatesInMonth, computeSlots, type AvailabilityRule, type DateOverride, type Interval, type PlainDate, type SlotRules } from "@/lib/booking/slots";
-import { busyPeriods } from "@/lib/google/calendar";
+import { busyPeriods } from "@/lib/calendar/feed";
 import { convexAnonymous, serverSecret } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { BookingQuestion } from "@/lib/types";
@@ -86,14 +86,14 @@ export async function getTeamHours(teamSlug: string, meetingId: string): Promise
 }
 
 async function busyFor(userId: string, from: Date, to: Date): Promise<Interval[]> {
-  // Our bookings and Google's free/busy at the same time: neither needs the
-  // other. Google unreachable for one member is not a reason to hide the team.
-  const [rows, google] = await Promise.all([
+  // Our bookings and the member's calendar feed at the same time: neither needs
+  // the other. One member's feed being unreadable is not a reason to hide the team.
+  const [rows, feed] = await Promise.all([
     convexAnonymous().query(api.publicBooking.busyForHost, { hostId: userId, from: from.getTime(), to: to.getTime(), secret: serverSecret() }),
     busyPeriods(userId, from, to).catch(() => [] as Interval[]),
   ]);
   const own: Interval[] = rows.map((r) => ({ start: new Date(r.starts_at), end: new Date(r.ends_at) }));
-  return [...own, ...google];
+  return [...own, ...feed];
 }
 
 /**

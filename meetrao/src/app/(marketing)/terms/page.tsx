@@ -23,7 +23,7 @@ const UPDATED = "27 November 2026";
 const TOC: TocEntry[] = [
   { id: "t-who", label: "1. Who we are" },
   { id: "t-account", label: "2. Your account" },
-  { id: "t-google", label: "3. Connecting Google Calendar" },
+  { id: "t-google", label: "3. Your calendar feed and video link" },
   { id: "t-use", label: "4. Acceptable use" },
   { id: "t-price", label: "5. What it costs" },
   { id: "t-ip", label: "6. Who owns what" },
@@ -43,14 +43,17 @@ export default function TermsPage() {
         <DocHeader
           eyebrow="Terms of Service"
           title="The agreement between you and Meetrao"
-          intro="Meetrao is a scheduling tool. You share one link, guests pick a time you are genuinely free, and each booking gets a Google Meet link. These terms say what you can expect from us and what we expect from you. They are written plainly on purpose."
+          intro="Meetrao is a scheduling tool. You share one link, guests pick a time you are free, and each booking reaches both of you as a calendar invite. These terms say what you can expect from us and what we expect from you. They are written plainly on purpose."
           meta={[`Last updated ${UPDATED}`, `Operated by ${OPERATOR_NAME}, Alexandria, Virginia, USA`]}
         />
 
         <p>
           <strong>What changed on {UPDATED}:</strong> Meetrao is now operated by {OPERATOR_NAME}, a company in
           Virginia, USA. These terms now name it as the operator, and Virginia law now governs them (section 11).
-          Nothing else about how the service works has changed.
+        </p>
+        <p>
+          <strong>Also on {UPDATED}:</strong> Google Calendar connection removed; calendar feeds, your own video
+          link and emailed invites described (section 3).
         </p>
 
         <p>
@@ -94,30 +97,24 @@ export default function TermsPage() {
           allowed to accept these terms on their behalf.
         </p>
 
-        <h2 id="t-google">3. Connecting Google Calendar</h2>
+        <h2 id="t-google">3. Your calendar feed and video link</h2>
         <p>
-          Connecting Google Calendar is optional. Without it Meetrao still works. It simply cannot see your
-          conflicts, so it will offer every time your availability allows.
+          Adding a calendar feed is optional. Without it Meetrao still works, but it can only avoid times already
+          booked through Meetrao, so it will offer every other time your availability allows.
         </p>
         <p>
-          When you connect it, you give us permission to see when you are busy and to create events on your
-          behalf. We use that permission for two things only: avoiding times you already have something in, and
-          creating the event for each confirmed booking, with its own Google Meet link, and your guest invited
-          so it appears on their calendar too.
+          If you add one, you give us the private address of a calendar feed that you are entitled to share, and
+          permission to fetch it to find the times you are busy. We keep only those busy times, not what your
+          events are about, and we never write to your calendar. The{" "}
+          <Link href="/privacy#p-calendar-feed">Privacy Policy</Link> sets out exactly what we keep and for how
+          long. Feeds are published by your calendar provider and can be slow to update, so a new event may not
+          block a time straight away. You can remove the feed at any time from Settings.
         </p>
         <p>
-          We do not read the contents of your existing events. Titles, guests, notes and attachments are none of
-          our business; we ask Google only which periods are busy. The permission Google asks you for is broader
-          than that, because adding your guest as an attendee requires a permission that also allows reading.
-          The <Link href="/privacy#p-google">Privacy Policy</Link> sets out exactly what we request and what we
-          do with it.
-        </p>
-        <p>
-          You can disconnect at any time from Settings. Doing so revokes the grant with Google as well as deleting
-          our copy of it, and it stops us checking for conflicts, which means guests may be offered times you are
-          not actually free. Google
-          Calendar and Google Meet are Google&rsquo;s services, governed by Google&rsquo;s own terms. We cannot
-          control their availability or behaviour.
+          Video meetings use the meeting link you save. You are responsible for that link and for the service
+          behind it, which is governed by its provider&rsquo;s own terms. Meetrao sends each booking to you and
+          your guest as a standard calendar invite by email; whether and how it appears in a calendar depends
+          on the calendar app each of you uses.
         </p>
 
         <h2 id="t-use">4. Acceptable use</h2>
@@ -203,8 +200,8 @@ export default function TermsPage() {
         <p>
           Meetrao is provided as it is, without warranties of any kind, express or implied, to the fullest extent
           the law allows. We work to keep it accurate and available, but we cannot promise it will never be down,
-          never show a wrong time, or never miss a conflict, particularly when the cause is Google&rsquo;s side,
-          your calendar settings, or a disconnected integration.
+          never show a wrong time, or never miss a conflict, particularly when the cause is a calendar feed that is late or unreachable,
+          your calendar settings, or an email that does not arrive.
         </p>
         <p>
           A scheduling tool sits in the middle of arrangements that matter to you. Check anything important.

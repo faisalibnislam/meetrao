@@ -44,7 +44,7 @@ const PANELS: Panel[] = [
     key: "conflicts",
     icon: "calendar",
     title: "Never double-book",
-    text: "Your calendar is checked before a time is offered, so what a guest sees is what is genuinely free.",
+    text: "Add your calendar feed and its busy times are checked before a time is offered, so what a guest sees is free.",
     render: (active) => <ConflictsPanel active={active} />,
   },
   {

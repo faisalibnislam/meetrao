@@ -106,12 +106,12 @@ const FOOTER_TRUST: { glyph: IconName; title: string; text: string }[] = [
   {
     glyph: "eye-slash",
     title: "Your calendar stays private",
-    text: "Meetrao reads busy or free: never what your meetings are about.",
+    text: "Meetrao keeps busy times from your feed: never what your meetings are about.",
   },
   {
     glyph: "xmark",
-    title: "Disconnect whenever",
-    text: "One click in Settings, and the calendar token is deleted.",
+    title: "Remove it whenever",
+    text: "One click in Settings, and the feed address and its busy times are deleted.",
   },
 ];
 
@@ -135,7 +135,7 @@ export function SiteFooter() {
       links: [
         ["Create a free link", "/signup"],
         ["Log in", "/login"],
-        ["Connect Google Calendar", "/help#calendar"],
+        ["Add your calendar feed", "/help#calendar"],
         ["Set your availability", "/help#availability"],
       ],
     },

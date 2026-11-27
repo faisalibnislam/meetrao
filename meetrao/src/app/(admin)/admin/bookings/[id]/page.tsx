@@ -38,7 +38,7 @@ export default async function AdminBookingPage({ params }: { params: Promise<{ i
       ],
     },
     {
-      label: "Google Meet",
+      label: "Video link",
       rows: [
         {
           key: "Link",

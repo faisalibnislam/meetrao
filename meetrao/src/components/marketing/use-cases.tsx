@@ -43,9 +43,9 @@ const CASES: readonly (readonly [id: string, name: string])[] = [
 
 /** What the carousel's right-aligned kicker used to say, split three ways. */
 const NOTES: readonly (readonly [string, string])[] = [
-  ["One link", "Clients pick a time you are genuinely free, and it lands on both calendars."],
+  ["One link", "Clients pick a time you are free, and a calendar invite reaches you both."],
   ["Your real hours", "Buffers and a minimum notice period keep your day intact."],
-  ["Meet attached", "Every booking arrives with a Google Meet link already on it."],
+  ["Video link attached", "Save your Zoom, Meet or Teams link once, and every video booking carries it."],
 ];
 
 export function UseCases() {

@@ -60,7 +60,7 @@ export const TITLE_TEMPLATE = "%s · Meetrao";
  * paid plans possible later, existing accounts told first.
  */
 export const DESCRIPTION =
-  "Share one link, guests pick a time you're free, every booking gets a Google Meet link. " +
+  "Share one link, guests pick a time you're free, and both of you get a calendar invite. " +
   "Free to use; paid plans from $30 a year add your domain and a team.";
 
 /**
@@ -94,8 +94,8 @@ export const KEYWORDS = [
   "booking link",
   "free Calendly alternative",
   "Cal.com alternative",
-  "Google Calendar scheduling",
-  "Google Meet booking",
+  "Google Calendar booking link",
+  "Outlook and iCloud scheduling",
 ];
 
 /** Absolute URL for a path. Canonical tags and JSON-LD both need one. */
@@ -182,8 +182,8 @@ export function softwareApplicationLd(): Json {
     },
     featureList: [
       "One public booking link per person",
-      "Google Calendar conflict checking, so no double bookings",
-      "A Google Meet link on every confirmed booking",
+      "Conflict checks against your calendar feed (Google, Outlook, iCloud), so no double bookings",
+      "A calendar invite by email for every booking, and your own video link on video calls",
       "Guests book without creating an account",
       "Automatic timezone conversion for guests",
       "Weekly working hours with multiple ranges per day",

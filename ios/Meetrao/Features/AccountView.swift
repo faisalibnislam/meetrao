@@ -72,7 +72,7 @@ struct AccountView: View {
                             .confirmationDialog("Delete your account?", isPresented: $confirmingDelete, titleVisibility: .visible) {
                                 Button("Delete account and everything in it", role: .destructive, action: deleteAccount)
                             } message: {
-                                Text("Your booking links stop working, and your meetings, bookings, contacts and settings are deleted. Google Calendar is disconnected. This can't be undone.")
+                                Text("Your booking links stop working, and your meetings, bookings, contacts and settings are deleted. Your calendar feed is removed. This can't be undone.")
                             }
                         if let error {
                             Label(error, systemImage: "exclamationmark.circle").foregroundStyle(.red)

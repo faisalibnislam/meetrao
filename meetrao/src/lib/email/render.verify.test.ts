@@ -8,7 +8,13 @@ import { POSTAL_ADDRESS } from "@/lib/contact";
    The two emails Convex Auth sends are NOT here; they live in
    convex/lib/emails.ts and are covered by convex-templates.test.ts. */
 
-const sent: { to: string; subject: string; html: string; headers?: unknown }[] = [];
+const sent: {
+  to: string;
+  subject: string;
+  html: string;
+  headers?: unknown;
+  attachments?: { filename: string; content: string | { data: number[] }; content_type?: string; contentType?: string }[];
+}[] = [];
 
 beforeAll(() => {
   // Dummies, deliberately. The point is to render the templates, not to reach
@@ -61,10 +67,13 @@ const mail = {
   durationLabel: "30 minutes",
   where: "meet.google.com/abc-defg-hij",
   meetUrl: "https://meet.google.com/abc-defg-hij",
+  startsAt: new Date("2026-09-16T14:00:00Z"),
+  endsAt: new Date("2026-09-16T14:30:00Z"),
+  sequence: 0,
 };
 
 const cancellation = { ...mail, cancelledByName: "Amina Chowdhury", cancelledAtLong: "8 September 2026 at 14:20", reason: "" };
-const moved = { ...mail, oldStartLong: "Tuesday, 15 September 2026 at 09:00", changedByName: "Faisal Islam" };
+const moved = { ...mail, sequence: 1, oldStartLong: "Tuesday, 15 September 2026 at 09:00", changedByName: "Faisal Islam" };
 
 describe("every transactional email renders", () => {
   it("renders every one with no unfilled fields", async () => {
@@ -113,6 +122,25 @@ describe("every transactional email renders", () => {
     expect(withNote!.html).toContain("&lt;script&gt;");
     expect(withNote!.html).toContain("&amp;");
     expect(withNote!.html).not.toContain("<script>");
+  });
+
+  it("attaches a calendar invitation to every booking email", () => {
+    const decode = (c: string | { data: number[] }) =>
+      typeof c === "string" ? Buffer.from(c, "base64").toString("utf8") : Buffer.from(c.data).toString("utf8");
+    const bookingMail = sent.filter((e) => !e.subject.includes("Welcome"));
+    expect(bookingMail).toHaveLength(6);
+    for (const e of bookingMail) {
+      const [a] = e.attachments ?? [];
+      expect(a, `no invite on "${e.subject}"`).toBeDefined();
+      const ics = decode(a.content);
+      const cancelled = e.subject.startsWith("Cancelled");
+      expect(ics).toContain(`METHOD:${cancelled ? "CANCEL" : "REQUEST"}`);
+      expect(ics).toContain("UID:MR-7K2P-4QX9@meetrao.com");
+      expect(ics).toContain("DTSTART:20260916T140000Z");
+      expect(ics).toContain(`SEQUENCE:${cancelled ? 1 : e.subject.startsWith("Moved") ? 1 : 0}`);
+      expect(String(a.content_type ?? a.contentType)).toContain("text/calendar");
+    }
+    expect(sent.find((e) => e.subject.includes("Welcome"))?.attachments ?? []).toHaveLength(0);
   });
 
   it("puts List-Unsubscribe on the welcome mail only", () => {

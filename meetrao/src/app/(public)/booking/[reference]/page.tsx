@@ -67,7 +67,7 @@ export default async function ConfirmedPage({
             </h1>
           </div>
           <p className="m-0 text-[13.5px] leading-[1.55] text-ink-2">
-            A confirmation is on its way to {booking.guestEmail}. The invite includes the Google Meet link.
+            A confirmation is on its way to {booking.guestEmail}. It carries a calendar invite with the meeting details.
           </p>
         </div>
 
@@ -102,7 +102,7 @@ export default async function ConfirmedPage({
               className="unlink box-border inline-flex h-[42px] w-full cursor-pointer items-center justify-center gap-[9px] rounded-[6px] border border-accent bg-accent font-sans text-[14px] font-semibold text-on-accent no-underline hover:bg-accent-2"
             >
               <Icon name="video" size={13} />
-              Join Google Meet
+              Join the call
             </a>
           ) : null}
 
@@ -111,22 +111,22 @@ export default async function ConfirmedPage({
             <span className="text-[12.5px] leading-[1.6] text-ink-2">
               {moved ? (
                 <>
-                  Moved. Both calendars now read the new time, and we emailed{" "}
+                  Moved. We emailed an updated calendar invite to{" "}
                   <strong className="font-semibold text-ink">{booking.guestEmail}</strong>.
-                  {booking.meetUrl ? " The same Meet link still works." : ""}
+                  {booking.meetUrl ? " The same call link still works." : ""}
                 </>
               ) : (
                 <>
-                  This is already on your calendar. We sent an invitation to{" "}
+                  We emailed a calendar invite to{" "}
                   <strong className="font-semibold text-ink">{booking.guestEmail}</strong>
-                  {booking.meetUrl ? " with the Meet link attached." : " with the details."}
+                  {booking.meetUrl ? " with the call link in it." : " with the details."}
                 </>
               )}
             </span>
           </div>
 
           <div className="flex flex-wrap gap-[8px]">
-            {/* A plain link, so it works for a guest whose calendar is not Google. */}
+            {/* A plain download, for a calendar that did not pick up the emailed invite. */}
             <ButtonLink variant="secondary" size={34} href={`/booking/${reference}/ics`} icon="download" prefetch={false}>
               Download .ics instead
             </ButtonLink>

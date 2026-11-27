@@ -59,14 +59,13 @@ describe("an app screen reads in one round after the session", () => {
   });
 
   it("the meeting form reads its plan and schedules beside the meeting", () => {
-    /* And now the host's other meetings, the workspaces and the calendar
-       connection too, for the Link field and the Meet warning: still one
-       round, not four in a row. */
+    /* And now the host's other meetings and the workspaces too, for the Link
+       field: still one round, not four in a row. */
     expect(read("src/app/(app)/meetings/[id]/edit/page.tsx")).toContain(
-      "const [data, pro, schedules, meetings, choices, calendar] = await Promise.all([",
+      "const [data, pro, schedules, meetings, choices] = await Promise.all([",
     );
     expect(read("src/app/(app)/meetings/new/page.tsx")).toContain(
-      "const [pro, schedules, meetings, context, choices, calendar] = await Promise.all([",
+      "const [pro, schedules, meetings, context, choices] = await Promise.all([",
     );
   });
 
@@ -160,17 +159,18 @@ describe("the guest booking path runs in phases, not chains", () => {
     expect(BOOKINGS).not.toContain("getPublicMeetings(");
   });
 
-  it("the calendar event and the host's mail details are fetched together", () => {
-    expect((BOOKINGS.match(/const \[event, hostProfile\] = await Promise\.all\(\[/g) ?? []).length).toBe(2);
+  it("makes no calendar call after the booking: the invite travels with the mail", () => {
+    expect(BOOKINGS).not.toContain("createEventForBooking");
+    expect((BOOKINGS.match(/const meetUrl = row\.meet_url \?\? null;/g) ?? []).length).toBe(2);
   });
 
-  /* The Google check never used our own bookings; it only waited for them. */
-  it("busy asks our bookings and Google at the same time", () => {
+  /* The feed check never uses our own bookings; it must not wait for them. */
+  it("busy asks our bookings and the calendar feed at the same time", () => {
     const fn = PUBLIC.slice(PUBLIC.indexOf("export async function getBusy"));
     const body = fn.slice(0, fn.indexOf("\n}\n"));
-    expect(body).toContain("const [rows, google] = await Promise.all([");
+    expect(body).toContain("const [rows, feed] = await Promise.all([");
     /* Exactly one await. An `await` on the bookings query inside the array
-       would still compile and still look parallel, while making Google wait
+       would still compile and still look parallel, while making the feed wait
        for it: the precise regression this exists to prevent. */
     expect(awaits(body), "one await: both start before either is waited on").toBe(1);
   });
@@ -231,11 +231,12 @@ describe("the guest pages do not fetch a meeting's hours twice", () => {
   });
 });
 
-describe("the Google busy check is one function, not three", () => {
-  it("reads host and connection together and calls no nested action", () => {
-    const google = read("convex/google.ts");
-    const fn = google.slice(google.indexOf("export const busyForHost"), google.indexOf("export const busyContext"));
-    expect(fn).toContain("internal.google.busyContext");
+describe("the calendar feed busy check is one function", () => {
+  it("reads host and feed together, serves a fresh cache, and calls no nested action", () => {
+    const feed = read("convex/calendarFeed.ts");
+    const fn = feed.slice(feed.indexOf("export const busyForHost"), feed.indexOf("export const statusOwn"));
+    expect(fn).toContain("internal.calendarFeed.feedContext");
+    expect(fn).toContain("FRESH_FOR_MS");
     expect(fn, "a nested action is a second function invocation").not.toContain("ctx.runAction(");
   });
 });
@@ -244,7 +245,7 @@ describe("the Google busy check is one function, not three", () => {
 
 describe("server-only Convex functions", () => {
   const PUBLIC_BOOKING = read("convex/publicBooking.ts");
-  const GOOGLE = read("convex/google.ts");
+  const FEED = read("convex/calendarFeed.ts");
   const fnBody = (src: string, name: string) => {
     const start = src.indexOf(`export const ${name}`);
     return src.slice(start, src.indexOf("\nexport ", start + 10));
@@ -253,14 +254,14 @@ describe("server-only Convex functions", () => {
   it("require the server secret", () => {
     expect(fnBody(PUBLIC_BOOKING, "busyForHost")).toContain("assertServerCall(a.secret)");
     expect(fnBody(PUBLIC_BOOKING, "recordPageView")).toContain("assertServerCall(a.secret)");
-    expect(fnBody(GOOGLE, "busyForHost")).toContain("assertServerCall(a.secret)");
+    expect(fnBody(FEED, "busyForHost")).toContain("assertServerCall(a.secret)");
   });
 
   it("are called with it", () => {
     for (const file of [
       "src/lib/data/public-booking.ts",
       "src/lib/data/team-booking.ts",
-      "src/lib/google/calendar.ts",
+      "src/lib/calendar/feed.ts",
       "src/lib/data/booking-start.ts",
     ]) {
       expect(read(file), file).toContain("secret: serverSecret()");

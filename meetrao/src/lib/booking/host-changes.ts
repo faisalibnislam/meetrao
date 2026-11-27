@@ -4,7 +4,6 @@ import type { ConvexHttpClient } from "convex/browser";
 import { zonedInstant } from "@/lib/booking/slots";
 import { cancellationMail, rescheduleMail } from "@/lib/email/booking-mail";
 import { sendCancellationToGuest, sendCancellationToHost, sendRescheduled } from "@/lib/email/send";
-import { CalendarError, deleteEventForBooking, updateEventForBooking } from "@/lib/google/calendar";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
 import type { Booking, Profile } from "@/lib/types";
@@ -13,13 +12,15 @@ import type { Booking, Profile } from "@/lib/types";
    A host cancelling or moving their own booking, wherever they did it from.
 
    The web's server actions and the iOS app's API routes both call these, so
-   the two cannot drift: the same order (the booking, then the calendar, then
-   the mail), the same refusals, and everyone who was told about the meeting
+   the two cannot drift: the same order (the booking, then the mail, which
+   carries the calendar update), the same refusals, and everyone who was told about the meeting
    is told what happened to it. Each caller brings its own way of proving who
    the host is; by the time anything here runs, `convex` is authenticated as
    that host and `profile` is theirs.
    ───────────────────────────────────────────────────────────────────────────── */
 
+/* `calendarWarning` is kept for the iOS app, which still reads it; with no
+   calendar written directly any more, nothing sets it. */
 export type ChangeResult = { error?: string; calendarWarning?: string };
 
 /**
@@ -63,18 +64,10 @@ export async function moveAsHost(
     return { error: /slot taken/i.test(message) ? "You already have a meeting then." : message };
   }
 
-  let calendarWarning: string | undefined;
-  if (before.google_event_id) {
-    const outcome = await updateEventForBooking(before.reference);
-    if ("failure" in outcome) {
-      calendarWarning = "The meeting has moved, but Google Calendar did not confirm the new time.";
-    }
-  }
-
-  const mail = rescheduleMail(moved.booking, profile, "host", moved.old_starts_at);
   const invitees = existing.invitees
     .map((i) => ({ name: i.name, email: i.email }))
     .filter((i) => i.email.toLowerCase() !== before.guest_email.toLowerCase());
+  const mail = { ...rescheduleMail(moved.booking, profile, "host", moved.old_starts_at), otherGuests: invitees };
 
   // Everyone who was told about the old time is told about the new one.
   await Promise.allSettled([
@@ -85,14 +78,14 @@ export async function moveAsHost(
     ),
   ]);
 
-  return { calendarWarning };
+  return {};
 }
 
 /**
- * Host-side cancellation. The booking is marked cancelled first, then the
- * calendar event goes, then everyone is told. A calendar or email failure
- * after the write leaves a cancelled booking and a warning, never a booking
- * that looks cancelled to one side and live to the other.
+ * Host-side cancellation. The booking is marked cancelled first, then
+ * everyone is told, each email carrying a calendar cancellation. An email
+ * failure after the write leaves a cancelled booking, never a booking that
+ * looks cancelled to one side and live to the other.
  */
 export async function cancelAsHost(
   convex: ConvexHttpClient,
@@ -112,25 +105,11 @@ export async function cancelAsHost(
     return { error: convexMessage(cause, "That booking could not be cancelled.") };
   }
 
-  let calendarWarning: string | undefined;
-  if (booking.google_event_id) {
-    try {
-      const outcome = await deleteEventForBooking(booking.reference);
-      if (outcome !== "ok" && outcome !== "already-deleted") throw new CalendarError(outcome, "Google refused the removal.");
-    } catch (cause) {
-      // An event that is already gone is not a problem worth reporting.
-      if (cause instanceof CalendarError && cause.kind !== "already-deleted") {
-        calendarWarning = "The booking is cancelled, but Google Calendar did not confirm the removal.";
-      }
-    }
-  }
-
-  const mail = cancellationMail(booking, profile, "host");
-
   // Every invitee, not just the guest of record. A meeting the host scheduled
   // for three people that only tells one of them it is cancelled leaves two
-  // sitting in an empty Meet.
+  // sitting in an empty call.
   const others = invitees.filter((i) => i.email.toLowerCase() !== booking.guest_email.toLowerCase());
+  const mail = { ...cancellationMail(booking, profile, "host"), otherGuests: others };
 
   await Promise.allSettled([
     sendCancellationToHost(mail, profile),
@@ -140,5 +119,5 @@ export async function cancelAsHost(
     ),
   ]);
 
-  return { calendarWarning };
+  return {};
 }

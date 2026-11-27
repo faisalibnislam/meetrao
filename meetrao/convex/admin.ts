@@ -349,6 +349,10 @@ export async function purgeAccount(
     for (const c of await ctx.db.query("calendar_connections").withIndex("by_user", (q) => q.eq("user_id", p.id)).collect()) {
       await ctx.db.delete(c._id);
     }
+    // The feed address is a secret to the host's calendar: it goes with them.
+    for (const f of await ctx.db.query("calendar_feeds").withIndex("by_user", (q) => q.eq("user_id", p.id)).collect()) {
+      await ctx.db.delete(f._id);
+    }
     /* Page views are the one table here that grows with traffic rather than
        with anything the host did, so they are deleted in bounded batches: a
        host with more rows than one mutation may write would otherwise be

@@ -27,7 +27,7 @@ const SLOTS = ["9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM", "11:00 AM", "2:00 P
 
 const FACTS: { icon: "clock" | "video" | "globe"; text: string }[] = [
   { icon: "clock", text: "30 minutes" },
-  { icon: "video", text: "Google Meet" },
+  { icon: "video", text: "Video call" },
   { icon: "globe", text: "Times shown in your timezone" },
 ];
 

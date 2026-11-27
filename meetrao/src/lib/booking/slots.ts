@@ -56,7 +56,7 @@ export type ComputeSlotsInput = {
   hostTimezone: string;
   availability: readonly AvailabilityRule[];
   rules: SlotRules;
-  /** Confirmed bookings plus Google Calendar busy periods, as UTC instants. */
+  /** Confirmed bookings plus the host's calendar-feed busy periods, as UTC instants. */
   busy: readonly Interval[];
   /** Days off and one-off hours, keyed by the host's own calendar date. */
   overrides?: readonly DateOverride[];

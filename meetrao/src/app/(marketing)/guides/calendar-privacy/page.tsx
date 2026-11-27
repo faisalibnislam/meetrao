@@ -9,15 +9,15 @@ import { OG_IMAGE, articleLd, breadcrumbLd, faqLd, graph } from "@/lib/seo";
 
    The question gets asked constantly and is answered almost nowhere, because
    the honest answer is a sentence about OAuth scopes and nobody selling a
-   scheduler wants to write it down. Meetrao can afford to: it asks for
-   freebusy, and the one broad scope it does hold is named here rather than
-   hidden behind "calendar access".
+   scheduler wants to write it down. Meetrao no longer holds any calendar
+   scope at all: it reads a calendar feed the host gives it and keeps only the
+   busy times, which is the smallest version of this there is.
 
-   RULE FOR THIS PAGE. It describes the OAuth scopes, which are a published,
-   checkable fact about how Google's API works. It does NOT characterise what
-   any other company does with what it is granted, because that is a claim
-   about their behaviour and this page has no way to check it. Where it names
-   another product it says what its consent screen asks for and stops.
+   RULE FOR THIS PAGE. It describes the OAuth scopes and calendar feeds, which
+   are published, checkable facts about how the calendar providers work. It
+   does NOT characterise what any other company does with what it is granted,
+   because that is a claim about their behaviour and this page has no way to
+   check it.
    ───────────────────────────────────────────────────────────────────────────── */
 
 /* Written out again below rather than interpolated. seo-invariants.test.ts
@@ -29,15 +29,15 @@ const TITLE = "What a scheduling app can read in your calendar";
 export const metadata: Metadata = {
   title: "What a scheduling app can read in your calendar",
   description:
-    "The difference between a scheduler that reads your free/busy times and one that reads your " +
-    "events, how to check which you granted, and how to take it back.",
+    "Free/busy access, full event access and calendar feeds compared: what each one exposes, how " +
+    "to check what you granted, and how to take it back.",
   alternates: { canonical: "/guides/calendar-privacy" },
   openGraph: {
     images: [OG_IMAGE],
     type: "article",
     title: `${TITLE} · Meetrao`,
     description:
-      "Free/busy against full event access, how to check which one you granted, and how to revoke it from your Google account.",
+      "Free/busy, full event access and calendar feeds compared, how to check what you granted, and how to revoke it.",
     url: "/guides/calendar-privacy",
   },
 };
@@ -45,23 +45,23 @@ export const metadata: Metadata = {
 const FAQ: [string, string][] = [
   [
     "Can a scheduling app read my meeting titles?",
-    "It depends on the permission you granted, not on the app's marketing. A tool holding only calendar.freebusy receives intervals: busy from 10:00 to 10:30, and nothing else. A tool holding calendar.events or calendar.readonly can read the title, the description, the guest list and the attachments of every event in that calendar. Google's consent screen names the grant when you connect; the app's home page usually does not.",
+    "It depends on what you gave it, not on the app's marketing. A tool holding only calendar.freebusy receives intervals: busy from 10:00 to 10:30, and nothing else. A tool holding calendar.events or calendar.readonly can read the title, the description, the guest list and the attachments of every event in that calendar. A tool given a calendar feed address receives the whole feed, and what matters is what it keeps.",
   ],
   [
-    "Which permissions does Meetrao ask for?",
-    "Two calendar scopes. calendar.freebusy, which is what the booking page runs on, and calendar.events, which is what writes the confirmed booking to your calendar and invites your guest. The second is broader than the use made of it, which the Privacy Policy says in those words rather than leaving you to work out.",
+    "What does Meetrao ask for?",
+    "No calendar permission at all. Sign in with Google asks only for your name, email address and profile picture. For conflicts you paste your calendar's private feed address, and from that feed Meetrao keeps only busy start and end times. Titles, descriptions, attendees and locations are not stored.",
   ],
   [
     "How do I check what I have already granted?",
     "Open your Google Account, go to Data and privacy, then Third-party apps and services. Every app you have connected is listed with the access it holds, and you can remove any of them from that screen. Revoking from there is immediate and does not require the app's cooperation.",
   ],
   [
-    "If I revoke access, what happens to my bookings?",
-    "On Meetrao, the booking records stay and the calendar stops being read, so the page can no longer tell whether a slot is free. Other tools behave differently. Revoking is always safe to do; it is reconnecting that takes a minute.",
+    "How do I take back a calendar feed address?",
+    "Remove it in the app first. Then, to be certain, reset the address at the source: in Google Calendar, the secret address has a Reset button, and in Outlook or iCloud you can stop publishing or sharing the calendar. The old address stops working for everybody who had it.",
   ],
   [
-    "Is free/busy enough to run a booking page?",
-    "For showing availability, yes, entirely. It is the only thing Meetrao's booking page consults. Writing the event afterwards is the part that needs more, and that is a separate grant doing a separate job.",
+    "Is busy time enough to run a booking page?",
+    "Yes, entirely. Showing availability only needs to know when you are taken. Putting the booking on both calendars does not need write access either: Meetrao emails a standard calendar invite, and your own calendar app adds it.",
   ],
 ];
 
@@ -73,8 +73,8 @@ export default function CalendarPrivacyPage() {
           articleLd({
             headline: TITLE,
             description:
-              "The difference between free/busy access and full event access, how to check which " +
-              "one a scheduling app holds, and how to revoke it.",
+              "The difference between free/busy access, full event access and a calendar feed, how " +
+              "to check what a scheduling app holds, and how to revoke it.",
             path: "/guides/calendar-privacy",
           }),
           faqLd(FAQ),
@@ -95,10 +95,10 @@ export default function CalendarPrivacyPage() {
             What a scheduling app can read in your calendar
           </h1>
           <p className="m-0 text-[15.5px] leading-[1.65] text-pretty text-ink-2">
-            Connecting a booking link to your calendar means granting an app access to it. The
-            grants are not all the same size, Google names them on the consent screen, and almost
-            nobody reads that screen. Here is what the two sizes are and how to tell which one you
-            handed over.
+            Connecting a booking link to your calendar usually means granting an app access to it.
+            The grants are not all the same size, Google names them on the consent screen, and
+            almost nobody reads that screen. Here is what the sizes are, how a calendar feed differs,
+            and how to tell what you handed over.
           </p>
         </div>
 
@@ -112,15 +112,13 @@ export default function CalendarPrivacyPage() {
             <strong>calendar.freebusy</strong> returns intervals. For a given calendar and a given
             window, it answers with a list of the periods that are taken: busy 10:00 to 10:30, busy
             14:00 to 15:00. There is no title in the response, no guest list, no description, no
-            location and no attachment. There is no field for them. An app holding this scope and
-            nothing else cannot learn what any of your meetings are, because the API it is calling
-            does not carry that.
+            location and no attachment. There is no field for them.
           </p>
           <p>
             <strong>calendar.events</strong> and <strong>calendar.readonly</strong> return events.
             That means the title, the description, who is invited, where it is and what is attached,
             for everything in the calendar. These are the scopes that let an app create the booking
-            on your calendar afterwards, which is why most schedulers need one, and they are also
+            on your calendar afterwards, which is why many schedulers ask for one, and they are also
             the scopes that let an app list everything already in it.
           </p>
           <p>
@@ -129,19 +127,18 @@ export default function CalendarPrivacyPage() {
             share and permanently delete all the calendars you can access&rdquo; is the second.
           </p>
 
-          <h2>Why most schedulers hold the broad one</h2>
+          <h2>A third way: a calendar feed</h2>
           <p>
-            Because they write. Showing your availability needs free/busy. Putting the confirmed
-            booking on your calendar with a video link, inviting your guest so it lands on theirs,
-            moving it when somebody reschedules and removing it when somebody cancels all need
-            write access to events, and Google does not offer a write-only scope. There is no way to
-            create an event without also being able to read events.
+            Google Calendar, Outlook and iCloud can all publish a calendar as a private feed: a long,
+            unguessable address in iCal (.ics) format. Anybody holding the address can read the
+            feed, and the feed has the full events in it. So the question shifts from &ldquo;what did
+            I grant&rdquo; to &ldquo;what does the app keep&rdquo;, and that is a question for its
+            privacy policy.
           </p>
           <p>
-            So the broad grant is usually real and usually necessary. What varies is whether the
-            product says so. A privacy policy that says &ldquo;calendar access&rdquo; where the
-            grant says calendar.events is not lying, exactly, but it is choosing the word that
-            prompts fewer questions.
+            A feed has two practical differences from a connection. It is read-only, so the app
+            cannot change your calendar. And it can lag: Google can take a few hours to update its
+            feed, so an event added a moment ago may not show up straight away.
           </p>
 
           <h2>How to check what you have already granted</h2>
@@ -159,6 +156,10 @@ export default function CalendarPrivacyPage() {
               is the right first move if you are unsure, because reconnecting takes a minute and
               leaving a forgotten grant in place does not.
             </li>
+            <li>
+              Feeds do not appear on that list. If you have handed out a feed address, reset it in
+              your calendar&rsquo;s settings to cut off everybody who had the old one.
+            </li>
           </ul>
           <p>
             Worth doing once a year regardless of which scheduler you use. The list is usually
@@ -167,35 +168,37 @@ export default function CalendarPrivacyPage() {
 
           <h2>What Meetrao asks for</h2>
           <p>
-            Two calendar scopes, and the{" "}
-            <Link href="/privacy#p-google">Privacy Policy</Link> names both in full because
-            Google&rsquo;s verification review compares that table against the consent screen.
+            No calendar permission. The{" "}
+            <Link href="/privacy#p-calendar-feed">Privacy Policy</Link> says the same thing in more
+            detail.
           </p>
           <ul>
             <li>
-              <strong>calendar.freebusy</strong>, used every time somebody opens your booking page,
-              so a slot you already have something in is never offered. This is the only thing the
-              booking page consults.
+              <strong>Sign in with Google</strong>, if you use it, asks only for your name, email
+              address and profile picture. It grants no access to your calendar.
             </li>
             <li>
-              <strong>calendar.events</strong>, used to create the event for a confirmed booking
-              with its Google Meet link, invite your guest, update or delete that event when the
-              booking changes, and read whether your guest accepted it, by that event&rsquo;s own
-              identifier rather than by listing or searching your calendar.
+              <strong>Your calendar feed</strong>, if you add one, is fetched every few minutes when
+              it is needed. Meetrao keeps only the busy start and end times from it, for a limited
+              window ahead, and never the titles, descriptions, attendees or locations. The address
+              is stored privately and shown masked after you save it.
+            </li>
+            <li>
+              <strong>Calendar invites</strong> go out by email to you and your guest with each
+              booking, so your own calendar app adds the meeting. Meetrao never writes to your
+              calendar.
             </li>
           </ul>
           <p>
-            The second is broader than the use made of it. That is a property of Google&rsquo;s
-            scopes rather than a choice, and the honest thing is to write it down rather than let
-            &ldquo;calendar access&rdquo; do the work. Meetrao does not sell your data or your
-            guests&rsquo; data, and does not use either to train machine-learning models; both are
-            stated in the policy rather than only here.
+            Removing the feed in Settings deletes the address and the busy times kept from it.
+            Meetrao does not sell your data or your guests&rsquo; data, and does not use either to
+            train machine-learning models; both are stated in the policy rather than only here.
           </p>
 
           <h2>Questions worth asking any scheduler</h2>
           <ul>
             <li>Which OAuth scopes does the consent screen name, and does the privacy policy use the same words?</li>
-            <li>Does the booking page itself read events, or only free/busy?</li>
+            <li>If it reads a feed, what does it keep from it, and for how long?</li>
             <li>What happens to the data when the account is deleted, and is there a grace-period copy?</li>
             <li>Is the data used to train anything?</li>
             <li>Who else receives it, and is that list separate from the general list of subprocessors?</li>
@@ -217,7 +220,7 @@ export default function CalendarPrivacyPage() {
 
         <div className="mt-[34px] flex max-w-[720px] flex-wrap items-center gap-[12px] rounded-[10px] border border-accent-line bg-accent-soft px-[18px] py-[16px]">
           <span className="min-w-[220px] flex-1 text-[14.5px] leading-[1.5] text-ink">
-            Meetrao&rsquo;s booking page runs on free/busy alone. Free, with no card.
+            Meetrao keeps busy times and nothing else. Free, with no card.
           </span>
           <Link
             href="/signup"

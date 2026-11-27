@@ -146,7 +146,7 @@ describe("the pricing page argues in the right order", () => {
        Three of the original five went this way, rescheduling, locations and
        team scheduling were all built, and each one failed here first. */
     const all = LIMITS.map(([t]) => t.toLowerCase()).join(" | ");
-    for (const missing of ["google calendar only", "no payments", "no zoom", "round-robin only", "email only"]) {
+    for (const missing of ["feed only", "no payments", "no zoom", "round-robin only", "email only"]) {
       expect(all, `${missing} is no longer listed as a limit`).toContain(missing);
     }
   });

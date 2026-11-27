@@ -8,7 +8,6 @@ import { CopyLinkControl } from "@/components/app/copy-link";
 import { MetricCard } from "@/components/app/metric-card";
 import { ButtonLink } from "@/components/ui/button";
 import { Callout, EmptyState, SectionHeading } from "@/components/ui/panels";
-import { GoogleG } from "@/components/ui/logo";
 import { formatTime } from "@/lib/booking/time";
 import { listBookings } from "@/lib/data/bookings";
 import { requireOnboardedSession } from "@/lib/data/session";
@@ -16,7 +15,8 @@ import { ownMeetings } from "@/lib/data/own";
 import { activeContext } from "@/lib/data/context";
 import { companyAnalytics } from "@/lib/data/company-analytics";
 import { timezoneLabel } from "@/lib/timezones";
-import { connectionStatus } from "@/lib/google/connection";
+import { feedStatus } from "@/lib/calendar/feed";
+import { usesVideoLink } from "@/lib/locations";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { bookingLink } from "@/lib/username";
@@ -55,7 +55,7 @@ export default async function DashboardPage({
     // The dashboard shows what is next; it has never rendered a past booking.
     listBookings(profile.id, zone, { history: false }),
     ownMeetings(),
-    connectionStatus(profile.id),
+    feedStatus(),
     convex.query(api.admin.avgReplyMinutes, { days: 30 }),
   ]);
 
@@ -97,19 +97,44 @@ export default async function DashboardPage({
       }
     >
       <div className="flex flex-col gap-[24px]">
-        {!calendar.connected ? (
+        {/* A video meeting with no link to send guests to cannot be booked:
+            that comes first, it is the one that turns guests away. */}
+        {!profile.video_link && active.some((m) => usesVideoLink(m.location ?? "google_meet")) ? (
+          <Callout
+            tone="red"
+            align="center"
+            action={
+              <ButtonLink variant="amber" size={28} href="/settings/calendar">
+                Add link
+              </ButtonLink>
+            }
+          >
+            <strong className="font-semibold">Add your video link.</strong> Your video call meetings can&rsquo;t be
+            booked until Meetrao has a link to send guests.
+          </Callout>
+        ) : null}
+
+        {!calendar.connected || calendar.state === "unreachable" ? (
           <Callout
             tone="amber"
             align="center"
             action={
-              <ButtonLink variant="amber" size={28} href="/api/google/connect?next=/dashboard">
-                <GoogleG size={13} />
-                Connect
+              <ButtonLink variant="amber" size={28} href="/settings/calendar">
+                {calendar.connected ? "Fix" : "Add calendar"}
               </ButtonLink>
             }
           >
-            <strong className="font-semibold">Google Calendar isn&rsquo;t connected.</strong> Meetrao can&rsquo;t
-            check for conflicts or add bookings to your calendar.
+            {calendar.connected ? (
+              <>
+                <strong className="font-semibold">Your calendar feed can&rsquo;t be read.</strong> Only Meetrao
+                bookings are blocking times right now.
+              </>
+            ) : (
+              <>
+                <strong className="font-semibold">Add your calendar.</strong> Paste its private iCal address so
+                guests can&rsquo;t book over your other events.
+              </>
+            )}
           </Callout>
         ) : null}
 

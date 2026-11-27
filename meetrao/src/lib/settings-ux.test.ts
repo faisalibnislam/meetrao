@@ -76,10 +76,12 @@ describe("the email address", () => {
 describe("the Calendar tab", () => {
   const CAL = panel("CalendarPanel");
 
-  it("says the connection status once, beside one button", () => {
-    expect(CAL).not.toContain('"Disconnected"');
+  /* No OAuth any more: a feed address and a video link, nothing to connect. */
+  it("asks for a calendar feed and a video link, not a Google connection", () => {
+    expect(CAL).toContain("<FeedForm feed={feed} />");
+    expect(CAL).toContain("<VideoLinkForm initial={videoLink} />");
+    expect(CAL).not.toContain("/api/google/connect");
     expect(CAL).not.toContain("<Badge");
-    expect(CAL).toContain('"Not connected"');
   });
 
   /* Edited on Availability only, where the hours it is read in live. */

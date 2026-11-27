@@ -136,7 +136,7 @@ struct BookingDetailView: View {
 
                     if let join = booking.joinURL {
                         Link(destination: join) {
-                            Label("Join Google Meet", systemImage: "video.fill")
+                            Label("Join the call", systemImage: "video.fill")
                         }
                     }
                 }
@@ -209,7 +209,7 @@ struct BookingDetailView: View {
                             Text("\(booking.guestName) will be emailed that it's cancelled. This can't be undone.")
                         }
                     } footer: {
-                        Text("The guest is emailed either way, and Google Calendar is updated.")
+                        Text("The guest is emailed either way, with an updated calendar invite.")
                     }
                     .disabled(busy)
                 }

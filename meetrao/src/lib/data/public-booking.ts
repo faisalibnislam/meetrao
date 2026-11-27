@@ -5,7 +5,7 @@ import { cache } from "react";
 import type { AvailabilityRule, DateOverride, Interval, SlotRules } from "@/lib/booking/slots";
 import type { BookingQuestion } from "@/lib/types";
 import type { PublicBrand } from "@/components/booking/brand";
-import { busyPeriods } from "@/lib/google/calendar";
+import { busyPeriods } from "@/lib/calendar/feed";
 import { convexAnonymous, serverSecret } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
@@ -220,11 +220,11 @@ export type BusyResult = { busy: Interval[]; calendarChecked: boolean };
 
 /**
  * Everything the host is not free for: Meetrao's own confirmed bookings, plus
- * whatever Google Calendar reports.
+ * whatever the host's calendar feed reports.
  *
- * If Google cannot be reached the bookings we know about still apply, and
- * `calendarChecked` is false so the caller can say so rather than implying the
- * host's whole calendar was consulted.
+ * If the feed is missing or cannot be read, the bookings we know about still
+ * apply, and `calendarChecked` is false so the caller can say so rather than
+ * implying the host's whole calendar was consulted.
  */
 export async function getBusy(
   hostId: string,
@@ -235,14 +235,10 @@ export async function getBusy(
      in `busy`, the first booking of a workshop would close it. */
   ignoreMeetingId?: string,
 ): Promise<BusyResult> {
-  /* Both at once. The Google check does not use the bookings at all, and it
-     was asked only after they came back, which made it a third round trip in
-     sequence on the booking page, and the slowest of the three since it goes
-     on to Google from there.
-
-     A Google failure still falls back to our own bookings rather than failing
-     the page: `null` here is "could not check", not "nothing busy". */
-  const [rows, google] = await Promise.all([
+  /* Both at once: the feed does not depend on the bookings. A feed failure
+     falls back to our own bookings rather than failing the page: `null` here
+     is "could not check", not "nothing busy". */
+  const [rows, feed] = await Promise.all([
     convexAnonymous().query(api.publicBooking.busyForHost, {
       hostId,
       from: from.getTime(),
@@ -259,7 +255,7 @@ export async function getBusy(
       end: new Date(r.ends_at),
     }));
 
-  return google ? { busy: [...own, ...google], calendarChecked: true } : { busy: own, calendarChecked: false };
+  return feed ? { busy: [...own, ...feed], calendarChecked: true } : { busy: own, calendarChecked: false };
 }
 
 /** Whether this meeting is one the given company's domain may serve. */

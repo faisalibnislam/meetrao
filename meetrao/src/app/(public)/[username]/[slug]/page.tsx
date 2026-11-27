@@ -35,7 +35,7 @@ export async function generateMetadata({
   const description =
     meeting.description ||
     `Book a ${meeting.durationMinutes}-minute ${meeting.name.toLowerCase()} with ${name}. ` +
-      `Live availability, no account needed, and a Google Meet link on every booking.`;
+      `Live availability, no account needed, and a calendar invite by email.`;
 
   return {
     title,

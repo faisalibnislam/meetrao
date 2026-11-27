@@ -2,13 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { buttonClass } from "@/components/ui/button-class";
 import { ChoiceChip, Field, Help, Input, Textarea } from "@/components/ui/controls";
 import { Eyebrow } from "@/components/ui/badge";
-import { Icon, type IconName } from "@/components/ui/icon";
-import { cx } from "@/lib/cx";
+import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Callout } from "@/components/ui/panels";
 import { useToast } from "@/components/ui/toast";
@@ -21,98 +19,52 @@ import type { TimezoneOption } from "@/lib/timezones";
 import { bookingLink } from "@/lib/username";
 import Link from "next/link";
 import { copyText } from "@/lib/clipboard";
-
-/* ── what the Google permission is for ────────────────────────────────────────
-
-   Written out in full, on the screen that asks for it, rather than left to the
-   consent dialog. Google's own screen names a scope ("See, edit and delete
-   events on your calendar") which is accurate and alarming, and a host who
-   meets that sentence with no context declines. The honest answer is that the
-   scope is broad and the use is narrow, and the place to say so is before they
-   click, not in a policy they will not open.
-
-   Keep this list true. It is the same claim /help and /privacy make, and the
-   three have to agree. */
-const READS: string[] = [
-  "When you are busy: the times, not the titles. Guests are never offered a slot you already have something in.",
-  "Whether your guest accepted the invitation to a meeting Meetrao itself created, so you are told if they decline.",
-];
-
-const WRITES: string[] = [
-  "One event for each booking, on your calendar and your guest’s, with a Google Meet link.",
-  "Changes to that event when a booking moves, and its removal when one is cancelled.",
-];
-
-const NEVER: string[] = [
-  "The titles, descriptions, locations, attachments or guests of your other meetings.",
-  "Anything at all when you disconnect: the permission is revoked with Google, not just with us.",
-];
+import { FeedForm, VideoLinkForm, type FeedView } from "@/components/app/calendar-feed-form";
 
 /* ── Step 2 · Calendar ────────────────────────────────────────────────────── */
 
+/* No permission screen any more. Meetrao used to ask Google for access to the
+   host's calendar; now the host pastes their calendar's private feed address
+   (read for busy times only) and their own video link, and every booking
+   email carries a calendar invite. Both are optional here and can be added in
+   Settings later; the last step says what is missing. */
 export function StepCalendar({
-  connected,
-  accountEmail,
-  failure,
+  feed,
+  videoLink,
 }: {
-  connected: boolean;
-  accountEmail: string | null;
-  failure: string | null;
+  feed: FeedView;
+  videoLink: string | null;
 }) {
   const router = useRouter();
 
   return (
     <OnboardingCard
-      title="Connect your calendar"
-      blurb="Without it, Meetrao cannot see your conflicts, so guests could book a time you are already busy. Here is exactly what the permission covers before you grant it."
+      title="Add your calendar"
+      blurb="Paste your calendar's private address so guests can't book over your other events, and add the video link your video calls should use."
       actions={
         <>
-          {connected ? (
-            <Button variant="accent" size={38} onClick={() => router.push("/onboarding/3")}>
-              Continue
-            </Button>
-          ) : (
-            <ButtonLink variant="accent" size={38} href="/api/google/connect?next=/onboarding/2">
-              Connect Google Calendar
-            </ButtonLink>
-          )}
-          <Button variant="ghost" size={38} onClick={() => router.push("/onboarding/3")}>
-            Skip for now
+          <Button variant="accent" size={38} onClick={() => router.push("/onboarding/3")}>
+            Continue
           </Button>
+          {!feed.connected ? (
+            <Button variant="ghost" size={38} onClick={() => router.push("/onboarding/3")}>
+              Skip for now
+            </Button>
+          ) : null}
         </>
       }
     >
-      <div className="flex flex-col gap-[14px]">
-        <div className="flex items-center gap-[13px] rounded-[8px] border border-line bg-fill px-[15px] py-[13px]">
-          <Icon name="calendar" size={17} className="flex-none text-accent-ink" />
-          <div className="flex min-w-0 flex-1 flex-col gap-[2px]">
-            <span className="text-[13.5px] font-semibold text-ink">Google Calendar</span>
-            <span className="text-[12.5px] text-ink-3">
-              {connected ? (accountEmail ?? "Connected") : "Not connected"}
-            </span>
-          </div>
-          <Badge tone={connected ? "ok" : "off"}>{connected ? "Connected" : "Disconnected"}</Badge>
-        </div>
+      <div className="flex flex-col gap-[18px]">
+        <FeedForm feed={feed} compact />
 
-        {failure ? (
-          <Callout tone="red" title="Couldn't connect to Google">
-            {failure}
-          </Callout>
-        ) : null}
-
-        <div className="flex flex-col gap-[12px]">
-          <PermissionGroup icon="eye" tone="accent" title="What Meetrao reads" items={READS} />
-          <PermissionGroup icon="calendar" tone="accent" title="What it writes" items={WRITES} />
-          <PermissionGroup icon="lock" tone="muted" title="What it never does" items={NEVER} />
-        </div>
+        <VideoLinkForm initial={videoLink} />
 
         <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
           <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
           <span className="text-[12.5px] leading-[1.6] text-ink-2">
-            Google will ask for “See, edit and delete events on your calendar”. That is the narrowest
-            permission that can put a booking on your calendar and invite your guest to it. Google does not
-            offer a write-only one. What Meetrao does with it is the list above.{" "}
-            <Link href="/help#calendar">The full explanation is in the help centre</Link>.
+            Meetrao never asks for access to your calendar. It reads only when you are busy, not what your events
+            are, and each booking reaches your calendar and your guest&rsquo;s as an emailed invite.{" "}
+            <Link href="/help#calendar">How this works</Link>.
           </span>
         </div>
       </div>
@@ -120,47 +72,6 @@ export function StepCalendar({
   );
 }
 
-/* One group of the permission explanation. Three of these rather than one long
-   list, because "reads", "writes" and "never" are the three questions somebody
-   actually has, and a flat list of nine bullets answers none of them. */
-function PermissionGroup({
-  icon,
-  tone,
-  title,
-  items,
-}: {
-  icon: IconName;
-  tone: "accent" | "muted";
-  title: string;
-  items: string[];
-}) {
-  return (
-    <div className="flex flex-col gap-[7px]">
-      <span className="flex items-center gap-[8px] text-[12.5px] font-semibold text-ink">
-        <Icon
-          name={icon}
-          size={12}
-          className={tone === "accent" ? "flex-none text-accent-ink" : "flex-none text-ink-3"}
-        />
-        {title}
-      </span>
-      <ul className="m-0 flex list-none flex-col gap-[6px] p-0 pl-[20px]">
-        {items.map((text) => (
-          <li key={text} className="flex items-start gap-[9px]">
-            <span
-              aria-hidden="true"
-              className={cx(
-                "mt-[7px] h-[4px] w-[4px] flex-none rounded-full",
-                tone === "accent" ? "bg-accent" : "bg-line-strong",
-              )}
-            />
-            <span className="text-[12.5px] leading-[1.5] text-pretty text-ink-2">{text}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
 
 /* ── Step 3 · First meeting ───────────────────────────────────────────────── */
 
@@ -258,7 +169,7 @@ export function StepFirstMeeting({
           <span className="text-[12.5px] font-semibold text-ink">Location</span>
           <div className="flex h-[36px] items-center gap-[9px] rounded-[6px] border border-line bg-fill px-[12px]">
             <Icon name="video" size={13} className="text-ink-2" />
-            <span className="text-[13.5px] text-ink">Google Meet</span>
+            <span className="text-[13.5px] text-ink">Video call</span>
             <span className="ml-auto text-[12px] text-ink-3">Only option in this release</span>
           </div>
         </div>
@@ -341,13 +252,17 @@ export function StepReady({
   openDays,
   firstStart,
   connected,
+  videoMissing,
 }: {
   username: string;
   meetingName: string;
   duration: number;
   openDays: number;
   firstStart: string;
+  /** A calendar feed is saved. */
   connected: boolean;
+  /** The first meeting is a video call and no video link is saved. */
+  videoMissing: boolean;
 }) {
   const router = useRouter();
   const toast = useToast();
@@ -359,7 +274,8 @@ export function StepReady({
   const summary = [
     { ok: true, text: `${meetingName} · ${duration} min` },
     { ok: true, text: `${openDays} days a week, from ${firstStart}` },
-    { ok: connected, text: connected ? "Google Calendar connected" : "Google Calendar not connected" },
+    { ok: connected, text: connected ? "Calendar feed added" : "No calendar feed yet" },
+    ...(videoMissing ? [{ ok: false, text: "No video link yet" }] : []),
   ];
 
   return (
@@ -447,17 +363,29 @@ export function StepReady({
           </span>
         </div>
 
-        {!connected ? (
+        {videoMissing ? (
+          <Callout
+            tone="red"
+            align="center"
+            action={
+              <ButtonLink variant="amber" size={28} href="/onboarding/2">
+                Add link
+              </ButtonLink>
+            }
+          >
+            Add your video link: guests can&rsquo;t book {meetingName} until Meetrao has a call link to send them.
+          </Callout>
+        ) : !connected ? (
           <Callout
             tone="amber"
             align="center"
             action={
-              <ButtonLink variant="amber" size={28} href="/api/google/connect?next=/onboarding/5">
-                Connect now
+              <ButtonLink variant="amber" size={28} href="/onboarding/2">
+                Add calendar
               </ButtonLink>
             }
           >
-            Connect Google Calendar before you share this link, so guests can&rsquo;t book over something you
+            Add your calendar feed before you share this link, so guests can&rsquo;t book over something you
             already have.
           </Callout>
         ) : null}
