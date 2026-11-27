@@ -26,7 +26,7 @@ export type MailableBooking = Pick<
   | "meet_url"
   | "location"
   | "location_detail"
->;
+> & Partial<Pick<Booking, "revision">>;
 
 /**
  * The same values, for a booking that moved rather than ended.
@@ -67,6 +67,9 @@ export function rescheduleMail(
     durationLabel: base.durationLabel,
     meetUrl: base.meetUrl,
     where: base.where,
+    startsAt: base.startsAt,
+    endsAt: base.endsAt,
+    sequence: base.sequence,
     oldStartLong: `${formatLongDate(oldStart, hostTimezone)} · ${formatTimeRange(oldStart, oldEnd, hostTimezone)}`,
     changedByName: by === "host" ? base.hostName : booking.guest_name,
   };
@@ -113,6 +116,9 @@ export function cancellationMail(
     durationLabel: formatDuration(booking.duration_minutes),
     meetUrl: booking.meet_url ?? "",
     where: whereText(booking.location ?? "google_meet", booking.location_detail ?? "", booking.meet_url),
+    startsAt: start,
+    endsAt: end,
+    sequence: booking.revision ?? 0,
     cancelledByName: by === "host" ? hostName : booking.guest_name,
     cancelledAtLong: `${formatLongDate(new Date(), hostTimezone)} · ${formatTime(new Date(), hostTimezone)}`,
     reason: "",

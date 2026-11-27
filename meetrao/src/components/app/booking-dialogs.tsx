@@ -18,7 +18,7 @@ import { whereText } from "@/lib/locations";
 
    Moving is offered beside cancelling rather than behind it: a host who wants
    a different time should not have to cancel, that mails the guest a
-   cancellation and throws away the Meet link to say "can we do Thursday?". */
+   cancellation and throws away the call link to say "can we do Thursday?". */
 
 export type DialogState = { booking: BookingView; view: "detail" | "cancel" | "move" } | null;
 
@@ -120,7 +120,7 @@ export function BookingDialogs({
         <div className="flex flex-col gap-[12px]">
           <span className="text-[13.5px] leading-[1.55] text-pretty text-ink-2">
             {booking.meetingName} with {booking.guest} is at {booking.dayLabel} · {booking.timeRange}. Moving
-            it emails everyone invited and updates both calendars; the Meet link stays the same.
+            it emails everyone invited an updated calendar invite; the call link stays the same.
           </span>
           <div className="flex flex-wrap gap-[12px]">
             <Field label="New date" htmlFor="move-date" className="min-w-[150px] flex-1">
@@ -152,7 +152,7 @@ export function BookingDialogs({
       primary={{
         // A phone call has nothing to join, so the button closes instead of
         // offering a link that does not exist.
-        label: booking.meetUrl ? "Join Google Meet" : "Close",
+        label: booking.meetUrl ? "Join the call" : "Close",
         onClick: () => {
           if (booking.meetUrl) window.open(booking.meetUrl, "_blank", "noopener,noreferrer");
           else onClose();
@@ -211,7 +211,7 @@ export function BookingDialogs({
         <DetailRow
           label="Calendar"
           value={
-            booking.cancelled ? "Removed from both calendars" : `On your calendar and ${guestFirst}’s`
+            booking.cancelled ? "Cancellation sent to both calendars" : `Invite sent to you and ${guestFirst}`
           }
         />
 

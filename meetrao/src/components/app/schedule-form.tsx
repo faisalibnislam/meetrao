@@ -85,7 +85,7 @@ export function ScheduleForm({
         tone: result.calendarWarning ? "warn" : "ok",
         title: result.calendarWarning ? "Scheduled, without the calendar" : "Meeting scheduled",
         text: result.calendarWarning
-          ? "Invitations were emailed, but Google Calendar did not take the event."
+          ? "Invitations were emailed, but something went wrong."
           : `${filled} ${filled === 1 ? "person has" : "people have"} been invited.`,
       });
       router.push("/bookings");
@@ -167,7 +167,7 @@ export function ScheduleForm({
       <section className="flex flex-col gap-[14px] border-b border-line py-[20px]">
         <PanelHeading
           title="Who"
-          subtitle="Everyone here gets the invitation, the calendar event and the Meet link."
+          subtitle="Everyone here gets an emailed calendar invite with the meeting details."
         />
 
         <div className="flex flex-col gap-[8px]">

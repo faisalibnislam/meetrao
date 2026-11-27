@@ -156,8 +156,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   },
   providers: [
     passwordProvider,
-    // The SAME OAuth client the calendar integration uses, so a host is not
-    // asked to authorise Google twice.
+    // Sign-in only: openid, email and profile. Meetrao asks Google for nothing
+    // else since 2026-11-27.
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,

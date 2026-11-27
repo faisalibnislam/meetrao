@@ -10,6 +10,7 @@ import { purgeAccount } from "./admin";
 import { supportedZoneOrNull } from "./lib/zones";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
+import { normalizeVideoLink } from "./lib/videoLink";
 
 /* profiles, and the auth trigger that used to create them.
 
@@ -158,6 +159,21 @@ export const updateOwn = mutation({
     await ctx.db.patch(me._id, patch);
     const after = await ctx.db.get(me._id);
     return profileOut(after!);
+  },
+});
+
+/**
+ * The host's video meeting link, used by every "Video call" meeting. Empty
+ * clears it; bookings already made keep the link they were made with.
+ */
+export const setVideoLink = mutation({
+  args: { link: v.string() },
+  handler: async (ctx, a) => {
+    const me = await requireProfile(ctx);
+    const normal = normalizeVideoLink(a.link);
+    if (!normal.ok) fail(normal.error);
+    await ctx.db.patch(me._id, { video_link: normal.link, updated_at: Date.now() });
+    return normal.link;
   },
 });
 
@@ -345,7 +361,12 @@ export const firstMeeting = query({
       .query("meeting_types").withIndex("by_user", (q) => q.eq("user_id", me.id)).collect();
     const first = rows.sort((a, b) => a.created_at - b.created_at)[0];
     return first
-      ? { name: first.name, description: first.description, duration_minutes: first.duration_minutes }
+      ? {
+          name: first.name,
+          description: first.description,
+          duration_minutes: first.duration_minutes,
+          location: first.location ?? "google_meet",
+        }
       : null;
   },
 });

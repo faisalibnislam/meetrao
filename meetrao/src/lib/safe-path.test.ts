@@ -22,8 +22,6 @@ describe("a redirect target stays on this site", () => {
 
   it.each([
     "src/app/auth/confirm/route.ts",
-    "src/app/api/google/connect/route.ts",
-    "src/app/api/google/callback/route.ts",
     "src/components/auth/auth-form.tsx",
   ])("%s goes through it", (file) => {
     const text = readFileSync(path.join(process.cwd(), file), "utf8");

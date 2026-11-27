@@ -11,7 +11,7 @@ import { articleLd, breadcrumbLd, faqLd, graph } from "@/lib/seo";
 export const metadata: Metadata = {
   title: "Help Centre: how scheduling works",
   description:
-    "How Meetrao works, in the order you meet it: connect Google Calendar, set your hours, " +
+    "How Meetrao works, in the order you meet it: add your calendar feed, set your hours, " +
     "share your link, and see exactly what a guest sees when they book.",
   alternates: { canonical: "/help" },
 };
@@ -25,19 +25,21 @@ const PILLARS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "calendar",
     title: "Never double-booked",
-    text: "Meetrao checks your Google Calendar before offering any slot, so nothing lands on top of what you already have.",
+    text: "Meetrao checks the busy times in your calendar feed before offering any slot, so nothing lands on top of what you already have.",
   },
   {
     icon: "video",
     title: "On both calendars",
-    text: "Each booking creates one event with its own Google Meet link, and invites your guest, so it lands on their calendar as well as yours.",
+    text: "Each booking emails you and your guest a calendar invite with your video link, so it lands on their calendar as well as yours.",
   },
 ];
 
 const TOC: { id: string; icon: IconName; label: string }[] = [
   { id: "start", icon: "sign-in", label: "Getting started" },
   { id: "setup", icon: "rectangle-list", label: "Setting up" },
-  { id: "calendar", icon: "calendar", label: "Google Calendar" },
+  { id: "calendar", icon: "calendar", label: "Your calendar feed" },
+  { id: "video", icon: "video", label: "Video link" },
+  { id: "invites", icon: "envelope", label: "Calendar invites" },
   { id: "dashboard", icon: "house", label: "Dashboard" },
   { id: "meetings", icon: "list", label: "Meetings" },
   { id: "availability", icon: "clock", label: "Availability" },
@@ -54,8 +56,8 @@ const STEPS: [string, string, string][] = [
   ["1", "Welcome", "A short summary of what is coming. Nothing to fill in."],
   [
     "2",
-    "Connect your calendar",
-    "One Google permission. Meetrao reads when you are busy, writes each booking to your calendar and invites your guest. It never reads what your other meetings are about; for the events it creates itself it also reads whether your guest accepted.",
+    "Add your calendar feed",
+    "Paste your calendar's private feed address (.ics). Meetrao keeps only when you are busy, never what your meetings are about, and never asks for access to your calendar account.",
   ],
   [
     "3",
@@ -74,25 +76,33 @@ const STEPS: [string, string, string][] = [
   ],
 ];
 
-/* The three scopes, as Google's consent screen names them, with what each one
-   is actually used for. The names are Google's wording on purpose: a host
-   comparing this page to the dialog they are about to see should find the same
-   sentences, not a friendlier paraphrase they cannot match up. */
-const SCOPES: { scope: string; google: string; use: string }[] = [
+/* Where to find the private feed address in each calendar. The menu names are
+   the providers' own, so a host can follow them with the settings page open. */
+const FEED_STEPS: { provider: string; steps: string[] }[] = [
   {
-    scope: "calendar.freebusy",
-    google: "See when you are busy or free",
-    use: "Checked every time somebody opens your booking page, so a slot you already have something in is never offered. It returns busy periods (start and end times) and nothing else.",
+    provider: "Google Calendar",
+    steps: [
+      "On a computer, open Google Calendar and go to Settings (the gear icon).",
+      "Under Settings for my calendars, choose your calendar.",
+      "Open Integrate calendar.",
+      "Copy the Secret address in iCal format. Not the public address: that one only works if the calendar is public.",
+    ],
   },
   {
-    scope: "calendar.events",
-    google: "See, edit and delete events on your calendar",
-    use: "Creating one event per booking with its Meet link, inviting your guest so it reaches their calendar, moving that event when a booking is rescheduled, and removing it when one is cancelled. It is also what lets Meetrao read whether your guest accepted that particular invitation.",
+    provider: "Outlook",
+    steps: [
+      "In Outlook on the web, open Settings, then Calendar, then Shared calendars.",
+      "Under Publish a calendar, choose your calendar and Can view when I'm busy, then Publish.",
+      "Copy the ICS link.",
+    ],
   },
   {
-    scope: "userinfo.email",
-    google: "Your Google account’s email address",
-    use: "Shown on the Calendar settings panel so you can tell which account is connected, a work one from a personal one.",
+    provider: "iCloud",
+    steps: [
+      "In the Calendar app (or at icloud.com/calendar), open the share settings for your calendar.",
+      "Turn on Public Calendar.",
+      "Copy the link it shows.",
+    ],
   },
 ];
 
@@ -100,50 +110,47 @@ const SCOPES: { scope: string; google: string; use: string }[] = [
 const CALENDAR_FACTS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "eye",
-    title: "What is read",
-    text: "Busy periods: times, not titles. And, for an event Meetrao created itself, whether your guest accepted or declined it.",
+    title: "What is kept",
+    text: "Busy periods from your feed: start and end times, for a limited window ahead, refreshed every few minutes when needed.",
+  },
+  {
+    icon: "lock",
+    title: "What is never kept",
+    text: "Event titles, descriptions, attendees and locations. They are dropped as the feed is read.",
   },
   {
     icon: "calendar",
     title: "What is written",
-    text: "One event per confirmed booking, with its Google Meet link and your guest as an attendee. Moved when a booking moves; removed when one is cancelled.",
-  },
-  {
-    icon: "lock",
-    title: "What is never read",
-    text: "The titles, descriptions, locations, attachments or guest lists of your other meetings. Meetrao never lists or searches your calendar.",
+    text: "Nothing. Meetrao never writes to your calendar. Bookings reach it through the calendar invite in your email.",
   },
   {
     icon: "sign-out",
     title: "How to stop it",
-    text: "Settings → Calendar → Disconnect. That revokes the permission with Google, not only with Meetrao, so it disappears from your Google account's third-party access list too.",
+    text: "Settings → Calendar → Remove. The feed address and the busy times kept from it are deleted.",
   },
 ];
 
-/* The failures a host meets in practice, and what each one means. Written from
-   the errors this product has actually produced, "Token has been expired or
-   revoked" is the common one, and it reads as a bug until somebody explains
-   that it is Google's seven-day rule for apps still in testing. */
+/* The problems a host meets in practice, and what each one means. */
 const CALENDAR_TROUBLE: [string, string][] = [
   [
-    "“Connect” sends me back with an error",
-    "Almost always a redirect URI that is not registered on the Google OAuth client for the address you are using. The sign-in callback and the calendar callback are two different URIs and both must be registered for every domain the app runs on.",
+    "A new event did not block a slot",
+    "Calendar feeds are not instant. Google can take a few hours to update its feed, and Outlook and iCloud also refresh on their own schedule. The event will be picked up once the feed changes. Bookings made through Meetrao always block their slot straight away.",
   ],
   [
-    "It says my calendar needs reconnecting",
-    "Google refused the refresh token. The usual cause is that access was revoked from the Google account's security page, the password changed, or the app is still in testing mode, where refresh tokens expire after seven days. Reconnecting fixes it; publishing the OAuth consent screen stops it recurring.",
+    "Settings says the feed cannot be read",
+    "The address was probably reset, unpublished or copied incompletely. Copy it again from your calendar and paste the new one. While the feed cannot be read, Meetrao still blocks its own bookings, but not your other events.",
   ],
   [
     "Guests were offered a time I was busy",
-    "Either the calendar is disconnected (the booking page says so) or the conflicting event is on a calendar other than the one you connected. Meetrao checks the calendar belonging to the connected account only.",
+    "Either the event is on a calendar other than the one whose feed you added, or the feed has not caught up yet. Meetrao checks only the feed you gave it.",
   ],
   [
-    "The booking is on my calendar but my guest never got it",
-    "Google sends the invitation, not Meetrao. Check the guest's spam folder, and that the address on the booking is right. The confirmation email Meetrao sends separately carries the same Meet link and an .ics file.",
+    "I pasted the public Google address and nothing is busy",
+    "Use the Secret address in iCal format. The public address only works when the whole calendar is public.",
   ],
   [
-    "I use Outlook or iCloud",
-    "Meetrao cannot see those. Google Calendar is the only provider, which is listed as a limitation on the pricing page rather than discovered here.",
+    "Is the feed address safe to paste?",
+    "Anyone with the address can read that calendar, so treat it like a password. Meetrao stores it privately, shows it masked after you save it, and never shares it. If it ever leaks, reset it in your calendar's settings and paste the new one.",
   ],
 ];
 
@@ -180,7 +187,7 @@ const PANELS: { icon: IconName; title: string; text: string }[] = [
   {
     icon: "calendar",
     title: "Calendar",
-    text: "Connect or disconnect Google Calendar, and set your timezone. Disconnecting stops conflict checking straight away.",
+    text: "Add, replace or remove your calendar feed, save your video link, and set your timezone. Removing the feed stops conflict checking against it straight away.",
   },
   {
     icon: "sliders",
@@ -211,19 +218,19 @@ const FAQS: [string, string][] = [
   ],
   [
     "Can guests reschedule?",
-    "Not yet. They can cancel and book a new time from your link, which achieves the same thing in two steps.",
+    "Yes. The link in their confirmation lets them pick a new time, and you both get an updated calendar invite.",
   ],
   [
     "Does Meetrao read my meeting titles or notes?",
-    "Almost never. It sees only whether a period is busy or free, titles, descriptions and attachments are never read. It does write the bookings you accept and invite your guest to them, and for those events it reads one more thing: whether the guest accepted or declined, so it can tell you when somebody says no.",
+    "No. From your calendar feed it keeps only busy start and end times. Titles, descriptions, attendees and locations are not stored, and Meetrao never asks for access to your calendar account.",
   ],
   [
-    "What if I disconnect my calendar?",
-    "Your link keeps working, but Meetrao can no longer see conflicts, so guests may be offered times you are not free. A banner reminds you until you reconnect. Disconnecting also revokes Meetrao's access with Google, so the permission disappears from your Google account, not just from ours.",
+    "What if I remove my calendar feed?",
+    "Your link keeps working, and Meetrao still blocks the times already booked through it, but it can no longer see your other events, so guests may be offered times you are not free. The address and the busy times kept from it are deleted.",
   ],
   [
-    "Can I use something other than Google Meet?",
-    "Yes. A meeting can be a Google Meet, a phone call, an address, or anything else you describe, your own Zoom or Teams link, for instance. Meetrao creates Meet links itself; for the others it passes on exactly what you wrote.",
+    "Which video service can I use?",
+    "Any one with a link you can reuse: Zoom, Google Meet, Teams, Whereby or another personal room. Save it once in Settings and every video call uses it. A meeting can also be a phone call or an address.",
   ],
   [
     "Can two people book the same slot?",
@@ -236,7 +243,7 @@ const FAQS: [string, string][] = [
   ],
   [
     "Does the meeting appear on my guest’s calendar too?",
-    "Yes, by default. Meetrao creates one event and adds your guest as an attendee, so the meeting, description and Meet link appear on both calendars. If they do not use Google Calendar, the invitation still arrives by email and they can download an .ics file.",
+    "Yes. Their confirmation email carries a standard calendar invite, which Gmail, Outlook and Apple Calendar can add with one click, often automatically. If they move or cancel the meeting, the updated invite follows.",
   ],
   [
     "What does it cost?",
@@ -274,7 +281,7 @@ export default function HelpPage() {
           articleLd({
             headline: "Help Centre: how Meetrao scheduling works",
             description:
-              "Connecting Google Calendar, setting your hours, sharing your link, branding your " +
+              "Adding your calendar feed, setting your hours, sharing your link, branding your " +
               "booking page, and what a guest sees when they book.",
             path: "/help",
           }),
@@ -292,7 +299,7 @@ export default function HelpPage() {
           Help Centre
         </h1>
         <p className="m-0 text-[15px] leading-[1.65] text-pretty text-ink-2">
-          Meetrao replaces the back-and-forth of finding a time. You connect your calendar once, describe the
+          Meetrao replaces the back-and-forth of finding a time. You add your calendar feed once, describe the
           meetings people can book, set the hours you are free, and share one link. Everything below explains a
           section of the app, in the order you would meet it.
         </p>
@@ -353,7 +360,8 @@ export default function HelpPage() {
             <h3>With Google</h3>
             <p>
               Continue with Google and you skip the confirmation step entirely. Google has already verified the
-              address. You go straight to setup.
+              address. You go straight to setup. Google shares only your name, email address and profile picture;
+              signing in this way gives Meetrao no access to your calendar.
             </p>
 
             <Tip>
@@ -384,8 +392,8 @@ export default function HelpPage() {
             </div>
 
             <Tip>
-              You can skip connecting your calendar, but then Meetrao cannot see when you are busy, guests may
-              be offered times you already have something in. Connect it before you share your link.
+              You can skip adding your calendar feed, but then Meetrao sees only its own bookings, and guests
+              may be offered times you already have something in. Add it before you share your link.
             </Tip>
 
             <p>
@@ -395,17 +403,12 @@ export default function HelpPage() {
           </section>
 
           <section>
-            <h2 id="calendar">Google Calendar: what the permission covers</h2>
+            <h2 id="calendar">Add your calendar feed</h2>
             <p>
-              Meetrao asks for one Google permission, at step two of setup. It is the part people hesitate
-              over, so here is the whole of it: what is read, what is written, what is never touched, and how
-              to take it back.
-            </p>
-            <p>
-              <strong>Why it is needed at all.</strong> A booking page that cannot see your calendar is a
-              booking page that offers times you are already busy. Meetrao checks your existing events before
-              it offers a slot, and writes each confirmed booking back so the meeting appears on both
-              calendars with a Meet link, rather than leaving you to copy it across.
+              Meetrao finds your conflicts from a calendar feed: a private address, in iCal (.ics) format, that
+              your calendar publishes. You paste it in once, at step two of setup or any time from{" "}
+              <strong>Settings → Calendar</strong>. It works with Google Calendar, Outlook, iCloud and any other
+              calendar that publishes an .ics feed. Meetrao never asks for access to your calendar account.
             </p>
 
             <div className="mb-[18px] grid grid-cols-[repeat(auto-fit,minmax(min(260px,100%),1fr))] gap-[12px]">
@@ -420,42 +423,30 @@ export default function HelpPage() {
               ))}
             </div>
 
-            <h3>The three permissions, in Google’s own words</h3>
+            <h3>Finding the address</h3>
+            {FEED_STEPS.map((provider) => (
+              <div key={provider.provider}>
+                <p>
+                  <strong>{provider.provider}</strong>
+                </p>
+                <ol>
+                  {provider.steps.map((step) => (
+                    <li key={step}>{step}</li>
+                  ))}
+                </ol>
+              </div>
+            ))}
             <p>
-              Google’s consent screen names scopes, not features. The middle one sounds broader than what
-              Meetrao does with it. That is Google’s vocabulary, and there is no narrower scope that can put
-              an event on your calendar and invite somebody to it.
+              Then paste the address into <strong>Settings → Calendar</strong> and save. Meetrao checks that it can
+              read it, and from then on shows it masked. To change it, paste a new one; to stop, press{" "}
+              <em>Remove</em>, which deletes the address and the busy times kept from it.
             </p>
 
-            <div className="mb-[16px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
-              {SCOPES.map((row) => (
-                <div key={row.scope} className="flex flex-col gap-[4px] bg-surface px-[15px] py-[13px]">
-                  <span className="text-[13.5px] font-semibold text-ink">{row.google}</span>
-                  <span className="text-[12px] text-ink-3">{row.scope}</span>
-                  <span className="text-[13px] leading-[1.55] text-pretty text-ink-2">{row.use}</span>
-                </div>
-              ))}
-            </div>
-
-            <h3>Connecting it</h3>
-            <p>
-              At step two of setup, or any time afterwards from <strong>Settings → Calendar</strong>. You will
-              be sent to Google, asked to choose an account, and shown the three permissions above. Approving
-              returns you to Meetrao with the calendar connected; the panel then shows which Google account it
-              is, so a personal one connected by mistake is obvious.
-            </p>
-            <p>
-              You can skip it during setup and your link still works, but until a calendar is connected,
-              Meetrao cannot see conflicts, and your booking page says so.
-            </p>
-
-            <h3>Disconnecting it</h3>
-            <p>
-              <strong>Settings → Calendar → Disconnect.</strong> Meetrao revokes the token with Google rather
-              than only forgetting it, so the entry disappears from your Google account’s third-party access
-              list as well. Bookings already made stay where they are, on both calendars; new bookings stop
-              being checked for conflicts and stop creating events.
-            </p>
+            <Tip>
+              Feeds are not instant. Google can take a few hours to update its feed, so an event you added a
+              moment ago may not block a slot straight away. Bookings made through Meetrao block their time at
+              once, whatever the feed says, and if the feed cannot be read Meetrao still blocks its own bookings.
+            </Tip>
 
             <h3>When something goes wrong</h3>
             <div className="mb-[8px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
@@ -473,6 +464,35 @@ export default function HelpPage() {
           </section>
 
           <section>
+            <h2 id="video">Video link</h2>
+            <p>
+              Meetrao does not create video meetings. Instead you save your own meeting link once, in{" "}
+              <strong>Settings</strong>: a Zoom personal room, a Google Meet link, a Teams meeting, a
+              Whereby room, or any other link you reuse. Every meeting set to <em>Video call</em> uses it.
+            </p>
+            <p>
+              The link goes into the confirmation, the reminders and the calendar invite, so your guest has it
+              wherever they look. Use a link that stays valid: a personal room rather than a one-off meeting.
+              Change it in Settings and future emails carry the new one.
+            </p>
+          </section>
+
+          <section>
+            <h2 id="invites">Calendar invites</h2>
+            <p>
+              Every booking email, yours and your guest&rsquo;s, carries a standard calendar invite (an .ics
+              file). Gmail, Outlook and Apple Calendar recognise it and add the meeting to the calendar, often
+              without a click. When a booking is rescheduled, the new email updates the same event; when it is
+              cancelled, the email removes it.
+            </p>
+            <p>
+              Meetrao never writes to anyone&rsquo;s calendar directly. If a meeting is missing from yours, open
+              the booking email and add the invite from there, and check that the email did not land in spam.
+              Replies to the invite (accept or decline) go to the calendar app, not to Meetrao.
+            </p>
+          </section>
+
+          <section>
             <h2 id="dashboard">Dashboard</h2>
             <p>
               The first thing you see, designed to be read once in the morning and then closed. It greets you
@@ -486,10 +506,10 @@ export default function HelpPage() {
             </p>
             <p>
               Below that, <strong>Today</strong> lists what is happening now, each row with a <em>Join</em>{" "}
-              button that opens Google Meet directly. <strong>Later this week</strong> follows. <em>Details</em>{" "}
+              button that opens the meeting&rsquo;s video link directly. <strong>Later this week</strong> follows. <em>Details</em>{" "}
               on any row opens the full booking, including any note your guest left.
             </p>
-            <p>If your calendar is not connected, an amber banner sits at the top until it is. It is worth clearing.</p>
+            <p>If you have not added a calendar feed, or it cannot be read, a banner at the top says so. It is worth clearing.</p>
             <p>
               <strong>Copy link</strong> in the header copies your booking link. If more than one meeting is
               active it becomes a dropdown, so you can copy the link for a specific meeting instead of your
@@ -507,8 +527,8 @@ export default function HelpPage() {
             <h3>Creating one</h3>
             <p>
               Give it a name guests will recognise and a description, both appear on your booking page. Pick a
-              duration (15, 30, 45 or 60 minutes). Location is Google Meet; it is the only option in this
-              release, and every booking gets its own link.
+              duration (15, 30, 45 or 60 minutes), and where it happens: a video call using the{" "}
+              <a href="#video">video link</a> you saved, a phone call, or an address.
             </p>
 
             <h3>Booking rules</h3>
@@ -549,7 +569,7 @@ export default function HelpPage() {
             </p>
 
             <Tip>
-              These hours are the outer boundary. Within them, Meetrao still hides anything your Google Calendar
+              These hours are the outer boundary. Within them, Meetrao still hides anything your calendar feed
               says you are busy for, so a meeting already in your calendar at 10am will not be offered, even
               though Tuesday 9–5 is open.
             </Tip>
@@ -574,8 +594,8 @@ export default function HelpPage() {
 
             <h3>Cancelling</h3>
             <p>
-              Open <em>Details</em>, then <em>Cancel meeting</em>. Your guest is emailed, the calendar event is
-              removed, and the slot opens for someone else to book. It cannot be undone, but the guest can book
+              Open <em>Details</em>, then <em>Cancel meeting</em>. Your guest is emailed, the calendar invite is
+              withdrawn so the meeting leaves both calendars, and the slot opens for someone else to book. It cannot be undone, but the guest can book
               a new time from your link.
             </p>
             <p>
@@ -588,8 +608,8 @@ export default function HelpPage() {
             <h2 id="emails">Emails and notifications</h2>
             <p>
               Meetrao emails both sides whenever a booking is made, changed or cancelled. The message carries
-              everything needed: the meeting, both names, the date and time in the right timezone, the duration
-              and the Google Meet link.
+              everything needed: the meeting, both names, the date and time in the right timezone, the duration,
+              where it happens or the video link, and a <a href="#invites">calendar invite</a>.
             </p>
             <p>
               You control which of these reach you in <strong>Settings → Notifications</strong>:
@@ -636,10 +656,10 @@ export default function HelpPage() {
               taps and a form.
             </p>
             <p>
-              Because Meetrao invites them to the calendar event, the meeting appears on their calendar
-              automatically with the Meet link attached. They do not have to add it themselves. The confirmation
-              page shows the booking with a <em>Join Google Meet</em> button, an .ics download if they use
-              something other than Google, and a way to cancel. The same details arrive by email.
+              Their confirmation email carries a calendar invite, so the meeting goes onto their calendar with
+              the video link in it. The confirmation page shows the booking with a button to join the call
+              for video meetings, an .ics download, and a way to cancel or reschedule. The same details arrive by
+              email.
             </p>
             <p>
               If someone else takes the slot while they are choosing, Meetrao tells them plainly and refreshes

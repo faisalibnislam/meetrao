@@ -58,8 +58,9 @@ export function PlanComparison({ footnote = true }: { footnote?: boolean }) {
            that says what it cannot do is more believable than one that does
            not, and this is the smallest honest version of it. */
         <p className="mt-[16px] max-w-[760px] text-[13px] leading-[1.6] text-ink-3">
-          No plan does: Outlook, iCloud or CalDAV; payments at booking; a Zoom or Teams integration that
-          makes links for you; collective availability or routing forms; or reminders by anything but email.
+          No plan does: a live two-way calendar connection (busy times come from your calendar&rsquo;s feed);
+          payments at booking; a Zoom, Meet or Teams integration that makes links for you; collective
+          availability or routing forms; or reminders by anything but email.
           The price is governed by <Link href="/terms#t-price">the Terms</Link>, which also says a free
           account is never billed automatically.
         </p>

@@ -34,7 +34,7 @@ const WALK: { key: StageKey; n: string; title: string; text: string; outcome: st
     key: "booking",
     n: "02",
     title: "Share one link",
-    text: "meetrao.com/adam/30-minute-consultation, always reflecting your calendar exactly as it is right now.",
+    text: "meetrao.com/adam/30-minute-consultation, with your busy times taken out before anyone sees it.",
     outcome: "One link. It never goes stale and never double-books.",
     url: "meetrao.com/adam/30-minute-consultation",
   },
@@ -50,8 +50,8 @@ const WALK: { key: StageKey; n: string; title: string; text: string; outcome: st
     key: "confirm",
     n: "04",
     title: "Booked, both sides",
-    text: "One calendar event with a Google Meet link, and your guest invited to the same event.",
-    outcome: "On both calendars, with a Meet link, automatically.",
+    text: "A calendar invite by email to both of you, with your video link already in it.",
+    outcome: "In both inboxes, ready to add to any calendar.",
     url: "meetrao.com/adam/30-minute-consultation, booked",
   },
 ];
@@ -328,7 +328,7 @@ export function Walkthrough({ today }: { today: string }) {
                               <span className="text-[11px] text-ink-3">meetrao.com/adam/30-minute-consultation</span>
                             </div>
                             <span className="ml-auto inline-flex h-[24px] flex-none items-center gap-[7px] rounded-[5px] border border-line bg-fill px-[9px] text-[11.5px] text-ink-2">
-                              30 min · Google Meet
+                              30 min · Video call
                             </span>
                           </div>
 
@@ -433,7 +433,7 @@ export function Walkthrough({ today }: { today: string }) {
                           <div className="flex gap-[10px] rounded-[9px] border border-accent-line bg-accent-soft px-[13px] py-[11px]">
                             <Icon name="check" weight="solid" size={11} className="mt-[2px] flex-none text-accent-ink" />
                             <span className="min-w-0 flex-1 text-[12.5px] leading-[1.5] text-accent-ink">
-                              This is already on your calendar. Adam has been invited to the same event.
+                              A calendar invite is on its way to your inbox. Adam gets the same one.
                             </span>
                           </div>
                         </div>

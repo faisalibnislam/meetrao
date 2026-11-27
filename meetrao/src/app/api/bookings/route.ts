@@ -7,7 +7,6 @@ import { formatDuration, formatLongDate, formatTime, formatTimeRange } from "@/l
 import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, getPublicMeeting } from "@/lib/data/public-booking";
 import { noteWithAnswers } from "@/lib/email/booking-mail";
 import { sendBookingNewToGuest, sendBookingNewToHost, type BookingMail } from "@/lib/email/send";
-import { createEventForBooking } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
@@ -90,7 +89,7 @@ const DAY = 86_400_000;
 
 /* The mutation's refusals of the "Add guests" list. They are the guest's to
    fix, so they come back as a 400 with the message, not as a server error. */
-const GUEST_REFUSAL = /not an email address|at most \d+ guests|group meeting/i;
+const GUEST_REFUSAL = /not an email address|at most \d+ guests|group meeting|added a video link/i;
 
 /**
  * A booking on a team link.
@@ -122,6 +121,7 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
     host_id: string;
     answers: { label: string; value: string }[];
     invitees: string[];
+    meet_url: string | null;
   };
 
   let row: TeamRow;
@@ -149,19 +149,12 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
-  let meetUrl: string | null = null;
-  let calendarWarning: string | null = null;
   /* The assigned member is the host of this booking, so the confirmation is
      addressed from them by name. A guest who booked "the sales team" still
-     needs to know who is turning up. Fetched alongside the calendar event
-     rather than after it: the two are independent and the event is the slow
-     one. */
-  const [event, hostProfile] = await Promise.all([
-    createEventForBooking(row.reference),
-    convexAnonymous().query(api.publicBooking.hostForBookingMail, { reference: row.reference }),
-  ]);
-  if ("failure" in event) calendarWarning = event.failure;
-  else meetUrl = event.meetUrl;
+     needs to know who is turning up. The video link, when there is one, was
+     copied onto the booking from that member's settings as it was made. */
+  const meetUrl = row.meet_url ?? null;
+  const hostProfile = await convexAnonymous().query(api.publicBooking.hostForBookingMail, { reference: row.reference });
   const end = new Date(row.ends_at);
   const guestTimezone = input.guestTimezone || team.members[0]?.timezone || "UTC";
   const hostTimezone = team.members.find((m) => m.id === row.host_id)?.timezone ?? guestTimezone;
@@ -182,6 +175,10 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
     durationLabel: formatDuration(row.duration),
     meetUrl: meetUrl ?? "",
     where: whereText(meeting.location, meeting.locationDetail, meetUrl),
+    startsAt: start,
+    endsAt: end,
+    sequence: 0,
+    otherGuests: (row.invitees ?? []).map((email) => ({ name: email, email })),
   };
 
   await Promise.allSettled([
@@ -190,7 +187,7 @@ async function bookTeam(request: NextRequest, input: z.infer<typeof Body>, start
     ...guestMails(mail, row.invitees ?? []),
   ]);
 
-  return NextResponse.json({ reference: row.reference, calendarWarning });
+  return NextResponse.json({ reference: row.reference });
 }
 
 export async function POST(request: NextRequest) {
@@ -253,6 +250,7 @@ export async function POST(request: NextRequest) {
     duration: number;
     answers: { label: string; value: string }[];
     invitees: string[];
+    meet_url: string | null;
   };
   let row: CreatedRow;
 
@@ -296,22 +294,12 @@ export async function POST(request: NextRequest) {
 
   const end = new Date(row.ends_at);
 
-  /* The calendar write comes after the booking exists. If it fails the booking
-     is still real. The host is told, rather than the guest losing a meeting
-     they were told they had. */
-  let meetUrl: string | null = null;
-  let calendarWarning: string | null = null;
-
-  /* The calendar event and the host's mail details are independent, and the
-     event is the slow one (it goes out to Google), so neither waits for the
-     other. The host's details are just enough to address the confirmation
-     email, keyed by the booking's own reference. */
-  const [event, hostProfile] = await Promise.all([
-    createEventForBooking(row.reference),
-    convexAnonymous().query(api.publicBooking.hostForBookingMail, { reference: row.reference }),
-  ]);
-  if ("failure" in event) calendarWarning = event.failure;
-  else meetUrl = event.meetUrl;
+  /* The video link, when there is one, was copied onto the booking from the
+     host's settings as it was made. The host's details are just enough to
+     address the confirmation email, keyed by the booking's own reference. The
+     calendar invitation travels with each email. */
+  const meetUrl = row.meet_url ?? null;
+  const hostProfile = await convexAnonymous().query(api.publicBooking.hostForBookingMail, { reference: row.reference });
 
   const mail: BookingMail = {
     bookingId: row.id,
@@ -329,6 +317,10 @@ export async function POST(request: NextRequest) {
     durationLabel: formatDuration(row.duration),
     meetUrl: meetUrl ?? "",
     where: whereText(meeting.location, meeting.locationDetail, meetUrl),
+    startsAt: start,
+    endsAt: end,
+    sequence: 0,
+    otherGuests: (row.invitees ?? []).map((email) => ({ name: email, email })),
   };
 
   // Mail must never keep a guest waiting on a confirmation screen.
@@ -338,5 +330,5 @@ export async function POST(request: NextRequest) {
     ...guestMails(mail, row.invitees ?? []),
   ]);
 
-  return NextResponse.json({ reference: row.reference, calendarWarning });
+  return NextResponse.json({ reference: row.reference });
 }

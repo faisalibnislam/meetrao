@@ -98,10 +98,9 @@ export function ButtonLink({
   );
 
   /* A route handler is not a page. <Link> prefetches whatever it points at
-     as soon as it scrolls into view, and "Connect Google Calendar" points at
-     /api/google/connect, which starts the OAuth flow: every view of the
-     calendar settings ran a Convex query and overwrote the OAuth state cookie
-     before anybody clicked. A plain anchor is fetched only when followed. */
+     as soon as it scrolls into view; a link to a route that starts an OAuth
+     flow (the old Google Calendar connect route was one) ran a Convex query
+     and overwrote the OAuth state cookie before anybody clicked. A plain anchor is fetched only when followed. */
   if (typeof rest.href === "string" && rest.href.startsWith("/api/")) {
     return (
       <a href={rest.href} className={classes} target={rest.target} rel={rest.rel}>

@@ -5,7 +5,6 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ChoiceChip, Field, Input, Switch, Textarea } from "@/components/ui/controls";
 import { Icon } from "@/components/ui/icon";
-import { GoogleG } from "@/components/ui/logo";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
 import { Callout, PanelHeading } from "@/components/ui/panels";
@@ -76,7 +75,7 @@ export function MeetingForm({
   pro = false,
   linkPrefix,
   siblings = [],
-  google = { connected: true, needsReconnect: false },
+  videoLink = "set",
   previewHref = null,
 }: {
   initial: MeetingInput;
@@ -97,10 +96,10 @@ export function MeetingForm({
    */
   siblings?: SlugHolder[];
   /**
-   * The host's Google Calendar connection. A Meet link is minted through it,
-   * so a Google Meet meeting without one is booked with no link at all.
+   * Whether the host has saved a video link. A "Video call" meeting sends
+   * every guest to it, so without one the meeting cannot be booked.
    */
-  google?: { connected: boolean; needsReconnect: boolean };
+  videoLink?: "set" | "missing";
   /** The saved meeting's public page, for the Preview link. Null when new. */
   previewHref?: string | null;
 }) {
@@ -264,9 +263,7 @@ export function MeetingForm({
     router.push("/meetings");
   }
 
-  /* Back here after connecting, which is the screen the host was on. */
-  const returnTo = editing ? `/meetings/${initial.id}/edit` : "/meetings/new";
-  const googleMissing = !google.connected || google.needsReconnect;
+  const videoMissing = videoLink === "missing";
 
   return (
     <div className="flex w-full max-w-[600px] flex-col">
@@ -433,36 +430,28 @@ export function MeetingForm({
           ))}
         </div>
 
-        {/* A MEET LINK NEEDS GOOGLE. The link on every booking is minted
-            through the host's Google Calendar, so without a connection the
-            meeting is booked with nowhere to meet, and the guest finds out at
-            the start time. Said here, where the choice is made, with the way
-            to fix it beside it, rather than silently accepted. */}
-        {locationKind === "google_meet" && googleMissing ? (
+        {/* A VIDEO CALL NEEDS A LINK. Every booking of this meeting is sent
+            to the host's saved video link, so without one there is nowhere to
+            meet: booking is refused until there is. Said here, where the
+            choice is made, with the way to fix it beside it. */}
+        {locationKind === "google_meet" && videoMissing ? (
           <Callout
             tone="amber"
             action={
-              <ButtonLink
-                variant="amber"
-                size={28}
-                href={`/api/google/connect?next=${encodeURIComponent(returnTo)}`}
-              >
-                <GoogleG size={13} />
-                {google.needsReconnect ? "Reconnect" : "Connect"}
+              <ButtonLink variant="amber" size={28} href="/settings/calendar">
+                Add link
               </ButtonLink>
             }
           >
-            <strong className="font-semibold">
-              {google.needsReconnect ? "Google Calendar needs reconnecting." : "Google Calendar isn’t connected."}
-            </strong>{" "}
-            Until it is, bookings of this meeting get no Meet link. Connect it, or pick another location.
+            <strong className="font-semibold">Add your video link first.</strong> Guests can&rsquo;t book a video
+            call until you save your Zoom, Meet, Teams or other meeting link in Settings.
           </Callout>
         ) : locationKind === "google_meet" ? (
           <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
             <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-accent-ink" />
             <span className="text-[12.5px] leading-[1.6] text-ink-2">
-              Meetrao creates one calendar event and invites your guest to it, so the meeting, the description
-              and the Meet link land on both calendars. Changes and cancellations update both sides.
+              Guests get your saved video link. You and your guest each receive a calendar invite by email, and
+              moves and cancellations update it.
             </span>
           </div>
         ) : (
@@ -494,7 +483,7 @@ export function MeetingForm({
           <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
             <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
             <span className="text-[12.5px] leading-[1.6] text-ink-2">
-              No Meet link is created. The booking still lands on both calendars, carrying this as its location.
+              You and your guest each receive a calendar invite by email, carrying this as its location.
             </span>
           </div>
         ) : null}
@@ -553,8 +542,8 @@ export function MeetingForm({
           <div className="flex gap-[11px] rounded-[8px] border border-line bg-fill px-[14px] py-[12px]">
             <Icon name="circle-info" weight="solid" size={11} className="mt-[3px] flex-none text-ink-3" />
             <span className="text-[12.5px] leading-[1.6] text-ink-2">
-              Everyone booked into a slot shares one calendar event and one Meet link, so your own calendar
-              shows the session once rather than once per guest.
+              Everyone booked into a slot gets the same place and the same video link. Each seat sends you its
+              own invite, so your calendar shows one entry per guest.
             </span>
           </div>
         ) : null}

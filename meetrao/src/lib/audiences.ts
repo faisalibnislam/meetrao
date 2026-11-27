@@ -64,7 +64,7 @@ export const CONSULTANTS: Audience = {
     ],
     [
       "Context before the call, not after",
-      "The booking form takes a note, and it reaches you with the booking and sits on the calendar event. Enough to arrive at a discovery call knowing what it is about.",
+      "The booking form takes a note, and it reaches you in the booking email. Enough to arrive at a discovery call knowing what it is about.",
     ],
   ],
   cannot: [
@@ -73,8 +73,8 @@ export const CONSULTANTS: Audience = {
       "Nothing in Meetrao collects money, so a paid consultation has to be invoiced separately. If taking payment at the point of booking is how you work, this is the wrong tool and it is better to know now.",
     ],
     [
-      "It reads one Google Calendar",
-      "If your availability is spread across a work calendar and a personal one, or lives in Outlook, Meetrao will offer times you are not actually free.",
+      "It reads one calendar feed",
+      "If your availability is spread across a work calendar and a personal one, Meetrao checks only the feed you give it and will offer times you are not actually free.",
     ],
     [
       "Every enquiry gets the same link",
@@ -124,7 +124,7 @@ export const COACHES: Audience = {
     ],
     [
       "Rescheduling without a message to you",
-      "A guest moves their own session from the link in their confirmation. The calendar event moves with it on both sides, and nobody has to negotiate a new time by email.",
+      "A guest moves their own session from the link in their confirmation. The calendar invite updates for both of you, and nobody has to negotiate a new time by email.",
     ],
   ],
   cannot: [
@@ -197,8 +197,8 @@ export const FREELANCERS: Audience = {
       "meet.yourname.com, not yourname.com. The record is a CNAME, and a CNAME cannot sit on an apex domain.",
     ],
     [
-      "One Google Calendar, and only Google",
-      "No Outlook, no iCloud, no second calendar. If your real availability is split across two, this will get it wrong.",
+      "One calendar feed, and it can lag",
+      "Google, Outlook or iCloud all work through their feed, but only one, and Google can take a few hours to show a new event. If your real availability is split across two calendars, this will get it wrong.",
     ],
   ],
   insteadSee: { label: "What a custom domain costs elsewhere", href: "/custom-domain" },

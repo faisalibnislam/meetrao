@@ -13,29 +13,19 @@ import { signOut } from "@/lib/actions/auth";
 import { ensureDefaultAvailability } from "@/lib/data/availability";
 import { minutesToLabel } from "@/lib/booking/time";
 import { requireSession } from "@/lib/data/session";
-import { connectionStatus } from "@/lib/google/connection";
+import { feedStatus } from "@/lib/calendar/feed";
 import { convexServer } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { timezoneOptions } from "@/lib/timezones";
 
 export const metadata: Metadata = { title: "Set up Meetrao" };
 
-const FAILURES: Record<string, string> = {
-  denied: "Google didn't confirm the permission. Try again and allow calendar access.",
-  scope: "Calendar access was not granted in full. Reconnect and allow inviting guests.",
-  state: "That connection attempt expired. Start it again from this page.",
-  failed: "Google didn't complete the handshake. Try again in a moment.",
-};
-
 export default async function OnboardingStep({
   params,
-  searchParams,
 }: {
   params: Promise<{ step: string }>;
-  searchParams: Promise<{ calendar?: string }>;
 }) {
   const { step: raw } = await params;
-  const { calendar } = await searchParams;
 
   const step = Number(raw);
   if (!Number.isInteger(step) || step < 1 || step > 5) notFound();
@@ -50,7 +40,7 @@ export default async function OnboardingStep({
   return (
     <div className="box-border flex min-h-screen flex-col">
       <StepRail step={step} name={name} email={session.profile.email} onSignOut={signOut} />
-      {await stepContent(step, session, convex, calendar)}
+      {await stepContent(step, session, convex)}
     </div>
   );
 }
@@ -58,20 +48,13 @@ export default async function OnboardingStep({
 type Session = Awaited<ReturnType<typeof requireSession>>;
 type Client = Awaited<ReturnType<typeof convexServer>>;
 
-async function stepContent(step: number, session: Session, convex: Client, calendar?: string) {
+async function stepContent(step: number, session: Session, convex: Client) {
   if (step === 1) {
     return <StepClaimLink initial={session.profile.username} />;
   }
 
   if (step === 2) {
-    const status = await connectionStatus(session.userId);
-    return (
-      <StepCalendar
-        connected={status.connected}
-        accountEmail={status.accountEmail}
-        failure={calendar && calendar !== "connected" ? (FAILURES[calendar] ?? FAILURES.failed) : null}
-      />
-    );
+    return <StepCalendar feed={await feedStatus()} videoLink={session.profile.video_link ?? null} />;
   }
 
   if (step === 3) {
@@ -115,7 +98,7 @@ async function stepContent(step: number, session: Session, convex: Client, calen
   const [meeting, screen, status] = await Promise.all([
     convex.query(api.profiles.firstMeeting, {}),
     convex.query(api.availability.screen, {}),
-    connectionStatus(session.userId),
+    feedStatus(),
   ]);
 
   const days: Day[] = rulesToDays(screen.rules);
@@ -129,6 +112,7 @@ async function stepContent(step: number, session: Session, convex: Client, calen
       openDays={open.length}
       firstStart={open.length ? minutesToLabel(open[0].ranges[0].start) : "–"}
       connected={status.connected}
+      videoMissing={!session.profile.video_link && (meeting?.location ?? "google_meet") === "google_meet"}
     />
   );
 }

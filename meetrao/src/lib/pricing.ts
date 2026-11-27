@@ -120,11 +120,11 @@ export const INCLUDED: readonly string[] = [
   "A public booking link for every meeting: meetrao.com/your-name/intro-call",
   "Unlimited meeting types and weekly schedules",
   "Unlimited bookings a month",
-  "Google Calendar connected, and checked for conflicts before a slot is offered",
-  "A Google Meet link created on every confirmed booking, or a phone call, an address, your own link",
+  "Your calendar feed (Google, Outlook, iCloud or any .ics link) checked for busy times before a slot is offered",
+  "Your own video link (Zoom, Meet, Teams) on every video booking, or a phone call or an address",
   "Guests book without an account, in their own timezone",
   "Reminders the day before and an hour before, to both of you",
-  "Guests move a meeting themselves, keeping the same Meet link",
+  "A calendar invite by email to both of you, updated when a meeting moves or is cancelled",
   "Days off and one-off hours, on top of your weekly pattern",
   "Up to five questions on the booking form",
   "Buffers between meetings, minimum notice, and a booking window",
@@ -145,9 +145,9 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
   { feature: "Booking links: meetrao.com/your-name/intro-call", free: true, pro: true, business: true },
   { feature: "Unlimited meeting types and weekly schedules", free: true, pro: true, business: true },
   { feature: "Unlimited bookings", free: true, pro: true, business: true },
-  { feature: "Google Calendar checked before a slot is offered", free: true, pro: true, business: true },
-  { feature: "Google Meet link on every online booking", free: true, pro: true, business: true },
-  { feature: "Phone, in person, or your own meeting link", free: true, pro: true, business: true },
+  { feature: "Your calendar feed checked before a slot is offered", free: true, pro: true, business: true },
+  { feature: "Calendar invites by email, for you and your guest", free: true, pro: true, business: true },
+  { feature: "Your video link, phone, or in person", free: true, pro: true, business: true },
   { feature: "Guests move a booking themselves", free: true, pro: true, business: true },
   { feature: "Days off and one-off hours", free: true, pro: true, business: true },
   { feature: "Up to five questions on the booking form", free: true, pro: true, business: true },
@@ -179,9 +179,9 @@ export const COMPARISON: readonly { feature: string; free: PlanCell; pro: PlanCe
  * been built reads as neglect, and one quietly deleted reads as worse.
  */
 export const LIMITS: readonly [string, string][] = [
-  ["Google Calendar only", "No Outlook, no iCloud, no CalDAV. If your calendar lives elsewhere, Meetrao cannot see your conflicts and is the wrong tool."],
+  ["Busy times by feed only", "Meetrao reads your calendar's private .ics feed, not a live connection, and never writes to your calendar. Google can take a few hours to update its feed, so a brand-new event may not block a slot straight away."],
   ["No payments", "You cannot charge for a booking. Nothing collects money."],
-  ["No Zoom or Teams integration", "Meetrao creates Google Meet links itself. A meeting can be a phone call, an address or your own Zoom link, but that link is one you paste, not one it makes for you."],
+  ["No Zoom, Meet or Teams integration", "Meetrao does not create video links. You save your own Zoom, Meet or Teams link once and every video booking uses it, so every guest gets the same room."],
   ["Round-robin only", "A team link goes to whoever is free and least recently booked. There is no collective availability (several hosts in one meeting) and no routing forms."],
   ["Reminders are email only", "One the day before and one an hour before, by email. No SMS, no WhatsApp, no push notifications."],
 ];
@@ -194,7 +194,7 @@ export const LIMITS: readonly [string, string][] = [
  */
 export const WHY: readonly string[] = [
   "Meetrao is run by Space Cherries LLC, a small company. There is no sales team to fund and no investor expecting a return this quarter, which is why the free plan is the real product rather than a demonstration of one.",
-  "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free, never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
+  "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and keeps only the busy start and end times from your calendar feed, never what your meetings are about. The Privacy Policy says exactly what it keeps and why.",
   "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; hosting a logo means storage and bandwidth on every page view; a team link means several calendars checked on every page load. Thirty dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
   `Business costs more because it carries more. Every person on a company domain is another published booking page, another calendar checked on every view and more reminder emails sent. ${BUSINESS_YEARLY} covers up to ${BUSINESS_LIMITS.companies} companies of up to ${BUSINESS_LIMITS.membersPerCompany} people, and the caps are there to bound that cost, not to sell the next plan up.`,
 ];
@@ -220,12 +220,12 @@ export const PRICING_FAQ: readonly (readonly [string, string, string])[] = [
   [
     "catch",
     "So what is the catch?",
-    "The limits, and they are listed above rather than discovered later: Google Calendar only, no payments, no Zoom or Teams integration, round-robin without collective availability, and email-only reminders. None of the plans lifts those, so paying will not fix one, and Free is not a trial of something better. If you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
+    "The limits, and they are listed above rather than discovered later: busy times from a calendar feed rather than a live connection, no payments, no Zoom, Meet or Teams integration, round-robin without collective availability, and email-only reminders. None of the plans lifts those, so paying will not fix one, and Free is not a trial of something better. If you need one of those five things, Meetrao is the wrong choice and this page would rather say so now.",
   ],
   [
     "data",
     "Am I the product?",
-    "No. Meetrao does not sell data, does not run ads, and does not share your calendar with anyone. It asks Google only whether a period is busy or free, never event titles, descriptions or attachments. For the events Meetrao creates itself it also reads whether your guest accepted or declined, which is how it can tell you. Disconnecting from Settings revokes the permission with Google, not just with us.",
+    "No. Meetrao does not sell data, does not run ads, and does not share your calendar with anyone. From your calendar feed it keeps only busy start and end times, never event titles, descriptions, attendees or locations, and it never asks for access to your Google account's calendar. Removing the feed in Settings deletes the address and the busy times kept from it.",
   ],
   [
     "limits",

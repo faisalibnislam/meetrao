@@ -988,6 +988,7 @@ export const createTeamBooking = mutation({
       starts_at: new Date(booking.starts_at).toISOString(),
       ends_at: new Date(booking.ends_at).toISOString(),
       meeting_name: booking.meeting_name, duration: booking.duration_minutes, host_id: booking.host_id,
+      meet_url: booking.meet_url,
     };
   },
 });
@@ -1081,6 +1082,7 @@ export const createBooking = mutation({
       starts_at: new Date(booking.starts_at).toISOString(),
       ends_at: new Date(booking.ends_at).toISOString(),
       meeting_name: booking.meeting_name, duration: booking.duration_minutes, host_id: booking.host_id,
+      meet_url: booking.meet_url,
     };
   },
 });

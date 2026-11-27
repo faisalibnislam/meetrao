@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { requireSession } from "@/lib/data/session";
-import { disconnect } from "@/lib/google/connection";
 import { convexServer } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
@@ -127,14 +126,42 @@ export async function changePassword(input: {
   return {};
 }
 
-export async function disconnectCalendar(): Promise<SettingsResult> {
-  const session = await requireSession();
-  const r = await disconnect(session.userId);
-  // Revalidate either way: on failure the card must keep showing "Connected",
-  // which is the truth, rather than a stale optimistic state.
+/* ── calendar feed and video link ────────────────────────────────────────── */
+
+export async function saveCalendarFeed(url: string): Promise<SettingsResult & { hint?: string }> {
+  await requireSession();
+  const r = await onConvex((c) => c.action(api.calendarFeed.saveOwn, { url }));
+  if (r.error) return { error: r.error };
   revalidatePath("/settings");
   revalidatePath("/dashboard");
-  return r.ok ? {} : { error: r.error ?? "Google Calendar could not be disconnected." };
+  return r.value!.ok ? { hint: r.value!.hint } : { error: r.value!.error };
+}
+
+export async function refreshCalendarFeed(): Promise<SettingsResult> {
+  await requireSession();
+  const r = await onConvex((c) => c.action(api.calendarFeed.refreshOwn, {}));
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+  if (r.error) return { error: r.error };
+  return r.value!.ok ? {} : { error: r.value!.error };
+}
+
+export async function removeCalendarFeed(): Promise<SettingsResult> {
+  await requireSession();
+  const r = await onConvex((c) => c.mutation(api.calendarFeed.removeOwn, {}));
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+  return r.error ? { error: r.error } : {};
+}
+
+/** Empty clears it. */
+export async function saveVideoLink(link: string): Promise<SettingsResult> {
+  await requireSession();
+  const r = await onConvex((c) => c.mutation(api.profiles.setVideoLink, { link }));
+  revalidatePath("/settings");
+  revalidatePath("/dashboard");
+  revalidatePath("/meetings");
+  return r.error ? { error: r.error } : {};
 }
 
 /**
@@ -143,12 +170,7 @@ export async function disconnectCalendar(): Promise<SettingsResult> {
  * `admin_remove_account` does as part of the same transaction.
  */
 export async function deleteOwnAccount(): Promise<SettingsResult> {
-  const session = await requireSession();
-
-  /* Revoke Google BEFORE the purge. Deleting the account takes the stored
-     refresh token with it, and a grant with nothing left to revoke it with
-     outlives the account that asked for it. */
-  await disconnect(session.userId);
+  await requireSession();
 
   const r = await onConvex((c) => c.mutation(api.profiles.deleteOwnAccount, {}));
   if (r.error) return { error: r.error };

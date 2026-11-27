@@ -75,17 +75,6 @@ export function notificationOut(d: Doc<"notifications">) {
   return { ...rest, created_at: iso(created_at), read_at: isoOrNull(read_at) };
 }
 
-export function connectionOut(d: Doc<"calendar_connections">) {
-  const { created_at, updated_at, token_expires_at, last_error_at, ...rest } = bare(d);
-  return {
-    ...rest,
-    token_expires_at: isoOrNull(token_expires_at),
-    last_error_at: isoOrNull(last_error_at),
-    created_at: iso(created_at),
-    updated_at: iso(updated_at),
-  };
-}
-
 export function activityOut(d: Doc<"admin_activity">) {
   const { created_at, ...rest } = bare(d);
   return { ...rest, created_at: iso(created_at) };

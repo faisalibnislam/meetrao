@@ -1,5 +1,7 @@
 export type Profile = {
   id: string;
+  /** The host's own video meeting link; absent or null when not set. */
+  video_link?: string | null;
   username: string;
   full_name: string;
   job_title: string;
@@ -113,20 +115,9 @@ export type Booking = {
   /** Where it happens, as it was when the booking was made. */
   location?: string;
   location_detail?: string;
+  /** Bumped on every move; the calendar invitation's SEQUENCE. Absent is 0. */
+  revision?: number;
   created_at: string;
-};
-
-export type CalendarConnection = {
-  id: string;
-  user_id: string;
-  google_account_email: string | null;
-  calendar_id: string;
-  access_token: string | null;
-  refresh_token: string | null;
-  token_expires_at: string | null;
-  scopes: string[];
-  needs_reconnect: boolean;
-  last_error: string | null;
 };
 
 export type PlatformSettings = {

@@ -851,7 +851,7 @@ function BrandPreview({
 
           {/* The quiet panel, which is the booking card's left half. */}
           <div className="rounded-[6px] bg-fill px-[10px] py-[8px] text-[11.5px] text-ink-2">
-            45 minutes · Google Meet
+            45 minutes · Video call
           </div>
         </div>
 

@@ -14,8 +14,8 @@ import { OPERATOR_NAME, OPERATOR_SITE, OPERATOR_URL, POSTAL_ADDRESS, SUPPORT_EMA
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "What Meetrao collects from your calendar and what it deliberately leaves alone, " +
-    "including the Google API Services User Data Policy Limited Use disclosure.",
+    "What Meetrao collects, why it keeps only busy times from your calendar feed, and what " +
+    "it leaves alone, including the Google Limited Use disclosure.",
   alternates: { canonical: "/privacy" },
 };
 
@@ -24,13 +24,15 @@ const UPDATED = "27 November 2026";
 const TOC: TocEntry[] = [
   { id: "p-who", label: "1. Who we are" },
   { id: "p-collect", label: "2. What we collect" },
-  { id: "p-google", label: "3. Google user data" },
+  { id: "p-calendar-feed", label: "3. Your calendar feed" },
+  { id: "p-invites", label: "· Calendar invites" },
+  { id: "p-google", label: "4. Sign in with Google" },
   /* Sub-entries, indented in the rail. A verification reviewer should be able
-     to reach either disclosure in one click from the top of the page rather
-     than by scrolling section 3. */
+     to reach each disclosure in one click from the top of the page rather
+     than by scrolling section 4. */
   { id: "p-google-share", label: "· Who we share it with" },
   { id: "p-google-protect", label: "· How we protect it" },
-  { id: "p-limited-use", label: "4. Google Limited Use" },
+  { id: "p-limited-use", label: "· Google Limited Use" },
   { id: "p-not", label: "5. What we don't do" },
   { id: "p-why", label: "6. Why we use it" },
   { id: "p-share", label: "7. Who else touches it" },
@@ -45,45 +47,18 @@ const TOC: TocEntry[] = [
 ];
 
 const SHORT_VERSION = [
-  "We read whether you are busy: never what your meetings are about.",
+  "From your calendar feed we keep only when you are busy: never what your meetings are about.",
   "We do not sell your data, or your guests' data, to anyone.",
   "We never use your data or your guests' data to train machine-learning models.",
   "Delete your account and it goes immediately. There is no grace-period copy.",
 ];
 
-/* Every scope in CALENDAR_SCOPES (lib/google/oauth.ts), plus the three Convex
-   Auth requests for Sign in with Google. Named in full because Google's
-   verification review compares this table against the consent screen, a policy
-   that says "calendar access" where the grant says calendar.events is the
-   single most common reason a review comes back. */
-const SCOPES: [string, string, string][] = [
-  [
-    "calendar.freebusy",
-    "See when you are busy or free",
-    "Every time somebody opens your booking page, so a slot you already have something in is never offered.",
-  ],
-  [
-    "calendar.events",
-    "See, edit and delete events on your calendar",
-    "Creating the event for each confirmed booking with its Google Meet link, inviting your guest so it reaches their calendar too, updating or deleting that event when the booking changes or is cancelled, and reading whether your guest accepted or declined THAT event, by its own identifier, never by listing or searching your calendar.",
-  ],
-  [
-    "userinfo.email",
-    "Your Google account's email address",
-    "Showing you which Google account is connected, on the Settings page, so you can tell a work account from a personal one.",
-  ],
-  [
-    "openid · email · profile",
-    "Your name, email address and profile picture",
-    "Only if you choose Sign in with Google instead of a password. Used to create your Meetrao account and sign you in.",
-  ],
-];
-
 const PURPOSES: [string, string][] = [
   ["Account details", "Signing you in, and keeping your booking link yours."],
-  ["Calendar busy times", "Never offering a time you already have something in."],
-  ["Permission to create events", "Writing each confirmed booking to your calendar with its Meet link."],
-  ["Guest name, email and note", "Confirming the booking, inviting them to the event, and telling you who is coming."],
+  ["Calendar feed address", "Fetching your calendar's feed so busy times can be found."],
+  ["Busy start and end times", "Never offering a time you already have something in."],
+  ["Your video link", "Putting the link you saved on each video booking."],
+  ["Guest name, email and note", "Confirming the booking, sending both of you the calendar invite, and telling you who is coming."],
   ["Notification preferences", "Sending only the messages you asked for."],
   ["Page views", "Knowing which pages are read and whether the site works on real phones."],
 ];
@@ -91,35 +66,36 @@ const PURPOSES: [string, string][] = [
 /**
  * Which providers receive Google user data specifically, and what each one gets.
  *
- * Deliberately separate from PROCESSORS below. That list answers "who helps run
- * Meetrao"; this one answers the narrower question Google's verification review
- * asks (with whom is GOOGLE USER DATA shared) and the answers differ. Google
+ * Google user data is now only what Sign in with Google returns: name, email
+ * address and profile picture. Deliberately separate from PROCESSORS below.
+ * That list answers "who helps run Meetrao"; this one answers the narrower
+ * question Google's verification review asks, and the answers differ. Google
  * Analytics is on the first list and must never be on this one.
  */
 const GOOGLE_DATA_RECIPIENTS: [string, string][] = [
   [
     "Convex (database and authentication, N. Virginia)",
-    "Stores the Google refresh and access tokens, the connected account's email address, and the calendar identifier. Also stores the booking records that produce calendar events, and runs the code that calls Google. The tokens are used where they are stored and are never returned to the website. The only provider that holds Google user data at rest.",
+    "Stores the name, email address and profile picture from Sign in with Google as part of your account, and runs the sign-in itself. The only provider that holds Google user data at rest.",
   ],
   [
     "Vercel (hosting, functions in Tokyo)",
-    "Processes it in memory while a request is being served, for example while creating an event. Stores none of it.",
+    "Processes it in memory while a page is being served, for example showing your name in the dashboard. Stores none of it.",
   ],
   [
     "Resend (email, United States)",
-    "Receives what appears in a confirmation email: the meeting name, the time, the guest's name and email address, and the Google Meet link. Never receives your tokens, and never the contents of your calendar.",
+    "Receives your name and email address when an email is sent to you or names you as the host, such as a booking confirmation and its calendar invite.",
   ],
   [
     "Google",
-    "The source, and the destination. Events Meetrao creates are written back to your own Google Calendar, and Google notifies your guest.",
+    "The source. Google confirms who you are when you sign in. Meetrao sends nothing back to your Google account.",
   ],
 ];
 
 const PROCESSORS: [string, string, string][] = [
   ["Vercel", "Hosting and content delivery", "United States"],
   ["Convex", "Database, authentication and file storage", "United States (N. Virginia)"],
-  ["Google", "Calendar, Meet, Sign in with Google, and Google Analytics", "United States"],
-  ["Resend", "Transactional email delivery", "United States"],
+  ["Google", "Sign in with Google, and Google Analytics", "United States"],
+  ["Resend", "Transactional email delivery, including calendar invites", "United States"],
 ];
 
 export default function PrivacyPage() {
@@ -131,14 +107,17 @@ export default function PrivacyPage() {
         <DocHeader
           eyebrow="Privacy Policy"
           title="What we collect, and what we don't"
-          intro="Meetrao needs your calendar to do its job. That is a lot of trust, so this page is specific about what we take, what we leave alone, and who else touches it. No vague language about “improving your experience”."
+          intro="Meetrao needs to know when you are busy to do its job. That is still trust, so this page is specific about what we take, what we leave alone, and who else touches it. No vague language about “improving your experience”."
           meta={[`Last updated ${UPDATED}`, `Data controller: ${OPERATOR_NAME}, Alexandria, Virginia, USA`]}
         />
 
         <p>
           <strong>What changed on {UPDATED}:</strong> Meetrao is now operated by {OPERATOR_NAME} in the United
-          States, which is now the data controller (sections 1 and 8). What we collect and how we use it has not
-          changed.
+          States, which is now the data controller (sections 1 and 8).
+        </p>
+        <p>
+          <strong>Also on {UPDATED}:</strong> Google Calendar connection removed; calendar feeds and emailed
+          invites described (section 3).
         </p>
 
         <div className="mb-[26px] flex flex-col gap-[11px] rounded-[10px] border border-accent-line bg-accent-soft px-[16px] py-[15px]">
@@ -187,6 +166,14 @@ export default function PrivacyPage() {
             <strong>Notification preferences</strong>, the switches in Settings that decide which emails we
             send you.
           </li>
+          <li>
+            <strong>Your calendar feed address</strong>, if you add one, and the busy times taken from it. See{" "}
+            <a href="#p-calendar-feed">section 3</a>.
+          </li>
+          <li>
+            <strong>Your video link</strong>, if you save one, such as a Zoom, Google Meet or Teams room. It is
+            shared with each guest who books a video call.
+          </li>
         </ul>
 
         <h3>From your guests</h3>
@@ -208,9 +195,8 @@ export default function PrivacyPage() {
           how it is used. We handle it on their instructions.
         </p>
         <p>
-          Because Meetrao invites the guest to the host&rsquo;s calendar event, the guest&rsquo;s name and email
-          are passed to Google Calendar as an attendee, and host and guest can each see the other&rsquo;s address
-          on the event. That exchange is how the meeting reaches both calendars.
+          Every booking email carries a calendar invite naming both host and guest, so each can see the
+          other&rsquo;s name and email address in it. That exchange is how the meeting reaches both calendars.
         </p>
 
         <h3>Automatically, when you visit the website</h3>
@@ -245,73 +231,62 @@ export default function PrivacyPage() {
           <a href="#p-cookies">section 12</a>.
         </p>
 
-        <h2 id="p-google">3. Google user data</h2>
+        <h2 id="p-calendar-feed">3. Your calendar feed</h2>
         <p>
-          Connecting Google Calendar is optional. Meetrao works without it, it just cannot then see your
-          conflicts. If you do connect it, here is exactly what we ask Google for and what each permission is
-          used for.
+          Adding a calendar feed is optional. Meetrao works without it; it then blocks only the times already
+          booked through Meetrao. If you add one, here is exactly what happens.
+        </p>
+        <p>
+          <strong>What you give us.</strong> The private address of a calendar feed in iCal (.ics) format, such
+          as Google Calendar&rsquo;s secret address, an Outlook published calendar link or an iCloud public
+          calendar link. Anyone holding that address can read the calendar, so we treat it as a secret.
+        </p>
+        <p>
+          <strong>How it is stored.</strong> Only in our database, with our backend provider, Convex. After you
+          save it, it is shown to you masked and never in full again. It is not shown to your guests and not
+          shared with anyone.
+        </p>
+        <p>
+          <strong>What we keep.</strong> When it is needed, at most every few minutes, Meetrao fetches the feed
+          and keeps only the start and end times of busy periods, for a limited window ahead. Event titles,
+          descriptions, attendees and locations are discarded as the feed is read and are never stored. The feed
+          is read only; Meetrao never writes to your calendar.
+        </p>
+        <p>
+          <strong>How to remove it.</strong> In Settings. Removing the feed deletes the address and the busy times
+          kept from it. To cut off the address everywhere, you can also reset or stop publishing it in your
+          calendar&rsquo;s own settings.
+        </p>
+        <p>
+          <strong>Earlier Google Calendar connections.</strong> Meetrao used to connect to Google Calendar
+          directly. That connection has been removed: access granted by earlier connections has been revoked with
+          Google and the stored tokens deleted. Meetrao no longer requests any Google Calendar permission.
         </p>
 
-        <div className="mb-[16px] flex flex-col gap-[1px] overflow-hidden rounded-[10px] border border-line bg-line">
-          {SCOPES.map(([scope, what, why]) => (
-            <div key={scope} className="flex flex-col gap-[4px] bg-surface px-[15px] py-[12px]">
-              <span className="text-[13px] font-semibold text-ink">{scope}</span>
-              <span className="text-[12.5px] font-medium text-ink-2">{what}</span>
-              <span className="text-[12.5px] leading-[1.55] text-ink-3">{why}</span>
-            </div>
-          ))}
-        </div>
-
+        <h3 id="p-invites">Calendar invites by email</h3>
         <p>
-          <strong>What we actually read.</strong> To find your conflicts, Meetrao asks Google one question:
-          which intervals in the next few weeks are busy. It never requests the contents of your events, and no
-          part of the service reads an event title, guest list, description, location or attachment.
-        </p>
-        <p>
-          <strong>What the permission would allow.</strong> We want to be straight about this, because
-          Google&rsquo;s consent screen is. Creating an event with your guest as an attendee requires the
-          calendar.events permission, and that permission is read as well as write. There is no narrower
-          permission that can add an attendee. So the access you grant is broader than the use we make of it.
-          Google&rsquo;s screen will tell you it lets us &ldquo;see, edit and delete&rdquo; your events; the
-          limit on what we do with it is the commitment below, and our code.
-        </p>
-        <p>
-          <strong>What we store.</strong> A refresh token and a short-lived access token, so we do not have to
-          ask you again; the email address of the connected Google account; and the identifier of the calendar to
-          use. Busy times are read when they are needed and are not stored. The events Meetrao creates live on
-          your calendar, not in our database. We keep only the booking record.
-        </p>
-        <p>
-          <strong>How to take it back.</strong> Disconnect at any time in Settings → Calendar. Two things happen,
-          in this order: we ask Google to revoke the grant, which ends it on Google&rsquo;s side and removes
-          Meetrao from your account&rsquo;s permissions, and then we delete both tokens from our database.
-          Deleting your account does the same thing before it deletes everything else. Throwing our own key away
-          is not the same as ending the grant, so we do both.
-        </p>
-        <p>
-          If Google cannot be reached at that moment, the disconnect still happens on our side and you can finish
-          it yourself at{" "}
-          <a href="https://myaccount.google.com/permissions" rel="noreferrer" target="_blank">
-            myaccount.google.com/permissions
-          </a>
-         , which is also where you can confirm at any time that Meetrao is gone. Events Meetrao already put on
-          your calendar stay there for you to keep or delete; disconnecting does not cancel your existing
-          bookings, but it does stop us checking for conflicts, so guests may be offered times you are not
-          actually free.
+          Each booking email, to the host and to the guest, includes a standard calendar invite (an .ics file) so
+          your calendar app can add the meeting. The invite contains the meeting details sent to the
+          participants: the meeting name, the time, the host&rsquo;s and guest&rsquo;s names and email addresses,
+          and the location or video link. A reschedule sends an updated
+          invite and a cancellation sends one that removes the meeting.
         </p>
 
-        {/* ── the two disclosures Google's reviewer checks for by name ──────
-            Both facts were already in this policy (§7 lists the processors,
-            §11 describes the protections) and the verification review still
-            came back saying the policy "does not state with whom you share
-            Google user data" and "does not specify any data protection
-            mechanisms for sensitive data".
+        <h2 id="p-google">4. Sign in with Google</h2>
+        <p>
+          Signing in with Google is optional; an email address and password work too. If you use it, Meetrao
+          asks Google only for the basic profile scopes <strong>openid</strong>, <strong>email</strong> and{" "}
+          <strong>profile</strong>: your name, email address and profile picture. They are used to create your
+          Meetrao account and sign you in, and for nothing else. Signing in with Google gives Meetrao no access to
+          your calendar, your email or anything else in your Google account. In this policy, that sign-in data is
+          the only Google user data we hold.
+        </p>
 
-            That is not a contradiction. A reviewer works a checklist against
-            the phrase "Google user data", and a disclosure written about "your
-            data" in general does not answer it. So the same facts are restated
-            here, in the section about Google user data, in the reviewer's own
-            words. Duplication is the point; do not "tidy" these away. */}
+        {/* ── the disclosures Google's reviewer checks for by name ──────────
+            The same facts are in section 7 and section 11, about "your data"
+            in general. A reviewer works a checklist against the phrase
+            "Google user data", so they are restated here in those words.
+            Duplication is the point; do not "tidy" these away. */}
 
         <h3 id="p-google-share">Who we share Google user data with</h3>
         <p>
@@ -336,10 +311,6 @@ export default function PrivacyPage() {
         </p>
 
         <h3 id="p-google-protect">How we protect Google user data</h3>
-        <p>
-          Calendar access is a sensitive scope, and these are the specific mechanisms that protect the data it
-          gives us:
-        </p>
         <ul>
           <li>
             <strong>Encrypted in transit.</strong> Every connection, browser to Meetrao, Meetrao to Google,
@@ -349,35 +320,26 @@ export default function PrivacyPage() {
             <strong>Encrypted at rest.</strong> Our database provider encrypts stored data at rest with AES-256.
           </li>
           <li>
-            <strong>Tokens are unreachable from any browser, and from our own website.</strong> Google refresh
-            and access tokens are readable only by <em>internal</em> database functions, which no client can
-            call at all, not a signed-in session, not our website, not a request carrying any key we publish.
-            Nothing anywhere returns a token. The code that talks to Google runs inside the database alongside
-            the tokens, so the credential is used where it is stored and never travels.
+            <strong>Reachable only through your own session.</strong> Account data is read through
+            internal database functions and authorised against the signed-in account, so one person&rsquo;s
+            details are not reachable from another&rsquo;s session.
           </li>
           <li>
-            <strong>The least data we can hold.</strong> Busy and free intervals are fetched when a booking page
-            is opened and are never written to our database. Event titles, guests, descriptions, locations and
-            attachments are never requested at all, so there is nothing of that kind to protect.
-          </li>
-          <li>
-            <strong>Revoked, then deleted.</strong> Disconnecting calls Google&rsquo;s revocation endpoint first
-            and deletes both tokens afterwards, so the grant ends on Google&rsquo;s side rather than merely
-            becoming unusable on ours. Deleting your account does the same before deleting everything else.
-            There is no grace-period copy and no backup that outlives it.
+            <strong>The least data we can hold.</strong> Name, email address and profile picture, and nothing
+            more from Google.
           </li>
           <li>
             <strong>Human access.</strong> Production data can be reached only by authorised {OPERATOR_NAME}
             personnel, using individually authenticated accounts with two-factor authentication, and only to fix a
-            fault. No human reads your Google user data otherwise.
+            fault.
           </li>
           <li>
-            <strong>If something goes wrong.</strong> We will notify affected users and the relevant regulator
-            as quickly as the law requires.
+            <strong>Deleted with your account.</strong> There is no grace-period copy and no backup that outlives
+            it beyond the short rotation window in section 9.
           </li>
         </ul>
 
-        <h2 id="p-limited-use">4. Google Limited Use</h2>
+        <h3 id="p-limited-use">Google Limited Use</h3>
         <p>
           Meetrao&rsquo;s use and transfer of information received from Google APIs to any other app will adhere
           to the{" "}
@@ -388,10 +350,7 @@ export default function PrivacyPage() {
         </p>
         <p>In plain terms, and specifically:</p>
         <ul>
-          <li>
-            we use Google user data only to provide and improve the scheduling features you can see in the
-            product;
-          </li>
+          <li>we use Google user data only to sign you in and run your account;</li>
           <li>we do not transfer it to anyone except as needed to provide those features, for security, or where the law requires it;</li>
           <li>we do not use it for advertising, and we do not sell it;</li>
           <li>
@@ -404,7 +363,8 @@ export default function PrivacyPage() {
         <h2 id="p-not">5. What we don&rsquo;t do</h2>
         <ul>
           <li>We do not sell your data, or your guests&rsquo; data, to anyone.</li>
-          <li>We do not read the contents of your calendar events.</li>
+          <li>We do not store the contents of your calendar events, only busy times.</li>
+          <li>We do not write to your calendar.</li>
           <li>We do not use your data or your guests&rsquo; data to train machine-learning models.</li>
           <li>We do not run advertising or share data with ad networks.</li>
           <li>We do not email your guests marketing. They hear from us only about the booking they made.</li>
@@ -422,7 +382,7 @@ export default function PrivacyPage() {
         <p>
           If you are in the EU or UK, our legal bases are: performing our contract with you (running the service,
           sending booking emails); legitimate interests (keeping the service secure, and counting page views in a
-          way that cannot identify anyone); your consent (connecting Google Calendar, Google Analytics, marketing
+          way that cannot identify anyone); your consent (adding a calendar feed, Google Analytics, marketing
           email); and legal obligation where one applies. You can withdraw a consent at any time without
           affecting what was done before you did.
         </p>
@@ -444,11 +404,12 @@ export default function PrivacyPage() {
         <p>
           Google Analytics is the one item on that list that does not run unless you allow it, and it is the only
           one that receives anything about you before you have an account. It receives no Google user data at
-          all, <a href="#p-google-share">who receives that, and what each one gets</a>, is set out in section 3.
+          all, <a href="#p-google-share">who receives that, and what each one gets</a>, is set out in section 4.
         </p>
         <p>
           The people you meet with also see things: your guest sees your name, title, photo, meeting details and
-          the times you are free, and you see your guest&rsquo;s name, email and note. That exchange is the point
+          the times you are free, and your video link if the meeting is a video call; you see your
+          guest&rsquo;s name, email and note. That exchange is the point
           of the product.
         </p>
         <p>
@@ -460,7 +421,7 @@ export default function PrivacyPage() {
         <p>
           Meetrao is operated from the United States. Your account data and bookings are stored by Convex in the
           United States, in the US&nbsp;East (N.&nbsp;Virginia) region. The website is served by
-          Vercel&rsquo;s global network, and email, calendar and analytics are handled by providers in the
+          Vercel&rsquo;s global network, and email and analytics are handled by providers in the
           United States. Your data will therefore be transferred and stored outside your own country.
         </p>
         <p>
@@ -474,12 +435,13 @@ export default function PrivacyPage() {
         <p>
           While your account is open, we keep your data so the service works. When your account is deleted (by
           you, or by us for a breach of the terms), we delete it immediately. Profile, booking link, meetings,
-          availability, booking history and calendar tokens all go. We do not keep a grace-period copy, so export
+          availability, booking history, your calendar feed address and its busy times all go. We do not keep a grace-period copy, so export
           anything you want to keep first.
         </p>
         <p>
-          Google tokens are revoked with Google and then deleted the moment you disconnect the calendar, which
-          does not require deleting your account. Page-view records are deleted automatically after 400 days.
+          Busy times from your calendar feed are kept only for a limited window ahead and replaced on each
+          refresh. Removing the feed deletes the address and those busy times at once, which does not require
+          deleting your account. Page-view records are deleted automatically after 400 days.
         </p>
         <p>
           Two caveats, both narrow. Encrypted backups may hold deleted data for a short window before they rotate
@@ -495,7 +457,7 @@ export default function PrivacyPage() {
         </p>
         <p>
           Some of it you can do yourself: edit your profile in Settings, change your notification preferences,
-          disconnect Google Calendar, or delete your account outright.
+          remove your calendar feed, or delete your account outright.
         </p>
         <p>
           <strong>If you are in the EU or UK</strong>, you also have the right to object to processing, to
@@ -515,9 +477,9 @@ export default function PrivacyPage() {
         <h2 id="p-security">11. Security</h2>
         <p>
           Traffic is encrypted in transit with TLS, and our database provider encrypts its storage at rest.
-          Passwords are hashed and never stored readably. Google tokens are readable only by
-          internal database functions that no client can call, and nothing returns one. The code that uses them runs
-          inside the database beside them. Every request is authorised against the signed-in account before it
+          Passwords are hashed and never stored readably. Your calendar feed address is readable only by
+          internal database functions that no client can call, and is never returned to any browser in full,
+          including yours. Every request is authorised against the signed-in account before it
           reads a single row, so one person&rsquo;s bookings are not reachable from another&rsquo;s session.
           Email addresses have to be confirmed before an account works, which keeps someone from signing up as
           you.
@@ -527,7 +489,7 @@ export default function PrivacyPage() {
           not to read your bookings.
         </p>
         <p>
-          The mechanisms protecting Google user data in particular (a sensitive scope) are listed in full under{" "}
+          The mechanisms protecting Google user data in particular are listed in full under{" "}
           <a href="#p-google-protect">how we protect Google user data</a>.
         </p>
         <p>

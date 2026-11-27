@@ -94,59 +94,112 @@ describe("the Google user data disclosures", () => {
 });
 
 /* ─────────────────────────────────────────────────────────────────────────────
-   The same claim in three places.
+   The calendar feed, said consistently.
 
+   Meetrao no longer connects to Google Calendar. Conflicts come from a
+   calendar feed the host pastes in, and only busy times are kept from it.
    /privacy is written for a reviewer, /help for a host who is hesitating, and
-   the onboarding step for one who is about to click Allow. They are different
-   audiences and different lengths, and that is fine, but they cannot say
-   different things about what Meetrao does with the permission.
+   they are different lengths, but they cannot say different things about what
+   Meetrao keeps.
 
-   The failure this guards is the ordinary one: somebody improves the wording
-   in a single place, and the product now makes two promises.
+   The failure this guards is the old promise surviving somewhere: a page that
+   still names calendar.events, or still says Meetrao writes to a calendar.
    ───────────────────────────────────────────────────────────────────────────── */
 
-describe("what the Google permission does, said consistently", () => {
+const strip = (text: string) =>
+  text.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\{\/\*[\s\S]*?\*\/\}/g, "").replace(/(^|[^:])\/\/.*$/gm, "$1");
+
+describe("what Meetrao keeps from a calendar, said consistently", () => {
   const help = readFileSync(path.join(process.cwd(), "src", "app", "help", "page.tsx"), "utf8");
-  const onboarding = readFileSync(
-    path.join(process.cwd(), "src", "components", "onboarding", "steps.tsx"),
+  const guide = readFileSync(
+    path.join(process.cwd(), "src", "app", "(marketing)", "guides", "calendar-privacy", "page.tsx"),
     "utf8",
   );
+  const terms = readFileSync(path.join(process.cwd(), "src", "app", "(marketing)", "terms", "page.tsx"), "utf8");
 
-  it("reads all three surfaces", () => {
+  it("reads every surface", () => {
     // Guards the guard: a renamed file passes every assertion below.
     expect(PAGE.length).toBeGreaterThan(5000);
     expect(help.length).toBeGreaterThan(5000);
-    expect(onboarding.length).toBeGreaterThan(2000);
+    expect(guide.length).toBeGreaterThan(3000);
+    expect(terms.length).toBeGreaterThan(3000);
   });
 
-  it("names the three scopes on both the policy and the help page", () => {
-    for (const scope of ["calendar.freebusy", "calendar.events", "userinfo.email"]) {
-      expect(PAGE, `the policy no longer names ${scope}`).toContain(scope);
-      expect(help, `the help centre no longer names ${scope}`).toContain(scope);
+  it("describes the calendar feed in the policy, reachable from the rail", () => {
+    expect(PAGE).toContain('id="p-calendar-feed"');
+    expect(PAGE).toMatch(/\{ id: "p-calendar-feed", label:/);
+    // What the host gives, how it is stored, what is kept, how to remove it.
+    for (const phrase of ["feed", ".ics", "masked", "busy periods", "Settings"]) {
+      expect(PAGE, `the policy no longer mentions ${phrase}`).toContain(phrase);
+    }
+    expect(PAGE).toMatch(/titles,\s+descriptions,\s+attendees\s+and\s+locations/);
+    expect(PAGE, "the policy does not say earlier Google tokens were deleted").toMatch(/revoked[\s\S]{0,80}tokens deleted/);
+  });
+
+  it("says emailed invites carry the meeting details", () => {
+    expect(PAGE).toContain('id="p-invites"');
+    expect(PAGE).toMatch(/calendar invite/);
+  });
+
+  it("asks Google for the basic profile only", () => {
+    for (const scope of ["openid", "email", "profile"]) {
+      expect(PAGE).toContain(scope);
     }
   });
 
-  /* Reading a guest's answer is the narrow exception to "only busy or free",
-     and it was added deliberately. All three have to carry it, or one of them
-     is making the old, wider promise. */
-  it("discloses the attendee read everywhere it is claimed", () => {
-    for (const [name, text] of [["policy", PAGE], ["help", help], ["onboarding", onboarding]] as const) {
-      expect(text.toLowerCase(), `${name} does not mention reading a guest's answer`).toMatch(
-        /accepted or declined|whether your guest accepted|accepted the invitation|accepted or declined it/,
+  /* No surface may promise or disclose a calendar scope Meetrao no longer holds.
+     Comments are stripped: an explanation of history is not a claim. */
+  it.each(["calendar.events", "calendar.freebusy", "userinfo.email"])("no longer requests %s", (scope) => {
+    expect(strip(PAGE), `the policy still names ${scope}`).not.toContain(scope);
+    expect(strip(help), `the help centre still names ${scope}`).not.toContain(scope);
+    expect(strip(terms), `the terms still name ${scope}`).not.toContain(scope);
+  });
+
+  it("does not promise to read a guest's RSVP any more", () => {
+    for (const [name, text] of [["policy", PAGE], ["help", help], ["terms", terms]] as const) {
+      expect(strip(text).toLowerCase(), `${name} still says Meetrao reads a guest's answer`).not.toMatch(
+        /whether (your|the) guest accepted/,
       );
     }
   });
 
-  it("says disconnecting revokes with Google, not only with us", () => {
-    for (const [name, text] of [["help", help], ["onboarding", onboarding]] as const) {
-      expect(text, `${name} does not say the permission is revoked with Google`).toMatch(
-        /revoke[sd]? (the permission )?with Google|not only with (us|Meetrao)|not just with (us|Meetrao)/i,
-      );
+  it("says Meetrao never writes to the calendar, on the policy and the help page", () => {
+    expect(PAGE).toMatch(/never writes to your calendar/);
+    expect(help).toMatch(/never writes to your calendar/);
+  });
+
+  it("keeps the help centre's feed, video and invite sections reachable from its contents", () => {
+    expect(help).toMatch(/\{ id: "calendar", icon: "calendar", label: "Your calendar feed" \}/);
+    for (const id of ["calendar", "video", "invites"]) {
+      expect(help).toContain(`id="${id}"`);
     }
   });
 
-  it("keeps the help centre's section reachable from its contents", () => {
-    expect(help).toMatch(/\{ id: "calendar", icon: "calendar", label: "Google Calendar" \}/);
-    expect(help).toContain('id="calendar"');
+  it("walks through finding the feed in each provider", () => {
+    for (const phrase of ["Secret address in iCal format", "Publish a calendar", "ICS link", "Public Calendar"]) {
+      expect(help, `the help centre no longer explains "${phrase}"`).toContain(phrase);
+    }
+  });
+});
+
+/* No marketing copy may still promise the calendar.events scope. The
+   calendar-privacy guide is left out on purpose: it explains the scope as a
+   general fact about Google's API, not as something Meetrao asks for. */
+describe("marketing never promises the old Google Calendar integration", () => {
+  const files = [
+    ["lib/pricing.ts"],
+    ["lib/comparisons.ts"],
+    ["lib/faq.ts"],
+    ["lib/seo.ts"],
+    ["lib/audiences.ts"],
+    ["components/marketing/pricing-band.tsx"],
+    ["components/marketing/use-cases.tsx"],
+    ["components/marketing/walkthrough.tsx"],
+  ].map(([f]) => [f, strip(readFileSync(path.join(process.cwd(), "src", f), "utf8"))] as const);
+
+  it.each(files)("%s promises no calendar.events, no Meet link per booking, no 'both calendars' event", (_f, text) => {
+    expect(text).not.toContain("calendar.events");
+    expect(text).not.toMatch(/Google Meet link (on|created on) every/i);
+    expect(text).not.toMatch(/Connect (your )?Google Calendar/i);
   });
 });

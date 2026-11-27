@@ -10,7 +10,6 @@ import { describe, expect, it } from "vitest";
 
 const read = (rel: string) => readFileSync(path.join(process.cwd(), rel), "utf8");
 const bookings = read("convex/bookings.ts");
-const google = read("convex/google.ts");
 
 describe("the seat guard", () => {
   it("guards the guard", () => {
@@ -47,22 +46,12 @@ describe("the seat guard", () => {
   });
 });
 
-describe("one calendar event between the seats", () => {
-  /* Twenty identical entries stacked on a host's Tuesday makes their own
-     calendar unreadable, a strange way to thank them for running a workshop. */
-  it("joins a seatmate's event instead of making another", () => {
-    expect(google).toContain("export const seatmateEvent");
-    const create = google.slice(google.indexOf("export const createEventForBooking"));
-    expect(create.slice(0, create.indexOf("\n});"))).toContain("internal.google.seatmateEvent");
-  });
-
-  /* One guest leaving a workshop must not delete it for the nineteen who are
-     still coming. */
-  it("keeps the event while another seat still holds it", () => {
-    const del = google.slice(google.indexOf("export const deleteEventForBooking"));
-    const body = del.slice(0, del.indexOf("\n});"));
-    expect(body).toContain("stillHeld");
-    expect(body).toMatch(/if \(stillHeld\)[\s\S]*eventId: null/);
+describe("seats in a video call", () => {
+  /* Every seat of a group meeting meets in the same place: the host's video
+     link, copied onto each booking as it is made. */
+  it("copies the host's video link onto every booking", () => {
+    expect(bookings).toContain("meetUrl = host?.video_link?.trim() || null;");
+    expect(bookings).toContain("meet_url: meetUrl,");
   });
 });
 

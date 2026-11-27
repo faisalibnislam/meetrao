@@ -6,7 +6,7 @@ import { AuthForm } from "@/components/auth/auth-form";
 export const metadata: Metadata = {
   title: "Sign up free: no card required",
   description:
-    "Create a free Meetrao account: connect Google Calendar, set your hours, and share one booking " +
+    "Create a free Meetrao account: add your calendar, set your hours, and share one booking " +
     "link. No credit card and no trial period.",
   alternates: { canonical: "/signup" },
 };

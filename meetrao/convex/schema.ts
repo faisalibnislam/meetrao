@@ -97,6 +97,14 @@ export default defineSchema({
      */
     default_buffer_minutes: v.optional(v.number()),
     default_window_days: v.optional(v.number()),
+    /**
+     * The host's own video meeting room (Zoom, Meet, Teams, Whereby…): what a
+     * "Video call" meeting sends guests to. Optional: absent on every profile
+     * written before Meetrao stopped creating Google Meet links. Copied onto
+     * each booking as `meet_url` when it is made, so changing it later does
+     * not move meetings already booked.
+     */
+    video_link: v.optional(nullableString),
     notify_new_booking: v.boolean(),
     notify_booking_changed: v.boolean(),
     notify_booking_cancelled: v.boolean(),
@@ -647,7 +655,35 @@ export default defineSchema({
     .index("by_user", ["user_id"])
     .index("by_token", ["token"]),
 
-  /* Google OAuth tokens. In Postgres this table had RLS on and NO policy, so
+  /* A host's calendar feed: the private iCal address of their own calendar,
+     and the busy times last read from it. The address is a SECRET (anyone
+     holding it can read the whole calendar): every function that reads `url`
+     is internal, the client only ever sees `url_hint`, and nothing logs it.
+     `busy` holds start/end pairs and nothing else from the feed. */
+  calendar_feeds: defineTable({
+    user_id: v.string(),
+    url: v.string(),
+    /** e.g. "calendar.google.com/••••.ics": what Settings shows. */
+    url_hint: v.string(),
+    busy: v.array(v.object({ start: v.number(), end: v.number() })),
+    /** The window `busy` covers. */
+    window_from: v.number(),
+    window_to: v.number(),
+    /** Last successful read, or null before the first one. */
+    fetched_at: nullableNumber,
+    /** Last failed read, cleared by a successful one. */
+    last_error: nullableString,
+    last_error_at: nullableNumber,
+    created_at: v.number(),
+    updated_at: v.number(),
+  }).index("by_user", ["user_id"]),
+
+  /* RETIRED. Google OAuth tokens from the Google Calendar connection, which
+     Meetrao no longer has. Kept in the schema only until
+     migrations/revokeGoogleCalendar has revoked and deleted every row; remove
+     it after that. Nothing reads it any more.
+
+     Google OAuth tokens. In Postgres this table had RLS on and NO policy, so
      only the service role could reach it. The Convex equivalent is that every
      function touching it is an internalQuery/internalMutation. It is not
      reachable from a client at all. Do not add a public function here. */

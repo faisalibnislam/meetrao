@@ -108,7 +108,8 @@ describe("Convex re-checks a move for itself", () => {
     // A calendar client that already holds the UID keeps the time it has
     // unless SEQUENCE rises.
     expect(bookings).toMatch(/revision:\s*\(b\.revision \?\? 0\) \+ 1/);
-    expect(read("src/app/(public)/booking/[reference]/ics/route.ts")).toContain("SEQUENCE:${booking.revision}");
+    expect(read("src/app/(public)/booking/[reference]/ics/route.ts")).toContain("sequence: booking.revision");
+    expect(read("src/lib/calendar/invite.ts")).toContain("`SEQUENCE:${sequence}`");
   });
 });
 

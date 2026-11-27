@@ -29,7 +29,7 @@ export type AuthPanel = "signup" | "login";
 
 const STEPS: { title: string }[] = [
   { title: "Create your account" },
-  { title: "Connect Google Calendar" },
+  { title: "Add your calendar" },
   { title: "Share your booking link" },
 ];
 
@@ -229,7 +229,7 @@ function Showcase() {
             </span>
             <span className="flex flex-col">
               <span className="text-[13.5px] font-semibold">30 minute intro</span>
-              <span className="text-[12px] text-ink-3">with Adam Voigt · Google Meet</span>
+              <span className="text-[12px] text-ink-3">with Adam Voigt · Video call</span>
             </span>
           </div>
 
@@ -298,7 +298,7 @@ function Showcase() {
             <span className="text-[12px] text-ink-2">Priya Nair · {pickedLabel}, 10:00 AM</span>
             <span className="mt-[4px] inline-flex items-center gap-[6px] text-[11.5px] font-medium text-accent-ink">
               <Icon name="video" size={11} />
-              Meet link added to both calendars
+              Calendar invite sent to both of you
             </span>
           </span>
         </div>

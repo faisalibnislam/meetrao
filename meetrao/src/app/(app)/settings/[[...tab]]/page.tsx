@@ -13,7 +13,7 @@ import {
 } from "@/components/app/settings-panels";
 import { signOut } from "@/lib/actions/auth";
 import { requireOnboardedSession } from "@/lib/data/session";
-import { connectionStatus } from "@/lib/google/connection";
+import { feedStatus } from "@/lib/calendar/feed";
 import { timezoneLabel } from "@/lib/timezones";
 import { TeamPanel } from "@/components/app/team-panel";
 import { TeamPitch } from "@/components/app/team-pitch";
@@ -34,13 +34,6 @@ import { siteUrl } from "@/lib/env";
 
 export const metadata: Metadata = { title: "Settings" };
 
-const FAILURES: Record<string, string> = {
-  denied: "Google didn't confirm the permission. Try again and allow calendar access.",
-  scope: "Calendar access was not granted in full. Reconnect and allow inviting guests.",
-  state: "That connection attempt expired. Start it again from this page.",
-  failed: "Google didn't complete the handshake. Try again in a moment.",
-};
-
 export default async function SettingsPage({
   params,
   searchParams,
@@ -50,7 +43,6 @@ export default async function SettingsPage({
 }) {
   const { tab: segments } = await params;
   const query = await searchParams;
-  const calendar = typeof query.calendar === "string" ? query.calendar : undefined;
   const welcome = typeof query.welcome === "string" ? query.welcome : undefined;
 
   /* A tab that has moved, sent to its new address with the query string
@@ -124,9 +116,9 @@ export default async function SettingsPage({
 
           {tab === "calendar" ? (
             <CalendarPanel
-              {...(await connectionStatus(session.userId))}
+              feed={await feedStatus()}
+              videoLink={session.profile.video_link ?? null}
               timezoneLabel={timezoneLabel(session.profile.timezone)}
-              failure={calendar && calendar !== "connected" ? (FAILURES[calendar] ?? FAILURES.failed) : null}
             />
           ) : null}
 

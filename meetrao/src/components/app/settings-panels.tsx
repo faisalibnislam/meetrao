@@ -7,7 +7,6 @@ import { Badge, Eyebrow } from "@/components/ui/badge";
 import { AvatarUpload } from "./avatar-upload";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Field, Help, Input, Switch } from "@/components/ui/controls";
-import { GoogleG } from "@/components/ui/logo";
 import { Icon } from "@/components/ui/icon";
 import { MenuSelect } from "@/components/ui/menu-select";
 import { Modal } from "@/components/ui/modal";
@@ -17,7 +16,6 @@ import { checkUsername } from "@/lib/actions/onboarding";
 import {
   changePassword,
   deleteOwnAccount,
-  disconnectCalendar,
   saveBookingDefaults,
   saveNotifications,
   saveProfile,
@@ -27,6 +25,7 @@ import { cx } from "@/lib/cx";
 import { LONG_OPTIONS, SHORT_OPTIONS, leadsOf, remindersText } from "@/lib/reminder-timing";
 import type { NotificationKey, Profile } from "@/lib/types";
 import { UpgradeHint } from "./upgrade";
+import { FeedForm, VideoLinkForm, type FeedView } from "./calendar-feed-form";
 import { bookingLink, isBadStatus, sanitizeUsername, usernameNote, usernameStatus, type UsernameStatus } from "@/lib/username";
 
 const DURATIONS = [
@@ -302,82 +301,35 @@ export function ProfilePanel({ profile }: { profile: Profile }) {
 /* ── Calendar ─────────────────────────────────────────────────────────────── */
 
 export function CalendarPanel({
-  connected,
-  accountEmail,
+  feed,
+  videoLink,
   timezoneLabel,
-  failure,
 }: {
-  connected: boolean;
-  accountEmail: string | null;
+  feed: FeedView;
+  videoLink: string | null;
   /** The host's zone as the timezone menus word it, e.g. "London (GMT+1)". */
   timezoneLabel: string;
-  failure: string | null;
 }) {
-  const router = useRouter();
-  const toast = useToast();
-  const [pending, startAction] = useTransition();
-
   return (
     <div className="flex flex-col gap-[15px]">
       <PanelHeading
         title="Calendar"
-        subtitle="Meetrao checks this calendar for conflicts, then writes each booking to it and invites your guest."
+        subtitle="Meetrao reads your calendar's busy times so nobody books over them, and every booking email carries a calendar invite."
       />
 
-      {failure ? (
-        <Callout tone="red" title="Couldn't connect to Google">
-          {failure}
-        </Callout>
-      ) : null}
-
-      {/* One status line and one button. This card used to say it three
-          times over when disconnected: "Not connected" under the name, a
-          Disconnected badge beside it, and a Connect button, and the badge
-          added nothing the other two had not. The line under the name is the
-          status; the button is what to do about it. */}
-      <div className="flex flex-wrap items-center gap-[13px] rounded-[8px] border border-line bg-surface px-[15px] py-[14px]">
-        <Icon name="calendar" size={17} className="flex-none text-accent-ink" />
-        <div className="flex min-w-[150px] flex-1 flex-col gap-[2px]">
-          <span className="text-[13.5px] font-semibold text-ink">Google Calendar</span>
-          <span className="text-[12.5px] text-ink-3">
-            {connected ? (accountEmail ? `Connected as ${accountEmail}` : "Connected") : "Not connected"}
-          </span>
+      <Card className="px-[15px] py-[14px]">
+        <div className="flex flex-col gap-[12px]">
+          <span className="text-[13.5px] font-semibold text-ink">Calendar feed</span>
+          <FeedForm feed={feed} />
         </div>
+      </Card>
 
-        {connected ? (
-          <Button
-            variant="secondary"
-            size={30}
-            busy={pending}
-            onClick={() =>
-              startAction(async () => {
-                /* The result is READ. It used to be discarded, so the warm
-                   "Calendar disconnected" toast fired over a calendar that was
-                   still connected, the card said Connected, the toast said
-                   otherwise, and the toast was the one that was lying. */
-                const r = await disconnectCalendar();
-                toast(
-                  r.error
-                    ? { tone: "bad", title: "Could not disconnect", text: r.error }
-                    : {
-                        tone: "warn",
-                        title: "Calendar disconnected",
-                        text: "Meetrao can no longer check for conflicts.",
-                      },
-                );
-                router.refresh();
-              })
-            }
-          >
-            Disconnect
-          </Button>
-        ) : (
-          <ButtonLink variant="accent" size={30} href="/api/google/connect?next=/settings/calendar">
-            <GoogleG size={13} />
-            Connect
-          </ButtonLink>
-        )}
-      </div>
+      <Card className="px-[15px] py-[14px]">
+        <div className="flex flex-col gap-[12px]">
+          <span className="text-[13.5px] font-semibold text-ink">Video calls</span>
+          <VideoLinkForm initial={videoLink} />
+        </div>
+      </Card>
 
       {/* Read here, set on Availability. The zone used to be editable in
           both places, and two controls for one value meant changing it in one

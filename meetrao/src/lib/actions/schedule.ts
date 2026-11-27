@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createEventForBooking } from "@/lib/google/calendar";
 import { formatDuration, formatLongDate, formatTime } from "@/lib/booking/time";
 import { timezoneLabel } from "@/lib/timezones";
 import { zonedInstant } from "@/lib/booking/slots";
@@ -26,7 +25,7 @@ import { api } from "@/convex/_generated/api";
        preference, it is double-booking, and the exclusion constraint on
        `bookings` catches it whatever the app believes.
      · The first invitee is the guest of record, so the confirmation email, the
-       .ics, the guest cancellation page and the admin console all keep working
+       calendar invitation, the guest cancellation page and the admin console all keep working
        on a row shaped exactly as before.
 
    Inserted through the service role: `bookings` has no INSERT policy for
@@ -39,7 +38,7 @@ import { api } from "@/convex/_generated/api";
 export type ScheduleResult = {
   error?: string;
   reference?: string;
-  /** Set when the booking exists but Google would not take the event. */
+  /** Unused since Meetrao stopped writing to Google Calendar; kept for the form. */
   calendarWarning?: string;
 };
 
@@ -114,7 +113,7 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
 
   const guest = invitees[0];
 
-  let created: { id: string; reference: string };
+  let created: { id: string; reference: string; meetUrl: string; location: string; locationDetail: string };
   try {
     const convex = await convexServer();
     // One mutation writes the booking AND its invitees, so a clash cannot
@@ -130,22 +129,22 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
       bufferMinutes: 0,
       invitees: invitees.slice(1).map((i) => ({ name: i.name, email: i.email })),
     });
-    created = { id: row.id, reference: row.reference };
+    created = {
+      id: row.id,
+      reference: row.reference,
+      meetUrl: row.meet_url ?? "",
+      location: row.location ?? "google_meet",
+      locationDetail: row.location_detail ?? "",
+    };
   } catch (cause) {
     const message = convexMessage(cause, "That meeting could not be scheduled.");
     // "slot taken" is this path's equivalent of the exclusion constraint.
-    return { error: /slot taken/i.test(message) ? "You already have a meeting then." : message };
+    if (/slot taken/i.test(message)) return { error: "You already have a meeting then." };
+    if (/added a video link/i.test(message)) {
+      return { error: "Add your video link in Settings, under Profile, before scheduling a video call." };
+    }
+    return { error: message };
   }
-
-  /* The calendar write comes after the booking exists. If Google refuses, the
-     meeting is still real and the host is told which part failed, rather than
-     everyone losing an invitation that was already confirmed on screen. */
-  let meetUrl = "";
-  let calendarWarning: string | undefined;
-
-  const event = await createEventForBooking(created.reference);
-  if ("failure" in event) calendarWarning = event.failure;
-  else meetUrl = event.meetUrl ?? "";
 
   const zone = profile.timezone;
   const base: Omit<BookingMail, "guestName" | "guestEmail"> = {
@@ -160,9 +159,13 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
     hostTimezoneLabel: timezoneLabel(zone),
     guestTimezoneLabel: timezoneLabel(zone),
     durationLabel: formatDuration(duration),
-    meetUrl,
-    // A meeting the host schedules themselves is a Meet, as it always was.
-    where: whereText("google_meet", "", meetUrl || null),
+    meetUrl: created.meetUrl,
+    // The meeting type's place, or a video call on the host's own link.
+    where: whereText(created.location, created.locationDetail, created.meetUrl || null),
+    startsAt: start,
+    endsAt: new Date(start.getTime() + duration * 60_000),
+    sequence: 0,
+    otherGuests: invitees,
   };
 
   // One confirmation each. Every invitee is a guest of this meeting, so each
@@ -177,5 +180,5 @@ export async function scheduleMeeting(input: ScheduleInput): Promise<ScheduleRes
 
   revalidatePath("/bookings");
   revalidatePath("/dashboard");
-  return { reference: created.reference, calendarWarning };
+  return { reference: created.reference };
 }

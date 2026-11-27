@@ -7,7 +7,6 @@ import { getBusy, getMeetingAvailability, getMeetingOverrides, getPublicHost, ge
 import { getBookingByReference } from "@/lib/data/guest-booking";
 import { rescheduleMail, type MailableBooking } from "@/lib/email/booking-mail";
 import { sendRescheduled } from "@/lib/email/send";
-import { updateEventForBooking } from "@/lib/google/calendar";
 import { convexAnonymous } from "@/lib/convex/server";
 import { convexMessage } from "@/lib/convex/error";
 import { api } from "@/convex/_generated/api";
@@ -121,17 +120,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 
-  /* The calendar write comes after the move, exactly as creation's comes after
-     the insert: if Google refuses, the meeting has still moved and the guest
-     is not sent back to a time nobody holds any more. */
-  // The mail details do not depend on the calendar write, so they are read
-  // while it runs rather than after it, as creation does.
-  let calendarWarning: string | null = null;
-  const [event, hostProfile] = await Promise.all([
-    updateEventForBooking(row.reference),
-    convexAnonymous().query(api.publicBooking.hostForRescheduleMail, { reference: row.reference }),
-  ]);
-  if ("failure" in event) calendarWarning = event.failure;
+  /* The emails carry the calendar update: the same invitation UID with a
+     higher SEQUENCE, so the meeting moves in every calendar that has it. */
+  const hostProfile = await convexAnonymous().query(api.publicBooking.hostForRescheduleMail, { reference: row.reference });
 
   if (hostProfile) {
     const moved: MailableBooking = {
@@ -145,7 +136,11 @@ export async function POST(request: NextRequest) {
       guest_timezone: guestTimezone,
       starts_at: row.starts_at,
       ends_at: row.ends_at,
-      meet_url: "meetUrl" in event ? event.meetUrl : booking.meetUrl,
+      meet_url: booking.meetUrl,
+      location: booking.location,
+      location_detail: booking.locationDetail,
+      // The move has just bumped it.
+      revision: booking.revision + 1,
     };
 
     const mail = rescheduleMail(moved, hostProfile, "guest", row.old_starts_at);
@@ -156,5 +151,5 @@ export async function POST(request: NextRequest) {
     ]);
   }
 
-  return NextResponse.json({ reference: row.reference, calendarWarning });
+  return NextResponse.json({ reference: row.reference });
 }
