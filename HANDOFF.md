@@ -173,8 +173,11 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   verbatim and irregular on purpose (`--ink-3` is `#66635C` for contrast; do not lighten it).
 - Deploy Convex before merging web changes that depend on it.
 - Secrets live in two places (Vercel and Convex); `setup:check` sees only the local file.
-- Google OAuth is used for Sign in with Google only (Convex Auth's `/api/auth/callback/google`). The old
-  `/api/google/callback` redirect URIs can be removed from the OAuth client.
+- Google OAuth is used for Sign in with Google only (Convex Auth's `/api/auth/callback/google`). Google Cloud
+  project `meetup-507707` (account faisal@airlystudio.com, `authuser=1`): Audience "In production", External;
+  Data access is only `userinfo.email` + `userinfo.profile` (no sensitive scopes, so no verification needed);
+  branding verified; the OAuth client's redirect URIs are only the two `<deployment>.convex.site/api/auth/callback/google`
+  ones (dev `festive-meerkat-460`, prod `avid-dotterel-109`). Adding any sensitive scope reopens Google review.
 - Cancelling is a POST behind a confirm step (mail scanners fetch GET links).
 - `convex/lib/auth.ts` `currentUserId` is the only place an auth subject maps to a profile; keep sign-in and reset
   responses generic (no account enumeration).
@@ -279,9 +282,8 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
     add a calendar feed there too.
 02. `revokeGoogleCalendar:run --prod` has reported `remaining: 0` (2026-11-27), so it is now safe to delete `convex/revokeGoogleCalendar.ts` and the
     `calendar_connections` table from `schema.ts`. The booking columns `google_event_id` and `guest_rsvp*` are
-    unused now (the API still returns `guest_rsvp`); drop them with a migration when convenient. Remove the
-    `/api/google/callback` redirect URIs from the Google OAuth client, and drop `calendar.events` /
-    `calendar.freebusy` from the consent screen's scopes.
+    unused now (the API still returns `guest_rsvp`); drop them with a migration when convenient. Remove the Google Cloud side was
+    cleaned up on 2026-11-27 (calendar scopes and `/api/google/callback` redirect URIs removed).
 03. Guest booking page: a video meeting from a host with no link is refused only when the guest submits. Hiding it
     up front would be nicer. Also, the guest's "Moved" subject line shows the host's time zone (pre-existing).
 04. Group meetings now give the host one invite per seat (they used to share one Google event).
@@ -329,6 +331,9 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   here afterwards.
 
 ## 12. Change log
+
+- 2026-11-27: Google Cloud: calendar scopes and calendar redirect URIs removed; Sign in with Google is in
+  production for all users with non-sensitive scopes only, so Google verification is no longer required.
 
 - 2026-11-27: Google Calendar replaced by a private iCal feed (conflicts) and emailed iTIP invites. Added a host
   video link. The Google Calendar OAuth, scopes, event writes and RSVP sync are removed, and stored grants are
