@@ -1,9 +1,10 @@
 import { internalAction, internalMutation } from "./_generated/server";
+import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { renderReminder } from "./lib/reminderEmail";
 import { required } from "./lib/emails";
 import { localWhen } from "./lib/effects";
-import { DEFAULT_LEADS, GRACE, dayPhrase, verdictFor } from "./lib/reminderWindow";
+import { DEFAULT_LEADS, GRACE, LONG_CHOICES, dayPhrase, verdictFor } from "./lib/reminderWindow";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Reminders: one the day before, one an hour before.
@@ -28,10 +29,18 @@ import { DEFAULT_LEADS, GRACE, dayPhrase, verdictFor } from "./lib/reminderWindo
    preference nobody had set.
    ───────────────────────────────────────────────────────────────────────────── */
 
-const DAY = 24 * 60 * 60_000;
+const MINUTE = 60_000;
 
-/** One sweep's worth. The window holds a day of bookings across every host. */
-const BATCH = 200;
+/** Bookings per claimDue call. A sweep keeps calling until the window is done. */
+const PAGE = 200;
+
+/** A ceiling on pages per sweep, so a runaway loop cannot spin forever (200 × 100 = 20,000 bookings). */
+const MAX_PAGES = 100;
+
+/* How far ahead a sweep looks: the longest first-reminder lead a host can
+   choose. This was one day, so a host who picked 48 hours got theirs a day
+   late, when the booking first came into view. */
+const HORIZON = Math.max(DEFAULT_LEADS.long, ...LONG_CHOICES) * MINUTE;
 
 type Due = {
   bookingId: string;
@@ -63,13 +72,20 @@ type Due = {
  * than sent late.
  */
 export const claimDue = internalMutation({
-  args: {},
-  handler: async (ctx): Promise<Due[]> => {
-    const now = Date.now();
-    const soon = await ctx.db
+  /* `now` is fixed by the sweep for all its pages: a paginated query must ask
+     for the same range every time or its cursor no longer means anything. */
+  args: { now: v.number(), cursor: v.union(v.string(), v.null()) },
+  handler: async (ctx, a): Promise<{ due: Due[]; cursor: string; isDone: boolean }> => {
+    const now = a.now;
+    /* EVERY booking in the window, a page at a time. This used to take the
+       first 200 by start time and stop: past 200 bookings starting within the
+       window across all hosts, the ones at the far end, which are exactly the
+       ones due their day-before reminder, were never looked at. */
+    const page = await ctx.db
       .query("bookings")
-      .withIndex("by_starts", (q) => q.gt("starts_at", now - GRACE).lte("starts_at", now + DAY))
-      .take(BATCH);
+      .withIndex("by_starts", (q) => q.gt("starts_at", now - GRACE).lte("starts_at", now + HORIZON))
+      .paginate({ numItems: PAGE, cursor: a.cursor });
+    const soon = page.page;
 
     const out: Due[] = [];
 
@@ -128,7 +144,7 @@ export const claimDue = internalMutation({
       }
     }
 
-    return out;
+    return { due: out, cursor: page.continueCursor, isDone: page.isDone };
   },
 });
 
@@ -172,7 +188,21 @@ async function deliver(to: string, subject: string, html: string, key: string): 
 export const sweep = internalAction({
   args: {},
   handler: async (ctx): Promise<{ sent: number; failed: number }> => {
-    const due: Due[] = await ctx.runMutation(internal.reminders.claimDue, {});
+    /* Claim the whole window first, a page per transaction, then send. Each
+       page is claimed in its own mutation, so a long window never runs one
+       transaction past its read or write limits. */
+    const now = Date.now();
+    const due: Due[] = [];
+    let cursor: string | null = null;
+    for (let pages = 0; pages < MAX_PAGES; pages++) {
+      const r: { due: Due[]; cursor: string; isDone: boolean } = await ctx.runMutation(
+        internal.reminders.claimDue,
+        { now, cursor },
+      );
+      due.push(...r.due);
+      if (r.isDone) break;
+      cursor = r.cursor;
+    }
     if (due.length === 0) return { sent: 0, failed: 0 };
 
     const site = required("SITE_URL");

@@ -281,3 +281,26 @@ describe("server-only Convex functions", () => {
     expect(purge).toContain("internal.admin.purgePageViews");
   });
 });
+
+/* ── 2026-11-27 reminder sweep ───────────────────────────────────────────── */
+
+describe("the reminder sweep sees every booking in its window", () => {
+  const REMINDERS = read("convex/reminders.ts");
+  const claim = REMINDERS.slice(REMINDERS.indexOf("export const claimDue"), REMINDERS.indexOf("function durationLabel"));
+  const sweep = REMINDERS.slice(REMINDERS.indexOf("export const sweep"));
+
+  it("pages through the window instead of stopping at the first batch", () => {
+    expect(claim).toContain(".paginate({ numItems: PAGE, cursor: a.cursor })");
+    expect(claim, "a bare take() skips everything past the first batch").not.toMatch(/\.take\(/);
+  });
+
+  it("keeps claiming until the window is done, with the same `now` on every page", () => {
+    expect(sweep).toContain("if (r.isDone) break;");
+    expect(sweep).toContain("{ now, cursor }");
+  });
+
+  it("looks as far ahead as the longest first-reminder lead a host can choose", () => {
+    expect(REMINDERS).toContain("Math.max(DEFAULT_LEADS.long, ...LONG_CHOICES) * MINUTE");
+    expect(claim).toContain("now + HORIZON");
+  });
+});
