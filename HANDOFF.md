@@ -214,6 +214,11 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
     fixtures are `testCleanup:seedFeedHostFixture` / `purgeFeedHostFixture` and `calendarFeed:saveFor`.
   - **Production at the switch:** 2 hosts, 3 meetings (all video calls), no `video_link` yet. Their video meetings
     stay unbookable until each host saves a link.
+  - **Deployed 2026-11-27.** Convex prod was deployed first, with a temporary uncommitted `google.ts` shim so the
+    old site kept booking. Then PR #75 was merged and Vercel went live. Then Convex prod was redeployed from `main`
+    without the shim. `revokeGoogleCalendar:run --prod` revoked 1 grant, found 1 already invalid, and left 0. On
+    dev it found 3 already invalid and left 0. meetrao.com was checked: the pages return 200, the booking page shows
+    "Video call", the Privacy feed section is live, and `/api/google/connect` returns 404.
 
 - **DNS and email (2026-11-27):** meetrao.com DNS moved from Vercel DNS to **Cloudflare** (Free plan, zone in the
   faisalibnislam@gmail.com account; Namecheap nameservers `carol.ns.cloudflare.com` / `doug.ns.cloudflare.com`).
@@ -272,7 +277,7 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
     review). Not built.
 01. Both prod hosts must add a video link (Settings → Calendar) or their video meetings stay unbookable. They can
     add a calendar feed there too.
-02. After `revokeGoogleCalendar:run --prod` reports `remaining: 0`, delete `convex/revokeGoogleCalendar.ts` and the
+02. `revokeGoogleCalendar:run --prod` has reported `remaining: 0` (2026-11-27), so it is now safe to delete `convex/revokeGoogleCalendar.ts` and the
     `calendar_connections` table from `schema.ts`. The booking columns `google_event_id` and `guest_rsvp*` are
     unused now (the API still returns `guest_rsvp`); drop them with a migration when convenient. Remove the
     `/api/google/callback` redirect URIs from the Google OAuth client, and drop `calendar.events` /
