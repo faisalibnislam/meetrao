@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { bookableDatesInMonth, computeSlots, dateKey, type PlainDate } from "@/lib/booking/slots";
 import { getPublicTeam, getTeamBusy, getTeamHours, teamOpenDates, teamSlotsForDay } from "@/lib/data/team-booking";
-import { getBusy, getMeetingAvailability, getMeetingOverrides, getSeatMap, getPublicHost, getPublicMeeting } from "@/lib/data/public-booking";
+import { getBusy, getMeetingOverrides, getSeatMap, getPublicHost, getPublicMeeting, getPublicMeetingHours } from "@/lib/data/public-booking";
 
 /* The slot query the booking page calls. Public, because the guest has no
    session, and read-only, so it exposes availability and nothing else about
@@ -80,7 +80,8 @@ export async function GET(request: NextRequest) {
 
   const [availability, overrides, { busy, calendarChecked }, seats] = await Promise.all([
     // Per meeting, not per host: two meetings can sit on different schedules.
-    getMeetingAvailability(meeting.id),
+    // Already fetched with the meeting itself; this resolves from the cache.
+    getPublicMeetingHours(username, slug),
     getMeetingOverrides(meeting.id),
     getBusy(host.id, from, to, meeting.capacity > 1 ? meeting.id : undefined),
     meeting.capacity > 1 ? getSeatMap(meeting.id, from, to) : Promise.resolve({} as Record<string, number>),

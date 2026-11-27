@@ -194,3 +194,48 @@ describe("a link to a route handler is never prefetched", () => {
     expect(button).toContain("<a href={rest.href} className={classes}");
   });
 });
+
+/* ── 2026-11-27 speed pass ───────────────────────────────────────────────── */
+
+describe("the Help Centre is static", () => {
+  it("does not read the session on the server", () => {
+    const help = read("src/app/help/page.tsx");
+    expect(help, "reading the session made /help render on every request").not.toContain("optionalSession");
+    expect(help).toContain("liveAccount={{ onSignOut: signOut }}");
+    expect(help).not.toMatch(/export default async function HelpPage/);
+  });
+});
+
+describe("signed-out visitors cost no Convex round trip", () => {
+  it("optionalSession asks Convex only when there is a token", () => {
+    const session = read("src/lib/data/session.ts");
+    const fn = session.slice(session.indexOf("export const optionalSession"));
+    expect(fn).toContain("convexServerIfSignedIn()");
+    expect(fn).toContain("if (!convex) return null;");
+  });
+
+  it("/api/me answers a signed-out visitor without asking Convex", () => {
+    const me = read("src/app/api/me/route.ts");
+    expect(me).toContain("convexServerIfSignedIn()");
+    expect(me).not.toContain("convexServer()");
+  });
+});
+
+describe("the guest pages do not fetch a meeting's hours twice", () => {
+  it("reuses the hours that came back with the meeting", () => {
+    for (const file of ["src/lib/data/booking-start.ts", "src/app/api/slots/route.ts"]) {
+      const text = read(file);
+      expect(text, file).toContain("getPublicMeetingHours(username, slug)");
+      expect(text, file).not.toContain("getMeetingAvailability(meeting.id)");
+    }
+  });
+});
+
+describe("the Google busy check is one function, not three", () => {
+  it("reads host and connection together and calls no nested action", () => {
+    const google = read("convex/google.ts");
+    const fn = google.slice(google.indexOf("export const busyForHost"), google.indexOf("export const busyContext"));
+    expect(fn).toContain("internal.google.busyContext");
+    expect(fn, "a nested action is a second function invocation").not.toContain("ctx.runAction(");
+  });
+});

@@ -38,6 +38,22 @@ export async function convexServer(): Promise<ConvexHttpClient> {
   return client;
 }
 
+/**
+ * Authenticated as the signed-in user, or null when there is no session token.
+ *
+ * For callers that have nothing to ask Convex on behalf of a signed-out
+ * visitor. Asking anyway costs a full round trip to learn "nobody", on pages
+ * where almost every visitor is signed out.
+ */
+export async function convexServerIfSignedIn(): Promise<ConvexHttpClient | null> {
+  const { convexAuthNextjsToken } = await import("@convex-dev/auth/nextjs/server");
+  const token = await convexAuthNextjsToken();
+  if (!token) return null;
+  const client = new ConvexHttpClient(url());
+  client.setAuth(token);
+  return client;
+}
+
 /** For the guest path, which has no session and must not pretend to. */
 export function convexAnonymous(): ConvexHttpClient {
   return new ConvexHttpClient(url());

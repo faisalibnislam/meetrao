@@ -744,8 +744,6 @@ contradicts your own Terms is how a rich result gets pulled.
   outside — Google validates the authorization code before the redirect URI, so
   every probe returns the same error. Both URIs in *Auth* above must be
   registered by hand, for every origin in use.
-- **`vercel.json` pins functions to Tokyo** while the database is in Virginia —
-  see *Why navigation is fast*. One line to change, and a production decision.
 - **Preview deployments use the DEV Convex deployment.** `NEXT_PUBLIC_CONVEX_URL`
   on Vercel's Preview environment points at `festive-meerkat-460`. That is
   reasonable for previews, but it means a preview build can never be promoted

@@ -4,8 +4,27 @@
     {
       "name": "meetrao-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "meetrao", "run", "dev"],
+      "runtimeArgs": [
+        "--prefix",
+        "meetrao",
+        "run",
+        "dev"
+      ],
       "port": 3000
+    },
+    {
+      "name": "meetrao-prod-local",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "meetrao",
+        "run",
+        "start",
+        "--",
+        "-p",
+        "3100"
+      ],
+      "port": 3100
     }
   ]
 }

@@ -11,9 +11,9 @@ import { signOut } from "@/lib/actions/auth";
 
    The nav is signed-in-aware all the same: `liveAccount` hands the job to the
    browser, which reads the session after hydration and swaps the two sign-up
-   buttons for the account menu. /help and /support keep resolving it on the
-   server (they are dynamic anyway) so those two get the right nav with no
-   swap at all. See components/marketing/site-account-live.tsx. */
+   buttons for the account menu. /help does the same since it
+   went static; /support still resolves it on the server, because a signed-in
+   host gets the app shell there rather than the marketing one. See components/marketing/site-account-live.tsx. */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[#F4F3ED]">

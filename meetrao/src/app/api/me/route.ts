@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { convexServer } from "@/lib/convex/server";
+import { convexServerIfSignedIn } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import { accountFrom } from "@/lib/nav-account";
 import type { Profile } from "@/lib/types";
@@ -30,7 +30,11 @@ const PRIVATE = { "cache-control": "no-store, private" };
 
 export async function GET() {
   try {
-    const convex = await convexServer();
+    /* Most callers are signed-out visitors on a marketing page. With no
+       session token there is nobody to look up, so answer without a round
+       trip to Convex. */
+    const convex = await convexServerIfSignedIn();
+    if (!convex) return NextResponse.json(null, { headers: PRIVATE });
     const profile = (await convex.query(api.profiles.current, {})) as Profile | null;
     const account = accountFrom(profile, profile?.email ?? null);
     return NextResponse.json(account === "signed-out" ? null : account, { headers: PRIVATE });

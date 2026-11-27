@@ -778,7 +778,10 @@ export default defineSchema({
     key: v.string(),
     window_start: v.number(),
     count: v.number(),
-  }).index("by_key", ["key"]),
+  })
+    .index("by_key", ["key"])
+    /* The sweep reads only stale windows, oldest first. */
+    .index("by_window_start", ["window_start"]),
 
   bootstrap_admins: defineTable({
     email: v.string(),

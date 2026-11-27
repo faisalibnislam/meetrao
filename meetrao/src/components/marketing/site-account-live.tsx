@@ -8,9 +8,9 @@ import type { Account } from "@/lib/nav-account";
 /* ─────────────────────────────────────────────────────────────────────────────
    The account menu, for pages that must not read the session on the server.
 
-   /help and /support resolve the session in their own Server Component and hand
+   /support resolves the session in its own Server Component and hands
    `account` straight to SiteNav, no flash, because the right chrome is in the
-   HTML. The landing page, Terms and Privacy cannot do that: reading cookies
+   HTML. The landing page, Terms, Privacy and /help cannot do that: reading cookies
    would opt all three out of static rendering, and the landing page is the one
    page whose time-to-first-byte a search engine measures. Trading the site's
    best-ranking page's TTFB for a nav variant would be a bad deal in general;
