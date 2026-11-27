@@ -309,8 +309,6 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
    first, then auth, on a branch, testing sign-in, `src/proxy.ts` and `convexAuthNextjsToken`.
 7. From the 2026-11-27 Convex audit, still open (the three security items were fixed the same day, see Current
    state):
-   - `reminders.claimDue` and `rsvp.due` use `take(200)` over a window then filter in JS; past 200 bookings in the
-     window, reminders/RSVP syncs are skipped. Query narrower index ranges or paginate.
    - `booking_page_views` is never pruned (now rate-limited and server-only); decide a retention period.
    - Low: `bookings.listForScreen` and `contacts` collect a host's whole history; admin counts scan whole tables.
 
@@ -331,6 +329,10 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   here afterwards.
 
 ## 12. Change log
+
+- 2026-11-27: Reminder sweep pages through every booking in its window (it stopped at the first 200) and looks
+  ahead as far as the longest first-reminder lead a host can pick (48 h; it was 24 h, so 48 h reminders went out a
+  day late). The RSVP finding no longer applies: RSVP sync was removed with Google Calendar (PR #75).
 
 - 2026-11-27: Google Cloud: calendar scopes and calendar redirect URIs removed; Sign in with Google is in
   production for all users with non-sensitive scopes only, so Google verification is no longer required.
