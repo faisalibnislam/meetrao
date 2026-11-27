@@ -54,6 +54,17 @@ export async function convexServerIfSignedIn(): Promise<ConvexHttpClient | null>
   return client;
 }
 
+/**
+ * The shared secret for the Convex functions only this server may call (the
+ * busy-time lookups and the page-view counter). See convex/lib/serverSecret.ts.
+ * Server-only: never prefix it NEXT_PUBLIC_.
+ */
+export function serverSecret(): string {
+  const value = process.env.CONVEX_SERVER_SECRET;
+  if (!value) throw new Error("CONVEX_SERVER_SECRET is not set.");
+  return value;
+}
+
 /** For the guest path, which has no session and must not pretend to. */
 export function convexAnonymous(): ConvexHttpClient {
   return new ConvexHttpClient(url());

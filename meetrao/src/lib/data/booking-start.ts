@@ -13,7 +13,7 @@ import {
   type PublicHost,
   type PublicMeeting,
 } from "@/lib/data/public-booking";
-import { convexAnonymous } from "@/lib/convex/server";
+import { convexAnonymous, serverSecret } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
 const DAY = 86_400_000;
@@ -89,7 +89,11 @@ export async function bookingStart(
     meeting.capacity > 1 ? getSeatMap(meeting.id, windowStart, windowEnd) : Promise.resolve({} as Record<string, number>),
     // An opening is what "Avg. Reply time" measures, opened to booked, so the
     // widget counts as one too.
-    convexAnonymous().mutation(api.publicBooking.recordPageView, { hostId: host.id, meetingTypeId: meeting.id }),
+    convexAnonymous().mutation(api.publicBooking.recordPageView, {
+      hostId: host.id,
+      meetingTypeId: meeting.id,
+      secret: serverSecret(),
+    }),
   ]);
 
   const input = {

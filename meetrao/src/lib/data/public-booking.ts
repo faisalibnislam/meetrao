@@ -6,7 +6,7 @@ import type { AvailabilityRule, DateOverride, Interval, SlotRules } from "@/lib/
 import type { BookingQuestion } from "@/lib/types";
 import type { PublicBrand } from "@/components/booking/brand";
 import { busyPeriods } from "@/lib/google/calendar";
-import { convexAnonymous } from "@/lib/convex/server";
+import { convexAnonymous, serverSecret } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -247,6 +247,7 @@ export async function getBusy(
       hostId,
       from: from.getTime(),
       to: to.getTime(),
+      secret: serverSecret(),
     }),
     busyPeriods(hostId, from, to).catch(() => null),
   ]);

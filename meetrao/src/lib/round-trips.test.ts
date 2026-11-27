@@ -239,3 +239,44 @@ describe("the Google busy check is one function, not three", () => {
     expect(fn, "a nested action is a second function invocation").not.toContain("ctx.runAction(");
   });
 });
+
+/* ── 2026-11-27 security pass ────────────────────────────────────────────── */
+
+describe("server-only Convex functions", () => {
+  const PUBLIC_BOOKING = read("convex/publicBooking.ts");
+  const GOOGLE = read("convex/google.ts");
+  const fnBody = (src: string, name: string) => {
+    const start = src.indexOf(`export const ${name}`);
+    return src.slice(start, src.indexOf("\nexport ", start + 10));
+  };
+
+  it("require the server secret", () => {
+    expect(fnBody(PUBLIC_BOOKING, "busyForHost")).toContain("assertServerCall(a.secret)");
+    expect(fnBody(PUBLIC_BOOKING, "recordPageView")).toContain("assertServerCall(a.secret)");
+    expect(fnBody(GOOGLE, "busyForHost")).toContain("assertServerCall(a.secret)");
+  });
+
+  it("are called with it", () => {
+    for (const file of [
+      "src/lib/data/public-booking.ts",
+      "src/lib/data/team-booking.ts",
+      "src/lib/google/calendar.ts",
+      "src/lib/data/booking-start.ts",
+    ]) {
+      expect(read(file), file).toContain("secret: serverSecret()");
+    }
+  });
+
+  it("rate-limit page views and check the host and meeting are real", () => {
+    const fn = fnBody(PUBLIC_BOOKING, "recordPageView");
+    expect(fn).toContain("consume(ctx");
+    expect(fn).toContain("meeting.user_id !== host.id");
+  });
+
+  it("delete a host's page views in batches", () => {
+    const admin = read("convex/admin.ts");
+    const purge = admin.slice(admin.indexOf("export async function purgeAccount"), admin.indexOf("export const purgePageViews"));
+    expect(purge).not.toMatch(/booking_page_views[\s\S]{0,120}\.collect\(\)/);
+    expect(purge).toContain("internal.admin.purgePageViews");
+  });
+});

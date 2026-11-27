@@ -1,6 +1,7 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { fail } from "./lib/errors";
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import { requireAdmin, requireProfile } from "./lib/auth";
 import { hasComp, hasSubscription, planOf } from "./lib/plan";
 import type { MutationCtx } from "./_generated/server";
@@ -348,8 +349,18 @@ export async function purgeAccount(
     for (const c of await ctx.db.query("calendar_connections").withIndex("by_user", (q) => q.eq("user_id", p.id)).collect()) {
       await ctx.db.delete(c._id);
     }
-    for (const pv of await ctx.db.query("booking_page_views").withIndex("by_host", (q) => q.eq("host_id", p.id)).collect()) {
-      await ctx.db.delete(pv._id);
+    /* Page views are the one table here that grows with traffic rather than
+       with anything the host did, so they are deleted in bounded batches: a
+       host with more rows than one mutation may write would otherwise be
+       impossible to delete. The first batch goes now, and the rest in
+       follow-up transactions moments later. They carry no personal data. */
+    const views = await ctx.db
+      .query("booking_page_views")
+      .withIndex("by_host", (q) => q.eq("host_id", p.id))
+      .take(PAGE_VIEW_BATCH);
+    for (const pv of views) await ctx.db.delete(pv._id);
+    if (views.length === PAGE_VIEW_BATCH) {
+      await ctx.scheduler.runAfter(0, internal.admin.purgePageViews, { hostId: p.id });
     }
 
     const username = p.username_lower;
@@ -419,6 +430,24 @@ export async function purgeAccount(
     return true;
   }
 }
+
+const PAGE_VIEW_BATCH = 1000;
+
+/** The rest of a removed host's page views, a batch per transaction. */
+export const purgePageViews = internalMutation({
+  args: { hostId: v.string() },
+  handler: async (ctx, a) => {
+    const views = await ctx.db
+      .query("booking_page_views")
+      .withIndex("by_host", (q) => q.eq("host_id", a.hostId))
+      .take(PAGE_VIEW_BATCH);
+    for (const pv of views) await ctx.db.delete(pv._id);
+    if (views.length === PAGE_VIEW_BATCH) {
+      await ctx.scheduler.runAfter(0, internal.admin.purgePageViews, { hostId: a.hostId });
+    }
+    return views.length;
+  },
+});
 
 export const removeAccount = internalMutation({
   args: { userId: v.string(), actorId: v.union(v.string(), v.null()) },

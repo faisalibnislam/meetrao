@@ -16,6 +16,7 @@ const REQUIRED = [
   ["GOOGLE_CLIENT_SECRET", "Google Cloud → Credentials → the same client's secret"],
   ["RESEND_API_KEY", "Resend → API Keys"],
   ["NEXT_PUBLIC_SITE_URL", "http://localhost:3000 locally; the deployed origin in production"],
+  ["CONVEX_SERVER_SECRET", "openssl rand -hex 32; the SAME value on the Convex deployment (npx convex env set)"],
 ];
 
 const OPTIONAL = [
@@ -62,6 +63,7 @@ console.log(
 console.log(
   "\nSome secrets live on the CONVEX deployment rather than here, because the\n" +
     "code that uses them runs there: GOOGLE_CLIENT_ID/SECRET, AUTH_RESEND_KEY,\n" +
-    "JWT_PRIVATE_KEY, JWKS, SITE_URL, ANALYTICS_INGEST_SECRET. List them with\n" +
+    "JWT_PRIVATE_KEY, JWKS, SITE_URL, ANALYTICS_INGEST_SECRET, and CONVEX_SERVER_SECRET\n" +
+    "(which also lives here). List them with\n" +
     "`npx convex env list` — this script cannot see them.",
 );
