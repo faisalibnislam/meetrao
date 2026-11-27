@@ -4231,8 +4231,8 @@ window.MR_DATA = {
   }],
   times: ['08:00 AM', '08:30 AM', '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM', '12:00 PM', '12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM', '05:00 PM', '05:30 PM', '06:00 PM', '07:00 PM'],
   timezones: [{
-    value: 'Asia/Dhaka',
-    label: 'GMT+06:00  Dhaka'
+    value: 'America/Los_Angeles',
+    label: 'GMT-07:00  Los Angeles'
   }, {
     value: 'Europe/London',
     label: 'GMT+01:00  London'
@@ -4448,7 +4448,7 @@ function BookingPage({
       lineHeight: 1.45,
       color: 'var(--ink-2)'
     }
-  }, "Times shown in GMT+06:00 Dhaka")))), /*#__PURE__*/React.createElement("div", {
+  }, "Times shown in GMT-05:00 New York")))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '30px',
       display: 'flex',

@@ -53,6 +53,8 @@ struct AccountView: View {
                         Button("Calendar, profile and branding") { openURL(Links.site("settings")) }
                         Button("Help centre") { openURL(Links.site("help")) }
                         Button("Contact support") { openURL(Links.site("support")) }
+                        Button("Terms of Service") { openURL(Links.site("terms")) }
+                        Button("Privacy Policy") { openURL(Links.site("privacy")) }
                     } footer: {
                         Text("Calendar connection, your profile, branding and companies are managed on meetrao.com.")
                     }
@@ -76,7 +78,10 @@ struct AccountView: View {
                             Label(error, systemImage: "exclamationmark.circle").foregroundStyle(.red)
                         }
                     } footer: {
-                        Text("Meetrao \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")")
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Meetrao \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")")
+                            Text("Operated by [Space Cherries LLC](https://www.spacecherries.com), 5242 Elbetee Lane, Alexandria, VA 22312, USA")
+                        }
                     }
                 }
             }

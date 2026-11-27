@@ -479,9 +479,9 @@ export function MeetingForm({
               maxLength={200}
               placeholder={
                 locationKind === "phone"
-                  ? "+880 1XXX-XXXXXX, or “I’ll call you”"
+                  ? "+1 555 010 0100, or “I’ll call you”"
                   : locationKind === "in_person"
-                    ? "12 Example Road, Cumilla"
+                    ? "12 Example Road, Springfield"
                     : "Your Zoom link, or what guests should do"
               }
               value={form.locationDetail ?? ""}

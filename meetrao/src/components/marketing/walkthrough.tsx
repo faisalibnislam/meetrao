@@ -245,7 +245,7 @@ export function Walkthrough({ today }: { today: string }) {
                             <span className="text-[15px] font-semibold text-ink">Availability</span>
                             <span className="inline-flex h-[30px] items-center gap-[8px] rounded-[6px] border border-line-strong bg-surface px-[11px] text-[12.5px] text-ink">
                               <Icon name="globe" size={11} className="text-ink-3" />
-                              GMT+06:00 Dhaka
+                              GMT-05:00 New York
                             </span>
                           </div>
 

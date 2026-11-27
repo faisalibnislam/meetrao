@@ -7,6 +7,29 @@ Every entry states the change, the old → new values, and whether it needs anyt
 
 ---
 
+## 27 November 2026 — Space Cherries LLC operates Meetrao
+
+Meetrao is now operated by **Space Cherries LLC**, 5242 Elbetee Lane, Alexandria, VA 22312, USA
+(www.spacecherries.com). Earlier entries below describe the previous operator and are kept as history.
+
+- **Footers** (Landing, Help, Support, Terms, Privacy): "© 2026 Space Cherries LLC · Meetrao is operated by
+  Space Cherries LLC, <address>", linked to spacecherries.com. Footer column link → "Operated by Space
+  Cherries LLC".
+- **Email footers** (all six mocks and the Emails board note): "Meetrao is operated by Space Cherries LLC ·
+  5242 Elbetee Lane, Alexandria, VA 22312, USA". The shipped value is `OPERATOR_LINE` in
+  `meetrao/src/lib/contact.ts`.
+- **Terms**: operator Space Cherries LLC; governing law the Commonwealth of Virginia, courts of Fairfax
+  County, Virginia.
+- **Privacy**: controller Space Cherries LLC, operated from the United States; SCCs cover EU/UK data.
+- **Support**: "a small team in the US".
+- **Contact**: every studio address → hello@meetrao.com.
+- **Demo time zone**: sample screens, mocks and the design-system picker show "GMT-05:00 New York"
+  (America/New_York) as the example zone.
+
+Copy only. No layout or token changes.
+
+---
+
 ## 7 September 2026 (later) — repackaged for a greenfield build on a decided stack
 
 The owner restarted: build everything from scratch, on **Vercel + Supabase + Resend + Google

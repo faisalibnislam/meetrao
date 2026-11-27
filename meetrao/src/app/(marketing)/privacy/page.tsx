@@ -9,7 +9,7 @@ import {
 } from "@/components/marketing/legal-doc";
 import { ChangeAnalyticsChoice } from "@/components/analytics/consent";
 import { Icon } from "@/components/ui/icon";
-import { POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
+import { OPERATOR_NAME, OPERATOR_SITE, OPERATOR_URL, POSTAL_ADDRESS, SUPPORT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "Privacy Policy",
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-const UPDATED = "20 September 2026";
+const UPDATED = "27 November 2026";
 
 const TOC: TocEntry[] = [
   { id: "p-who", label: "1. Who we are" },
@@ -132,8 +132,14 @@ export default function PrivacyPage() {
           eyebrow="Privacy Policy"
           title="What we collect, and what we don't"
           intro="Meetrao needs your calendar to do its job. That is a lot of trust, so this page is specific about what we take, what we leave alone, and who else touches it. No vague language about “improving your experience”."
-          meta={[`Last updated ${UPDATED}`, "Data controller: Meetrao, Cumilla, Bangladesh"]}
+          meta={[`Last updated ${UPDATED}`, `Data controller: ${OPERATOR_NAME}, Alexandria, Virginia, USA`]}
         />
+
+        <p>
+          <strong>What changed on {UPDATED}:</strong> Meetrao is now operated by {OPERATOR_NAME} in the United
+          States, which is now the data controller (sections 1 and 8). What we collect and how we use it has not
+          changed.
+        </p>
 
         <div className="mb-[26px] flex flex-col gap-[11px] rounded-[10px] border border-accent-line bg-accent-soft px-[16px] py-[15px]">
           <span className="text-[13.5px] font-semibold text-accent-ink">The short version</span>
@@ -149,8 +155,9 @@ export default function PrivacyPage() {
 
         <h2 id="p-who">1. Who we are</h2>
         <p>
-          Meetrao is a scheduling service operated by a sole proprietor trading as Meetrao, at {POSTAL_ADDRESS}.
-          In this policy, &ldquo;we&rdquo;, &ldquo;us&rdquo; and &ldquo;Meetrao&rdquo; mean that operator, and
+          Meetrao is a scheduling service operated by {OPERATOR_NAME}, at {POSTAL_ADDRESS} (
+          <a href={OPERATOR_URL}>{OPERATOR_SITE}</a>). In this policy, &ldquo;we&rdquo;, &ldquo;us&rdquo; and
+          &ldquo;Meetrao&rdquo; mean {OPERATOR_NAME}, and
           &ldquo;you&rdquo; means the person using the service.
         </p>
         <p>
@@ -360,8 +367,8 @@ export default function PrivacyPage() {
             There is no grace-period copy and no backup that outlives it.
           </li>
           <li>
-            <strong>Human access.</strong> Production data can be reached only by the one person who operates
-            Meetrao, using individually authenticated accounts with two-factor authentication, and only to fix a
+            <strong>Human access.</strong> Production data can be reached only by authorised {OPERATOR_NAME}
+            personnel, using individually authenticated accounts with two-factor authentication, and only to fix a
             fault. No human reads your Google user data otherwise.
           </li>
           <li>
@@ -451,7 +458,7 @@ export default function PrivacyPage() {
 
         <h2 id="p-where">8. Where it is stored</h2>
         <p>
-          Meetrao is operated from Bangladesh. Your account data and bookings are stored by Convex in the
+          Meetrao is operated from the United States. Your account data and bookings are stored by Convex in the
           United States, in the US&nbsp;East (N.&nbsp;Virginia) region. The website is served by
           Vercel&rsquo;s global network, and email, calendar and analytics are handled by providers in the
           United States. Your data will therefore be transferred and stored outside your own country.
@@ -459,7 +466,7 @@ export default function PrivacyPage() {
         <p>
           Where we move personal data out of the EU or UK, we rely on the European Commission&rsquo;s Standard
           Contractual Clauses, or the UK Addendum, as incorporated into our agreements with the providers named
-          above. Bangladesh has no EU adequacy decision, so the same clauses cover the data reaching us. You can
+          above, and the same clauses cover the data reaching us in the United States. You can
           ask us for a copy of the mechanism that applies to you.
         </p>
 
@@ -516,7 +523,7 @@ export default function PrivacyPage() {
           you.
         </p>
         <p>
-          Access to production data is limited to the one person who operates Meetrao, and is used to fix faults,
+          Access to production data is limited to authorised {OPERATOR_NAME} personnel, and is used to fix faults,
           not to read your bookings.
         </p>
         <p>
@@ -572,11 +579,11 @@ export default function PrivacyPage() {
         <p>
           Email <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a> for anything in this policy, including a
           request to see, correct, export or delete your data. You can also{" "}
-          <Link href="/support">use the contact form</Link>. By post: {POSTAL_ADDRESS}.
+          <Link href="/support">use the contact form</Link>. By post: {OPERATOR_NAME}, {POSTAL_ADDRESS}.
         </p>
 
         <DocFooterNote title="Privacy questions or requests">
-          Email <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>, or write to {POSTAL_ADDRESS}. A person
+          Email <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>, or write to {OPERATOR_NAME}, {POSTAL_ADDRESS}. A person
           reads it.
         </DocFooterNote>
       </DocLayout>

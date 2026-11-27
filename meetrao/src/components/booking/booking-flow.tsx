@@ -230,7 +230,7 @@ export function BookingFlow(props: FlowProps) {
    *
    * Same month, same day number, re-asked in the new zone: "the 19th" is a
    * calendar date, and a calendar date belongs to a zone, so the 19th in
-   * Tokyo is a different set of instants from the 19th in Dhaka and has to
+   * Tokyo is a different set of instants from the 19th in New York and has to
    * come from the server again rather than being re-labelled here. A time
    * already chosen is dropped for the same reason: it is still a real
    * instant, but it may now sit on another day than the one highlighted.
@@ -696,7 +696,7 @@ export function BookingFlow(props: FlowProps) {
             {/* A control, not a sentence. Detection is right for nearly
                 everyone, but not for a guest booking from a work laptop set
                 to head office, or planning a call for a trip, and "Times
-                shown in GMT+06:00 Dhaka" with no way to change it left them
+                shown in GMT-05:00 New York" with no way to change it left them
                 doing the arithmetic in their head. */}
             <div className="flex flex-col gap-[6px] pt-[2px]">
               <span id="booking-tz-label" className="flex items-center gap-[10px] text-[12.5px] text-ink-2">

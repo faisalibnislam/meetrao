@@ -19,7 +19,27 @@
  * footer carries it for the same reason Google's review does: so the operator
  * of a service that reads people's calendars is not anonymous.
  */
-export const POSTAL_ADDRESS = "44/A Judge Court Road, Cumilla 3500, Bangladesh";
+export const POSTAL_ADDRESS = "5242 Elbetee Lane, Alexandria, VA 22312, USA";
+
+/**
+ * The legal entity that operates Meetrao. Meetrao is the product; this is the
+ * company behind it, named in the Terms, the Privacy Policy, the footer, the
+ * email footers and the Organization structured data.
+ */
+export const OPERATOR_NAME = "Space Cherries LLC";
+
+/** The operator's own website, linked wherever the operator is named. */
+export const OPERATOR_URL = "https://www.spacecherries.com";
+
+/** The operator's website as a reader sees it, without the scheme. */
+export const OPERATOR_SITE = "www.spacecherries.com";
+
+/**
+ * The line at the foot of every email: who operates the service and where.
+ * The default for EMAIL_POSTAL_ADDRESS, and the value that setting should
+ * hold on every Convex deployment.
+ */
+export const OPERATOR_LINE = `Meetrao is operated by ${OPERATOR_NAME}, ${POSTAL_ADDRESS}`;
 
 /**
  * The one address a visitor is ever shown, and the one Meetrao sends from.

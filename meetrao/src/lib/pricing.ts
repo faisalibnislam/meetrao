@@ -193,7 +193,7 @@ export const LIMITS: readonly [string, string][] = [
  * free because it is small and new, not because you are the product.
  */
 export const WHY: readonly string[] = [
-  "Meetrao is built and run by one person. There is no sales team to fund and no investor expecting a return this quarter, which is why the free plan is the real product rather than a demonstration of one.",
+  "Meetrao is run by Space Cherries LLC, a small company. There is no sales team to fund and no investor expecting a return this quarter, which is why the free plan is the real product rather than a demonstration of one.",
   "Free is not paid for with your data. Meetrao does not sell anything to anybody, does not run ads, and asks Google only whether a period is busy or free, never what your meetings are about, beyond whether your guest accepted the booking it made for you. The Privacy Policy names every permission it holds and why.",
   "Pro is priced to cover what it costs to run, not to extract what it is worth. A custom domain means a certificate and a support burden; hosting a logo means storage and bandwidth on every page view; a team link means several calendars checked on every page load. Thirty dollars a year is roughly that, and it is what keeps the free plan from needing to be paid for some other way.",
   `Business costs more because it carries more. Every person on a company domain is another published booking page, another calendar checked on every view and more reminder emails sent. ${BUSINESS_YEARLY} covers up to ${BUSINESS_LIMITS.companies} companies of up to ${BUSINESS_LIMITS.membersPerCompany} people, and the caps are there to bound that cost, not to sell the next plan up.`,

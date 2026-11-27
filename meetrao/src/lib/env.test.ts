@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { POSTAL_ADDRESS } from "@/lib/contact";
+import { OPERATOR_LINE } from "@/lib/contact";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    "Set but blank" has to mean the same thing as "not set".
@@ -43,20 +43,20 @@ afterEach(() => {
 describe("optional variables with a real default", () => {
   it("uses the default when the variable is absent", async () => {
     const e = await envWith({});
-    expect(e.EMAIL_POSTAL_ADDRESS).toBe(POSTAL_ADDRESS);
+    expect(e.EMAIL_POSTAL_ADDRESS).toBe(OPERATOR_LINE);
     expect(e.EMAIL_FROM).toBe("Meetrao <hello@meetrao.com>");
   });
 
   /* The whole point of this file. */
   it("uses the default when the variable is set but blank", async () => {
     const e = await envWith({ EMAIL_POSTAL_ADDRESS: "", EMAIL_FROM: "" });
-    expect(e.EMAIL_POSTAL_ADDRESS).toBe(POSTAL_ADDRESS);
+    expect(e.EMAIL_POSTAL_ADDRESS).toBe(OPERATOR_LINE);
     expect(e.EMAIL_FROM).toBe("Meetrao <hello@meetrao.com>");
   });
 
   it("uses the default when the variable is only whitespace", async () => {
     const e = await envWith({ EMAIL_POSTAL_ADDRESS: "   ", EMAIL_FROM: "\t" });
-    expect(e.EMAIL_POSTAL_ADDRESS).toBe(POSTAL_ADDRESS);
+    expect(e.EMAIL_POSTAL_ADDRESS).toBe(OPERATOR_LINE);
     expect(e.EMAIL_FROM).toBe("Meetrao <hello@meetrao.com>");
   });
 

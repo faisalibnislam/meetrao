@@ -69,7 +69,7 @@ check("an unverified account gets no session", beforeVerify?.tokens == null, JSO
 const verifyMail = await latestEmailTo(EMAIL, env.RESEND_API_KEY);
 check("a verification email was sent", verifyMail != null, verifyMail?.subject);
 check("it is ours, not Auth.js's default", verifyMail?.subject === "Confirm your email", verifyMail?.subject);
-check("it carries the postal address anti-spam law requires", (verifyMail?.html ?? "").includes("Cumilla"));
+check("it carries the postal address anti-spam law requires", (verifyMail?.html ?? "").includes("Elbetee Lane"));
 /* The footer used to offer one, pointing at /settings/notifications — an
    account the recipient has not activated yet. An unsubscribe that cannot work
    is worse than none, and this message is transactional anyway. */

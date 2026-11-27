@@ -115,7 +115,7 @@ function rows(data: unknown): TopRow[] {
 }
 
 /**
- * "BD" → "Bangladesh".
+ * "DE" → "Germany".
  *
  * Intl carries the whole list, so there is no country table to maintain and go
  * stale. A code Intl does not recognise comes back unchanged, and "Unknown",

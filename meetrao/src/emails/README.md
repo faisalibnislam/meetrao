@@ -67,7 +67,8 @@ covers both.
   defaults it for the five templates here; the two in `convex/` read it from
   the Convex deployment's own environment and **throw if it is unset**, rather
   than sending a footer with no address in it. `npx convex env set
-  EMAIL_POSTAL_ADDRESS "…"` on every deployment.
+  EMAIL_POSTAL_ADDRESS "…"` on every deployment, with the value of
+  `OPERATOR_LINE` in `src/lib/contact.ts` (set on dev and prod 2026-11-27).
 - **`booking-changed.html` has no trigger.** There is no reschedule flow, guests
   cancel and rebook. `sendRescheduled()` exists and is unwired, so building
   reschedule later is a matter of calling it.
