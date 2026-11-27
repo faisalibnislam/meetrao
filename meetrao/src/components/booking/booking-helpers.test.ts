@@ -132,7 +132,7 @@ describe("extra guests reach the booking, the event and the inbox", () => {
     expect(SEND).toContain("`booking-new-guest:${mail.bookingId}:${mail.guestEmail.toLowerCase()}`");
     expect(SEND).toContain("`booking-cancelled-guest:${mail.bookingId}:${mail.guestEmail.toLowerCase()}`");
     expect(SEND).toContain(
-      "`booking-changed-guest:${mail.bookingId}:${mail.startLong}:${mail.guestEmail.toLowerCase()}`",
+      "`booking-changed-guest:${mail.bookingId}:${mail.startsAt.toISOString()}:${mail.guestEmail.toLowerCase()}`",
     );
   });
 });

@@ -29,6 +29,7 @@ import type * as companyDomains from "../companyDomains.js";
 import type * as contacts from "../contacts.js";
 import type * as crons from "../crons.js";
 import type * as domains from "../domains.js";
+import type * as google from "../google.js";
 import type * as http from "../http.js";
 import type * as lib_apiAuth from "../lib/apiAuth.js";
 import type * as lib_apns from "../lib/apns.js";
@@ -99,6 +100,7 @@ declare const fullApi: ApiFromModules<{
   contacts: typeof contacts;
   crons: typeof crons;
   domains: typeof domains;
+  google: typeof google;
   http: typeof http;
   "lib/apiAuth": typeof lib_apiAuth;
   "lib/apns": typeof lib_apns;

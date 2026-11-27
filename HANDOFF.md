@@ -2,7 +2,7 @@
 
 > Read this first if you are a Claude (or any agent) picking this project up, on this Mac or another one. Then read CLAUDE.md / AGENTS.md. Keep this file current: after every change to the project, update "Current state", "Next steps" and "Change log", and commit it.
 
-Last updated: 2026-11-27 · Written on: Faisal's MacBook Pro M5
+Last updated: 2026-11-27 (calendar feed) · Written on: Faisal's MacBook Pro M5
 
 ## 1. What this is
 
@@ -184,6 +184,37 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
 
 ## 9. Current state (as of 2026-11-19, operator change and speed pass 2026-11-27)
 
+- **Google Calendar replaced (2026-11-27, PR #75):** Meetrao no longer has any Google Calendar access, which
+  makes Google's sensitive-scope verification for project `meetup-507707` unnecessary. The user sends Google the
+  "no longer need these scopes" reply themselves. What replaced it:
+  - **Calendar feed for conflicts.** The host pastes a private iCal address in Settings → Calendar or onboarding
+    step 2. It lives in `calendar_feeds` (Convex). It is read by `convex/calendarFeed.ts` and parsed by
+    `convex/lib/icalFeed.ts` (ical.js: RRULE/EXDATE/overrides, transparent and cancelled events skipped, all-day
+    and floating times in the host's zone). Only busy start/end times are cached, for 5 minutes, covering yesterday
+    to a year out. `busyForHost` is server-only (`CONVEX_SERVER_SECRET`).
+  - **The feed URL is a secret.** The client sees only `url_hint`, nothing logs it, and the account purge deletes
+    it.
+  - **Unreadable feed.** Booking falls back to Meetrao's own bookings (`calendarChecked: false`), and Settings and
+    the dashboard show "unreachable".
+  - **Invites by email.** Every booking email carries an iTIP `.ics` built by `src/lib/calendar/invite.ts`. The UID
+    is `<reference>@meetrao.com`, SEQUENCE is the booking `revision`, and a cancellation sends `METHOD:CANCEL`.
+    The guest's copy is organised by the host. The host's copy is organised by Meetrao (support@), with the host
+    shown as already accepted.
+  - **Video link.** `profiles.video_link` (Settings → Calendar, onboarding). The stored location value
+    `google_meet` means "Video call". The link is copied onto each booking's `meet_url`. With no link, booking or
+    scheduling a video call is refused and saving a video meeting is blocked. The dashboard, meeting form and
+    onboarding show the prompt.
+  - **Removed.** The OAuth connect/callback routes, `src/lib/google/*`, `convex/google.ts`,
+    `calendarConnections.ts`, `lib/googleApi.ts`, `rsvp.ts` and its cron, and all event writes.
+    `convex/revokeGoogleCalendar.ts` is a one-off. The `calendar_connections` table stays in the schema until
+    that has run on prod.
+  - **Fixed alongside.** "Moved" emails had never sent: their Resend idempotency key held an en dash.
+  - **Verified on dev** with a throwaway host and a real public feed (`ics.fixtur.es`). Busy slots were hidden,
+    409 was returned on busy slots, and the invites (request, move SEQUENCE 2, cancel) parsed correctly. The
+    fixtures are `testCleanup:seedFeedHostFixture` / `purgeFeedHostFixture` and `calendarFeed:saveFor`.
+  - **Production at the switch:** 2 hosts, 3 meetings (all video calls), no `video_link` yet. Their video meetings
+    stay unbookable until each host saves a link.
+
 - **DNS and email (2026-11-27):** meetrao.com DNS moved from Vercel DNS to **Cloudflare** (Free plan, zone in the
   faisalibnislam@gmail.com account; Namecheap nameservers `carol.ns.cloudflare.com` / `doug.ns.cloudflare.com`).
   Web records are DNS-only: apex `A 76.76.21.21`, `www CNAME cname.vercel-dns.com`. Resend re-added meetrao.com
@@ -236,6 +267,20 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
 
 ## 10. Next steps / open work
 
+00. **Optional Meet links (user wants this later):** a "Create a Meet link for each booking" switch using the
+    Google Meet REST API (`spaces.create`, scope `meetings.space.created`, sensitive, needs a smaller Google
+    review). Not built.
+01. Both prod hosts must add a video link (Settings → Calendar) or their video meetings stay unbookable. They can
+    add a calendar feed there too.
+02. After `revokeGoogleCalendar:run --prod` reports `remaining: 0`, delete `convex/revokeGoogleCalendar.ts` and the
+    `calendar_connections` table from `schema.ts`. The booking columns `google_event_id` and `guest_rsvp*` are
+    unused now (the API still returns `guest_rsvp`); drop them with a migration when convenient. Remove the
+    `/api/google/callback` redirect URIs from the Google OAuth client, and drop `calendar.events` /
+    `calendar.freebusy` from the consent screen's scopes.
+03. Guest booking page: a video meeting from a host with no link is refused only when the guest submits. Hiding it
+    up front would be nicer. Also, the guest's "Moved" subject line shows the host's time zone (pre-existing).
+04. Group meetings now give the host one invite per seat (they used to share one Google event).
+
 0. Vercel `EMAIL_POSTAL_ADDRESS` was updated to `OPERATOR_LINE` on 2026-11-27 (Production, Preview, Development);
    it applies from the next production deploy.
    Also: the App Store seller name comes from the Apple Developer enrollment (Individual, "Abu Mohammad Faisal");
@@ -279,6 +324,11 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   here afterwards.
 
 ## 12. Change log
+
+- 2026-11-27: Google Calendar replaced by a private iCal feed (conflicts) and emailed iTIP invites. Added a host
+  video link. The Google Calendar OAuth, scopes, event writes and RSVP sync are removed, and stored grants are
+  revoked by a one-off migration. Copy, Help, Terms and Privacy are updated. Move emails, which had never sent,
+  now do (PR #75).
 
 - 2026-11-27 — Security pass: server-only secret on busy-time lookups and page views, page-view validation and rate
   limit, batched page-view purge, API key hashed inside Convex.
