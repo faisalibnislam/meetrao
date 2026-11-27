@@ -137,12 +137,35 @@ function toMeeting(row: MeetingRow): PublicMeeting {
  * keyed by username and slug already, and refuses exactly what the list did:
  * a suspended host, or a meeting that is switched off.
  */
+const meetingRow = cache(async function meetingRow(username: string, slug: string) {
+  return await convexAnonymous().query(api.publicBooking.getMeetingAvailability, { username, slug });
+});
+
 export const getPublicMeeting = cache(async function getPublicMeeting(
   username: string,
   slug: string,
 ): Promise<PublicMeeting | null> {
-  const row = await convexAnonymous().query(api.publicBooking.getMeetingAvailability, { username, slug });
+  const row = await meetingRow(username, slug);
   return row ? toMeeting(row.meeting as MeetingRow) : null;
+});
+
+/**
+ * The weekly hours behind the meeting at this address, from the SAME query as
+ * getPublicMeeting, which already resolves the meeting's schedule (or the
+ * host's default) and returns its rules. The guest pages used to throw those
+ * away and fetch them again by meeting id in the next round. Empty when there
+ * is no bookable meeting here.
+ */
+export const getPublicMeetingHours = cache(async function getPublicMeetingHours(
+  username: string,
+  slug: string,
+): Promise<AvailabilityRule[]> {
+  const row = await meetingRow(username, slug);
+  return (row?.rules ?? []).map((r) => ({
+    weekday: r.weekday,
+    startMinute: r.start_minute,
+    endMinute: r.end_minute,
+  }));
 });
 
 /**

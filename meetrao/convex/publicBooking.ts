@@ -574,11 +574,14 @@ export const companyPlaceOf = query({
       .unique();
     if (!company) return null;
 
-    const row = await ctx.db
+    /* By the HOST's memberships, a handful at most, rather than every member
+       of the company: this runs on every personal booking-page load, and a
+       company's member list only grows. */
+    const memberships = await ctx.db
       .query("company_members")
-      .withIndex("by_company", (q) => q.eq("company_id", company.id))
+      .withIndex("by_user", (q) => q.eq("user_id", host.id))
       .collect();
-    const mine = row.find((m) => m.user_id === host.id);
+    const mine = memberships.find((m) => m.company_id === company.id);
     /* No membership means no address on this company, which happens when
        somebody is removed while their meeting still points at it. Sending
        them nowhere is better than sending them to a handle that 404s. */

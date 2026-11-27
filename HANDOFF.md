@@ -180,7 +180,21 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   dashes out of the comments too").
 - Commit messages end with the Claude co-author line; PRs from `claude/*` branches.
 
-## 9. Current state (as of 2026-11-19, operator change 2026-11-27)
+## 9. Current state (as of 2026-11-19, operator change and speed pass 2026-11-27)
+
+- **DNS and email (2026-11-27):** meetrao.com DNS moved from Vercel DNS to **Cloudflare** (Free plan, zone in the
+  faisalibnislam@gmail.com account; Namecheap nameservers `carol.ns.cloudflare.com` / `doug.ns.cloudflare.com`).
+  Web records are DNS-only: apex `A 76.76.21.21`, `www CNAME cname.vercel-dns.com`. Resend re-added meetrao.com
+  (us-east-1, sending + receiving, all verified): `send`/`rsend` CNAMEs to `*.forge.rmta.net`, apex
+  `MX 9 receive.forge.rmta.net`, same DKIM as before. Stale `_domainconnect` CNAME left in Cloudflare (harmless).
+- **Speed pass (2026-11-27):** `/help` is static (nav reads the session in the browser); `optionalSession` and
+  `/api/me` skip Convex when there is no session token; guest booking page and `/api/slots` reuse the hours that
+  come back with the meeting; `google.busyForHost` reads host + connection in one internal query and calls the token
+  logic directly instead of nested `runAction`s; `companyPlaceOf` reads the host's memberships (`by_user`) instead of
+  every company member; `rate_limits` has a `by_window_start` index and the sweep batches until done. Locked in by
+  `src/lib/round-trips.test.ts`. Production numbers before: booking page 558 ms median / 800 ms p95, `/help` 865 ms
+  p95. Convex prod insights were healthy; queries take 5-15 ms warm, so the remaining booking-page time is the Google
+  call, Vercel cold starts (low traffic) and render.
 
 - **Operator (2026-11-27):** Meetrao is operated by **Space Cherries LLC**, 5242 Elbetee Lane, Alexandria, VA 22312,
   USA (www.spacecherries.com). One definition in `meetrao/src/lib/contact.ts` (`POSTAL_ADDRESS`, `OPERATOR_NAME`,
@@ -229,7 +243,20 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
    built", but companies shipped on 2026-10-04).
 5. Resend: inbound mail is shared across apps; consider a separate inbound address/domain filter per app (the
    2026-10-31 fix drops non-meetrao mail).
-6. `@convex-dev/auth` is pre-1.0 (0.0.95): plan the migration when 2.0 ships.
+6. `@convex-dev/auth` is 0.0.95 and 2.1.0 is out (needs `convex ^1.48`; installed 1.46.0): upgrade `convex`
+   first, then auth, on a branch, testing sign-in, `src/proxy.ts` and `convexAuthNextjsToken`.
+7. From the 2026-11-27 Convex audit (not fixed yet, ranked):
+   - `publicBooking.recordPageView` is public, unauthenticated, unlimited, and `booking_page_views` is never pruned;
+     enough rows make `admin.purgeAccount` exceed the per-mutation write limit. Rate-limit it, validate ids, prune
+     (owner decides retention), and batch `purgeAccount`.
+   - `apiPublic.*` accept the stored key hash as an argument, so a leaked `api_keys` export is replayable; add a
+     server secret or hash inside Convex.
+   - `google.busyForHost` / `publicBooking.busyForHost` return raw busy blocks to anyone with a host id; computing
+     slots inside Convex fixes this and saves a round trip.
+   - `reminders.claimDue` and `rsvp.due` use `take(200)` over a window then filter in JS; past 200 bookings in the
+     window, reminders/RSVP syncs are skipped. Query narrower index ranges or paginate.
+   - Low: `bookings.listForScreen` and `contacts` collect a host's whole history; admin counts scan whole tables;
+     `apiPublic.touchKey` writes on every call.
 
 ## 11. Gotchas
 
@@ -247,6 +274,10 @@ Read `meetrao/README.md` ("Decisions worth knowing"), `meetrao/AGENTS.md` (Next.
   here afterwards.
 
 ## 12. Change log
+
+- 2026-11-27 — DNS moved to Cloudflare; Resend domain re-added and verified. Speed pass: static Help Centre, no
+  Convex call for signed-out session checks, fewer booking-page reads, single-step Google busy check, indexed
+  member lookup and rate-limit sweep.
 
 - 2026-11-27 — Space Cherries LLC named as operator everywhere (site, legal pages, emails, iOS, design files);
   Convex and Vercel email footer env updated; demo time zones, placeholders and fixtures

@@ -1,4 +1,5 @@
-import { action, internalAction, internalMutation, internalQuery } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery, type ActionCtx } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { fail } from "./lib/errors";
@@ -79,38 +80,60 @@ export const flagReconnect = internalMutation({
  * from Google is unrecoverable, so the connection is flagged and the caller
  * degrades rather than retrying.
  */
+type Credentials = { token: string; calendarId: string } | null;
+
+/*
+ * The token logic as a plain function, not an action. Every caller used to reach
+ * it through ctx.runAction, which starts a separate function invocation in the
+ * middle of the one already running: on the booking page that was a nested
+ * action plus a nested query before Google was even asked. Called directly, it
+ * costs nothing but the work. `row` is the host's connection, already read by
+ * the caller when it could fold that read into one it was making anyway.
+ */
+async function credentialsFrom(
+  ctx: ActionCtx,
+  userId: string,
+  row: Doc<"calendar_connections"> | null,
+): Promise<Credentials> {
+  const a = { userId };
+  if (!row || row.needs_reconnect) return null;
+
+  if (row.access_token && (row.token_expires_at ?? 0) > Date.now() + 60_000) {
+    return { token: row.access_token, calendarId: row.calendar_id };
+  }
+  if (!row.refresh_token) {
+    await ctx.runMutation(internal.google.flagReconnect, {
+      userId: a.userId, message: "No refresh token: reconnect Google Calendar.",
+    });
+    return null;
+  }
+
+  try {
+    const tokens = await refreshAccessToken(row.refresh_token);
+    await ctx.runMutation(internal.google.storeTokens, {
+      userId: a.userId,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
+      expiresAtMs: tokens.expiresAtMs,
+      scopes: tokens.scopes,
+    });
+    return { token: tokens.accessToken, calendarId: row.calendar_id };
+  } catch (cause) {
+    const message = cause instanceof GoogleAuthError ? cause.message : "Google Calendar could not be reached.";
+    await ctx.runMutation(internal.google.flagReconnect, { userId: a.userId, message });
+    return null;
+  }
+}
+
+/** Reads the connection, then as above. */
+async function credentialsFor(ctx: ActionCtx, userId: string): Promise<Credentials> {
+  return credentialsFrom(ctx, userId, await ctx.runQuery(internal.google.connectionFor, { userId }));
+}
+
+/** Kept for rsvp.ts, which batches hosts in its own action. */
 export const accessTokenFor = internalAction({
   args: { userId: v.string() },
-  handler: async (ctx, a): Promise<{ token: string; calendarId: string } | null> => {
-    const row = await ctx.runQuery(internal.google.connectionFor, { userId: a.userId });
-    if (!row || row.needs_reconnect) return null;
-
-    if (row.access_token && (row.token_expires_at ?? 0) > Date.now() + 60_000) {
-      return { token: row.access_token, calendarId: row.calendar_id };
-    }
-    if (!row.refresh_token) {
-      await ctx.runMutation(internal.google.flagReconnect, {
-        userId: a.userId, message: "No refresh token: reconnect Google Calendar.",
-      });
-      return null;
-    }
-
-    try {
-      const tokens = await refreshAccessToken(row.refresh_token);
-      await ctx.runMutation(internal.google.storeTokens, {
-        userId: a.userId,
-        accessToken: tokens.accessToken,
-        refreshToken: tokens.refreshToken,
-        expiresAtMs: tokens.expiresAtMs,
-        scopes: tokens.scopes,
-      });
-      return { token: tokens.accessToken, calendarId: row.calendar_id };
-    } catch (cause) {
-      const message = cause instanceof GoogleAuthError ? cause.message : "Google Calendar could not be reached.";
-      await ctx.runMutation(internal.google.flagReconnect, { userId: a.userId, message });
-      return null;
-    }
-  },
+  handler: async (ctx, a): Promise<Credentials> => credentialsFor(ctx, a.userId),
 });
 
 /* ── public entry points ───────────────────────────────────────────────────── */
@@ -126,15 +149,18 @@ export const accessTokenFor = internalAction({
 export const busyForHost = action({
   args: { hostId: v.string(), from: v.number(), to: v.number() },
   handler: async (ctx, a): Promise<{ busy: Array<{ start: number; end: number }>; checked: boolean }> => {
-    const host = await ctx.runQuery(internal.google.bookableHost, { hostId: a.hostId });
-    if (!host) return { busy: [], checked: false };
+    /* ONE read for both questions: is this host bookable, and what is their
+       calendar connection. These were a query, then an action that ran a
+       second query, one after the other on every booking page. */
+    const found = await ctx.runQuery(internal.google.busyContext, { hostId: a.hostId });
+    if (!found) return { busy: [], checked: false };
 
     const now = Date.now();
     const from = Math.max(a.from, now - DAY);
     const to = Math.min(a.to, now + 365 * DAY, from + 90 * DAY);
     if (to <= from) return { busy: [], checked: false };
 
-    const creds = await ctx.runAction(internal.google.accessTokenFor, { userId: a.hostId });
+    const creds = await credentialsFrom(ctx, a.hostId, found.connection);
     if (!creds) return { busy: [], checked: false };
 
     try {
@@ -146,12 +172,16 @@ export const busyForHost = action({
   },
 });
 
-export const bookableHost = internalQuery({
+export const busyContext = internalQuery({
   args: { hostId: v.string() },
   handler: async (ctx, a) => {
     const host = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", a.hostId)).unique();
     if (!host || host.is_suspended) return null;
-    return { hostId: host.id, timezone: host.timezone };
+    const connection = await ctx.db
+      .query("calendar_connections")
+      .withIndex("by_user", (q) => q.eq("user_id", a.hostId))
+      .unique();
+    return { connection };
   },
 });
 
@@ -253,7 +283,7 @@ export const createEventForBooking = action({
       }
     }
 
-    const creds = await ctx.runAction(internal.google.accessTokenFor, { userId: booking.host_id });
+    const creds = await credentialsFor(ctx, booking.host_id);
     if (!creds) return { ok: false, reason: "not-connected" };
 
     const attendees = [{ email: booking.guest_email, name: booking.guest_name }, ...invitees];
@@ -307,7 +337,7 @@ export const updateEventForBooking = action({
     // Nothing to move. The booking simply never had an event.
     if (!booking.google_event_id) return { ok: false, reason: "no-event" };
 
-    const creds = await ctx.runAction(internal.google.accessTokenFor, { userId: booking.host_id });
+    const creds = await credentialsFor(ctx, booking.host_id);
     if (!creds) return { ok: false, reason: "not-connected" };
 
     const outcome = await patchEventTime(creds.token, creds.calendarId, booking.google_event_id, {
@@ -367,7 +397,7 @@ export const deleteEventForBooking = action({
       }
     }
 
-    const creds = await ctx.runAction(internal.google.accessTokenFor, { userId: found.booking.host_id });
+    const creds = await credentialsFor(ctx, found.booking.host_id);
     if (!creds) return { ok: false, reason: "not-connected" };
 
     const outcome = await deleteEvent(creds.token, creds.calendarId, found.booking.google_event_id);

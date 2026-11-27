@@ -4,10 +4,10 @@ import { bookableDatesInMonth, computeSlots } from "@/lib/booking/slots";
 import { dateFormat } from "@/lib/intl";
 import {
   getBusy,
-  getMeetingAvailability,
   getMeetingOverrides,
   getPublicHost,
   getPublicMeeting,
+  getPublicMeetingHours,
   getSeatMap,
   meetingIsOnCompany,
   type PublicHost,
@@ -81,7 +81,8 @@ export async function bookingStart(
   const windowEnd = new Date(Date.UTC(year, month, 1) + DAY);
 
   const [availability, overrides, { busy }, seats, pageViewId] = await Promise.all([
-    getMeetingAvailability(meeting.id),
+    // Already fetched with the meeting itself; this resolves from the cache.
+    getPublicMeetingHours(username, slug),
     getMeetingOverrides(meeting.id),
     // A workshop's own seats are not conflicts with themselves.
     getBusy(host.id, windowStart, windowEnd, meeting.capacity > 1 ? meeting.id : undefined),

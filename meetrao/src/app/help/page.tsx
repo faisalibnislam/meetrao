@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteFooter, SiteNav } from "@/components/marketing/site-chrome";
 import { signOut } from "@/lib/actions/auth";
-import { optionalSession } from "@/lib/data/session";
 import { Eyebrow } from "@/components/ui/badge";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { cx } from "@/lib/cx";
@@ -258,18 +257,12 @@ function Tip({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default async function HelpPage() {
-  const session = await optionalSession();
-
-  const chrome = session
-    ? {
-        name: session.profile.full_name || session.profile.username,
-        email: session.profile.email,
-        avatarUrl: session.profile.avatar_url,
-        onSignOut: signOut,
-      }
-    : null;
-
+/* STATIC, like the rest of the marketing pages. This used to read the session
+   on the server to draw the signed-in nav, which made the Help Centre the
+   one long marketing page rendered on every request (865 ms at the 95th
+   percentile). The nav now reads the session in the browser after hydration,
+   exactly as the landing page does; see components/marketing/site-account-live.tsx. */
+export default function HelpPage() {
   return (
     <div className="min-h-screen bg-[#F4F3ED]">
       {/* The Help Centre carried no article markup, so a consumer had nothing
@@ -292,7 +285,7 @@ export default async function HelpPage() {
           ]),
         )}
       />
-      <SiteNav account={chrome} />
+      <SiteNav liveAccount={{ onSignOut: signOut }} />
     <div className="mx-auto max-w-[1148px] px-[26px] pt-[40px] pb-[64px] max-[560px]:px-[18px]">
       <div className="flex max-w-[680px] flex-col gap-[12px]">
         <h1 className="m-0 font-serif text-[clamp(32px,4vw,46px)] leading-[1.04] font-normal tracking-[-0.02em] text-ink">

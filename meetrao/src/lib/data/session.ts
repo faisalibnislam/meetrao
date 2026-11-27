@@ -2,7 +2,7 @@ import "server-only";
 
 import { cache } from "react";
 import { redirect } from "next/navigation";
-import { convexServer } from "@/lib/convex/server";
+import { convexServer, convexServerIfSignedIn } from "@/lib/convex/server";
 import { api } from "@/convex/_generated/api";
 import type { Profile } from "@/lib/types";
 
@@ -93,7 +93,10 @@ export async function requireAdmin(): Promise<Session> {
  * request should mean one check.
  */
 export const optionalSession = cache(async function optionalSession(): Promise<Session | null> {
-  const convex = await convexServer();
+  /* No token, no question to ask: a signed-out visitor is answered without a
+     round trip to Convex. */
+  const convex = await convexServerIfSignedIn();
+  if (!convex) return null;
   const profile = (await convex.query(api.profiles.current, {})) as Profile | null;
   if (!profile) return null;
   // `verified` is not read on these screens; requireSession is the caller
