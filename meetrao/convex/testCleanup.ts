@@ -2,6 +2,7 @@ import { internalAction, internalMutation, internalQuery } from "./_generated/se
 import { internal } from "./_generated/api";
 import { hashApiKey, keyPrefix, newApiKey, newWebhookSecret } from "./lib/apiAuth";
 import { v } from "convex/values";
+import { purgeAccount } from "./admin";
 
 /**
  * Removes bookings made by a verification script, and the rows their effects
@@ -409,4 +410,45 @@ export const purgeDeveloperFixtures = internalMutation({
     }
     return true;
   },
+});
+
+/** A complete throwaway host for checking the calendar feed end to end: UTC,
+ *  open every hour of every day, one hour-long video call, a video link. The
+ *  account itself is made by a real sign-up (auth:signIn) with a Resend sink
+ *  address; this only finishes setting it up. Undone by purgeFeedHostFixture. */
+export const seedFeedHostFixture = internalMutation({
+  args: { email: v.string(), videoLink: v.string() },
+  handler: async (ctx, a) => {
+    const user = await ctx.db.query("users").withIndex("email", (q) => q.eq("email", a.email.trim().toLowerCase())).unique();
+    if (!user) return { ok: false as const, reason: "no such user" };
+    const profile = await ctx.db.query("profiles").withIndex("by_uuid", (q) => q.eq("id", user._id as unknown as string)).unique();
+    if (!profile) return { ok: false as const, reason: "no profile" };
+    const now = Date.now();
+    await ctx.db.patch(profile._id, {
+      timezone: "UTC", timezone_auto: false, video_link: a.videoLink, onboarding_completed_at: now,
+      notify_new_booking: true, updated_at: now,
+    });
+    const scheduleId = crypto.randomUUID();
+    await ctx.db.insert("availability_schedules", {
+      id: scheduleId, user_id: profile.id, name: "Feed check", is_default: true, created_at: now, updated_at: now,
+    });
+    for (let weekday = 0; weekday < 7; weekday++) {
+      await ctx.db.insert("availability_rules", {
+        id: crypto.randomUUID(), user_id: profile.id, schedule_id: scheduleId, weekday,
+        start_minute: 0, end_minute: 1440, created_at: now,
+      });
+    }
+    await ctx.db.insert("meeting_types", {
+      id: crypto.randomUUID(), user_id: profile.id, name: "Feed check", description: "", slug: "feed-check",
+      duration_minutes: 60, buffer_minutes: 0, minimum_notice_minutes: 0, booking_window_days: 60,
+      schedule_id: scheduleId, location: "google_meet", location_detail: "", capacity: 1, is_active: true,
+      questions: [], created_at: now, updated_at: now,
+    });
+    return { ok: true as const, userId: profile.id, username: profile.username };
+  },
+});
+
+export const purgeFeedHostFixture = internalMutation({
+  args: { userId: v.string() },
+  handler: async (ctx, a) => await purgeAccount(ctx, { userId: a.userId, actorId: null }),
 });

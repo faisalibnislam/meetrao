@@ -15,6 +15,7 @@ const sent: {
   headers?: unknown;
   attachments?: { filename: string; content: string | { data: number[] }; content_type?: string; contentType?: string }[];
 }[] = [];
+const keys: (string | null)[] = [];
 
 beforeAll(() => {
   // Dummies, deliberately. The point is to render the templates, not to reach
@@ -33,6 +34,7 @@ beforeAll(() => {
 
   vi.stubGlobal("fetch", async (_url: string, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
+    keys.push(new Headers(init.headers).get("Idempotency-Key"));
     sent.push(body);
     return new Response(JSON.stringify({ id: "test-id" }), {
       status: 200,
@@ -60,7 +62,7 @@ const mail = {
   guestNote: "Happy to discuss scope & budget <script>",
   hostName: "Faisal Islam",
   hostEmail: "host@example.invalid",
-  startLong: "Wednesday, 16 September 2026 at 10:00",
+  startLong: "Wednesday, 16 September 2026 · 10:00 – 10:30",
   startShort: "16 Sep",
   hostTimezoneLabel: "America/New_York (GMT-4)",
   guestTimezoneLabel: "Europe/London (GMT+1)",
@@ -141,6 +143,17 @@ describe("every transactional email renders", () => {
       expect(String(a.content_type ?? a.contentType)).toContain("text/calendar");
     }
     expect(sent.find((e) => e.subject.includes("Welcome"))?.attachments ?? []).toHaveLength(0);
+  });
+
+  /* An idempotency key travels as an HTTP header, which holds Latin-1 only.
+     The move email's key once carried the formatted time ("10:00 – 11:00"),
+     and every move email failed before it left. */
+  it("gives every email a header-safe idempotency key", () => {
+    expect(keys).toHaveLength(7);
+    for (const k of keys) {
+      expect(k, "missing key").toBeTruthy();
+      expect(k!, k!).toMatch(/^[\x20-\x7e]+$/);
+    }
   });
 
   it("puts List-Unsubscribe on the welcome mail only", () => {

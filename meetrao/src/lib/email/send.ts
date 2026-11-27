@@ -397,10 +397,14 @@ export async function sendRescheduled(
     subject: `Moved: ${mail.meetingName} is now ${mail.startShort}`,
     /* A guest key also names the recipient, for the reason given above
        sendBookingNewToGuest: every invitee is sent this with the same id. */
+    /* The new start as an ISO instant, never the formatted line: that one
+       carries an en dash ("10:00 – 11:00"), an idempotency key travels as an
+       HTTP header, and a header cannot hold it, so every move's email failed
+       before it was sent. */
     idempotencyKey:
       to === "host"
-        ? `booking-changed-host:${mail.bookingId}:${mail.startLong}`
-        : `booking-changed-guest:${mail.bookingId}:${mail.startLong}:${mail.guestEmail.toLowerCase()}`,
+        ? `booking-changed-host:${mail.bookingId}:${mail.startsAt.toISOString()}`
+        : `booking-changed-guest:${mail.bookingId}:${mail.startsAt.toISOString()}:${mail.guestEmail.toLowerCase()}`,
     // Same UID, higher SEQUENCE: the calendar moves the meeting it already has.
     invite: { method: "REQUEST", ics: inviteFor(mail, to, "REQUEST") },
     html: render("booking-changed", {

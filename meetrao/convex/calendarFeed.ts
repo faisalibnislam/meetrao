@@ -1,4 +1,4 @@
-import { action, internalMutation, internalQuery, mutation, query, type ActionCtx } from "./_generated/server";
+import { action, internalAction, internalMutation, internalQuery, mutation, query, type ActionCtx } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
@@ -264,6 +264,23 @@ export const saveOwn = action({
     if (!read.ok) return { ok: false, error: read.error };
     const hint = await ctx.runMutation(internal.calendarFeed.saveFeed, {
       userId, url: normal.url, busy: read.busy, from: read.from, to: read.to,
+    });
+    return { ok: true, hint, busyCount: read.busy.length };
+  },
+});
+
+/** Saves a feed for a named host: verification scripts and support only. */
+export const saveFor = internalAction({
+  args: { userId: v.string(), url: v.string() },
+  handler: async (ctx, a): Promise<{ ok: true; hint: string; busyCount: number } | { ok: false; error: string }> => {
+    const normal = normalizeFeedUrl(a.url);
+    if (!normal.ok) return normal;
+    const context = await ctx.runQuery(internal.calendarFeed.feedContext, { hostId: a.userId });
+    if (!context) return { ok: false, error: "No such host." };
+    const read = await readFeed(normal.url, context.timezone);
+    if (!read.ok) return read;
+    const hint = await ctx.runMutation(internal.calendarFeed.saveFeed, {
+      userId: a.userId, url: normal.url, busy: read.busy, from: read.from, to: read.to,
     });
     return { ok: true, hint, busyCount: read.busy.length };
   },
